@@ -1,0 +1,14 @@
+services:
+  talenhuman-db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=TalenHuman
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5433:5432" # Use 5433 to avoid conflict with Legalix if running
+    volumes:
+      - talenhuman_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  talenhuman_postgres_data:
