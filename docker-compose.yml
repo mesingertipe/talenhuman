@@ -1,14 +1,20 @@
 services:
-  talenhuman-db:
-    image: postgres:15-alpine
+  talenhuman-api:
+    build:
+      context: .
+      dockerfile: src/TalenHuman.API/Dockerfile
     environment:
-      - POSTGRES_DB=TalenHuman
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - ConnectionStrings__DefaultConnection=Host=172.17.0.1;Port=5432;Database=TalenHuman;Username=postgres;Password=postgres
     ports:
-      - "5433:5432" # Use 5433 to avoid conflict with Legalix if running
+      - "5001:8080"
     volumes:
-      - talenhuman_postgres_data:/var/lib/postgresql/data
+      - .:/app
 
-volumes:
-  talenhuman_postgres_data:
+  talenhuman-web:
+    build:
+      context: .
+      dockerfile: src/TalenHuman.Web/Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - talenhuman-api
