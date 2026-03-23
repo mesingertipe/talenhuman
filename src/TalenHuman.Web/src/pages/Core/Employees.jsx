@@ -17,6 +17,8 @@ const Employees = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [currentEmployee, setCurrentEmployee] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -71,6 +73,7 @@ const Employees = () => {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
+      setIsSubmitting(true);
       if (currentEmployee) {
         await api.put(`/employees/${currentEmployee.id}`, formData);
         showToast("Colaborador actualizado con éxito");
@@ -82,17 +85,22 @@ const Employees = () => {
       fetchData();
     } catch (err) {
       showToast("Error al procesar el registro", "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDelete = async () => {
     try {
+      setIsDeleting(true);
       await api.delete(`/employees/${currentEmployee.id}`);
       showToast("Registro eliminado correctamente");
       setShowConfirm(false);
       fetchData();
     } catch (err) {
       showToast("Error al eliminar colaborador", "error");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -359,11 +367,11 @@ const Employees = () => {
               </div>
 
               <div className="modal-footer">
-                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary">
-                  No Guardar
+                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary" disabled={isSubmitting}>
+                  Cancelar
                 </button>
-                <button type="submit" className="btn-premium btn-premium-primary">
-                  {currentEmployee ? 'Actualizar Datos' : 'Registrar Colaborador'}
+                <button type="submit" className="btn-premium btn-premium-primary" disabled={isSubmitting}>
+                  {isSubmitting ? <div className="loader"></div> : (currentEmployee ? 'Guardar Cambios' : 'Registrar Colaborador')}
                 </button>
               </div>
             </form>
@@ -383,11 +391,11 @@ const Employees = () => {
                 Estás a punto de inactivar a <strong>{currentEmployee.firstName} {currentEmployee.lastName}</strong>. Perderá acceso inmediato a la plataforma pero sus históricos se conservarán.
               </p>
               <div style={{ display: 'flex', gap: '1rem' }}>
-                <button onClick={() => setShowConfirm(false)} className="btn-premium btn-premium-secondary" style={{ flex: 1 }}>
-                  Conservar
+                <button onClick={() => setShowConfirm(false)} className="btn-premium btn-premium-secondary" style={{ flex: 1 }} disabled={isDeleting}>
+                  Cancelar
                 </button>
-                <button onClick={handleDelete} className="btn-premium btn-premium-danger" style={{ flex: 1 }}>
-                  Confirmar Baja
+                <button onClick={handleDelete} className="btn-premium btn-premium-danger" style={{ flex: 1 }} disabled={isDeleting}>
+                  {isDeleting ? <div className="loader"></div> : 'Confirmar Eliminación'}
                 </button>
               </div>
             </div>

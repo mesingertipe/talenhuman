@@ -17,6 +17,8 @@ const Stores = () => {
   const [currentStore, setCurrentStore] = useState(null);
   const [formData, setFormData] = useState({ name: '', address: '', brandId: '' });
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { 
     data: currentStores, 
@@ -58,6 +60,7 @@ const Stores = () => {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
+      setIsSubmitting(true);
       if (currentStore) {
         await api.put(`/stores/${currentStore.id}`, formData);
         showToast("Sede actualizada con éxito");
@@ -69,17 +72,22 @@ const Stores = () => {
       fetchData();
     } catch (err) {
       showToast("Error al guardar la tienda", "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDelete = async () => {
     try {
+      setIsDeleting(true);
       await api.delete(`/stores/${currentStore.id}`);
       showToast("Sede eliminada satisfactoriamente");
       setShowConfirm(false);
       fetchData();
     } catch (err) {
       showToast("Error al eliminar el registro", "error");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -256,11 +264,11 @@ const Stores = () => {
               </div>
 
               <div className="modal-footer">
-                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary">
-                  No Guardar
+                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary" disabled={isSubmitting}>
+                  Cancelar
                 </button>
-                <button type="submit" className="btn-premium btn-premium-primary">
-                  {currentStore ? 'Guardar Cambios' : 'Crear Tienda'}
+                <button type="submit" className="btn-premium btn-premium-primary" disabled={isSubmitting}>
+                  {isSubmitting ? <div className="loader"></div> : (currentStore ? 'Guardar Cambios' : 'Crear Tienda')}
                 </button>
               </div>
             </form>
@@ -280,11 +288,11 @@ const Stores = () => {
                 Estás por eliminar permanentemente <strong>{currentStore?.name}</strong>. Esta acción impactará sobre la asignación de empleados.
               </p>
               <div style={{ display: 'flex', gap: '1rem' }}>
-                <button onClick={() => setShowConfirm(false)} className="btn-premium btn-premium-secondary" style={{ flex: 1 }}>
-                  Conservar
+                <button onClick={() => setShowConfirm(false)} className="btn-premium btn-premium-secondary" style={{ flex: 1 }} disabled={isDeleting}>
+                  Cancelar
                 </button>
-                <button onClick={handleDelete} className="btn-premium btn-premium-danger" style={{ flex: 1 }}>
-                  Sí, eliminar
+                <button onClick={handleDelete} className="btn-premium btn-premium-danger" style={{ flex: 1 }} disabled={isDeleting}>
+                  {isDeleting ? <div className="loader"></div> : 'Sí, eliminar'}
                 </button>
               </div>
             </div>

@@ -16,6 +16,9 @@ const Users = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -79,6 +82,7 @@ const Users = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     const payload = { ...formData };
     
     // SuperAdmin always maps to the primary tenant if no company selected
@@ -103,7 +107,7 @@ const Users = () => {
         await api.post('/users', payload);
         showToast("Usuario creado con éxito");
       }
-      setShowModal(false);
+      showModal && setShowModal(false);
       fetchData();
     } catch (err) {
       console.error("User save error:", err);
@@ -122,17 +126,22 @@ const Users = () => {
       }
       
       showToast(errorMsg, "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDelete = async () => {
+    setIsDeleting(true);
     try {
       await api.delete(`/users/${currentUser.id}`);
-      showToast("Usuario eliminado");
+      showToast("Usuario eliminado correctamente");
       setShowConfirm(false);
       fetchData();
     } catch (err) {
-      showToast("No se pudo eliminar el usuario", "error");
+      showToast("Error al eliminar el usuario", "error");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -144,15 +153,15 @@ const Users = () => {
   };
 
   const handleSyncEmployees = async () => {
+    setSyncLoading(true);
     try {
-        setLoading(true);
         const res = await api.post('/auth/sync-employee-users');
         showToast(res.data.message);
         fetchData();
     } catch (err) {
         showToast("Error al sincronizar usuarios", "error");
     } finally {
-        setLoading(false);
+        setSyncLoading(false);
     }
   };
 
@@ -174,10 +183,10 @@ const Users = () => {
           {isSuperAdminUser && (
             <button 
               onClick={handleSyncEmployees}
-              disabled={loading}
+              disabled={syncLoading}
               className="px-4 py-2.5 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 font-bold text-sm hover:bg-indigo-100 transition-colors flex items-center gap-2"
             >
-              <CheckCircle size={18} /> Sincronizar Empleados
+              {syncLoading ? <div className="loader loader-indigo"></div> : <CheckCircle size={18} />} Sincronizar Empleados
             </button>
           )}
           <button 
@@ -474,11 +483,11 @@ const Users = () => {
               </div>
 
               <div className="modal-footer">
-                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary">
+                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary" disabled={isSubmitting}>
                   Cancelar
                 </button>
-                <button type="submit" className="btn-premium btn-premium-primary">
-                  {currentUser ? 'Guardar Cambios' : 'Crear Usuario'}
+                <button type="submit" className="btn-premium btn-premium-primary" disabled={isSubmitting}>
+                  {isSubmitting ? <div className="loader"></div> : (currentUser ? 'Guardar Cambios' : 'Crear Usuario')}
                 </button>
               </div>
             </form>
@@ -498,11 +507,11 @@ const Users = () => {
                 ¿Estás seguro de que deseas eliminar permanentemente a <strong>{currentUser?.fullName}</strong>? Esta acción no se puede deshacer.
               </p>
               <div style={{ display: 'flex', gap: '1rem' }}>
-                <button onClick={() => setShowConfirm(false)} className="btn-premium btn-premium-secondary" style={{ flex: 1 }}>
-                  Conservar
+                <button onClick={() => setShowConfirm(false)} className="btn-premium btn-premium-secondary" style={{ flex: 1 }} disabled={isDeleting}>
+                  Cancelar
                 </button>
-                <button onClick={handleDelete} className="btn-premium btn-premium-danger" style={{ flex: 1 }}>
-                  Eliminar
+                <button onClick={handleDelete} className="btn-premium btn-premium-danger" style={{ flex: 1 }} disabled={isDeleting}>
+                  {isDeleting ? <div className="loader"></div> : 'Confirmar Eliminación'}
                 </button>
               </div>
             </div>

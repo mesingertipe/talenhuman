@@ -15,6 +15,8 @@ const Brands = () => {
   const [currentBrand, setCurrentBrand] = useState(null);
   const [formData, setFormData] = useState({ name: '' });
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { 
     data: currentBrands, 
@@ -52,6 +54,7 @@ const Brands = () => {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
+      setIsSubmitting(true);
       if (currentBrand) {
         await api.put(`/brands/${currentBrand.id}`, formData);
         showToast("Marca actualizada con éxito");
@@ -63,17 +66,22 @@ const Brands = () => {
       fetchBrands();
     } catch (err) {
       showToast("Error al guardar la marca", "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDelete = async () => {
     try {
+      setIsDeleting(true);
       await api.delete(`/brands/${currentBrand.id}`);
       showToast("Marca eliminada correctamente");
       setShowConfirm(false);
       fetchBrands();
     } catch (err) {
       showToast("Error al eliminar la marca", "error");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -216,12 +224,12 @@ const Brands = () => {
               </div>
 
               <div className="modal-footer">
-                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary">
-                  No Guardar
-                </button>
-                <button type="submit" className="btn-premium btn-premium-primary">
-                  {currentBrand ? 'Actualizar Marca' : 'Añadir Marca'}
-                </button>
+                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary" disabled={isSubmitting}>
+              Cancelar
+            </button>
+            <button type="submit" className="btn-premium btn-premium-primary" disabled={isSubmitting}>
+              {isSubmitting ? <div className="loader"></div> : (currentBrand ? 'Actualizar' : 'Guardar')}
+            </button>
               </div>
             </form>
           </div>
@@ -240,12 +248,12 @@ const Brands = () => {
                 Estás por descartar permanentemente la marca <strong>{currentBrand?.name}</strong>. Asegúrate de que no haya tiendas vinculadas activas.
               </p>
               <div style={{ display: 'flex', gap: '1rem' }}>
-                <button onClick={() => setShowConfirm(false)} className="btn-premium btn-premium-secondary" style={{ flex: 1 }}>
-                  Conservar
-                </button>
-                <button onClick={handleDelete} className="btn-premium btn-premium-danger" style={{ flex: 1 }}>
-                  Eliminar Marca
-                </button>
+                <button onClick={() => setShowConfirm(false)} className="btn-premium btn-premium-secondary" disabled={isDeleting}>
+              No, cancelar
+            </button>
+            <button onClick={handleDelete} className="btn-premium btn-premium-danger" disabled={isDeleting}>
+              {isDeleting ? <div className="loader"></div> : 'Si, eliminar'}
+            </button>
               </div>
             </div>
           </div>

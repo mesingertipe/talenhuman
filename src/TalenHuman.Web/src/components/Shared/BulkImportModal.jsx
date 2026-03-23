@@ -234,12 +234,16 @@ const BulkImportModal = ({ isOpen, onClose, type, onComplete }) => {
             </button>
             {step === 1 && (
               <button disabled={!file || loading} onClick={handleValidate} className="btn-premium btn-premium-primary min-w-[160px]">
-                {loading ? 'Validando...' : 'Validar Datos'} {!loading && <ChevronRight size={18} />}
+                {loading ? <div className="loader"></div> : (
+                  <>
+                    Validar Datos <ChevronRight size={18} />
+                  </>
+                )}
               </button>
             )}
             {step === 2 && (
               <button disabled={previewData?.hasErrors || loading} onClick={handleConfirm} className="btn-premium btn-premium-primary min-w-[160px]">
-                {loading ? 'Procesando...' : 'Confirmar Carga'}
+                {loading ? <div className="loader"></div> : 'Confirmar Carga'}
               </button>
             )}
           </div>
