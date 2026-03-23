@@ -40,9 +40,12 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
+        // Search by Email or Username (IdentificationNumber)
         var user = await _userManager.Users
             .Include(u => u.Company)
-            .FirstOrDefaultAsync(u => u.NormalizedEmail == request.Email.ToUpper());
+            .FirstOrDefaultAsync(u => 
+                u.NormalizedEmail == request.Email.ToUpper() || 
+                u.UserName == request.Email);
 
         if (user == null) return Unauthorized("Credenciales inválidas");
 
@@ -171,11 +174,38 @@ public class AuthController : ControllerBase
             errors = errors 
         });
     }
+
+    [HttpPost("self-service-reset")]
+    public async Task<IActionResult> SelfServiceReset([FromBody] SelfServiceResetRequest request)
+    {
+        var employee = await _context.Employees
+            .Include(e => e.User)
+            .FirstOrDefaultAsync(e => e.IdentificationNumber == request.IdentificationNumber);
+
+        if (employee == null || employee.User == null)
+            return BadRequest("No se encontró un registro válido para los datos proporcionados.");
+
+        if (!employee.BirthDate.HasValue || employee.BirthDate.Value.Date != request.BirthDate.Date)
+            return BadRequest("Los datos de validación son incorrectos.");
+
+        // Generate token and reset
+        var user = employee.User;
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var result = await _userManager.ResetPasswordAsync(user, token, request.NewPassword);
+
+        if (!result.Succeeded)
+            return BadRequest(new { message = "Error al restablecer la contraseña.", errors = result.Errors });
+
+        user.MustChangePassword = false;
+        await _userManager.UpdateAsync(user);
+
+        return Ok(new { message = "Contraseña restablecida correctamente." });
+    }
 }
 
 public class LoginRequest
 {
-    public string Email { get; set; } = null!;
+    public string Email { get; set; } = null!; // Can be Email or IdentificationNumber
     public string Password { get; set; } = null!;
 }
 
@@ -188,5 +218,12 @@ public class ResetPasswordRequest
 {
     public string Email { get; set; } = null!;
     public string Token { get; set; } = null!;
+    public string NewPassword { get; set; } = null!;
+}
+
+public class SelfServiceResetRequest
+{
+    public string IdentificationNumber { get; set; } = null!;
+    public DateTime BirthDate { get; set; }
     public string NewPassword { get; set; } = null!;
 }

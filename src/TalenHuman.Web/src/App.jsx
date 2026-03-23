@@ -11,6 +11,7 @@ import ResetPassword from './pages/ResetPassword'
 import Login from './pages/Login'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetForgottenPassword from './pages/ResetForgottenPassword'
+import SelfServiceReset from './pages/SelfServiceReset';
 
 function App() {
   const [user, setUser] = React.useState(null);
@@ -18,41 +19,60 @@ function App() {
   const [authLoading, setAuthLoading] = React.useState(true);
   const [authView, setAuthView] = React.useState('login'); // 'login', 'forgot', 'reset'
   const [resetEmail, setResetEmail] = React.useState('');
+  const [token, setToken] = React.useState(null); // Added token state
 
   React.useEffect(() => {
     const savedUser = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    if (savedUser && token) {
+    const storedToken = localStorage.getItem('token'); // Renamed to avoid conflict
+    if (savedUser && storedToken) {
       setUser(JSON.parse(savedUser));
+      setToken(storedToken); // Set token state
     }
     setAuthLoading(false);
   }, []);
+
+  const handleLogin = (userData, userToken) => { // Modified handleLogin to accept token
+    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('token', userToken);
+    setUser(userData);
+    setToken(userToken); // Set token state on login
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
+    setToken(null); // Clear token state on logout
   };
 
   if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 font-bold">Iniciando TalenHuman...</div>;
 
-  if (!user) {
+  if (!token) {
     if (authView === 'forgot') {
-        return <ForgotPassword 
-          onBack={() => setAuthView('login')} 
-          onTokenRequested={(email) => {
+        return <ForgotPassword
+          onBack={() => setAuthView('login')}
+          onNext={(email) => {
             setResetEmail(email);
             setAuthView('reset');
-          }} 
+          }}
         />;
     }
     if (authView === 'reset') {
-        return <ResetForgottenPassword 
-          email={resetEmail} 
-          onBack={() => setAuthView('login')} 
+        return <ResetForgottenPassword
+          email={resetEmail}
+          onBack={() => setAuthView('login')}
         />;
     }
-    return <Login onLogin={(u) => setUser(u)} onForgotPassword={() => setAuthView('forgot')} />;
+    if (authView === 'self-service') {
+      return <SelfServiceReset onBack={() => setAuthView('login')} />;
+    }
+    return (
+      <Login
+        onLogin={handleLogin}
+        onForgotPassword={() => setAuthView('forgot')}
+        onSelfServiceReset={() => setAuthView('self-service')}
+      />
+    );
   }
 
   if (user.mustChangePassword) {

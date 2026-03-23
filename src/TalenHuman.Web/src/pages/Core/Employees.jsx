@@ -22,6 +22,7 @@ const Employees = () => {
     firstName: '',
     lastName: '',
     identificationNumber: '',
+    birthDate: '',
     storeId: '',
     profileId: '',
     dateOfEntry: new Date().toISOString().split('T')[0],
@@ -272,6 +273,19 @@ const Employees = () => {
                         value={formData.identificationNumber} 
                         onChange={(e) => setFormData({ ...formData, identificationNumber: e.target.value })} 
                         style={{ flex: 1, padding: '0.75rem 0.75rem 0.75rem 0', border: 'none', background: 'transparent', fontWeight: '500', outline: 'none', fontSize: '0.9rem', color: '#1e293b', margin: 0 }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Fecha de Nacimiento <span className="text-red-500">*</span></label>
+                    <div style={{ display: 'flex', alignItems: 'center', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
+                      <span style={{ padding: '0 12px', color: '#94a3b8', display: 'flex', alignItems: 'center', flexShrink: 0 }}><Calendar size={16} /></span>
+                      <input 
+                        required 
+                        type="date" 
+                        value={formData.birthDate?.split('T')[0] || ''} 
+                        onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })} 
+                        style={{ flex: 1, padding: '0.75rem 0.75rem 0.75rem 0', border: 'none', background: 'transparent', fontWeight: '500', outline: 'none', fontSize: '0.9rem', color: '#334155', margin: 0 }}
                       />
                     </div>
                   </div>

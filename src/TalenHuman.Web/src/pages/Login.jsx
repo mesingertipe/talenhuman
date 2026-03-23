@@ -1,11 +1,12 @@
+```javascript
 import React, { useState } from 'react';
 import { Lock, Mail, Eye, EyeOff, Users, ArrowRight, ShieldAlert } from 'lucide-react';
 import api from '../services/api';
 import './Login.css';
 
-const Login = ({ onLogin, onForgotPassword }) => {
+const Login = ({ onLogin, onForgotPassword, onSelfServiceReset }) => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('Admin123!');
+  const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -43,7 +44,7 @@ const Login = ({ onLogin, onForgotPassword }) => {
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       localStorage.setItem('tenantId', res.data.user.companyId);
-      onLogin(res.data.user);
+      onLogin(res.data.user, res.data.token);
     } catch (err) {
       setError('Credenciales inválidas. Por favor intenta de nuevo.');
       console.error(err);
@@ -112,16 +113,16 @@ const Login = ({ onLogin, onForgotPassword }) => {
 
             <form onSubmit={handleSubmit} className="login-form">
               <div className="form-group">
-                <label className="form-label">Email corporativo</label>
+                <label className="form-label">Usuario o Correo Corporativo</label>
                 <div className="input-wrapper">
                   <Mail className="input-icon" size={18} />
                   <input 
-                    type="email" 
+                    type="text" 
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="login-input"
-                    placeholder="nombre@empresa.com"
+                    placeholder="Ej: 1016... o admin@empresa.com"
                   />
                 </div>
               </div>
@@ -149,23 +150,32 @@ const Login = ({ onLogin, onForgotPassword }) => {
               </div>
 
               <div className="form-options">
-                <label className="remember-me">
-                  <input 
-                    type="checkbox" 
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                  />
-                  <span>Recordar email</span>
-                </label>
-                <button 
-                  type="button" 
-                  onClick={onForgotPassword} 
-                  className="forgot-password"
-                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                >
-                  ¿Olvidaste tu clave?
-                </button>
-              </div>
+              <label className="remember-me">
+                <input 
+                  type="checkbox" 
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                <span>Recordarme</span>
+              </label>
+              <button 
+                type="button" 
+                className="forgot-password"
+                onClick={onForgotPassword}
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
+
+            <div className="text-center mt-4">
+              <button 
+                type="button" 
+                className="text-indigo-600 font-bold text-sm hover:underline"
+                onClick={onSelfServiceReset}
+              >
+                No tengo correo corporativo
+              </button>
+            </div>
 
               <button 
                 type="submit" 
