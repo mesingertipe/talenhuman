@@ -13,6 +13,7 @@ RUN dotnet restore src/TalenHuman.API/TalenHuman.API.csproj
 COPY . .
 WORKDIR /app/src/TalenHuman.API
 RUN dotnet publish -c Release -o /out
+RUN ls -la /out
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
