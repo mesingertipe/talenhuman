@@ -12,12 +12,13 @@ RUN dotnet restore src/TalenHuman.API/TalenHuman.API.csproj
 # Copy everything else and build
 COPY . .
 WORKDIR /app/src/TalenHuman.API
-RUN dotnet publish -c Release -o /out
-RUN ls -la /out
+# Cache bust: 3
+RUN dotnet publish "src/TalenHuman.API/TalenHuman.API.csproj" -c Release -o /out
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /out .
+RUN ls -la .
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "TalenHuman.API.dll"]
