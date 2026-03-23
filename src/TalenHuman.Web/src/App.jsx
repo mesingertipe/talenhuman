@@ -9,11 +9,15 @@ import Users from './pages/SuperAdmin/Users'
 import Companies from './pages/SuperAdmin/Companies'
 import ResetPassword from './pages/ResetPassword'
 import Login from './pages/Login'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetForgottenPassword from './pages/ResetForgottenPassword'
 
 function App() {
   const [user, setUser] = React.useState(null);
   const [currentPage, setCurrentPage] = React.useState('Dashboard');
   const [authLoading, setAuthLoading] = React.useState(true);
+  const [authView, setAuthView] = React.useState('login'); // 'login', 'forgot', 'reset'
+  const [resetEmail, setResetEmail] = React.useState('');
 
   React.useEffect(() => {
     const savedUser = localStorage.getItem('user');
@@ -33,7 +37,22 @@ function App() {
   if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 font-bold">Iniciando TalenHuman...</div>;
 
   if (!user) {
-    return <Login onLogin={(u) => setUser(u)} />;
+    if (authView === 'forgot') {
+        return <ForgotPassword 
+          onBack={() => setAuthView('login')} 
+          onTokenRequested={(email) => {
+            setResetEmail(email);
+            setAuthView('reset');
+          }} 
+        />;
+    }
+    if (authView === 'reset') {
+        return <ResetForgottenPassword 
+          email={resetEmail} 
+          onBack={() => setAuthView('login')} 
+        />;
+    }
+    return <Login onLogin={(u) => setUser(u)} onForgotPassword={() => setAuthView('forgot')} />;
   }
 
   if (user.mustChangePassword) {

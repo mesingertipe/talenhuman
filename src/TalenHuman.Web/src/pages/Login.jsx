@@ -3,18 +3,37 @@ import { Lock, Mail, Eye, EyeOff, Users, ArrowRight, ShieldAlert } from 'lucide-
 import api from '../services/api';
 import './Login.css';
 
-const Login = ({ onLogin }) => {
-  const [email, setEmail] = useState('admin@talenhuman.com');
+const Login = ({ onLogin, onForgotPassword }) => {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('Admin123!');
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Load remembered email on mount
+  React.useEffect(() => {
+    const savedEmail = localStorage.getItem('rememberedEmail');
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    } else {
+        setEmail('admin@talenhuman.com');
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
+      // Handle "Remember Me" persistence
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', email);
+      } else {
+        localStorage.removeItem('rememberedEmail');
+      }
+
       // Clear potentially stale session data before login attempt
       if (email === 'admin@talenhuman.com') {
         localStorage.setItem('tenantId', '11111111-1111-1111-1111-111111111111');
@@ -108,10 +127,7 @@ const Login = ({ onLogin }) => {
               </div>
 
               <div className="form-group">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <label className="form-label" style={{ marginBottom: 0 }}>Contraseña</label>
-                  <a href="#" style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--primary)', textDecoration: 'none' }}>¿Olvidaste tu clave?</a>
-                </div>
+                <label className="form-label">Contraseña</label>
                 <div className="input-wrapper">
                   <Lock className="input-icon" size={18} />
                   <input 
@@ -130,6 +146,25 @@ const Login = ({ onLogin }) => {
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
+              </div>
+
+              <div className="form-options">
+                <label className="remember-me">
+                  <input 
+                    type="checkbox" 
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                  />
+                  <span>Recordar email</span>
+                </label>
+                <button 
+                  type="button" 
+                  onClick={onForgotPassword} 
+                  className="forgot-password"
+                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                >
+                  ¿Olvidaste tu clave?
+                </button>
               </div>
 
               <button 

@@ -68,10 +68,58 @@ public class AuthController : ControllerBase
             user = new { user.Email, user.FullName, user.CompanyId, user.MustChangePassword, roles, companyName = user.Company?.Name }
         });
     }
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        var user = await _userManager.FindByEmailAsync(request.Email);
+        if (user == null) 
+        {
+            // Don't reveal that the user does not exist for security
+            return Ok(new { message = "Si el correo está registrado, recibirás un enlace/token de recuperación." });
+        }
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        
+        // TODO: Send email with token. For now, we log it to console/response to allow testing.
+        Console.WriteLine($"Password Reset Token for {user.Email}: {token}");
+        
+        return Ok(new { 
+            message = "Token generado exitosamente.", 
+            debugToken = token // REMOVE THIS in production
+        });
+    }
+
+    [HttpPost("reset-password-with-token")]
+    public async Task<IActionResult> ResetPasswordWithToken([FromBody] ResetPasswordRequest request)
+    {
+        var user = await _userManager.FindByEmailAsync(request.Email);
+        if (user == null) return BadRequest("Email no encontrado.");
+
+        var result = await _userManager.ResetPasswordAsync(user, request.Token, request.NewPassword);
+        if (!result.Succeeded)
+        {
+            return BadRequest(new { message = "No se pudo restablecer la contraseña.", errors = result.Errors });
+        }
+
+        return Ok(new { message = "Contraseña restablecida exitosamente." });
+    }
 }
 
 public class LoginRequest
 {
     public string Email { get; set; } = null!;
     public string Password { get; set; } = null!;
+}
+
+public class ForgotPasswordRequest
+{
+    public string Email { get; set; } = null!;
+}
+
+public class ResetPasswordRequest
+{
+    public string Email { get; set; } = null!;
+    public string Token { get; set; } = null!;
+    public string NewPassword { get; set; } = null!;
 }
