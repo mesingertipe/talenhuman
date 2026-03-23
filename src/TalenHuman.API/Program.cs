@@ -62,14 +62,33 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Seed database
+// Seed database (resilient — retries up to 5 times so the container survives a slow DB)
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<TalenHuman.Infrastructure.Persistence.ApplicationDbContext>();
-    var userManager = services.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<TalenHuman.Domain.Entities.User>>();
-    var roleManager = services.GetRequiredService<Microsoft.AspNetCore.Identity.RoleManager<TalenHuman.Domain.Entities.Role>>();
-    await TalenHuman.Infrastructure.Persistence.DbInitializer.SeedAsync(context, userManager, roleManager);
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    var maxRetries = 5;
+    for (int attempt = 1; attempt <= maxRetries; attempt++)
+    {
+        try
+        {
+            var context = services.GetRequiredService<TalenHuman.Infrastructure.Persistence.ApplicationDbContext>();
+            var userManager = services.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<TalenHuman.Domain.Entities.User>>();
+            var roleManager = services.GetRequiredService<Microsoft.AspNetCore.Identity.RoleManager<TalenHuman.Domain.Entities.Role>>();
+            await context.Database.MigrateAsync();
+            await TalenHuman.Infrastructure.Persistence.DbInitializer.SeedAsync(context, userManager, roleManager);
+            logger.LogInformation("Database seeded successfully.");
+            break;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "DB seed attempt {Attempt}/{Max} failed. Retrying in 3s...", attempt, maxRetries);
+            if (attempt == maxRetries)
+                logger.LogError("Could not seed database after {Max} attempts. App will continue without seed.", maxRetries);
+            else
+                await Task.Delay(TimeSpan.FromSeconds(3));
+        }
+    }
 }
 
 app.Run();

@@ -23,8 +23,20 @@ const BulkImportModal = ({ isOpen, onClose, type, onComplete }) => {
     onClose();
   };
 
-  const handleDownloadTemplate = () => {
-    window.open(`http://localhost:5001/api/import/template/${type}`, '_blank');
+  const handleDownloadTemplate = async () => {
+    try {
+      const res = await api.get(`/import/template/${type}`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Plantilla_${type}_${new Date().toISOString().slice(0,10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error descargando plantilla', err);
+    }
   };
 
   const handleFileChange = (e) => {

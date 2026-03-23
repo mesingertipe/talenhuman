@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TalenHuman.Application.Common.Interfaces;
 using TalenHuman.Application.Common.Models;
@@ -5,6 +6,7 @@ using System.Text;
 
 namespace TalenHuman.API.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class ImportController : ControllerBase
