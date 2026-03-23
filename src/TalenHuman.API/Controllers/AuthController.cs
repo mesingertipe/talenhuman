@@ -6,6 +6,10 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using TalenHuman.Domain.Entities;
+using Microsoft.Extensions.Configuration;
+using TalenHuman.Application.Common.Interfaces;
+using TalenHuman.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TalenHuman.API.Controllers;
 
@@ -15,11 +19,22 @@ public class AuthController : ControllerBase
 {
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
+    private readonly ApplicationDbContext _context;
+    private readonly IConfiguration _configuration;
+    private readonly IIdentityService _identityService;
 
-    public AuthController(UserManager<User> userManager, SignInManager<User> signInManager)
+    public AuthController(
+        UserManager<User> userManager,
+        SignInManager<User> signInManager,
+        ApplicationDbContext context,
+        IConfiguration configuration,
+        IIdentityService identityService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
+        _context = context;
+        _configuration = configuration;
+        _identityService = identityService;
     }
 
     [HttpPost("login")]
@@ -103,6 +118,58 @@ public class AuthController : ControllerBase
         }
 
         return Ok(new { message = "Contraseña restablecida exitosamente." });
+    }
+
+    [HttpPost("sync-employee-users")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public async Task<IActionResult> SyncEmployeeUsers()
+    {
+        var employeesWithoutUser = await _context.Employees
+            .Where(e => e.UserId == null)
+            .ToListAsync();
+
+        int created = 0;
+        var errors = new List<string>();
+
+        foreach (var emp in employeesWithoutUser)
+        {
+            try 
+            {
+                var generatedEmail = $"{emp.IdentificationNumber}@talenhuman.local";
+                var (succeeded, userId) = await _identityService.CreateUserAsync(
+                    emp.IdentificationNumber,
+                    generatedEmail,
+                    emp.IdentificationNumber,
+                    $"{emp.FirstName} {emp.LastName}",
+                    emp.CompanyId,
+                    "Empleado",
+                    emp.Id);
+
+                if (succeeded)
+                {
+                    emp.UserId = userId;
+                    created++;
+                }
+                else
+                {
+                    errors.Add($"Error creando usuario para {emp.IdentificationNumber}");
+                }
+            }
+            catch (Exception ex)
+            {
+                errors.Add($"Excepción para {emp.IdentificationNumber}: {ex.Message}");
+            }
+        }
+
+        if (created > 0)
+        {
+            await _context.SaveChangesAsync();
+        }
+
+        return Ok(new { 
+            message = $"Proceso completado. {created} usuarios creados.",
+            errors = errors 
+        });
     }
 }
 

@@ -143,6 +143,19 @@ const Users = () => {
     setFormData({ ...formData, roles: newRoles });
   };
 
+  const handleSyncEmployees = async () => {
+    try {
+        setLoading(true);
+        const res = await api.post('/auth/sync-employee-users');
+        showToast(res.data.message);
+        fetchData();
+    } catch (err) {
+        showToast("Error al sincronizar usuarios", "error");
+    } finally {
+        setLoading(false);
+    }
+  };
+
   return (
     <div className="page-container animate-in fade-in duration-300">
       <div className="page-header flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -158,6 +171,15 @@ const Users = () => {
         </div>
         
         <div className="flex items-center gap-3 flex-shrink-0">
+          {isSuperAdminUser && (
+            <button 
+              onClick={handleSyncEmployees}
+              disabled={loading}
+              className="px-4 py-2.5 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 font-bold text-sm hover:bg-indigo-100 transition-colors flex items-center gap-2"
+            >
+              <CheckCircle size={18} /> Sincronizar Empleados
+            </button>
+          )}
           <button 
             onClick={() => {
               setCurrentUser(null);
