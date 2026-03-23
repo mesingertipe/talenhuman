@@ -18,12 +18,14 @@ public class TenantProvider : ITenantProvider
         var context = _httpContextAccessor.HttpContext;
         if (context == null) return Guid.Empty;
 
-        // Try to get from Header (X-Tenant-Id) - Only for SuperAdmin
+        // Try to get from Header (X-Tenant-Id)
         var headerValue = context.Request.Headers["X-Tenant-Id"].ToString();
         if (!string.IsNullOrEmpty(headerValue) && Guid.TryParse(headerValue, out var tenantId))
         {
-            // If user is Admin, we allow switching.
-            if (context.User.IsInRole("Admin") || context.User.IsInRole("SuperAdmin"))
+            // If user is not authenticated (Login) or is Admin/SuperAdmin, allow switching.
+            if (!(context.User.Identity?.IsAuthenticated ?? false) || 
+                context.User.IsInRole("Admin") || 
+                context.User.IsInRole("SuperAdmin"))
             {
                 return tenantId;
             }

@@ -8,11 +8,12 @@ public record CreateEmployeeCommand : IRequest<Guid>
 {
     public string FirstName { get; init; } = string.Empty;
     public string LastName { get; init; } = string.Empty;
-    public string Email { get; init; } = string.Empty;
     public string IdentificationNumber { get; init; } = string.Empty;
     public Guid StoreId { get; init; }
     public Guid ProfileId { get; init; }
-    public string Role { get; init; } = "Empleado"; // Empleado, Gerente, Supervisor, RH, Admin
+    public DateTime DateOfEntry { get; init; }
+    public bool IsActive { get; init; } = true;
+    public string Role { get; init; } = "Empleado";
 }
 
 public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeCommand, Guid>
@@ -35,17 +36,19 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
     {
         var companyId = _tenantProvider.GetTenantId();
 
+        var generatedEmail = $"{request.IdentificationNumber}@talenhuman.local";
+
         var employee = new Employee
         {
             FirstName = request.FirstName,
             LastName = request.LastName,
-            Email = request.Email,
+            Email = generatedEmail,
             IdentificationNumber = request.IdentificationNumber,
             StoreId = request.StoreId,
             ProfileId = request.ProfileId,
             CompanyId = companyId,
-            DateOfEntry = DateTime.UtcNow,
-            IsActive = true
+            DateOfEntry = request.DateOfEntry.ToUniversalTime(),
+            IsActive = request.IsActive
         };
 
         _context.Employees.Add(employee);
@@ -55,20 +58,12 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
         string userName;
         string password;
 
-        if (request.Role == "Empleado")
-        {
-            userName = request.IdentificationNumber;
-            password = request.IdentificationNumber; // Initial password is IdentificationNumber
-        }
-        else
-        {
-            userName = request.Email;
-            password = "TemporaryPassword123!"; // Generic initial password for managers
-        }
+        userName = request.IdentificationNumber;
+        password = request.IdentificationNumber; // Initial password is IdentificationNumber
 
         var (succeeded, userId) = await _identityService.CreateUserAsync(
             userName,
-            request.Email,
+            generatedEmail,
             password,
             $"{request.FirstName} {request.LastName}",
             companyId,

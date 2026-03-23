@@ -27,22 +27,22 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<Attendance> Attendances => Set<Attendance>();
     public DbSet<Absence> Absences => Set<Absence>();
 
+    public Guid TenantId => _tenantProvider.GetTenantId();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
 
         // Apply Multitenancy Global Filter
-        var tenantId = _tenantProvider.GetTenantId();
-        
-        builder.Entity<User>().HasQueryFilter(u => u.CompanyId == tenantId);
-        builder.Entity<Brand>().HasQueryFilter(b => b.CompanyId == tenantId);
-        builder.Entity<Store>().HasQueryFilter(s => s.CompanyId == tenantId);
-        builder.Entity<Profile>().HasQueryFilter(p => p.CompanyId == tenantId);
-        builder.Entity<Employee>().HasQueryFilter(e => e.CompanyId == tenantId);
-        builder.Entity<Shift>().HasQueryFilter(s => s.CompanyId == tenantId);
-        builder.Entity<Attendance>().HasQueryFilter(a => a.CompanyId == tenantId);
-        builder.Entity<Absence>().HasQueryFilter(a => a.CompanyId == tenantId);
-        builder.Entity<SupervisorStore>().HasQueryFilter(s => s.CompanyId == tenantId);
+        builder.Entity<User>().HasQueryFilter(u => u.CompanyId == TenantId);
+        builder.Entity<Brand>().HasQueryFilter(b => b.CompanyId == TenantId);
+        builder.Entity<Store>().HasQueryFilter(s => s.CompanyId == TenantId);
+        builder.Entity<Profile>().HasQueryFilter(p => p.CompanyId == TenantId);
+        builder.Entity<Employee>().HasQueryFilter(e => e.CompanyId == TenantId);
+        builder.Entity<Shift>().HasQueryFilter(s => s.CompanyId == TenantId);
+        builder.Entity<Attendance>().HasQueryFilter(a => a.CompanyId == TenantId);
+        builder.Entity<Absence>().HasQueryFilter(a => a.CompanyId == TenantId);
+        builder.Entity<SupervisorStore>().HasQueryFilter(s => s.CompanyId == TenantId);
 
         // Many-to-Many: Supervisor -> Stores
         builder.Entity<SupervisorStore>()

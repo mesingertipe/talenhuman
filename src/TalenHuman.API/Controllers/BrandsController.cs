@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using TalenHuman.Application.Common.Interfaces;
 using TalenHuman.Domain.Entities;
 using TalenHuman.Infrastructure.Persistence;
 
@@ -7,13 +9,16 @@ namespace TalenHuman.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class BrandsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
+    private readonly ITenantProvider _tenantProvider;
 
-    public BrandsController(ApplicationDbContext context)
+    public BrandsController(ApplicationDbContext context, ITenantProvider tenantProvider)
     {
         _context = context;
+        _tenantProvider = tenantProvider;
     }
 
     [HttpGet]
@@ -33,6 +38,7 @@ public class BrandsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Brand>> CreateBrand(Brand brand)
     {
+        brand.CompanyId = _tenantProvider.GetTenantId();
         _context.Brands.Add(brand);
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetBrand), new { id = brand.Id }, brand);
@@ -41,8 +47,11 @@ public class BrandsController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateBrand(Guid id, Brand brand)
     {
-        if (id != brand.Id) return BadRequest();
-        _context.Entry(brand).State = EntityState.Modified;
+        var existing = await _context.Brands.FindAsync(id);
+        if (existing == null) return NotFound();
+
+        existing.Name = brand.Name;
+        
         await _context.SaveChangesAsync();
         return NoContent();
     }
@@ -52,8 +61,16 @@ public class BrandsController : ControllerBase
     {
         var brand = await _context.Brands.FindAsync(id);
         if (brand == null) return NotFound();
-        _context.Brands.Remove(brand);
-        await _context.SaveChangesAsync();
-        return NoContent();
+
+        try
+        {
+            _context.Brands.Remove(brand);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+        catch (DbUpdateException)
+        {
+            return BadRequest(new { message = "No se puede eliminar la marca porque tiene registros asociados." });
+        }
     }
 }

@@ -17,7 +17,7 @@ public class Brand : BaseEntity, IMultitenant
 {
     public string Name { get; set; } = string.Empty;
     public Guid CompanyId { get; set; }
-    public Company Company { get; set; } = null!;
+    public Company? Company { get; set; }
 
     // Relationships
     public ICollection<Store> Stores { get; set; } = new List<Store>();
@@ -30,10 +30,10 @@ public class Store : BaseEntity, IMultitenant
     public string? Code { get; set; } // External system code
     
     public Guid BrandId { get; set; }
-    public Brand Brand { get; set; } = null!;
+    public Brand? Brand { get; set; }
     
     public Guid CompanyId { get; set; }
-    public Company Company { get; set; } = null!;
+    public Company? Company { get; set; }
 
     // Relationships
     public ICollection<Employee> Employees { get; set; } = new List<Employee>();
@@ -43,13 +43,13 @@ public class Store : BaseEntity, IMultitenant
 public class SupervisorStore : IMultitenant
 {
     public Guid UserId { get; set; }
-    public User User { get; set; } = null!;
+    public User? User { get; set; }
     
     public Guid StoreId { get; set; }
-    public Store Store { get; set; } = null!;
+    public Store? Store { get; set; }
     
     public Guid CompanyId { get; set; }
-    public Company Company { get; set; } = null!;
+    public Company? Company { get; set; }
 }
 
 public class Profile : BaseEntity, IMultitenant
@@ -58,5 +58,5 @@ public class Profile : BaseEntity, IMultitenant
     public string? Description { get; set; }
     
     public Guid CompanyId { get; set; }
-    public Company Company { get; set; } = null!;
+    public Company? Company { get; set; }
 }

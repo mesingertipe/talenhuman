@@ -1,0 +1,281 @@
+import React, { useState, useEffect } from 'react';
+import { Plus, Trash2, Edit, X, Building2, Hash, Shield, AlertCircle, CheckCircle } from 'lucide-react';
+import api from '../../services/api';
+
+const Companies = () => {
+  const [companies, setCompanies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [currentCompany, setCurrentCompany] = useState(null);
+  const [formData, setFormData] = useState({ id: '', name: '', taxId: '', isActive: true });
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ ...toast, show: false }), 3000);
+  };
+
+  const fetchCompanies = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get('/companies');
+      setCompanies(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    const payload = { ...formData };
+    if (!payload.id) delete payload.id;
+
+    try {
+      if (formData.id) {
+        await api.put(`/companies/${formData.id}`, payload);
+        showToast("Empresa actualizada con éxito");
+      } else {
+        await api.post('/companies', payload);
+        showToast("Empresa creada con éxito");
+      }
+      setShowModal(false);
+      fetchCompanies();
+    } catch (err) {
+      console.error("Save error:", err);
+      showToast("Error al procesar la solicitud", "error");
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await api.delete(`/companies/${currentCompany.id}`);
+      showToast("Empresa eliminada correctamente");
+      setShowConfirm(false);
+      fetchCompanies();
+    } catch (err) {
+      showToast("Error al eliminar la empresa", "error");
+    }
+  };
+
+  return (
+    <div className="page-container animate-in fade-in duration-300">
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+        <div>
+          <h1 className="text-3xl font-bold">Panel de Empresas</h1>
+          <p className="text-slate-500">Gestión global de inquilinos (Tenants) y su estado operacional</p>
+        </div>
+        <button 
+          onClick={() => { setFormData({ id: '', name: '', taxId: '', isActive: true }); setShowModal(true); }}
+          className="btn-premium btn-premium-primary"
+        >
+          <Plus size={20} /> Nueva Empresa
+        </button>
+      </div>
+
+      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        {loading ? (
+          <div style={{ padding: '6rem', textAlign: 'center' }}>
+            <div className="flex flex-col items-center gap-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+              <p className="text-slate-500 font-medium tracking-wide">Cargando empresas...</p>
+            </div>
+          </div>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Empresa</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Identificación (NIT)</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Estado</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em', textAlign: 'right' }}>Gestión</th>
+              </tr>
+            </thead>
+            <tbody>
+              {companies.map((c) => (
+                <tr key={c.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-slate-50/50 transition-colors">
+                  <td style={{ padding: '1.25rem 1.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{ width: '44px', height: '44px', background: 'var(--bg-main)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366f1', border: '1px solid #eef2ff' }}>
+                        <Building2 size={22} />
+                      </div>
+                      <div className="font-bold text-slate-800">{c.name}</div>
+                    </div>
+                  </td>
+                  <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontWeight: '500' }}>{c.taxId || 'N/A'}</td>
+                  <td style={{ padding: '1.25rem 1.5rem' }}>
+                    <span style={{ 
+                      padding: '0.35rem 0.75rem', 
+                      background: c.isActive ? '#ecfdf5' : '#fff1f2', 
+                      color: c.isActive ? '#059669' : '#e11d48', 
+                      borderRadius: '9999px', 
+                      fontSize: '0.7rem', 
+                      fontWeight: '800',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      textTransform: 'uppercase'
+                    }}>
+                      {c.isActive ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
+                      {c.isActive ? 'Activa' : 'Inactiva'}
+                    </span>
+                  </td>
+                  <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
+                    <button 
+                      onClick={() => { setFormData({ id: c.id, name: c.name, taxId: c.taxId, isActive: c.isActive }); setShowModal(true); }}
+                      style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', padding: '0.5rem' }}
+                      className="hover:scale-110 transition-transform"
+                    >
+                      <Edit size={20} />
+                    </button>
+                    {!c.isMaster && (
+                      <button 
+                        onClick={() => { setCurrentCompany(c); setShowConfirm(true); }}
+                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.5rem' }}
+                        className="hover:scale-110 transition-transform"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '520px' }}>
+            <div className="modal-header">
+              <h2 className="text-xl font-bold flex items-center gap-2" style={{ margin: 0 }}>
+                {formData.id ? <Edit size={24} className="text-indigo-500" /> : <Plus size={24} className="text-indigo-500" />}
+                {formData.id ? 'Editar Empresa' : 'Nueva Empresa'}
+              </h2>
+              <button 
+                onClick={() => setShowModal(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}
+                className="hover:text-slate-600 transition-colors"
+              >
+                <X size={22} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSave}>
+              <div className="modal-body space-y-6">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre Comercial</label>
+                  <div className="relative">
+                    <Building2 size={18} className="absolute left-3 top-4 text-slate-400" />
+                    <input 
+                      required 
+                      value={formData.name} 
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                      className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
+                      placeholder="Ej. TalenHuman Corp"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">NIT / Tax ID</label>
+                  <div className="relative">
+                    <Hash size={18} className="absolute left-3 top-4 text-slate-400" />
+                    <input 
+                      required 
+                      value={formData.taxId} 
+                      onChange={(e) => setFormData({ ...formData, taxId: e.target.value })} 
+                      className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
+                      placeholder="Ej. 900.123.456-7"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100/50">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-slate-800 text-sm">Estado de la Empresa</p>
+                      <p className="text-xs text-slate-500 mt-1">Habilitar o restringir el logueo.</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only" 
+                        checked={formData.isActive}
+                        onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                      />
+                      <div 
+                        onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
+                        style={{ 
+                          width: '44px', height: '24px', background: formData.isActive ? '#4f46e5' : '#cbd5e1', 
+                          borderRadius: '999px', position: 'relative', cursor: 'pointer', transition: 'all 0.3s' 
+                        }}
+                      >
+                        <div style={{ 
+                          width: '18px', height: '18px', background: 'white', borderRadius: '50%', 
+                          position: 'absolute', top: '3px', left: formData.isActive ? '23px' : '3px', transition: 'all 0.3s' 
+                        }}></div>
+                      </div>
+                      <span className="ml-3 text-sm font-bold text-indigo-700 uppercase">{formData.isActive ? 'Activa' : 'Inactiva'}</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary">
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-premium btn-premium-primary">
+                  {formData.id ? 'Guardar Cambios' : 'Crear Empresa'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showConfirm && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '420px' }}>
+            <div className="modal-body" style={{ textAlign: 'center', paddingTop: '3rem' }}>
+              <div className="mb-6" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                <Trash2 size={40} />
+              </div>
+              <h2 className="text-2xl font-bold mb-3">¿Confirmar Eliminación?</h2>
+              <p className="text-slate-500 text-sm mb-8 px-4" style={{ lineHeight: '1.6' }}>
+                Estás a punto de eliminar permanentemente a <strong>{currentCompany?.name}</strong> y todos sus datos vinculados. Esta operación es irreversible.
+              </p>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button onClick={() => setShowConfirm(false)} className="btn-premium btn-premium-secondary" style={{ flex: 1 }}>
+                  No, volver
+                </button>
+                <button onClick={handleDelete} className="btn-premium btn-premium-danger" style={{ flex: 1 }}>
+                  Sí, eliminar todo
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toast.show && (
+        <div className="toast-container">
+          <div className={`toast ${toast.type === 'success' ? 'toast-success' : 'toast-error'}`}>
+            {toast.type === 'success' ? <CheckCircle size={20} className="text-emerald-500" /> : <AlertCircle size={20} className="text-red-500" />}
+            {toast.message}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Companies;
