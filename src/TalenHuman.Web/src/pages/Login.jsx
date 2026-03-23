@@ -1,4 +1,3 @@
-```javascript
 import React, { useState } from 'react';
 import { Lock, Mail, Eye, EyeOff, Users, ArrowRight, ShieldAlert } from 'lucide-react';
 import api from '../services/api';
