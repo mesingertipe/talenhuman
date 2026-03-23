@@ -1,14 +1,23 @@
 import { useState, useMemo, useEffect } from 'react';
 
+// Normalize API responses: always returns an array regardless of wrapper shape
+const normalizeData = (d) => {
+  if (Array.isArray(d)) return d;
+  if (d && Array.isArray(d.items)) return d.items;
+  if (d && Array.isArray(d.value)) return d.value;
+  if (d && Array.isArray(d.data)) return d.data;
+  return [];
+};
+
 export const useTableData = (initialData, searchFields = [], defaultItemsPerPage = 10) => {
-  const [data, setData] = useState(initialData);
+  const [data, setData] = useState(normalizeData(initialData));
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(defaultItemsPerPage);
 
   // Update data if the parent passes a new initialData (e.g., after an API fetch)
   useEffect(() => {
-    setData(initialData);
+    setData(normalizeData(initialData));
   }, [initialData]);
 
   const filteredData = useMemo(() => {
