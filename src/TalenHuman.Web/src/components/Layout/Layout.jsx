@@ -18,7 +18,7 @@ const Sidebar = () => {
         <div style={{ background: 'var(--primary)', padding: '0.5rem', borderRadius: '8px' }}>
           <Store size={28} color="white" />
         </div>
-        <span style={{ fontSize: '1.5rem', fontWeight: '700', letterSpacing: '-0.5px' }}>HumanCore</span>
+        <span style={{ fontSize: '1.5rem', fontWeight: '700', letterSpacing: '-0.5px' }}>TalenHuman</span>
       </div>
       
       <nav style={{ flex: 1 }}>

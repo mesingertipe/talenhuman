@@ -1,6 +1,0 @@
-@RestoHR.API_HostAddress = http://localhost:5057
-
-GET {{RestoHR.API_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

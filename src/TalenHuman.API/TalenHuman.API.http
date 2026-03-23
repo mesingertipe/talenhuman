@@ -1,0 +1,6 @@
+@TalenHuman.API_HostAddress = http://localhost:5001
+
+GET {{TalenHuman.API_HostAddress}}/swagger/
+Accept: application/json
+
+###
