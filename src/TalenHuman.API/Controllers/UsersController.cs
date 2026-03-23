@@ -40,13 +40,26 @@ public class UsersController : ControllerBase
                 .IgnoreQueryFilters();
 
             // Filter logic:
-            // 1. If SuperAdmin, filter by selected tenant if one is provided (sidebar context).
+            // 1. If SuperAdmin, filter by selected tenant. 
+            //    We always show users of the selected tenant.
+            //    If the selected tenant is NOT the system tenant, we also show system users (SuperAdmins) but filter others.
             // 2. If regular Admin, ALWAYS filter by their own company (security boundary).
+            var systemTenantId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+
             if (isSuperAdmin)
             {
-                if (selectedTenantId != Guid.Empty && selectedTenantId != Guid.Parse("11111111-1111-1111-1111-111111111111"))
+                // If they are in the System/Master view, show everyone? 
+                // The user says "solo los del seleccionado".
+                // If they select a specific company, show only that company's users + SuperAdmins of the system.
+                // If they are in the System/Master view, show only master-tenant users.
+                // If they select a specific company, show only that company's users + the master administrator.
+                if (selectedTenantId != systemTenantId)
                 {
-                    query = query.Where(u => u.CompanyId == selectedTenantId);
+                    query = query.Where(u => u.CompanyId == selectedTenantId || (u.CompanyId == systemTenantId && u.Email == "admin@talenhuman.com"));
+                }
+                else
+                {
+                    query = query.Where(u => u.CompanyId == systemTenantId);
                 }
             }
             else
