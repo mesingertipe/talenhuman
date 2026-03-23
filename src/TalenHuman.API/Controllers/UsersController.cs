@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using TalenHuman.Domain.Entities;
 using TalenHuman.Infrastructure.Persistence;
+using TalenHuman.Application.Common.Interfaces;
 
 namespace TalenHuman.API.Controllers;
 
@@ -15,11 +16,13 @@ public class UsersController : ControllerBase
 {
     private readonly UserManager<User> _userManager;
     private readonly ApplicationDbContext _context;
+    private readonly ITenantProvider _tenantProvider;
 
-    public UsersController(UserManager<User> userManager, ApplicationDbContext context)
+    public UsersController(UserManager<User> userManager, ApplicationDbContext context, ITenantProvider tenantProvider)
     {
         _userManager = userManager;
         _context = context;
+        _tenantProvider = tenantProvider;
     }
 
     [HttpGet]
@@ -30,13 +33,23 @@ public class UsersController : ControllerBase
         {
             var isSuperAdmin = User.IsInRole("SuperAdmin");
             var userCompanyId = Guid.Parse(User.FindFirst("CompanyId")?.Value ?? Guid.Empty.ToString());
+            var selectedTenantId = _tenantProvider.GetTenantId();
 
             var query = _context.Users
                 .Include(u => u.Company)
                 .IgnoreQueryFilters();
 
-            // If not SuperAdmin, only show users of their own company
-            if (!isSuperAdmin)
+            // Filter logic:
+            // 1. If SuperAdmin, filter by selected tenant if one is provided (sidebar context).
+            // 2. If regular Admin, ALWAYS filter by their own company (security boundary).
+            if (isSuperAdmin)
+            {
+                if (selectedTenantId != Guid.Empty && selectedTenantId != Guid.Parse("11111111-1111-1111-1111-111111111111"))
+                {
+                    query = query.Where(u => u.CompanyId == selectedTenantId);
+                }
+            }
+            else
             {
                 query = query.Where(u => u.CompanyId == userCompanyId);
             }

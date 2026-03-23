@@ -161,9 +161,13 @@ const Users = () => {
           <button 
             onClick={() => {
               setCurrentUser(null);
+              const selectedTenant = localStorage.getItem('tenantId');
+              const defaultTenant = '11111111-1111-1111-1111-111111111111';
               setFormData({ 
                   fullName: '', email: '', password: '', 
-                  companyId: isSuperAdminUser ? '' : (JSON.parse(localStorage.getItem('user'))?.companyId || ''), 
+                  companyId: isSuperAdminUser 
+                    ? (selectedTenant && selectedTenant !== defaultTenant ? selectedTenant : '') 
+                    : (JSON.parse(localStorage.getItem('user'))?.companyId || ''), 
                   roles: ['Admin'], isActive: true, mustChangePassword: true,
                   storeIds: []
               });
