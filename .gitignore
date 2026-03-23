@@ -1,5 +1,8 @@
 # .gitignore for .NET and Node.js
 
+# Temporary publish folder
+tmp_publish/
+
 # .NET
 bin/
 obj/
