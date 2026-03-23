@@ -324,6 +324,7 @@
   to { transform: rotate(360deg); }
 }
 
+.login-footer {
   margin-bottom: 2rem;
   text-align: center;
   font-size: 0.9rem;

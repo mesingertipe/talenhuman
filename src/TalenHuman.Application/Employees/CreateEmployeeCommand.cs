@@ -45,7 +45,7 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
             LastName = request.LastName,
             Email = generatedEmail,
             IdentificationNumber = request.IdentificationNumber,
-            BirthDate = request.BirthDate,
+            BirthDate = request.BirthDate?.ToUniversalTime(),
             StoreId = request.StoreId,
             ProfileId = request.ProfileId,
             CompanyId = companyId,

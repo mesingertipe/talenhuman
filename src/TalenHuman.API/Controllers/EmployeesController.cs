@@ -84,7 +84,7 @@ public class EmployeesController : ControllerBase
         employee.FirstName = dto.FirstName;
         employee.LastName = dto.LastName;
         employee.IdentificationNumber = dto.IdentificationNumber;
-        employee.BirthDate = dto.BirthDate;
+        employee.BirthDate = dto.BirthDate?.ToUniversalTime();
         employee.StoreId = dto.StoreId;
         employee.ProfileId = dto.ProfileId;
         employee.DateOfEntry = dto.DateOfEntry.ToUniversalTime();
