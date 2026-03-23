@@ -9,6 +9,9 @@ public class User : IdentityUser<Guid>, IMultitenant
     public Guid CompanyId { get; set; }
     public Company? Company { get; set; }
     
+    public Guid? EmployeeId { get; set; }
+    public Employee? Employee { get; set; }
+    public bool MustChangePassword { get; set; } = true;
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

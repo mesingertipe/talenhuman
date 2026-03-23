@@ -10,11 +10,21 @@
   --text-muted: #64748b;
   --border: #e2e8f0;
   --sidebar-w: 260px;
+  --sidebar-collapsed-w: 80px;
   --header-h: 70px;
   
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --glass: rgba(255, 255, 255, 0.7);
+}
+
+.dark {
+  --bg-main: #0f172a;
+  --bg-card: #1e293b;
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --border: #334155;
+  --glass: rgba(15, 23, 42, 0.7);
 }
 
 * {
@@ -48,6 +58,16 @@ h1, h2, h3, .brand-logo {
   flex-direction: column;
   position: fixed;
   height: 100vh;
+  transition: width 0.3s ease;
+  z-index: 100;
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed-w);
+}
+
+.sidebar.collapsed span, .sidebar.collapsed .sidebar-footer span {
+  display: none;
 }
 
 .main-content {
@@ -55,6 +75,11 @@ h1, h2, h3, .brand-logo {
   margin-left: var(--sidebar-w);
   display: flex;
   flex-direction: column;
+  transition: margin-left 0.3s ease;
+}
+
+.sidebar.collapsed + .main-content {
+  margin-left: var(--sidebar-collapsed-w);
 }
 
 .header {

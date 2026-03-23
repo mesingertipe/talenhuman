@@ -23,7 +23,10 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
+        services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
+
         services.AddScoped<ITenantProvider, TenantProvider>();
+        services.AddScoped<IIdentityService, Identity.IdentityService>();
         services.AddHttpContextAccessor();
 
         return services;

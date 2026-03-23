@@ -37,6 +37,19 @@ public class Store : BaseEntity, IMultitenant
 
     // Relationships
     public ICollection<Employee> Employees { get; set; } = new List<Employee>();
+    public ICollection<SupervisorStore> SupervisorStores { get; set; } = new List<SupervisorStore>();
+}
+
+public class SupervisorStore : IMultitenant
+{
+    public Guid UserId { get; set; }
+    public User User { get; set; } = null!;
+    
+    public Guid StoreId { get; set; }
+    public Store Store { get; set; } = null!;
+    
+    public Guid CompanyId { get; set; }
+    public Company Company { get; set; } = null!;
 }
 
 public class Profile : BaseEntity, IMultitenant

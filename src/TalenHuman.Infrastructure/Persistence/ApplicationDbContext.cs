@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace TalenHuman.Infrastructure.Persistence;
 
-public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>
+public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplicationDbContext
 {
     private readonly ITenantProvider _tenantProvider;
 
@@ -42,6 +42,27 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>
         builder.Entity<Shift>().HasQueryFilter(s => s.CompanyId == tenantId);
         builder.Entity<Attendance>().HasQueryFilter(a => a.CompanyId == tenantId);
         builder.Entity<Absence>().HasQueryFilter(a => a.CompanyId == tenantId);
+        builder.Entity<SupervisorStore>().HasQueryFilter(s => s.CompanyId == tenantId);
+
+        // Many-to-Many: Supervisor -> Stores
+        builder.Entity<SupervisorStore>()
+            .HasKey(ss => new { ss.UserId, ss.StoreId });
+
+        builder.Entity<SupervisorStore>()
+            .HasOne(ss => ss.User)
+            .WithMany()
+            .HasForeignKey(ss => ss.UserId);
+
+        builder.Entity<SupervisorStore>()
+            .HasOne(ss => ss.Store)
+            .WithMany(s => s.SupervisorStores)
+            .HasForeignKey(ss => ss.StoreId);
+
+        // Relationships: User -> Employee
+        builder.Entity<User>()
+            .HasOne(u => u.Employee)
+            .WithOne(e => e.User)
+            .HasForeignKey<Employee>(e => e.UserId);
 
         // Configure Relationships
         builder.Entity<Store>()
