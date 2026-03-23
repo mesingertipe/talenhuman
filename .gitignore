@@ -6,6 +6,7 @@ obj/
 *.user
 *.userosscache
 *.sln.docstates
+appsettings.Development.json
 
 # Node.js
 node_modules/

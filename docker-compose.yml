@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: src/TalenHuman.API/Dockerfile
     environment:
-      - ConnectionStrings__DefaultConnection=Host=172.17.0.1;Port=5432;Database=TalenHuman;Username=postgres;Password=postgres
+      - ConnectionStrings__DefaultConnection=Host=${DB_HOST:-172.17.0.1};Port=${DB_PORT:-5432};Database=TalenHuman;Username=postgres;Password=${DB_PASSWORD}
     ports:
       - "5001:8080"
     volumes:
