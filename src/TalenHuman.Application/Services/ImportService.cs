@@ -98,18 +98,19 @@ public class ImportService : IImportService
             ws.Column(2).Width = 40;
             ws.Column(3).Width = 30;
 
-            // Reference sheet (hidden)
+            // Reference sheet (visible for cross-sheet validation compatibility)
             var wsBrands = workbook.Worksheets.Add("Marcas_Referencia");
-            wsBrands.Visibility = XLWorksheetVisibility.Hidden;
-            var brands = await _context.Brands.Where(b => b.CompanyId == companyId).ToListAsync();
             wsBrands.Cell(1, 1).Value = "Nombre de la Marca";
+            wsBrands.Cell(1, 1).Style.Font.Bold = true;
+            var brands = await _context.Brands.Where(b => b.CompanyId == companyId).ToListAsync();
             for (int i = 0; i < brands.Count; i++) wsBrands.Cell(i + 2, 1).Value = brands[i].Name;
+            wsBrands.Column(1).Width = 35;
 
-            // Dropdown for Marca Comercial (col C)
+            // Dropdown for Marca Comercial (col C) using formula string
             if (brands.Count > 0)
             {
                 var brandValidation = ws.Range("C2:C500").CreateDataValidation();
-                brandValidation.List(wsBrands.Range($"A2:A{brands.Count + 1}"), true);
+                brandValidation.List($"Marcas_Referencia!$A$2:$A${brands.Count + 1}", true);
             }
 
             var wsHelp = workbook.Worksheets.Add("Instrucciones");
@@ -151,36 +152,37 @@ public class ImportService : IImportService
 
             ws.Columns().AdjustToContents();
 
-            // --- Reference sheets ---
+            // --- Reference sheets (visible so Excel can resolve cross-sheet validation) ---
             var wsStores = workbook.Worksheets.Add("Tiendas_Referencia");
-            wsStores.Visibility = XLWorksheetVisibility.Hidden;
-            var stores = await _context.Stores.Where(s => s.CompanyId == companyId).ToListAsync();
             wsStores.Cell(1, 1).Value = "Nombre de la Tienda";
+            wsStores.Cell(1, 1).Style.Font.Bold = true;
+            var stores = await _context.Stores.Where(s => s.CompanyId == companyId).ToListAsync();
             for (int i = 0; i < stores.Count; i++) wsStores.Cell(i + 2, 1).Value = stores[i].Name;
+            wsStores.Column(1).Width = 35;
 
             var wsProfiles = workbook.Worksheets.Add("Cargos_Referencia");
-            wsProfiles.Visibility = XLWorksheetVisibility.Hidden;
-            var profiles = await _context.Profiles.Where(p => p.CompanyId == companyId).ToListAsync();
             wsProfiles.Cell(1, 1).Value = "Nombre del Cargo";
+            wsProfiles.Cell(1, 1).Style.Font.Bold = true;
+            var profiles = await _context.Profiles.Where(p => p.CompanyId == companyId).ToListAsync();
             for (int i = 0; i < profiles.Count; i++) wsProfiles.Cell(i + 2, 1).Value = profiles[i].Name;
+            wsProfiles.Column(1).Width = 35;
 
-            // --- Excel data-validation dropdowns (rows 2..500) ---
+            // --- Excel data-validation dropdowns using formula strings (cross-sheet compatible) ---
             if (stores.Count > 0)
             {
-                var storeListRange = $"Tiendas_Referencia!$A$2:$A${stores.Count + 1}";
                 var storeValidation = ws.Range("D2:D500").CreateDataValidation();
-                storeValidation.List(wsStores.Range($"A2:A{stores.Count + 1}"), true);
+                storeValidation.List($"Tiendas_Referencia!$A$2:$A${stores.Count + 1}", true);
             }
 
             if (profiles.Count > 0)
             {
                 var profileValidation = ws.Range("E2:E500").CreateDataValidation();
-                profileValidation.List(wsProfiles.Range($"A2:A{profiles.Count + 1}"), true);
+                profileValidation.List($"Cargos_Referencia!$A$2:$A${profiles.Count + 1}", true);
             }
 
-            // Active dropdown
+            // Active dropdown (inline list — no sheet needed)
             var activeValidation = ws.Range("G2:G500").CreateDataValidation();
-            activeValidation.List($"\"SI,NO\"", false);
+            activeValidation.List($"\"SI,NO\"", true);
 
             var wsHelp = workbook.Worksheets.Add("Instrucciones");
             wsHelp.Cell(1, 1).Value = "Instrucciones de diligenciamiento";
