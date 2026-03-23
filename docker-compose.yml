@@ -6,7 +6,7 @@ services:
     environment:
       - ConnectionStrings__DefaultConnection=Host=${DB_HOST:-172.17.0.1};Port=${DB_PORT:-5432};Database=TalenHuman;Username=postgres;Password=${DB_PASSWORD}
     ports:
-      - "5001:8080"
+      - "8080:8080"
     volumes:
       - .:/app
 
