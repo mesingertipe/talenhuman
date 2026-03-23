@@ -11,8 +11,8 @@ RUN dotnet restore src/TalenHuman.API/TalenHuman.API.csproj
 
 # Copy everything else and build
 COPY . .
-WORKDIR /app/src/TalenHuman.API
-# Cache bust: 3
+WORKDIR /app
+# Cache bust: 4
 RUN dotnet publish "src/TalenHuman.API/TalenHuman.API.csproj" -c Release -o /out
 
 # Build runtime image
