@@ -131,11 +131,12 @@ public class ImportService : IImportService
             ws.Cell(1, 3).Value = "Cédula";
             ws.Cell(1, 4).Value = "Sede Asignada";
             ws.Cell(1, 5).Value = "Perfil de Cargo";
-            ws.Cell(1, 6).Value = "Fecha de Ingreso";
-            ws.Cell(1, 7).Value = "Activo (SI/NO)";
+            ws.Cell(1, 6).Value = "Fecha de Nacimiento";
+            ws.Cell(1, 7).Value = "Fecha de Ingreso";
+            ws.Cell(1, 8).Value = "Activo (SI/NO)";
 
             // Style headers
-            var headerRange = ws.Range("A1:G1");
+            var headerRange = ws.Range("A1:H1");
             headerRange.Style.Font.Bold = true;
             headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#4f46e5");
             headerRange.Style.Font.FontColor = XLColor.White;
@@ -144,11 +145,13 @@ public class ImportService : IImportService
             ws.Cell(2, 1).Value = "Juan";
             ws.Cell(2, 2).Value = "Pérez Gómez";
             ws.Cell(2, 3).Value = "1016914200";
-            ws.Cell(2, 6).Value = DateTime.Today.ToString("yyyy-MM-dd");
-            ws.Cell(2, 7).Value = "SI";
+            ws.Cell(2, 6).Value = "1990-05-15";
+            ws.Cell(2, 7).Value = DateTime.Today.ToString("yyyy-MM-dd");
+            ws.Cell(2, 8).Value = "SI";
 
-            // Format date column
+            // Format date columns
             ws.Column(6).Style.NumberFormat.Format = "yyyy-MM-dd";
+            ws.Column(7).Style.NumberFormat.Format = "yyyy-MM-dd";
 
             ws.Columns().AdjustToContents();
 
@@ -181,7 +184,7 @@ public class ImportService : IImportService
             }
 
             // Active dropdown (inline list — no sheet needed)
-            var activeValidation = ws.Range("G2:G500").CreateDataValidation();
+            var activeValidation = ws.Range("H2:H500").CreateDataValidation();
             activeValidation.List($"\"SI,NO\"", true);
 
             var wsHelp = workbook.Worksheets.Add("Instrucciones");
@@ -189,9 +192,10 @@ public class ImportService : IImportService
             wsHelp.Cell(1, 1).Style.Font.Bold = true;
             wsHelp.Cell(2, 1).Value = "- Cédula: número único de identificación. Será el usuario y la contraseña inicial.";
             wsHelp.Cell(3, 1).Value = "- Sede Asignada: seleccione del listón desplegable (solo opciones válidas).";
-            wsHelp.Cell(4, 1).Value = "- Perfil de Cargo: seleccione del listón desplegable.";
-            wsHelp.Cell(5, 1).Value = "- Fecha de Ingreso: formato YYYY-MM-DD (Ej: 2026-03-23).";
-            wsHelp.Cell(6, 1).Value = "- Activo: SI o NO.";
+            ws.Cell(4, 1).Value = "- Perfil de Cargo: seleccione del listón desplegable.";
+            ws.Cell(5, 1).Value = "- Fecha de Nacimiento: formato YYYY-MM-DD (Requerido para recuperación de clave).";
+            ws.Cell(6, 1).Value = "- Fecha de Ingreso: formato YYYY-MM-DD (Ej: 2026-03-23).";
+            ws.Cell(7, 1).Value = "- Activo: SI o NO.";
             wsHelp.Columns().AdjustToContents();
         }
 
@@ -352,12 +356,14 @@ public class ImportService : IImportService
                 {
                     var sedeNombre = row.Data["Sede Asignada"];
                     var cargoNombre = row.Data["Perfil de Cargo"];
+                    var birthDateStr = row.Data.GetValueOrDefault("Fecha de Nacimiento");
                     var activeStr = row.Data.GetValueOrDefault("Activo (SI/NO)", "SI");
                     var dateStr = row.Data.GetValueOrDefault("Fecha de Ingreso");
 
                     var store = await _context.Stores.FirstAsync(s => s.Name == sedeNombre);
                     var profile = await _context.Profiles.FirstAsync(p => p.Name == cargoNombre);
 
+                    DateTime? birthDate = DateTime.TryParse(birthDateStr, out var parsedBirth) ? parsedBirth : null;
                     DateTime dateOfEntry = DateTime.TryParse(dateStr, out var parsedDate) ? parsedDate : DateTime.UtcNow;
 
                     var command = new CreateEmployeeCommand
@@ -365,6 +371,7 @@ public class ImportService : IImportService
                         FirstName = row.Data["Nombre"],
                         LastName = row.Data["Apellidos"],
                         IdentificationNumber = row.Data["Cédula"],
+                        BirthDate = birthDate,
                         Role = "Empleado",
                         StoreId = store.Id,
                         ProfileId = profile.Id,
@@ -509,6 +516,7 @@ public class ImportService : IImportService
                 var cedula = row["Cédula"]?.ToString()?.Trim() ?? "";
                 var sedeNombre = row["Sede Asignada"]?.ToString()?.Trim();
                 var cargoNombre = row["Perfil de Cargo"]?.ToString()?.Trim();
+                var birthDateStr = row["Fecha de Nacimiento"]?.ToString()?.Trim();
                 var activeStr = row["Activo (SI/NO)"]?.ToString()?.Trim() ?? "SI";
                 var dateStr = row["Fecha de Ingreso"]?.ToString()?.Trim();
 
@@ -523,6 +531,7 @@ public class ImportService : IImportService
                     continue;
                 }
 
+                DateTime? birthDate = DateTime.TryParse(birthDateStr, out var parsedBirth) ? parsedBirth : null;
                 DateTime dateOfEntry = DateTime.TryParse(dateStr, out var parsedDate) ? parsedDate : DateTime.UtcNow;
 
                 var command = new CreateEmployeeCommand
@@ -530,6 +539,7 @@ public class ImportService : IImportService
                     FirstName = row["Nombre"]?.ToString()?.Trim() ?? "",
                     LastName = row["Apellidos"]?.ToString()?.Trim() ?? "",
                     IdentificationNumber = cedula,
+                    BirthDate = birthDate,
                     Role = "Empleado",
                     StoreId = store.Id,
                     ProfileId = profile.Id,

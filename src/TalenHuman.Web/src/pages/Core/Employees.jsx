@@ -122,7 +122,8 @@ const Employees = () => {
                 setCurrentEmployee(null); 
                 setFormData({ 
                     firstName: '', lastName: '', 
-                    identificationNumber: '', storeId: stores[0]?.id || '', 
+                    identificationNumber: '', birthDate: '',
+                    storeId: stores[0]?.id || '', 
                     profileId: profiles[0]?.id || '',
                     dateOfEntry: new Date().toISOString().split('T')[0],
                     isActive: true

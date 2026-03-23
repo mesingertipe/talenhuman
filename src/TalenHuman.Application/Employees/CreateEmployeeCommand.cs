@@ -11,6 +11,7 @@ public record CreateEmployeeCommand : IRequest<Guid>
     public string IdentificationNumber { get; init; } = string.Empty;
     public Guid StoreId { get; init; }
     public Guid ProfileId { get; init; }
+    public DateTime? BirthDate { get; init; }
     public DateTime DateOfEntry { get; init; }
     public bool IsActive { get; init; } = true;
     public string Role { get; init; } = "Empleado";
@@ -44,6 +45,7 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
             LastName = request.LastName,
             Email = generatedEmail,
             IdentificationNumber = request.IdentificationNumber,
+            BirthDate = request.BirthDate,
             StoreId = request.StoreId,
             ProfileId = request.ProfileId,
             CompanyId = companyId,

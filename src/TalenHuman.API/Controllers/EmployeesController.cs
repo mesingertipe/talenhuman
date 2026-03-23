@@ -54,6 +54,7 @@ public class EmployeesController : ControllerBase
                 emp.LastName,
                 emp.Email,
                 emp.IdentificationNumber,
+                emp.BirthDate,
                 emp.StoreId,
                 emp.ProfileId,
                 emp.DateOfEntry,
@@ -83,6 +84,7 @@ public class EmployeesController : ControllerBase
         employee.FirstName = dto.FirstName;
         employee.LastName = dto.LastName;
         employee.IdentificationNumber = dto.IdentificationNumber;
+        employee.BirthDate = dto.BirthDate;
         employee.StoreId = dto.StoreId;
         employee.ProfileId = dto.ProfileId;
         employee.DateOfEntry = dto.DateOfEntry.ToUniversalTime();
@@ -141,6 +143,7 @@ public class UpdateEmployeeDto
     public string IdentificationNumber { get; set; } = string.Empty;
     public Guid StoreId { get; set; }
     public Guid ProfileId { get; set; }
+    public DateTime? BirthDate { get; set; }
     public DateTime DateOfEntry { get; set; }
     public bool IsActive { get; set; }
     public string Role { get; set; } = "Empleado";
