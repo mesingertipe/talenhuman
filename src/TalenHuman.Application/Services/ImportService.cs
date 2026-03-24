@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Data;
 using TalenHuman.Application.Common.Interfaces;
 using TalenHuman.Application.Common.Models;
+using TalenHuman.Domain.Common;
 using TalenHuman.Domain.Entities;
 using MediatR;
 using TalenHuman.Application.Employees;
@@ -356,15 +357,19 @@ public class ImportService : IImportService
                 {
                     var sedeNombre = row.Data["Sede Asignada"];
                     var cargoNombre = row.Data["Perfil de Cargo"];
+                    var jornadaNombre = row.Data.GetValueOrDefault("Jornada");
                     var birthDateStr = row.Data.GetValueOrDefault("Fecha de Nacimiento");
                     var activeStr = row.Data.GetValueOrDefault("Activo (SI/NO)", "SI");
                     var dateStr = row.Data.GetValueOrDefault("Fecha de Ingreso");
 
                     var store = await _context.Stores.FirstAsync(s => s.Name == sedeNombre);
                     var profile = await _context.Profiles.FirstAsync(p => p.Name == cargoNombre);
+                    var jornada = !string.IsNullOrEmpty(jornadaNombre) 
+                        ? await _context.Jornadas.FirstOrDefaultAsync(j => j.Nombre == jornadaNombre)
+                        : null;
 
                     DateTime? birthDate = DateTime.TryParse(birthDateStr, out var parsedBirth) ? parsedBirth : null;
-                    DateTime dateOfEntry = DateTime.TryParse(dateStr, out var parsedDate) ? parsedDate : DateTime.UtcNow;
+                    DateTime dateOfEntry = DateTime.TryParse(dateStr, out var parsedDate) ? parsedDate : ColombiaTime.Now;
 
                     var command = new CreateEmployeeCommand
                     {
@@ -375,6 +380,7 @@ public class ImportService : IImportService
                         Role = "Empleado",
                         StoreId = store.Id,
                         ProfileId = profile.Id,
+                        JornadaId = jornada?.Id,
                         DateOfEntry = dateOfEntry,
                         IsActive = !activeStr.Equals("NO", StringComparison.OrdinalIgnoreCase)
                     };
@@ -516,6 +522,7 @@ public class ImportService : IImportService
                 var cedula = row["Cédula"]?.ToString()?.Trim() ?? "";
                 var sedeNombre = row["Sede Asignada"]?.ToString()?.Trim();
                 var cargoNombre = row["Perfil de Cargo"]?.ToString()?.Trim();
+                var jornadaNombre = row["Jornada"]?.ToString()?.Trim(); // Added this line
                 var birthDateStr = row["Fecha de Nacimiento"]?.ToString()?.Trim();
                 var activeStr = row["Activo (SI/NO)"]?.ToString()?.Trim() ?? "SI";
                 var dateStr = row["Fecha de Ingreso"]?.ToString()?.Trim();
@@ -524,6 +531,9 @@ public class ImportService : IImportService
 
                 var store = await _context.Stores.FirstOrDefaultAsync(s => s.Name == sedeNombre);
                 var profile = await _context.Profiles.FirstOrDefaultAsync(p => p.Name == cargoNombre);
+                var jornada = !string.IsNullOrEmpty(jornadaNombre) 
+                    ? await _context.Jornadas.FirstOrDefaultAsync(j => j.Nombre == jornadaNombre)
+                    : null;
 
                 if (store == null || profile == null)
                 {
@@ -543,6 +553,7 @@ public class ImportService : IImportService
                     Role = "Empleado",
                     StoreId = store.Id,
                     ProfileId = profile.Id,
+                    JornadaId = jornada?.Id, // Added this line
                     DateOfEntry = dateOfEntry,
                     IsActive = !activeStr.Equals("NO", StringComparison.OrdinalIgnoreCase)
                 };

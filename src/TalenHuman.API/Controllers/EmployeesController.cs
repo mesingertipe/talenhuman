@@ -1,5 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using TalenHuman.Domain.Common;
+using TalenHuman.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +33,7 @@ public class EmployeesController : ControllerBase
         var employees = await _context.Employees
             .Include(e => e.Store)
             .Include(e => e.Profile)
+            .Include(e => e.Jornada)
             .ToListAsync();
 
         var result = new List<object>();
@@ -57,6 +60,8 @@ public class EmployeesController : ControllerBase
                 emp.BirthDate,
                 emp.StoreId,
                 emp.ProfileId,
+                emp.JornadaId, // Added JornadaId
+                JornadaNombre = emp.Jornada != null ? emp.Jornada.Nombre : "No asignada", // Added JornadaNombre
                 emp.DateOfEntry,
                 emp.IsActive,
                 StoreName = emp.Store?.Name,
@@ -81,13 +86,24 @@ public class EmployeesController : ControllerBase
         var employee = await _context.Employees.FindAsync(id);
         if (employee == null) return NotFound();
 
+        // Check for existing identification number (Cédula) - excluding current employee
+        var exists = await _context.Employees
+            .IgnoreQueryFilters()
+            .AnyAsync(x => x.Id != id && x.IdentificationNumber == dto.IdentificationNumber);
+            
+        if (exists)
+        {
+            return BadRequest(new { message = $"El número de identificación {dto.IdentificationNumber} ya se encuentra registrado en el sistema." });
+        }
+
         employee.FirstName = dto.FirstName;
         employee.LastName = dto.LastName;
         employee.IdentificationNumber = dto.IdentificationNumber;
-        employee.BirthDate = dto.BirthDate?.ToUniversalTime();
+        employee.BirthDate = dto.BirthDate;
         employee.StoreId = dto.StoreId;
         employee.ProfileId = dto.ProfileId;
-        employee.DateOfEntry = dto.DateOfEntry.ToUniversalTime();
+        employee.JornadaId = dto.JornadaId;
+        employee.DateOfEntry = dto.DateOfEntry;
         employee.IsActive = dto.IsActive;
 
         _context.Entry(employee).State = EntityState.Modified;
@@ -134,6 +150,31 @@ public class EmployeesController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpGet("by-cedula/{cedula}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<object>> GetByCedula(string cedula)
+    {
+        var employee = await _context.Employees
+            .Include(e => e.Store)
+            .Include(e => e.Profile)
+            .FirstOrDefaultAsync(e => e.IdentificationNumber == cedula && e.IsActive);
+
+        if (employee == null)
+        {
+            return NotFound(new { message = "Empleado no encontrado o inactivo" });
+        }
+
+        return Ok(new
+        {
+            employee.Id,
+            employee.FirstName,
+            employee.LastName,
+            employee.IdentificationNumber,
+            StoreName = employee.Store?.Name,
+            ProfileName = employee.Profile?.Name
+        });
+    }
 }
 
 public class UpdateEmployeeDto
@@ -143,6 +184,7 @@ public class UpdateEmployeeDto
     public string IdentificationNumber { get; set; } = string.Empty;
     public Guid StoreId { get; set; }
     public Guid ProfileId { get; set; }
+    public Guid? JornadaId { get; set; } // Added JornadaId
     public DateTime? BirthDate { get; set; }
     public DateTime DateOfEntry { get; set; }
     public bool IsActive { get; set; }

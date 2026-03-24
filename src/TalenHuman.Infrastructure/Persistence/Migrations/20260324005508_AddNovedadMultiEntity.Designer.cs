@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TalenHuman.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace TalenHuman.Infrastructure.Migrations
+namespace TalenHuman.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260324005508_AddNovedadMultiEntity")]
+    partial class AddNovedadMultiEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -405,12 +408,6 @@ namespace TalenHuman.Infrastructure.Migrations
                     b.Property<DateTime>("FechaInicio")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<int>("IdSolicitud")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("IdSolicitud"));
-
                     b.Property<Guid>("NovedadTipoId")
                         .HasColumnType("uuid");
 
@@ -599,12 +596,6 @@ namespace TalenHuman.Infrastructure.Migrations
 
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("timestamp without time zone");
-
-                    b.Property<bool>("IsDescanso")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsFuera")
-                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("timestamp without time zone");

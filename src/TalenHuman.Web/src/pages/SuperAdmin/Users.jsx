@@ -174,7 +174,7 @@ const Users = () => {
             placeholder="Buscar usuarios..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2.5 m-0 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 bg-white shadow-sm font-medium text-sm transition-all"
+            className="input-premium"
             style={{ margin: 0 }}
           />
         </div>
@@ -184,7 +184,7 @@ const Users = () => {
             <button 
               onClick={handleSyncEmployees}
               disabled={syncLoading}
-              className="px-4 py-2.5 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 font-bold text-sm hover:bg-indigo-100 transition-colors flex items-center gap-2"
+              className="px-4 py-2.5 rounded-xl border border-indigo-200 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 font-bold text-sm hover:bg-indigo-100 transition-colors flex items-center gap-2"
             >
               {syncLoading ? <div className="loader loader-indigo"></div> : <CheckCircle size={18} />} Sincronizar Empleados
             </button>
@@ -211,97 +211,100 @@ const Users = () => {
         </div>
       </div>
 
-      <div className="card flex flex-col" style={{ padding: 0, overflow: 'hidden', minHeight: '60vh' }}>
+      <div className="card flex flex-col dark:bg-slate-900" style={{ padding: 0, overflow: 'hidden', minHeight: '60vh' }}>
         {loading ? (
           <div style={{ padding: '6rem', textAlign: 'center' }}>
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p className="text-slate-500 font-medium">Cargando base de usuarios...</p>
+            <p className="text-slate-500 font-medium font-bold">Cargando base de usuarios...</p>
           </div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
+              <tr style={{ textAlign: 'left', background: 'var(--bg-card)', borderBottom: '1px solid var(--border)' }} className="bg-slate-50 dark:bg-slate-800/80">
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Usuario</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Empresa</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Roles</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Empresa / Sede</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Roles de Acceso</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Estado</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em', textAlign: 'right' }}>Gestión</th>
               </tr>
             </thead>
             <tbody>
               {currentUsers.map((u) => (
-                <tr key={u.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-slate-50 transition-colors">
+                <tr key={u.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-slate-50 dark:hover:bg-slate-800/10 transition-colors">
                   <td style={{ padding: '1.25rem 1.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div style={{ width: '40px', height: '40px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <UserIcon size={20} className="text-slate-400" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 border border-slate-200 dark:border-slate-600 flex items-center justify-center shadow-sm">
+                        <UserIcon size={20} className="text-slate-500 dark:text-slate-400" />
                       </div>
                       <div>
-                        <div className="font-bold text-slate-800">{u.fullName}</div>
-                        <div className="text-xs text-slate-500 font-medium">{u.email}</div>
+                        <div className="font-bold text-slate-800 dark:text-white leading-tight">{u.fullName}</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">{u.email}</div>
                       </div>
                     </div>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
-                    <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2 text-slate-600 font-bold text-sm">
-                            <Building2 size={14} className="text-slate-400" />
+                    <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-bold text-sm leading-none">
+                            <Building2 size={14} className="text-indigo-500 opacity-70" />
                             {u.companyName}
                         </div>
                         {u.storeNames?.length > 0 && (
-                            <div className="flex items-center gap-2 text-indigo-600 font-medium text-[11px]">
-                                <MapPin size={12} />
+                            <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] uppercase tracking-wider bg-indigo-50 dark:bg-indigo-900/20 px-2 py-0.5 rounded-md w-fit border border-indigo-100 dark:border-indigo-800/50">
+                                <MapPin size={10} />
                                 {u.storeNames.join(', ')}
                             </div>
                         )}
                     </div>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1.5">
                       {u.roles?.map(r => (
-                        <span key={r} style={{ padding: '0.2rem 0.5rem', background: r === 'SuperAdmin' ? '#eef2ff' : '#f8fafc', color: r === 'SuperAdmin' ? '#4f46e5' : '#64748b', borderRadius: '6px', fontSize: '0.65rem', fontWeight: '800', border: '1px solid currentColor', borderOpacity: 0.2, textTransform: 'uppercase' }}>
+                        <div key={r} className={`flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest ${
+                            r === 'SuperAdmin' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400'
+                        }`}>
+                          <div className={`w-1.5 h-1.5 rounded-full ${r === 'SuperAdmin' ? 'bg-indigo-500' : 'bg-slate-400'}`}></div>
                           {r}
-                        </span>
+                        </div>
                       ))}
                     </div>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
-                    <span style={{ 
-                        padding: '0.25rem 0.6rem', 
-                        background: u.isActive ? '#ecfdf5' : '#fff1f2', 
-                        color: u.isActive ? '#059669' : '#e11d48', 
-                        borderRadius: '999px', fontSize: '0.7rem', fontWeight: '700' 
-                    }}>
+                    <div className={`flex items-center gap-2 text-[11px] font-black uppercase tracking-widest ${
+                        u.isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'
+                    }`}>
+                      <div className={`w-1.5 h-1.5 rounded-full ${u.isActive ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'}`}></div>
                       {u.isActive ? 'Activo' : 'Inactivo'}
-                    </span>
+                    </div>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
-                    <button 
-                      onClick={() => {
-                        setCurrentUser(u);
-                        setFormData({ 
-                            fullName: u.fullName, email: u.email, 
-                            password: '', companyId: u.companyId, 
-                            roles: u.roles, isActive: u.isActive,
-                            mustChangePassword: u.mustChangePassword,
-                            storeIds: u.storeIds || []
-                        });
-                        setShowModal(true);
-                      }}
-                      style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', padding: '0.5rem' }}
-                      className="hover:scale-110 transition-transform"
-                    >
-                      <Edit size={18} />
-                    </button>
-                    {!u.roles?.includes('SuperAdmin') && (
-                        <button 
-                            onClick={() => { setCurrentUser(u); setShowConfirm(true); }}
-                            style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.5rem' }}
-                            className="hover:scale-110 transition-transform"
-                        >
-                            <Trash2 size={18} />
-                        </button>
-                    )}
+                      <button 
+                        onClick={() => {
+                          setCurrentUser(u);
+                          setFormData({ 
+                              fullName: u.fullName, email: u.email, 
+                              password: '', companyId: u.companyId, 
+                              roles: u.roles, isActive: u.isActive,
+                              mustChangePassword: u.mustChangePassword,
+                              storeIds: u.storeIds || []
+                          });
+                          setShowModal(true);
+                        }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '1rem', color: '#6366f1' }}
+                        className="hover:scale-110 transition-transform dark:text-indigo-400"
+                        title="Editar Usuario"
+                      >
+                        <Edit size={18} />
+                      </button>
+                      {!u.roles?.includes('SuperAdmin') && (
+                          <button 
+                              onClick={() => { setCurrentUser(u); setShowConfirm(true); }}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
+                              className="hover:scale-110 transition-transform dark:text-red-400"
+                              title="Eliminar Usuario"
+                          >
+                              <Trash2 size={18} />
+                          </button>
+                      )}
                   </td>
                 </tr>
               ))}
@@ -309,8 +312,8 @@ const Users = () => {
                 <tr>
                   <td colSpan="5" style={{ padding: '4rem', textAlign: 'center' }}>
                     <div className="flex flex-col items-center gap-2 opacity-40">
-                      <UserIcon size={48} />
-                      <p className="font-medium">No se encontraron usuarios.</p>
+                      <UserIcon size={48} className="text-slate-400" />
+                      <p className="font-medium text-slate-500">No se encontraron usuarios.</p>
                     </div>
                   </td>
                 </tr>
@@ -332,54 +335,54 @@ const Users = () => {
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '600px' }}>
+          <div className="modal-content shadow-2xl" style={{ maxWidth: '600px', borderRadius: '24px' }}>
             <div className="modal-header">
-              <h2 className="text-xl font-bold flex items-center gap-2" style={{ margin: 0 }}>
-                {currentUser ? <Edit size={24} className="text-indigo-500" /> : <Plus size={24} className="text-indigo-500" />}
+              <h2 className="text-xl font-bold flex items-center gap-2 dark:text-white" style={{ margin: 0 }}>
+                {currentUser ? <Edit size={22} className="text-indigo-500" /> : <Plus size={22} className="text-indigo-500" />}
                 {currentUser ? 'Editar Usuario' : 'Nuevo Usuario Administrativo'}
               </h2>
               <button 
                 onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem' }}
+                className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors bg-transparent border-none cursor-pointer p-2 rounded-full"
               >
                 <X size={22} />
               </button>
             </div>
             
             <form onSubmit={handleSave}>
-              <div className="modal-body space-y-6">
+              <div className="modal-body space-y-6 p-8">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre Completo</label>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Nombre Completo</label>
                     <div className="relative">
                       <UserIcon size={18} className="absolute left-3 top-3.5 text-slate-400" />
-                      <input required value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" />
+                      <input required value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} className="input-premium pl-10" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Correo Electrónico</label>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Correo Electrónico</label>
                     <div className="relative">
                       <Mail size={18} className="absolute left-3 top-3.5 text-slate-400" />
                       <input 
                         required 
                         disabled={!!currentUser}
                         type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
-                        className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium disabled:opacity-50" 
+                        className="input-premium pl-10 disabled:opacity-50" 
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{currentUser ? 'Nueva Contraseña (Opcional)' : 'Contraseña'}</label>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">{currentUser ? 'Nueva Contraseña (Opcional)' : 'Contraseña'}</label>
                     <div className="relative">
                       <Lock size={18} className="absolute left-3 top-3.5 text-slate-400" />
                       <input 
                         required={!currentUser}
                         type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} 
-                        className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
+                        className="input-premium pl-10" 
                       />
                     </div>
                   </div>
+
                   {isSuperAdminUser && (
                     <div className="col-span-2">
                         <SearchableSelect
@@ -394,7 +397,6 @@ const Users = () => {
                     </div>
                   )}
 
-                  {/* Store Selector - Only for Gerente or Supervisor */}
                   {(formData.roles.includes('Gerente') || formData.roles.includes('Supervisor')) && (
                     <div className="col-span-2 animate-in slide-in-from-top-2 duration-300">
                       {formData.roles.includes('Supervisor') ? (
@@ -422,24 +424,18 @@ const Users = () => {
                 </div>
 
                 <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Roles y Permisos</label>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Roles y Permisos</label>
                     <div className="flex flex-wrap gap-2">
                         {filteredRoles.map(role => (
                             <button
                                 key={role}
                                 type="button"
                                 onClick={() => toggleRole(role)}
-                                style={{ 
-                                    padding: '0.5rem 1rem', 
-                                    borderRadius: '10px', 
-                                    fontSize: '0.8rem', 
-                                    fontWeight: '700',
-                                    border: '1px solid',
-                                    transition: 'all 0.2s',
-                                    background: formData.roles.includes(role) ? '#4f46e5' : 'white',
-                                    color: formData.roles.includes(role) ? 'white' : '#64748b',
-                                    borderColor: formData.roles.includes(role) ? '#4f46e5' : '#e2e8f0'
-                                }}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                                    formData.roles.includes(role) 
+                                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-md' 
+                                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-indigo-300'
+                                }`}
                             >
                                 {role}
                             </button>
@@ -448,36 +444,26 @@ const Users = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
                         <div>
-                            <p className="font-bold text-slate-800 text-sm">Estado de la cuenta</p>
-                            <p className="text-xs text-slate-500">Permitir o denegar el acceso</p>
+                            <p className="font-bold text-slate-800 dark:text-white text-sm">Estado de la cuenta</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">Permitir o denegar el acceso</p>
                         </div>
-                        <button 
-                            type="button"
+                        <div 
                             onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
-                            className="flex items-center gap-2 text-indigo-600 font-bold"
-                            style={{ border: 'none', background: 'none', cursor: 'pointer' }}
-                        >
-                            {formData.isActive ? <ToggleRight size={32} /> : <ToggleLeft size={32} className="text-slate-300" />}
-                            <span className="text-[10px] uppercase font-bold">{formData.isActive ? 'Activo' : 'Inactivo'}</span>
-                        </button>
+                            className={`premium-switch ${formData.isActive ? 'active' : ''}`}
+                        />
                     </div>
 
-                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
                         <div>
-                            <p className="font-bold text-slate-800 text-sm">Cambio Obligatorio</p>
-                            <p className="text-xs text-slate-500">Forzar cambio al ingresar</p>
+                            <p className="font-bold text-slate-800 dark:text-white text-sm">Cambio Obligatorio</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">Forzar cambio al ingresar</p>
                         </div>
-                        <button 
-                            type="button"
+                        <div 
                             onClick={() => setFormData({ ...formData, mustChangePassword: !formData.mustChangePassword })}
-                            className="flex items-center gap-2 text-orange-600 font-bold"
-                            style={{ border: 'none', background: 'none', cursor: 'pointer' }}
-                        >
-                            {formData.mustChangePassword ? <ToggleRight size={32} /> : <ToggleLeft size={32} className="text-slate-300" />}
-                            <span className="text-[10px] uppercase font-bold">{formData.mustChangePassword ? 'SI' : 'NO'}</span>
-                        </button>
+                            className={`premium-switch ${formData.mustChangePassword ? 'active' : ''}`}
+                        />
                     </div>
                 </div>
               </div>
@@ -497,13 +483,13 @@ const Users = () => {
 
       {showConfirm && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '420px' }}>
-            <div className="modal-body" style={{ textAlign: 'center', paddingTop: '3rem' }}>
+          <div className="modal-content shadow-2xl" style={{ maxWidth: '420px', borderRadius: '24px' }}>
+            <div className="modal-body p-8" style={{ textAlign: 'center' }}>
               <div className="mb-6" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
                 <Trash2 size={40} />
               </div>
-              <h2 className="text-2xl font-bold mb-3">¿Eliminar Usuario?</h2>
-              <p className="text-slate-500 text-sm mb-8" style={{ lineHeight: '1.6' }}>
+              <h2 className="text-2xl font-bold mb-3 dark:text-white">¿Eliminar Usuario?</h2>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mb-8" style={{ lineHeight: '1.6' }}>
                 ¿Estás seguro de que deseas eliminar permanentemente a <strong>{currentUser?.fullName}</strong>? Esta acción no se puede deshacer.
               </p>
               <div style={{ display: 'flex', gap: '1rem' }}>

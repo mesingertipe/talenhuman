@@ -12,6 +12,10 @@ import Login from './pages/Login'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetForgottenPassword from './pages/ResetForgottenPassword'
 import SelfServiceReset from './pages/SelfServiceReset';
+import Jornadas from './pages/Core/Jornadas';
+import NewsInbox from './pages/News/NewsInbox';
+import NewsDesigner from './pages/Admin/NewsDesigner';
+import ShiftScheduler from './pages/Scheduling/ShiftScheduler';
 
 function App() {
   const [user, setUser] = React.useState(null);
@@ -96,6 +100,17 @@ function App() {
       case 'Empleados': return <Employees />;
       case 'Usuarios': 
         if (isSuperAdmin || isAdmin) return <Users />;
+        return <Dashboard />;
+      case 'Jornadas':
+        if (isSuperAdmin || isAdmin) return <Jornadas />;
+        return <Dashboard />;
+      case 'Turnos': return <ShiftScheduler />;
+      case 'Marcaciones': // Added case for Marcaciones
+        if (isSuperAdmin || isAdmin) return <Marcaciones />;
+        return <Dashboard />;
+      case 'Novedades': return <NewsInbox />;
+      case 'Configuración Novedades':
+        if (isSuperAdmin || isAdmin) return <NewsDesigner />;
         return <Dashboard />;
       case 'Empresas': 
         if (isSuperAdmin) return <Companies />;

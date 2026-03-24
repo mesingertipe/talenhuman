@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using TalenHuman.Application.Common.Interfaces;
 using TalenHuman.Domain.Entities;
 
@@ -10,8 +11,9 @@ public record CreateEmployeeCommand : IRequest<Guid>
     public string LastName { get; init; } = string.Empty;
     public string IdentificationNumber { get; init; } = string.Empty;
     public Guid StoreId { get; init; }
-    public Guid ProfileId { get; init; }
-    public DateTime? BirthDate { get; init; }
+    public Guid ProfileId { get; set; }
+    public Guid? JornadaId { get; set; }
+    public DateTime? BirthDate { get; set; }
     public DateTime DateOfEntry { get; init; }
     public bool IsActive { get; init; } = true;
     public string Role { get; init; } = "Empleado";
@@ -37,6 +39,16 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
     {
         var companyId = _tenantProvider.GetTenantId();
 
+        // Check for existing identification number (Cédula)
+        var exists = await _context.Employees
+            .IgnoreQueryFilters() // check globally to prevent Identity conflicts
+            .AnyAsync(x => x.IdentificationNumber == request.IdentificationNumber, cancellationToken);
+            
+        if (exists)
+        {
+            throw new Exception($"El número de identificación {request.IdentificationNumber} ya se encuentra registrado en el sistema.");
+        }
+
         var generatedEmail = $"{request.IdentificationNumber}@talenhuman.local";
 
         var employee = new Employee
@@ -45,11 +57,12 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
             LastName = request.LastName,
             Email = generatedEmail,
             IdentificationNumber = request.IdentificationNumber,
-            BirthDate = request.BirthDate?.ToUniversalTime(),
+            BirthDate = request.BirthDate,
             StoreId = request.StoreId,
             ProfileId = request.ProfileId,
+            JornadaId = request.JornadaId,
             CompanyId = companyId,
-            DateOfEntry = request.DateOfEntry.ToUniversalTime(),
+            DateOfEntry = request.DateOfEntry,
             IsActive = request.IsActive
         };
 

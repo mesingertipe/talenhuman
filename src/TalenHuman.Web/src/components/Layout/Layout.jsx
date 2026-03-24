@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Users, Clock, Calendar, FileText, Settings, 
   LogOut, Store, Sun, Moon, Pin, PinOff, ChevronLeft, ChevronRight,
-  Briefcase, Boxes, Building, Link, ChevronDown, ChevronUp
+  Briefcase, Boxes, Building, Link, ChevronDown, ChevronUp, User as UserIcon
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
@@ -24,6 +24,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
       children: [
         { icon: <Boxes size={20} />, label: 'Marcas', roles: ['SuperAdmin', 'Admin'] },
         { icon: <Briefcase size={20} />, label: 'Cargos', roles: ['SuperAdmin', 'Admin'] },
+        { icon: <Calendar size={20} />, label: 'Jornadas', roles: ['SuperAdmin', 'Admin'] },
         { icon: <Store size={20} />, label: 'Tiendas', roles: ['SuperAdmin', 'Admin'] },
         { icon: <Users size={20} />, label: 'Empleados' },
       ]
@@ -42,6 +43,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
       isHeader: true,
       children: [
         { icon: <Settings size={20} />, label: 'Usuarios', roles: ['SuperAdmin', 'Admin'] },
+        { icon: <FileText size={20} />, label: 'Configuración Novedades', roles: ['SuperAdmin', 'Admin'] },
         { icon: <Building size={20} />, label: 'Empresas', roles: ['SuperAdmin'] },
       ]
     },
@@ -59,46 +61,52 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
     <button 
       key={item.label} 
       onClick={() => setPage(item.label)}
-      className={`nav-link-btn ${activePage === item.label ? 'active' : ''}`}
+      className={`nav-link-btn group ${activePage === item.label ? 'active bg-indigo-600/10 dark:bg-indigo-500/10 border-l-4 border-l-indigo-600 dark:border-l-indigo-400' : 'hover:bg-slate-800/50'}`}
       title={isCollapsed ? item.label : ''}
       style={{ 
         background: 'none', border: 'none', width: '100%', 
         display: 'flex', alignItems: 'center', gap: '0.75rem', 
-        padding: isSubItem ? '0.6rem 1rem 0.6rem 2rem' : '0.75rem 1rem', 
-        color: '#9ca3af', cursor: 'pointer',
-        borderRadius: '8px', marginBottom: '0.25rem', textAlign: 'left',
-        transition: 'all 0.2s'
+        padding: isSubItem ? '0.6rem 1rem 0.6rem 2rem' : '0.85rem 1.25rem', 
+        color: activePage === item.label ? '#fff' : '#94a3b8', cursor: 'pointer',
+        borderRadius: '0 12px 12px 0', marginBottom: '0.25rem', textAlign: 'left',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        marginRight: '0.75rem'
       }}
     >
-      <span className={activePage === item.label ? 'text-white' : ''}>{item.icon}</span>
-      {!isCollapsed && <span style={{ color: activePage === item.label ? 'white' : 'inherit' }}>{item.label}</span>}
+      <span className={`${activePage === item.label ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300'}`}>{item.icon}</span>
+      {!isCollapsed && <span style={{ fontWeight: activePage === item.label ? '700' : '500', fontSize: '0.875rem' }}>{item.label}</span>}
     </button>
   );
 
   return (
     <div 
-      className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}
+      className={`sidebar border-r dark:border-slate-800 ${isCollapsed ? 'collapsed' : ''}`}
+      style={{ background: '#0f172a' }}
       onMouseEnter={() => !isPinned && setIsCollapsed(false)}
       onMouseLeave={() => !isPinned && setIsCollapsed(true)}
     >
-      <div className="brand" style={{ marginBottom: '2.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: isCollapsed ? 'center' : 'flex-start' }}>
-        <div style={{ background: 'var(--primary)', padding: '0.5rem', borderRadius: '8px', minWidth: '40px' }}>
-          <Users size={24} color="white" />
+      <div className="brand" style={{ padding: '1.5rem 1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: isCollapsed ? 'center' : 'flex-start' }}>
+        <div style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)', padding: '0.6rem', borderRadius: '12px', minWidth: '42px', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)' }}>
+          <Users size={22} color="white" />
         </div>
-        {!isCollapsed && <span style={{ fontSize: '1.25rem', fontWeight: '700', letterSpacing: '-0.5px', color: 'white' }}>TalenHuman</span>}
+        {!isCollapsed && (
+          <div className="flex flex-col justify-center">
+            <span style={{ fontSize: '1.25rem', fontWeight: '800', letterSpacing: '-0.02em', color: 'white' }}>TalenHuman</span>
+          </div>
+        )}
       </div>
       
-      <nav style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '0 0.5rem' }}>
+      <nav style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '0 0' }}>
         {renderNavButton({ icon: <LayoutDashboard size={20} />, label: 'Dashboard' })}
         
         {filteredStructure.map((section, idx) => (
-          <div key={idx} style={{ marginBottom: '0.5rem' }}>
+          <div key={idx} style={{ marginBottom: '1rem' }}>
             {!isCollapsed && (
               <div 
                 onClick={() => toggleHeader(section.label)}
                 style={{ 
-                  fontSize: '0.7rem', textTransform: 'uppercase', color: '#4b5563', 
-                  margin: '1.25rem 0.5rem 0.5rem 0.5rem', fontWeight: '700',
+                  fontSize: '0.65rem', textTransform: 'uppercase', color: '#475569', 
+                  margin: '1.5rem 1.25rem 0.5rem 1.25rem', fontWeight: '800', trackingWidest: '0.1em',
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   cursor: 'pointer', userSelect: 'none'
                 }}
@@ -117,42 +125,49 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
         ))}
       </nav>
 
-      <div className="sidebar-footer" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', paddingBottom: '1rem' }}>
+      <div className="sidebar-footer" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '1rem 0' }}>
         {isSuperAdmin && !isCollapsed && (
-          <div style={{ padding: '0 1rem 1rem 1rem' }}>
-            <p style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: '#4b5563', marginBottom: '0.5rem', fontWeight: '700' }}>Empresa Actual</p>
-            <select 
-              value={selectedTenant}
-              onChange={onTenantChange}
-              style={{ 
-                width: '100%',
-                background: '#1f2937', 
-                border: '1px solid #374151', 
-                borderRadius: '8px', 
-                padding: '0.6rem 0.75rem', 
-                fontSize: '0.8rem',
-                color: 'white',
-                outline: 'none',
-                cursor: 'pointer',
-                marginTop: '0.25rem'
-              }}
-            >
-              {companies.map(c => <option key={c.id} value={c.id} style={{ color: 'black' }}>{c.name}</option>)}
-            </select>
+          <div style={{ padding: '0 1.25rem 1rem 1.25rem' }}>
+            <p style={{ fontSize: '0.6rem', textTransform: 'uppercase', color: '#4b5563', marginBottom: '0.5rem', fontWeight: '800', trackingWidest: '0.05em' }}>Tenant Activo</p>
+            <div className="relative">
+              <Building size={14} className="absolute left-2.5 top-2.5 text-slate-500" />
+              <select 
+                value={selectedTenant}
+                onChange={onTenantChange}
+                style={{ 
+                  width: '100%',
+                  background: '#1e293b', 
+                  border: '1px solid #334155', 
+                  borderRadius: '10px', 
+                  padding: '0.6rem 0.75rem 0.6rem 2.2rem', 
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                  color: 'white',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  appearance: 'none'
+                }}
+              >
+                {companies.map(c => <option key={c.id} value={c.id} style={{ color: 'black' }}>{c.name}</option>)}
+              </select>
+            </div>
           </div>
         )}
         
         <button 
           onClick={() => setIsPinned(!isPinned)} 
-          style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', width: '100%' }}
+          style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1.25rem', width: '100%', fontSize: '0.85rem', fontWeight: '600' }}
+          className="hover:bg-slate-800/50 transition-colors"
         >
-          {isPinned ? <Pin size={20} /> : <PinOff size={20} />}
-          {!isCollapsed && <span>{isPinned ? 'Desanclar' : 'Anclar'}</span>}
+          {isPinned ? <Pin size={18} className="text-indigo-400" /> : <PinOff size={18} />}
+          {!isCollapsed && <span>{isPinned ? 'Desanclar Sidebar' : 'Anclar Sidebar'}</span>}
         </button>
         <button 
           onClick={onLogout}
-          className="nav-link-btn" style={{ background: 'none', border: 'none', width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', color: '#9ca3af', cursor: 'pointer' }}>
-          <LogOut size={20} />
+          style={{ background: 'none', border: 'none', width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1.25rem', color: '#f87171', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600' }}
+          className="hover:bg-red-500/10 transition-colors"
+        >
+          <LogOut size={18} />
           {!isCollapsed && <span>Cerrar Sesión</span>}
         </button>
       </div>
@@ -162,68 +177,78 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
 
 const getPageInfo = (page) => {
   switch (page) {
-    case 'Marcas': return { title: 'Marcas', subtitle: 'Administra las marcas comerciales registradas en este tenant' };
-    case 'Cargos': return { title: 'Cargos', subtitle: 'Define la estructura jerárquica y perfiles de cargo laborales' };
-    case 'Tiendas': return { title: 'Tiendas', subtitle: 'Gestiona los puntos de venta físicos y su ubicación logística' };
-    case 'Empleados': return { title: 'Colaboradores', subtitle: 'Gestión de personal, perfiles de acceso y vinculación a sedes' };
-    case 'Usuarios': return { title: 'Gestión de Usuarios', subtitle: 'Administración global de accesos, roles y estados de cuenta' };
+    case 'Marcas': return { title: 'Marcas', subtitle: 'Gestión de marcas corporativas y tenants' };
+    case 'Cargos': return { title: 'Cargos', subtitle: 'Estructura jerárquica y perfiles laborales' };
+    case 'Tiendas': return { title: 'Puntos de Venta', subtitle: 'Administración de sedes y ubicaciones físicas' };
+    case 'Jornadas': return { title: 'Horarios', subtitle: 'Definición de jornadas y horas semanales' };
+    case 'Empleados': return { title: 'Personal', subtitle: 'Ficha técnica de colaboradores y sedes' };
+    case 'Usuarios': return { title: 'Usuarios', subtitle: 'Gestión de credenciales y niveles de acceso' };
+    case 'Novedades': return { title: 'Novedades', subtitle: 'Bandeja de solicitudes y tracking de incidencias' };
+    case 'Configuración Novedades': return { title: 'Diseñador', subtitle: 'Configuración dinámica de tipos de novedad' };
+    case 'Turnos': return { title: 'Programador', subtitle: 'Asignación semanal y balance de recursos' };
+    case 'Marcaciones': return { title: 'Marcaciones', subtitle: 'Registro de asistencia y control biométrico' };
+    case 'Empresas': return { title: 'Tenants', subtitle: 'Administración global de organizaciones' };
     default: return { title: page, subtitle: '' };
   }
 };
 
 const Header = ({ user, activePage, currentCompanyName }) => {
   const { isDarkMode, toggleTheme } = useTheme();
-  // Show tenant info for SuperAdmin or any other administrative/tenant level role
   const showTenantInfo = !!user;
-
   const pageInfo = getPageInfo(activePage);
 
   return (
-    <header className="header" style={{ padding: '0 1.5rem', display: 'flex', alignItems: 'center', minHeight: '80px', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+    <header className="header" style={{ padding: '0 2rem', display: 'flex', alignItems: 'center', minHeight: '90px', borderBottom: '1px solid var(--border)' }}>
       <div className="header-left" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-800" style={{ margin: 0, lineHeight: 1.2 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+          <h1 className="text-3xl font-black tracking-tight text-slate-800 dark:text-white" style={{ margin: 0, lineHeight: 1 }}>
             {activePage === 'Dashboard' 
-              ? (currentCompanyName || 'Panel de Control') 
+              ? (currentCompanyName || 'Dashboard') 
               : pageInfo.title}
           </h1>
           {activePage !== 'Dashboard' && showTenantInfo && currentCompanyName && (
-            <span className="text-xs text-slate-500 font-bold px-2 py-0.5 bg-slate-100 rounded-md uppercase tracking-wider">
-              @ {currentCompanyName}
-            </span>
+             <span className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide opacity-80 ml-1">
+               @ {currentCompanyName}
+             </span>
           )}
         </div>
         {pageInfo.subtitle && (
-            <p className="text-sm text-slate-500 font-medium" style={{ margin: '0.15rem 0 0 0' }}>{pageInfo.subtitle}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 ml-0.5">{pageInfo.subtitle}</p>
         )}
       </div>
-      <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+      <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
         <button 
           onClick={toggleTheme}
           style={{ 
             background: 'var(--bg-card)', 
-            border: '1px solid var(--border)', 
-            borderRadius: '10px', 
-            padding: '0.5rem', 
+            border: '1.5px solid var(--border)', 
+            borderRadius: '14px', 
+            width: '44px',
+            height: '44px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'center',
             color: 'var(--text-main)',
-            boxShadow: 'var(--shadow-sm)'
+            boxShadow: 'var(--shadow-sm)',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
           }}
+          className="hover:scale-110 active:scale-95 hover:border-indigo-400"
           title={isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
         >
-          {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+          {isDarkMode ? <Sun size={20} className="text-amber-400" /> : <Moon size={20} className="text-slate-600" />}
         </button>
 
-        <div style={{ height: '24px', width: '1px', background: 'var(--border)' }}></div>
+        <div style={{ height: '32px', width: '1.5px', background: 'var(--border)', opacity: 0.5 }}></div>
 
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-main)' }}>{user?.fullName || 'Usuario'}</div>
-          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{user?.roles?.join(', ')}</div>
-        </div>
-        <div style={{ width: '38px', height: '38px', background: 'var(--primary)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.2)' }}>
-          <Users size={18} color="white" />
+        <div className="flex items-center gap-4">
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: '900', color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '-0.01em' }}>{user?.fullName || 'Perfil'}</div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 'bold', color: 'var(--text-muted)', textTransform: 'uppercase', trackingWidest: '0.05em' }}>{user?.roles?.join(' • ')}</div>
+            </div>
+            <div style={{ width: '46px', height: '46px', background: 'linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 16px rgba(79, 70, 229, 0.25)', border: '2px solid white' }} className="dark:border-slate-800">
+              <UserIcon size={22} color="white" />
+            </div>
         </div>
       </div>
     </header>

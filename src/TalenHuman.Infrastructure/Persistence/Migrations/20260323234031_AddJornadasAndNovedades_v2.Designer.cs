@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TalenHuman.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace TalenHuman.Infrastructure.Migrations
+namespace TalenHuman.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260323234031_AddJornadasAndNovedades_v2")]
+    partial class AddJornadasAndNovedades_v2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -384,9 +387,6 @@ namespace TalenHuman.Infrastructure.Migrations
                     b.Property<string>("AdjuntoUrl")
                         .HasColumnType("text");
 
-                    b.Property<Guid?>("BrandId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid");
 
@@ -396,7 +396,7 @@ namespace TalenHuman.Infrastructure.Migrations
                     b.Property<string>("DatosDinamicos")
                         .HasColumnType("text");
 
-                    b.Property<Guid?>("EmpleadoId")
+                    b.Property<Guid>("EmpleadoId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("FechaFin")
@@ -405,38 +405,22 @@ namespace TalenHuman.Infrastructure.Migrations
                     b.Property<DateTime>("FechaInicio")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<int>("IdSolicitud")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("IdSolicitud"));
-
                     b.Property<Guid>("NovedadTipoId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Observaciones")
-                        .HasColumnType("text");
-
                     b.Property<int>("Status")
                         .HasColumnType("integer");
-
-                    b.Property<Guid?>("StoreId")
-                        .HasColumnType("uuid");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BrandId");
-
                     b.HasIndex("CompanyId");
 
                     b.HasIndex("EmpleadoId");
 
                     b.HasIndex("NovedadTipoId");
-
-                    b.HasIndex("StoreId");
 
                     b.ToTable("Novedades");
                 });
@@ -493,9 +477,6 @@ namespace TalenHuman.Infrastructure.Migrations
                     b.Property<string>("CamposConfig")
                         .HasColumnType("text");
 
-                    b.Property<int>("Categoria")
-                        .HasColumnType("integer");
-
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid");
 
@@ -511,10 +492,6 @@ namespace TalenHuman.Infrastructure.Migrations
 
                     b.Property<bool>("RequiereAdjunto")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("RolAprobador")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp without time zone");
@@ -599,12 +576,6 @@ namespace TalenHuman.Infrastructure.Migrations
 
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("timestamp without time zone");
-
-                    b.Property<bool>("IsDescanso")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsFuera")
-                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("timestamp without time zone");
@@ -933,10 +904,6 @@ namespace TalenHuman.Infrastructure.Migrations
 
             modelBuilder.Entity("TalenHuman.Domain.Entities.Novedad", b =>
                 {
-                    b.HasOne("TalenHuman.Domain.Entities.Brand", "Brand")
-                        .WithMany()
-                        .HasForeignKey("BrandId");
-
                     b.HasOne("TalenHuman.Domain.Entities.Company", "Company")
                         .WithMany()
                         .HasForeignKey("CompanyId")
@@ -945,7 +912,9 @@ namespace TalenHuman.Infrastructure.Migrations
 
                     b.HasOne("TalenHuman.Domain.Entities.Employee", "Empleado")
                         .WithMany()
-                        .HasForeignKey("EmpleadoId");
+                        .HasForeignKey("EmpleadoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("TalenHuman.Domain.Entities.NovedadTipo", "NovedadTipo")
                         .WithMany("Novedades")
@@ -953,19 +922,11 @@ namespace TalenHuman.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("TalenHuman.Domain.Entities.Store", "Store")
-                        .WithMany()
-                        .HasForeignKey("StoreId");
-
-                    b.Navigation("Brand");
-
                     b.Navigation("Company");
 
                     b.Navigation("Empleado");
 
                     b.Navigation("NovedadTipo");
-
-                    b.Navigation("Store");
                 });
 
             modelBuilder.Entity("TalenHuman.Domain.Entities.NovedadLog", b =>

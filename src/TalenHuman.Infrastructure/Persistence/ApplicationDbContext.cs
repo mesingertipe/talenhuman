@@ -26,6 +26,11 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<Shift> Shifts => Set<Shift>();
     public DbSet<Attendance> Attendances => Set<Attendance>();
     public DbSet<Absence> Absences => Set<Absence>();
+    public DbSet<Jornada> Jornadas => Set<Jornada>();
+    public DbSet<SupervisorStore> SupervisorStores => Set<SupervisorStore>();
+    public DbSet<NovedadTipo> NovedadTipos => Set<NovedadTipo>();
+    public DbSet<Novedad> Novedades => Set<Novedad>();
+    public DbSet<NovedadLog> NovedadLogs => Set<NovedadLog>();
 
     public Guid TenantId => _tenantProvider.GetTenantId();
 
@@ -42,6 +47,10 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<Shift>().HasQueryFilter(s => s.CompanyId == TenantId);
         builder.Entity<Attendance>().HasQueryFilter(a => a.CompanyId == TenantId);
         builder.Entity<Absence>().HasQueryFilter(a => a.CompanyId == TenantId);
+        builder.Entity<Jornada>().HasQueryFilter(j => j.CompanyId == TenantId);
+        builder.Entity<NovedadTipo>().HasQueryFilter(n => n.CompanyId == TenantId);
+        builder.Entity<Novedad>().HasQueryFilter(n => n.CompanyId == TenantId);
+        builder.Entity<NovedadLog>().HasQueryFilter(n => n.CompanyId == TenantId);
         builder.Entity<SupervisorStore>().HasQueryFilter(s => s.CompanyId == TenantId);
 
         // Many-to-Many: Supervisor -> Stores
@@ -83,6 +92,10 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
             .HasForeignKey(s => s.EmployeeId)
             .OnDelete(DeleteBehavior.Cascade);
             
+        builder.Entity<Novedad>()
+            .Property(n => n.IdSolicitud)
+            .ValueGeneratedOnAdd();
+
         // Additional configuration can be added here
     }
 
@@ -103,10 +116,10 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
             switch (entry.State)
             {
                 case EntityState.Added:
-                    entry.Entity.CreatedAt = DateTime.UtcNow;
+                    entry.Entity.CreatedAt = ColombiaTime.Now;
                     break;
                 case EntityState.Modified:
-                    entry.Entity.UpdatedAt = DateTime.UtcNow;
+                    entry.Entity.UpdatedAt = ColombiaTime.Now;
                     break;
             }
         }
