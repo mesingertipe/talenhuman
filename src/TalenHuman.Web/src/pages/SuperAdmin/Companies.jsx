@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit, X, Building2, Hash, Shield, AlertCircle, CheckCircle } from 'lucide-react';
 import api from '../../services/api';
+import { useTheme } from '../../context/ThemeContext';
 
 const Companies = () => {
+  const { isDarkMode } = useTheme();
+  const activeColors = {
+    bg: isDarkMode ? '#0f172a' : '#f8fafc',
+    card: isDarkMode ? '#1e293b' : '#ffffff',
+    border: isDarkMode ? '#334155' : '#f1f5f9',
+    textMain: isDarkMode ? '#f1f5f9' : '#1e293b',
+    textMuted: isDarkMode ? '#94a3b8' : '#64748b',
+    accent: '#4f46e5',
+    accentSoft: isDarkMode ? 'rgba(79, 70, 229, 0.15)' : '#eef2ff'
+  };
+
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -65,15 +77,18 @@ const Companies = () => {
   };
 
   return (
-    <div className="page-container animate-in fade-in duration-300">
-      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+    <div className="page-container animate-in fade-in duration-500" style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto' }}>
+      {/* Elite Header & Toolbar */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4rem', gap: '2rem' }}>
         <div>
-          <h1 className="text-3xl font-bold">Panel de Empresas</h1>
-          <p className="text-slate-500">Gestión global de inquilinos (Tenants) y su estado operacional</p>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.03em' }}>Gestión de empresas</h1>
+          <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginTop: '6px' }}>Configuración de inquilinos y clientes corporativos</p>
         </div>
+
         <button 
           onClick={() => { setFormData({ id: '', name: '', taxId: '', isActive: true }); setShowModal(true); }}
           className="btn-premium btn-premium-primary"
+          style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
         >
           <Plus size={20} /> Nueva Empresa
         </button>
@@ -155,9 +170,9 @@ const Companies = () => {
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '520px' }}>
             <div className="modal-header">
-              <h2 className="text-xl font-bold flex items-center gap-2" style={{ margin: 0 }}>
-                {formData.id ? <Edit size={24} className="text-indigo-500" /> : <Plus size={24} className="text-indigo-500" />}
-                {formData.id ? 'Editar Empresa' : 'Nueva Empresa'}
+              <h2 className="text-lg font-bold flex items-center gap-2" style={{ margin: 0 }}>
+                {formData.id ? <Edit size={22} className="text-indigo-500" /> : <Plus size={22} className="text-indigo-500" />}
+                {formData.id ? 'Editar empresa' : 'Nueva empresa'}
               </h2>
               <button 
                 onClick={() => setShowModal(false)}
@@ -171,7 +186,7 @@ const Companies = () => {
             <form onSubmit={handleSave}>
               <div className="modal-body space-y-6">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre Comercial</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre Comercial *</label>
                   <div className="relative">
                     <Building2 size={18} className="absolute left-3 top-4 text-slate-400" />
                     <input 
@@ -204,26 +219,13 @@ const Companies = () => {
                       <p className="font-bold text-slate-800 text-sm">Estado de la Empresa</p>
                       <p className="text-xs text-slate-500 mt-1">Habilitar o restringir el logueo.</p>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
+                    <label className="premium-switch">
                       <input 
                         type="checkbox" 
-                        className="sr-only" 
                         checked={formData.isActive}
                         onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                       />
-                      <div 
-                        onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
-                        style={{ 
-                          width: '44px', height: '24px', background: formData.isActive ? '#4f46e5' : '#cbd5e1', 
-                          borderRadius: '999px', position: 'relative', cursor: 'pointer', transition: 'all 0.3s' 
-                        }}
-                      >
-                        <div style={{ 
-                          width: '18px', height: '18px', background: 'white', borderRadius: '50%', 
-                          position: 'absolute', top: '3px', left: formData.isActive ? '23px' : '3px', transition: 'all 0.3s' 
-                        }}></div>
-                      </div>
-                      <span className="ml-3 text-sm font-bold text-indigo-700 uppercase">{formData.isActive ? 'Activa' : 'Inactiva'}</span>
+                      <span className="premium-switch-slider"></span>
                     </label>
                   </div>
                 </div>
@@ -249,7 +251,7 @@ const Companies = () => {
               <div className="mb-6" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
                 <Trash2 size={40} />
               </div>
-              <h2 className="text-2xl font-bold mb-3">¿Confirmar Eliminación?</h2>
+              <h2 className="text-xl font-bold mb-3">¿Eliminar empresa?</h2>
               <p className="text-slate-500 text-sm mb-8 px-4" style={{ lineHeight: '1.6' }}>
                 Estás a punto de eliminar permanentemente a <strong>{currentCompany?.name}</strong> y todos sus datos vinculados. Esta operación es irreversible.
               </p>

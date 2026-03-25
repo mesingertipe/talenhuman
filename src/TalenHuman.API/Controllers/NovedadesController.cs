@@ -64,12 +64,12 @@ public class NovedadesController : ControllerBase
             query = query.Where(n => n.Status == status.Value);
         }
 
-        // RBAC: Filter by RoleAprobador and Managed Stores
+        // RBAC: Filter by RoleAprobador (only for Pending) and Managed Stores
         if (!userRoles.Contains("SuperAdmin") && !userRoles.Contains("Admin"))
         {
-            // Only show news where the user's role matches the NovedadTipo.RolAprobador
-            // (Strict verification: if a news type requires RH, only RH shows it)
-            query = query.Where(n => userRoles.Contains(n.NovedadTipo.RolAprobador));
+            // IMPORTANT: If news is PENDING, only the assigned approver role can see it.
+            // If it is already APPROVED/RECHAZADO, it is "public" for the store management.
+            query = query.Where(n => n.Status != NovedadStatus.Pendiente || userRoles.Contains(n.NovedadTipo.RolAprobador));
 
             // If it's a Supervisor/Gerente, further filter by their managed stores
             if (userRoles.Contains("Supervisor") || userRoles.Contains("Gerente"))

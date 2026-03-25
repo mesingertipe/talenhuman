@@ -26,8 +26,13 @@ public class Brand : BaseEntity, IMultitenant
 public class Store : BaseEntity, IMultitenant
 {
     public string Name { get; set; } = string.Empty;
-    public string Address { get; set; } = string.Empty;
+    public string? Address { get; set; } = string.Empty;
+    public string? ExternalId { get; set; } // Custom Store ID
     public string? Code { get; set; } // External system code
+    public bool IsActive { get; set; } = true;
+    
+    public Guid? CityId { get; set; }
+    public City? City { get; set; }
     
     public Guid BrandId { get; set; }
     public Brand? Brand { get; set; }
@@ -59,4 +64,15 @@ public class Profile : BaseEntity, IMultitenant
     
     public Guid CompanyId { get; set; }
     public Company? Company { get; set; }
+}
+
+public class City : BaseEntity, IMultitenant
+{
+    public string Name { get; set; } = string.Empty;
+    
+    public Guid CompanyId { get; set; }
+    public Company? Company { get; set; }
+    
+    // Relationships
+    public ICollection<Store> Stores { get; set; } = new List<Store>();
 }

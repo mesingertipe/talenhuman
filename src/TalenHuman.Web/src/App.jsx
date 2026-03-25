@@ -16,6 +16,8 @@ import Jornadas from './pages/Core/Jornadas';
 import NewsInbox from './pages/News/NewsInbox';
 import NewsDesigner from './pages/Admin/NewsDesigner';
 import ShiftScheduler from './pages/Scheduling/ShiftScheduler';
+import Marcaciones from './pages/Core/Marcaciones';
+import Cities from './pages/Core/Cities';
 
 function App() {
   const [user, setUser] = React.useState(null);
@@ -89,27 +91,30 @@ function App() {
 
     switch(currentPage) {
       case 'Marcas': 
-        if (isSuperAdmin || isAdmin) return <Brands />;
+        if (isSuperAdmin || isAdmin) return <Brands user={user} />;
         return <Dashboard />;
       case 'Tiendas': 
-        if (isSuperAdmin || isAdmin) return <Stores />;
+        if (isSuperAdmin || isAdmin) return <Stores user={user} />;
+        return <Dashboard />;
+      case 'Ciudades': 
+        if (isSuperAdmin || isAdmin) return <Cities user={user} />;
         return <Dashboard />;
       case 'Cargos': 
-        if (isSuperAdmin || isAdmin) return <Profiles />;
+        if (isSuperAdmin || isAdmin) return <Profiles user={user} />;
         return <Dashboard />;
-      case 'Empleados': return <Employees />;
+      case 'Empleados': return <Employees user={user} />;
       case 'Usuarios': 
         if (isSuperAdmin || isAdmin) return <Users />;
         return <Dashboard />;
       case 'Jornadas':
         if (isSuperAdmin || isAdmin) return <Jornadas />;
         return <Dashboard />;
-      case 'Turnos': return <ShiftScheduler />;
+      case 'Turnos': return <ShiftScheduler user={user} />;
       case 'Marcaciones': // Added case for Marcaciones
         if (isSuperAdmin || isAdmin) return <Marcaciones />;
         return <Dashboard />;
-      case 'Novedades': return <NewsInbox />;
-      case 'Configuración Novedades':
+      case 'Novedades': return <NewsInbox user={user} />;
+      case 'Configuración novedades':
         if (isSuperAdmin || isAdmin) return <NewsDesigner />;
         return <Dashboard />;
       case 'Empresas': 

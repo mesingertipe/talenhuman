@@ -1,428 +1,427 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit, X, FileText, CheckCircle, AlertCircle, Settings, Layers, Paperclip, User as UserIcon } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { 
+    Plus, 
+    Trash2, 
+    Settings, 
+    X, 
+    FileText, 
+    Layers, 
+    CheckCircle, 
+    AlertCircle,
+    Save,
+    Paperclip,
+    Search,
+    ChevronRight,
+    LucideSettings,
+    Edit3,
+    UserCircle2,
+    Layout
+} from 'lucide-react';
 import api from '../../services/api';
+import { useTheme } from '../../context/ThemeContext';
 
 const NewsDesigner = () => {
+    const { isDarkMode } = useTheme();
     const [newsTypes, setNewsTypes] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
     const [showModal, setShowModal] = useState(false);
-    const [showConfirm, setShowConfirm] = useState(false);
     const [currentType, setCurrentType] = useState(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
-    const [formData, setFormData] = useState({ 
-        nombre: '', 
-        descripcion: '', 
-        requiereAdjunto: true,
+    const [formData, setFormData] = useState({
+        nombre: '',
+        descripcion: '',
         categoria: 0,
-        rolAprobador: 'Admin'
+        requiereAdjunto: false,
+        rolAprobador: 'RH'
     });
-    const [fields, setFields] = useState([]); // Array of { name, type, required }
+    const [fields, setFields] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
-    useEffect(() => {
-        fetchNewsTypes();
-    }, []);
-
-    const showToast = (message, type = 'success') => {
-        setToast({ show: true, message, type });
-        setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
+    // Elite V12 Design System
+    const activeColors = {
+        bg: isDarkMode ? '#0f172a' : '#f8fafc',
+        card: isDarkMode ? '#1e293b' : '#ffffff',
+        border: isDarkMode ? '#334155' : '#f1f5f9',
+        textMain: isDarkMode ? '#f1f5f9' : '#1e293b',
+        textMuted: isDarkMode ? '#94a3b8' : '#64748b',
+        accent: '#4f46e5',
+        accentSoft: isDarkMode ? 'rgba(79, 70, 229, 0.15)' : '#eef2ff'
     };
+
+    useEffect(() => { fetchNewsTypes(); }, []);
 
     const fetchNewsTypes = async () => {
         try {
             setLoading(true);
-            const res = await api.get('/novedadtipos');
-            setNewsTypes(res.data);
-        } catch (err) {
-            console.error(err);
-            showToast("Error al cargar tipos de novedad", "error");
-        } finally {
-            setLoading(false);
+            const response = await api.get('/NovedadTipos');
+            setNewsTypes(response.data);
+        } catch (error) { 
+            showToast('Error al sincronizar estructuras', 'error'); 
+        } finally { 
+            setLoading(false); 
         }
+    };
+
+    const showToast = (message, type = 'success') => {
+        setToast({ show: true, message, type });
+        setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3500);
+    };
+
+    const handleOpenModal = (type = null) => {
+        if (type) {
+            setCurrentType(type);
+            setFormData({
+                nombre: type.nombre,
+                descripcion: type.descripcion || '',
+                categoria: type.categoria || 0,
+                requiereAdjunto: type.requiereAdjunto || false,
+                rolAprobador: type.rolAprobador || 'RH'
+            });
+            setFields(type.camposConfig ? JSON.parse(type.camposConfig) : []);
+        } else {
+            setCurrentType(null);
+            setFormData({ nombre: '', descripcion: '', categoria: 0, requiereAdjunto: false, rolAprobador: 'RH' });
+            setFields([]);
+        }
+        setShowModal(true);
     };
 
     const handleSave = async (e) => {
         e.preventDefault();
-        // fields is already an array, payload will stringify it
-
+        setIsSubmitting(true);
         try {
-            setIsSubmitting(true);
             const payload = { ...formData, camposConfig: JSON.stringify(fields) };
             if (currentType) {
-                await api.put(`/novedadtipos/${currentType.id}`, payload);
-                showToast("Configuración actualizada");
+                await api.put(`/NovedadTipos/${currentType.id}`, payload);
+                showToast('Estructura actualizada');
             } else {
-                await api.post('/novedadtipos', payload);
-                showToast("Tipo de novedad creado");
+                await api.post('/NovedadTipos', payload);
+                showToast('Estructura creada con éxito');
             }
             setShowModal(false);
             fetchNewsTypes();
-        } catch (err) {
-            showToast("Error al guardar configuración", "error");
+        } catch (error) {
+            showToast('Error al persistir cambios', 'error');
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const handleDelete = async () => {
+        setIsDeleting(true);
         try {
-            setIsDeleting(true);
-            await api.delete(`/novedadtipos/${currentType.id}`);
-            showToast("Eliminado correctamente");
+            await api.delete(`/NovedadTipos/${currentType.id}`);
+            showToast('Estructura eliminada');
             setShowConfirm(false);
             fetchNewsTypes();
-        } catch (err) {
-            const errorMsg = err.response?.data || "Error al eliminar";
-            showToast(errorMsg, "error");
+        } catch (error) {
+            showToast('Error en la eliminación', 'error');
         } finally {
             setIsDeleting(false);
         }
     };
 
+    const filteredTypes = newsTypes.filter(t => t.nombre.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    if (loading) return (
+        <div style={{ display: 'flex', height: '80vh', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '20px' }}>
+            <div className="animate-spin" style={{ width: '40px', height: '40px', border: `4px solid ${activeColors.accentSoft}`, borderTopColor: activeColors.accent, borderRadius: '50%' }}></div>
+            <span style={{ fontSize: '0.7rem', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.2em' }}>Sincronizando...</span>
+        </div>
+    );
+
     return (
-        <div className="page-container animate-in fade-in duration-300">
-            <div className="page-header flex justify-end mb-8">
-                <button 
-                    onClick={() => { 
-                        setCurrentType(null); 
-                        setFormData({ 
-                            nombre: '', 
-                            descripcion: '', 
-                            requiereAdjunto: true, 
-                            categoria: 0, 
-                            rolAprobador: 'Admin' 
-                        }); 
-                        setFields([]);
-                        setShowModal(true); 
-                    }}
-                    className="btn-premium btn-premium-primary whitespace-nowrap h-[52px] px-8"
-                >
-                    <Plus size={20} className="mr-2" /> Nuevo Tipo
-                </button>
+        <div style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto', animation: 'fadeIn 0.5s ease-out' }}>
+            {/* Elite Header & Toolbar */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4rem', gap: '2rem' }}>
+                <div>
+                    <h1 style={{ fontSize: '2.2rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.03em' }}>Diseñador de novedades</h1>
+                    <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginTop: '6px' }}>Gestión de estructuras y campos dinámicos</p>
+                </div>
+
+                <div style={{ display: 'flex', gap: '15px', alignItems: 'center', width: '100%', maxWidth: '700px' }}>
+                    <div style={{ position: 'relative', flex: 1 }}>
+                        <Search style={{ position: 'absolute', left: '18px', top: '18px', color: '#94a3b8' }} size={18} />
+                        <input 
+                            type="text" 
+                            placeholder="Filtrar estructuras..." 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{ width: '100%', padding: '16px 20px 16px 52px', borderRadius: '20px', background: activeColors.card, border: `1px solid ${activeColors.border}`, color: activeColors.textMain, fontSize: '0.9rem', fontWeight: '600', boxSizing: 'border-box', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}
+                        />
+                    </div>
+                    <button 
+                        onClick={() => handleOpenModal()} 
+                        style={{ background: activeColors.accent, color: 'white', padding: '16px 36px', borderRadius: '20px', border: 'none', fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.15em', cursor: 'pointer', boxShadow: '0 10px 25px rgba(79, 70, 229, 0.3)', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.3s' }}
+                        className="hover:scale-105 active:scale-95"
+                    >
+                        <Plus size={18} strokeWidth={3} /> Nueva Estructura
+                    </button>
+                </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
-                {loading ? (
-                    <div className="py-24 text-center w-full col-span-full">
-                        <div className="loader !border-indigo-600 !w-12 !h-12 mx-auto"></div>
-                    </div>
-                ) : (
-                    newsTypes.map((type) => (
-                        <div key={type.id} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:shadow-2xl transition-all" style={{ borderRadius: '28px', padding: '1.5rem', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative' }}>
-                            {/* Top row: Icon & Title Header */}
-                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '1rem' }}>
-                                <div style={{ width: '56px', height: '56px', flexShrink: 0, backgroundColor: 'rgba(79, 70, 229, 0.1)', color: '#4f46e5', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="dark:bg-indigo-900/30 dark:text-indigo-400 shadow-sm">
-                                    <Layers size={28} />
+            {/* Elite Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '2.5rem', paddingBottom: '100px' }}>
+                {filteredTypes.map(type => (
+                    <div key={type.id} style={{ background: activeColors.card, borderRadius: '36px', border: `1px solid ${activeColors.border}`, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 15px 35px rgba(0,0,0,0.03)', transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)' }} className="hover:shadow-2xl hover:translate-y-[-8px]">
+                        <div style={{ height: '8px', background: `linear-gradient(90deg, ${activeColors.accent} 0%, ${activeColors.accent}cc 100%)` }}></div>
+                        
+                        <div style={{ padding: '2.5rem', flex: 1 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', alignItems: 'flex-start' }}>
+                                <div style={{ width: '56px', height: '56px', background: activeColors.accentSoft, borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.accent }}>
+                                    <Layout size={24} />
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1, minWidth: 0 }}>
-                                     <span style={{ width: 'max-content', padding: '0.125rem 0.625rem', marginBottom: '0.375rem', borderRadius: '0.375rem', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }} className={`
-                                         ${(type.categoria === 0 || type.categoria === '0') ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 
-                                         (type.categoria === 1 || type.categoria === '1') ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' : 
-                                         'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'}
-                                     `}>
-                                         { (type.categoria === 0 || type.categoria === '0') ? 'Empleado' : 
-                                           (type.categoria === 1 || type.categoria === '1') ? 'Tienda' : 
-                                           'Marca' }
-                                     </span>
-                                     <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '-0.025em', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} className="text-slate-800 dark:text-white" title={type.nombre}>
-                                        {type.nombre}
-                                     </h3>
-                                </div>
+                                {type.requiereAdjunto && (
+                                    <div style={{ fontSize: '9px', fontWeight: '950', padding: '8px 16px', borderRadius: '99px', background: isDarkMode ? 'rgba(16, 185, 129, 0.15)' : '#ecfdf5', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.12em', border: `1px solid ${isDarkMode ? 'rgba(16, 185, 129, 0.3)' : '#d1fae5'}` }}>
+                                        Adjunto Obligatorio
+                                    </div>
+                                )}
                             </div>
                             
-                            {/* Middle: Description */}
-                            <div style={{ marginBottom: '1.25rem', flex: 1, padding: '0.875rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }} className="bg-slate-50 dark:bg-slate-800/40 border-slate-100 dark:border-slate-800/50">
-                                <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: '500', lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} className="text-slate-500 dark:text-slate-400">
-                                    {type.description || type.descripcion || 'Sin descripción detallada.'}
-                                </p>
-                            </div>
-
-                            {/* Bottom: Technical Badges */}
-                            <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, marginBottom: '1.25rem' }}>
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid var(--border)' }} className="bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.25rem' }} className="text-slate-500 dark:text-slate-400">
-                                        <Paperclip size={12} />
-                                        <span style={{ fontSize: '10px', fontWeight: '700' }}>Soporte</span>
-                                    </div>
-                                    <span style={{ fontSize: '11px', fontWeight: '900', textTransform: 'uppercase' }} className={`${type.requiereAdjunto ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'}`}>
-                                        {type.requiereAdjunto ? 'OBLIG' : 'OPC'}
-                                    </span>
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0.5rem 1.5rem', borderRadius: '0.5rem', border: '1px solid var(--border)' }} className="bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.25rem' }} className="text-slate-500 dark:text-slate-400">
-                                        <Settings size={12} />
-                                        <span style={{ fontSize: '10px', fontWeight: '700' }}>Campos</span>
-                                    </div>
-                                    <span style={{ fontSize: '12px', fontWeight: '900' }} className="text-indigo-600 dark:text-indigo-400">
-                                        {JSON.parse(type.camposConfig || '[]').length}
-                                    </span>
-                                </div>
-                            </div>
+                            <h3 style={{ fontSize: '1.35rem', fontWeight: '950', color: activeColors.textMain, textTransform: 'uppercase', marginBottom: '10px', letterSpacing: '-0.02em' }}>{type.nombre}</h3>
+                            <p style={{ fontSize: '0.85rem', fontWeight: '600', color: activeColors.textMuted, marginBottom: '2rem', lineHeight: '1.6', minHeight: '3em' }}>{type.descripcion || 'Sin descripción corporativa definida.'}</p>
                             
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '1rem', borderTop: '1px solid var(--border)', marginTop: 'auto' }} className="border-slate-100 dark:border-slate-800">
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '11px', fontWeight: '700', minWidth: 0 }} className="text-slate-500 dark:text-slate-400">
-                                    <CheckCircle size={14} className="text-emerald-500" style={{ minWidth: 'max-content' }} /> Audita:
-                                    <span style={{ fontWeight: '900', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '80px' }} className="text-slate-700 dark:text-slate-200" title={type.rolAprobador || 'Admin'}>{type.rolAprobador || 'Admin'}</span>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', paddingTop: '1.5rem', borderTop: `1px solid ${activeColors.border}` }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase' }}>
+                                    <UserCircle2 size={16} style={{ color: activeColors.accent }} /> <span style={{ opacity: 0.6 }}>Auditor:</span> <span style={{ color: activeColors.textMain }}>{type.rolAprobador}</span>
                                 </div>
-
-                                {/* Action Buttons: EXACTLY like Users */}
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', flexShrink: 0 }}>
-                                    <button 
-                                        onClick={() => { 
-                                            setCurrentType(type); 
-                                            setFormData({ 
-                                                ...type, 
-                                                categoria: type.categoria ?? 0, 
-                                                rolAprobador: type.rolAprobador || 'Admin' 
-                                            }); 
-                                            try { setFields(JSON.parse(type.camposConfig || '[]')); } catch(e) { setFields([]); }
-                                            setShowModal(true); 
-                                        }}
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '1rem', color: '#6366f1' }}
-                                        className="hover:scale-110 transition-transform dark:text-indigo-400"
-                                        title="Editar Novedad"
-                                    >
-                                        <Edit size={18} />
-                                    </button>
-                                    <button 
-                                        onClick={() => { setCurrentType(type); setShowConfirm(true); }}
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
-                                        className="hover:scale-110 transition-transform dark:text-red-400"
-                                        title="Eliminar Novedad"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase' }}>
+                                    <Layers size={16} style={{ color: '#10b981' }} /> <span style={{ opacity: 0.6 }}>Campos:</span> <span style={{ color: activeColors.textMain }}>{type.camposConfig ? JSON.parse(type.camposConfig).length : 0}</span>
                                 </div>
                             </div>
                         </div>
-                    ))
-                )}
-                {!loading && newsTypes.length === 0 && (
-                    <div className="bg-white dark:bg-slate-900 rounded-[32px] border border-dashed border-slate-200 dark:border-slate-800 py-24 text-center text-slate-400 font-black uppercase tracking-widest w-full">
-                        <FileText size={64} className="mx-auto mb-6 opacity-10" />
-                        No hay tipos de novedades diseñados
-                    </div>
-                )}
-            </div>
 
-            {showModal && (
-                <div className="modal-overlay">
-                    <div className="modal-content shadow-2xl dark:bg-slate-900 border dark:border-slate-800" style={{ maxWidth: '700px', borderRadius: '48px' }}>
-                        <div className="modal-header border-b dark:border-slate-800 px-10 py-8">
-                            <h2 className="text-2xl font-black flex items-center gap-3 dark:text-white uppercase tracking-tight" style={{ margin: 0 }}>
-                                <Settings size={28} className="text-indigo-500" />
-                                {currentType ? 'Configurar Novedad' : 'Diseñador de Novedad'}
-                            </h2>
-                            <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-all p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
-                                <X size={28} />
+                        {/* Actions */}
+                        <div style={{ padding: '0 2.5rem 2.5rem 2.5rem', display: 'flex', gap: '15px' }}>
+                            <button 
+                                onClick={() => handleOpenModal(type)} 
+                                style={{ flex: 1, padding: '16px', borderRadius: '18px', border: 'none', background: isDarkMode ? '#334155' : '#f1f5f9', color: isDarkMode ? 'white' : activeColors.accent, fontWeight: '900', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', transition: 'all 0.2s' }}
+                                className="hover:bg-indigo-600 hover:text-white"
+                            >
+                                <Edit3 size={16} /> Configurar
+                            </button>
+                            <button 
+                                onClick={() => { setCurrentType(type); setShowConfirm(true); }}
+                                style={{ width: '52px', height: '52px', borderRadius: '18px', border: 'none', background: isDarkMode ? '#451a1a' : '#fef2f2', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                                className="hover:bg-red-600 hover:text-white"
+                            >
+                                <Trash2 size={20} />
                             </button>
                         </div>
-                        <form onSubmit={handleSave}>
-                            <div className="modal-body p-10 space-y-8" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="col-span-2">
-                                        <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 ml-1">Nombre del Tipo de Novedad</label>
+                    </div>
+                ))}
+            </div>
+
+            {/* Configuration Modal Boutique */}
+            {showModal && createPortal(
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 15, 0.85)', backdropFilter: 'blur(30px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                    <div style={{ background: activeColors.card, width: '100%', maxWidth: '950px', maxHeight: '92vh', borderRadius: '48px', overflow: 'hidden', display: 'flex', flexDirection: 'column', border: isDarkMode ? '1px solid #334155' : 'none', boxShadow: '0 50px 100px rgba(0,0,0,0.5)', animation: 'modalSlideUp 0.4s cubic-bezier(0.165, 0.84, 0.44, 1)' }}>
+                        {/* Header */}
+                        <div style={{ padding: '35px 50px', background: isDarkMode ? '#1e293b' : '#ffffff', borderBottom: `1px solid ${activeColors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
+                            <div>
+                                <h2 style={{ color: activeColors.textMain, fontWeight: '950', fontSize: '1.4rem', margin: 0, letterSpacing: '-0.02em' }}>{currentType ? 'Editar estructura' : 'Nueva configuración'}</h2>
+                                <p style={{ fontSize: '0.8rem', color: activeColors.textMuted, fontWeight: '600', marginTop: '4px' }}>Defina los atributos técnicos de esta novedad</p>
+                            </div>
+                            <button onClick={() => setShowModal(false)} style={{ background: activeColors.accentSoft, border: 'none', width: '48px', height: '48px', borderRadius: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.accent, transition: 'all 0.2s' }} className="hover:rotate-90">
+                                <X size={24} strokeWidth={3} />
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        <div style={{ padding: '40px 50px', flex: 1, overflowY: 'auto', background: activeColors.bg }}>
+                            <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+                                {/* General Info Block */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
+                                    <div style={{ gridColumn: '1 / -1' }}>
+                                        <label style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.1em' }}>Nombre de la Estructura *</label>
                                         <input 
                                             required 
                                             value={formData.nombre} 
                                             onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} 
-                                            placeholder="Ej. Incapacidad, Permiso Especial, Vacaciones..."
-                                            className="input-premium dark:bg-slate-900"
+                                            placeholder="Ej. Licencia Remunerada..."
+                                            style={{ width: '100%', padding: '18px 24px', borderRadius: '18px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', boxSizing: 'border-box', outline: 'none', transition: 'border-color 0.2s' }}
+                                            className="focus:border-indigo-500"
                                         />
                                     </div>
-                                    <div className="col-span-2">
-                                        <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 ml-1">Descripción para el Usuario</label>
+                                    <div style={{ gridColumn: '1 / -1' }}>
+                                        <label style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.1em' }}>Manual de Usuario (Instrucciones)</label>
                                         <textarea 
                                             value={formData.descripcion || ''} 
                                             onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })} 
-                                            placeholder="Describe cuándo y cómo debe usarse este tipo de novedad..."
-                                            className="input-premium dark:bg-slate-900 min-h-[100px]"
+                                            placeholder="Describa brevemente cuándo aplicar esta novedad..."
+                                            style={{ width: '100%', padding: '18px 24px', borderRadius: '18px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', minHeight: '100px', boxSizing: 'border-box', outline: 'none', resize: 'vertical' }}
+                                            className="focus:border-indigo-500"
                                         />
                                     </div>
-
-                                    <div className="col-span-1">
-                                        <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 ml-1">Se aplica a:</label>
-                                        <select 
-                                            value={formData.categoria} 
-                                            onChange={(e) => setFormData({ ...formData, categoria: parseInt(e.target.value) })} 
-                                            className="input-premium dark:bg-slate-900"
-                                        >
-                                            <option value={0}>Colaborador (Personal)</option>
-                                            <option value={1}>Tiendas (Ubicaciones)</option>
-                                            <option value={2}>Marcas (Unidades)</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="col-span-1">
-                                        <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 ml-1">Aprobación requerida por:</label>
-                                        <select 
-                                            value={formData.rolAprobador} 
-                                            onChange={(e) => setFormData({ ...formData, rolAprobador: e.target.value })} 
-                                            className="input-premium dark:bg-slate-900"
-                                        >
-                                            <option value="Admin">Administrador General</option>
-                                            <option value="RH">Talento Humano (RH)</option>
-                                            <option value="Supervisor">Operaciones / Supervisor</option>
-                                            <option value="Gerente">Gerencia / Finanzas</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div className="flex items-center justify-between p-6 bg-slate-50/50 dark:bg-slate-800/30 rounded-3xl border border-slate-200/50 dark:border-slate-800 col-span-2">
-                                        <div>
-                                            <p className="font-black text-slate-800 dark:text-white text-sm mb-1 uppercase tracking-tight">Carga de Soporte</p>
-                                            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold">Obligatorio adjuntar documento/foto</p>
-                                        </div>
-                                        <div 
-                                            onClick={() => setFormData({ ...formData, requiereAdjunto: !formData.requiereAdjunto })}
-                                            className={`premium-switch ${formData.requiereAdjunto ? 'active' : ''}`}
-                                        />
-                                    </div>
-
-                                    <div className="col-span-2 pt-4">
-                                        <div className="flex items-center justify-between mb-6 border-b dark:border-slate-800 pb-4">
-                                            <label className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Campos Personalizados</label>
-                                            <button 
-                                                type="button" 
-                                                onClick={() => setFields([...fields, { name: '', type: 'text', required: false }])}
-                                                className="btn-premium btn-premium-primary !h-10 !px-4 !text-[10px] !rounded-xl"
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.1em' }}>Nivel de Autoridad (Aprobador) *</label>
+                                        <div style={{ position: 'relative' }}>
+                                            <select 
+                                                value={formData.rolAprobador} 
+                                                onChange={(e) => setFormData({ ...formData, rolAprobador: e.target.value })}
+                                                style={{ width: '100%', padding: '18px 24px', borderRadius: '18px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', boxSizing: 'border-box', appearance: 'none', outline: 'none' }}
+                                                className="focus:border-indigo-500"
                                             >
-                                                <Plus size={16} className="mr-2" /> Agregar Campo
-                                            </button>
+                                                <option value="RH">Talento Humano (RH)</option>
+                                                <option value="Admin">Administrador Master</option>
+                                                <option value="Supervisor">Supervisor Directo</option>
+                                            </select>
+                                            <ChevronRight size={20} style={{ position: 'absolute', right: '20px', top: '20px', transform: 'rotate(90deg)', pointerEvents: 'none', color: activeColors.textMuted }} />
                                         </div>
-                                        
-                                        <div className="space-y-4">
-                                            {fields.map((f, idx) => (
-                                                <div key={idx} className="bg-slate-50 dark:bg-slate-800/20 rounded-3xl border border-slate-100 dark:border-slate-800 p-6 animate-in slide-in-from-right-4 duration-300 shadow-sm">
-                                                    <div className="flex flex-wrap md:flex-nowrap gap-4 items-end">
-                                                        <div className="flex-1 min-w-[200px]">
-                                                            <label className="block text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 ml-1">Etiqueta del Campo</label>
-                                                            <input 
-                                                                value={f.name} 
-                                                                onChange={(e) => {
-                                                                    const newFields = [...fields];
-                                                                    newFields[idx].name = e.target.value;
-                                                                    setFields(newFields);
-                                                                }}
-                                                                placeholder="Ej. Entidad, ¿Autorizado?..."
-                                                                className="input-premium dark:bg-slate-900 !h-11 !text-xs !font-bold"
-                                                            />
-                                                        </div>
-                                                        <div className="w-full md:w-[160px]">
-                                                            <label className="block text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 ml-1">Tipo de Campo</label>
-                                                            <select 
-                                                                value={f.type}
-                                                                onChange={(e) => {
-                                                                    const newFields = [...fields];
-                                                                    newFields[idx].type = e.target.value;
-                                                                    if ((e.target.value === 'select' || e.target.value === 'radio') && !newFields[idx].options) {
-                                                                        newFields[idx].options = '';
-                                                                    }
-                                                                    setFields(newFields);
-                                                                }}
-                                                                className="input-premium dark:bg-slate-900 !h-11 !text-xs !font-bold"
-                                                            >
-                                                                <option value="text">Texto Corto</option>
-                                                                <option value="number">Número</option>
-                                                                <option value="date">Fecha / Hora</option>
-                                                                <option value="check">Checkbox / Switch</option>
-                                                                <option value="select">Lista (Select)</option>
-                                                                <option value="radio">Radio Buttons</option>
-                                                            </select>
-                                                        </div>
-                                                        <div className="flex flex-col items-center gap-2 mb-1 px-4 border-l dark:border-slate-800">
-                                                            <label className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Oblig.</label>
-                                                            <input 
-                                                                type="checkbox" 
-                                                                checked={f.required}
-                                                                onChange={(e) => {
-                                                                    const newFields = [...fields];
-                                                                    newFields[idx].required = e.target.checked;
-                                                                    setFields(newFields);
-                                                                }}
-                                                                className="w-5 h-5 rounded-lg text-indigo-600 border-slate-300 dark:border-slate-700 dark:bg-slate-900 transition-all cursor-pointer"
-                                                            />
-                                                        </div>
-                                                        <button 
-                                                            type="button"
-                                                            onClick={() => setFields(fields.filter((_, i) => i !== idx))}
-                                                            className="p-3 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/40 rounded-xl transition-all"
-                                                        >
-                                                            <Trash2 size={20} />
-                                                        </button>
-                                                    </div>
-                                                    
-                                                    {(f.type === 'select' || f.type === 'radio') && (
-                                                        <div className="mt-5 p-5 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/50 animate-in slide-in-from-top-2">
-                                                            <label className="block text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-2">Opciones de la Lista (separadas por coma)</label>
-                                                            <input 
-                                                                value={f.options || ''}
-                                                                onChange={(e) => {
-                                                                    const newFields = [...fields];
-                                                                    newFields[idx].options = e.target.value;
-                                                                    setFields(newFields);
-                                                                }}
-                                                                placeholder="Opción 1, Opción 2, Opción 3"
-                                                                className="input-premium !bg-white dark:!bg-slate-900 !h-10 !text-xs !font-bold"
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ))}
-                                            {fields.length === 0 && (
-                                                <div className="text-center py-12 bg-slate-50 dark:bg-slate-900/50 border border-dashed border-slate-200 dark:border-slate-800 rounded-[32px]">
-                                                    <p className="text-[10px] text-slate-400 dark:text-slate-600 font-black uppercase tracking-widest">Diseña el formulario personalizado aquí</p>
-                                                </div>
-                                            )}
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', background: activeColors.accentSoft, borderRadius: '18px', border: `1px solid ${isDarkMode ? 'rgba(79, 70, 229, 0.2)' : '#d1daff'}` }}>
+                                        <div>
+                                            <span style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: activeColors.accent, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Adjunto Requerido</span>
+                                            <span style={{ fontSize: '0.7rem', color: activeColors.textMuted, fontWeight: '600' }}>Exigir soporte documental</span>
                                         </div>
+                                        <label className="premium-switch">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={formData.requiereAdjunto} 
+                                                onChange={(e) => setFormData({ ...formData, requiereAdjunto: e.target.checked })} 
+                                            />
+                                            <span className="premium-switch-slider"></span>
+                                        </label>
                                     </div>
                                 </div>
-                            </div>
-                            <div className="modal-footer border-t dark:border-slate-800 px-10 py-8 gap-4">
-                                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary !h-[56px] flex-1 text-sm font-black uppercase tracking-widest" disabled={isSubmitting}>
-                                    Descartar
-                                </button>
-                                <button type="submit" className="btn-premium btn-premium-primary !h-[56px] flex-1 text-sm font-black uppercase tracking-widest shadow-xl shadow-indigo-100 dark:shadow-none" disabled={isSubmitting}>
-                                    {isSubmitting ? <div className="loader !border-white !w-5 !h-5"></div> : (currentType ? 'Actualizar Novedad' : 'Guardar Diseño')}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
 
-            {showConfirm && (
-                <div className="modal-overlay">
-                    <div className="modal-content dark:bg-slate-900 border dark:border-slate-800 shadow-2xl" style={{ maxWidth: '440px', borderRadius: '40px', padding: '3rem' }}>
-                        <div className="text-center">
-                            <div className="mb-8 mx-auto bg-red-50 dark:bg-red-900/30 text-red-500 w-24 h-24 rounded-[32px] flex items-center justify-center shadow-lg shadow-red-50 dark:shadow-none animate-bounce-subtle">
-                                <Trash2 size={48} />
-                            </div>
-                            <h2 className="text-2xl font-black mb-3 dark:text-white uppercase tracking-tight">¿Eliminar Diseño?</h2>
-                            <p className="text-slate-500 dark:text-slate-400 text-sm font-bold mb-10 px-4 leading-relaxed tracking-tight">
-                                Esta acción es irreversible. Se eliminará permanentemente la configuración para <span className="text-slate-800 dark:text-white underline decoration-red-500 decoration-2 underline-offset-4">{currentType?.nombre}</span>.
-                            </p>
-                            <div className="flex gap-4">
-                                <button onClick={() => setShowConfirm(false)} className="btn-premium btn-premium-secondary h-[60px] flex-1 text-xs font-black uppercase tracking-widest" disabled={isDeleting}>
-                                    Volver
-                                </button>
-                                <button onClick={handleDelete} className="btn-premium btn-premium-danger h-[60px] flex-1 text-xs font-black uppercase tracking-widest" disabled={isDeleting}>
-                                    {isDeleting ? <div className="loader !border-white !w-5 !h-5"></div> : 'Confirmar'}
-                                </button>
-                            </div>
+                                {/* Dynamic Fields Modular Block */}
+                                <div style={{ borderTop: `2px dashed ${activeColors.border}`, paddingTop: '40px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '25px' }}>
+                                        <div>
+                                            <h3 style={{ fontSize: '1rem', fontWeight: '950', color: activeColors.textMain, textTransform: 'uppercase', margin: 0 }}>Campos Personalizados</h3>
+                                            <p style={{ fontSize: '0.75rem', color: activeColors.textMuted, fontWeight: '600' }}>Capture datos específicos para esta novedad</p>
+                                        </div>
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setFields([...fields, { name: '', type: 'text', required: false, options: '' }])}
+                                            style={{ padding: '12px 24px', background: activeColors.accent, color: 'white', border: 'none', borderRadius: '16px', fontWeight: '900', fontSize: '9px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 8px 15px rgba(79, 70, 229, 0.2)', display: 'flex', alignItems: 'center', gap: '8px' }}
+                                        >
+                                            <Plus size={14} strokeWidth={3} /> Agregar Requerimiento
+                                        </button>
+                                    </div>
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                        {fields.length === 0 && (
+                                            <div style={{ padding: '60px', textAlign: 'center', border: `2px dashed ${activeColors.border}`, borderRadius: '32px' }}>
+                                                <Layers size={48} style={{ color: activeColors.border, marginBottom: '15px' }} />
+                                                <p style={{ color: activeColors.textMuted, fontSize: '0.85rem', fontWeight: '600' }}>Sin campos adicionales configurados.</p>
+                                            </div>
+                                        )}
+                                        {fields.map((f, idx) => (
+                                            <div key={idx} style={{ background: activeColors.card, padding: '30px', borderRadius: '28px', border: `1px solid ${activeColors.border}`, display: 'grid', gridTemplateColumns: '1fr 200px 60px', gap: '25px', alignItems: 'end', animation: 'fadeIn 0.3s ease-in-out' }}>
+                                                <div>
+                                                    <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '10px' }}>Etiqueta del Campo *</label>
+                                                    <input 
+                                                        value={f.name} 
+                                                        onChange={(e) => { const n = [...fields]; n[idx].name = e.target.value; setFields(n); }}
+                                                        placeholder="Ej: Número de Radicado"
+                                                        style={{ width: '100%', padding: '14px 20px', borderRadius: '14px', border: `1px solid ${activeColors.border}`, background: activeColors.bg, color: activeColors.textMain, fontWeight: '700', boxSizing: 'border-box', outline: 'none' }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '10px' }}>Tipo de Dato *</label>
+                                                    <select 
+                                                        value={f.type} 
+                                                        onChange={(e) => { const n = [...fields]; n[idx].type = e.target.value; setFields(n); }}
+                                                        style={{ width: '100%', padding: '14px 20px', borderRadius: '14px', border: `1px solid ${activeColors.border}`, background: activeColors.bg, color: activeColors.textMain, fontWeight: '700', cursor: 'pointer', boxSizing: 'border-box', outline: 'none' }}
+                                                    >
+                                                        <option value="text">Texto Libre</option>
+                                                        <option value="number">Número</option>
+                                                        <option value="date">Fecha</option>
+                                                        <option value="select">Lista Desplegable</option>
+                                                        <option value="radio">Selección Única</option>
+                                                    </select>
+                                                </div>
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => setFields(fields.filter((_, i) => i !== idx))}
+                                                    style={{ width: '56px', height: '56px', borderRadius: '16px', border: 'none', background: '#fef2f2', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
+                                                    className="hover:bg-red-600 hover:text-white"
+                                                >
+                                                    <Trash2 size={22} />
+                                                </button>
+                                                
+                                                {(f.type === 'select' || f.type === 'radio') && (
+                                                    <div style={{ gridColumn: '1 / -1', padding: '25px', background: activeColors.accentSoft, borderRadius: '20px', border: `1px dashed ${activeColors.accent}` }}>
+                                                        <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: activeColors.accent, textTransform: 'uppercase', marginBottom: '10px' }}>Opciones Disponibles (Separar por comas) *</label>
+                                                        <input 
+                                                            value={f.options || ''} 
+                                                            onChange={(e) => { const n = [...fields]; n[idx].options = e.target.value; setFields(n); }}
+                                                            placeholder="Opción 1, Opción 2, Opción 3..."
+                                                            style={{ width: '100%', padding: '14px 20px', borderRadius: '12px', border: 'none', background: activeColors.card, color: activeColors.textMain, fontWeight: '700', boxSizing: 'border-box', outline: 'none' }}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                
+                                <div style={{ display: 'flex', gap: '20px', paddingTop: '20px', position: 'sticky', bottom: 0, background: activeColors.bg, paddingBottom: '10px' }}>
+                                    <button type="button" onClick={() => setShowModal(false)} style={{ flex: 1, padding: '20px', borderRadius: '20px', border: `2px solid ${activeColors.border}`, background: 'transparent', color: activeColors.textMuted, fontWeight: '900', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}>Cancelar</button>
+                                    <button type="submit" disabled={isSubmitting} style={{ flex: 2, padding: '20px', borderRadius: '20px', border: 'none', background: activeColors.accent, color: 'white', fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 30px rgba(79, 70, 229, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
+                                        {isSubmitting ? 'Procesando Transacción...' : 'Finalizar Estructura V12'}
+                                        {!isSubmitting && <CheckCircle size={20} />}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
+                </div>,
+                document.getElementById('modal-root')
+            )}
+
+            {/* Confirmation Overlay Elite */}
+            {showConfirm && createPortal(
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 15, 0.95)', backdropFilter: 'blur(20px)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ background: activeColors.card, padding: '50px', borderRadius: '48px', textAlign: 'center', maxWidth: '450px', width: '90%', border: isDarkMode ? '1px solid #334155' : 'none', boxShadow: '0 50px 100px rgba(0,0,0,0.5)' }}>
+                        <div style={{ width: '90px', height: '90px', background: '#fef2f2', color: '#ef4444', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 30px' }}>
+                            <Trash2 size={42} />
+                        </div>
+                        <h2 style={{ fontSize: '1.4rem', fontWeight: '950', color: activeColors.textMain, letterSpacing: '-0.02em' }}>¿Eliminar estructura?</h2>
+                        <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginBottom: '40px', lineHeight: '1.6' }}>Se revocará permanentemente la estructura:<br/><strong style={{ color: activeColors.textMain, fontSize: '1.1rem' }}>{currentType?.nombre}</strong></p>
+                        <div style={{ display: 'flex', gap: '15px' }}>
+                            <button onClick={() => setShowConfirm(false)} style={{ flex: 1, padding: '18px', borderRadius: '18px', border: `2px solid ${activeColors.border}`, background: 'transparent', color: activeColors.textMuted, fontWeight: '800', textTransform: 'uppercase', fontSize: '10px' }}>Cerrar</button>
+                            <button onClick={handleDelete} disabled={isDeleting} style={{ flex: 1, padding: '18px', borderRadius: '18px', border: 'none', background: '#ef4444', color: 'white', fontWeight: '900', textTransform: 'uppercase', fontSize: '10px', boxShadow: '0 10px 20px rgba(239, 68, 68, 0.3)' }}>
+                                {isDeleting ? 'Borrando...' : 'Confirmar'}
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.getElementById('modal-root')
+            )}
+
+            {/* Premium Toast System */}
+            {toast.show && (
+                <div style={{ position: 'fixed', bottom: '50px', right: '50px', zIndex: 11000, background: toast.type === 'success' ? '#10b981' : '#ef4444', color: 'white', padding: '20px 40px', borderRadius: '24px', fontWeight: '950', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.15em', display: 'flex', alignItems: 'center', gap: '15px', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', animation: 'slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)' }}>
+                    {toast.type === 'success' ? <CheckCircle size={22} /> : <AlertCircle size={22} />}
+                    {toast.message}
                 </div>
             )}
 
-            {toast.show && (
-                <div className="toast-container !z-[10001]">
-                    <div className={`toast shadow-2xl ${toast.type === 'success' ? 'toast-success bg-emerald-500 text-white' : 'toast-error bg-red-500 text-white'}`}>
-                        {toast.type === 'success' ? <CheckCircle size={24} /> : <AlertCircle size={24} />}
-                        <span className="font-black uppercase tracking-tight">{toast.message}</span>
-                    </div>
-                </div>
-            )}
+            <style>{`
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes modalSlideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+                @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+                @keyframes spin { to { transform: rotate(360deg); } }
+                
+                .animate-spin { animation: spin 1s linear infinite; }
+                .hover\\:scale-105:hover { transform: scale(1.05); }
+                .hover\\:scale-110:hover { transform: scale(1.10); }
+                .active\\:scale-95:active { transform: scale(0.95); }
+                .hover\\:rotate-90:hover { transform: rotate(90deg); }
+                .hover\\:shadow-2xl:hover { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+                .hover\\:translate-y-\\[-8px\\]:hover { transform: translateY(-8px); }
+                .hover\\:bg-indigo-600:hover { background-color: #4f46e5 !important; }
+                .hover\\:bg-red-600:hover { background-color: #ef4444 !important; }
+                .hover\\:text-white:hover { color: #ffffff !important; }
+                .focus\\:border-indigo-500:focus { border-color: #4f46e5 !important; }
+            `}</style>
         </div>
     );
 };

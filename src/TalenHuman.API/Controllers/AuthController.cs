@@ -80,10 +80,58 @@ public class AuthController : ControllerBase
             signingCredentials: creds
         );
 
+        // Load store info for Managers/Supervisors
+        Guid? storeId = null;
+        string? storeName = null;
+        string? storeExternalId = null;
+        List<Guid> storeIds = new();
+
+        var employee = await _context.Employees
+            .Include(e => e.Store)
+            .FirstOrDefaultAsync(e => e.Id == user.EmployeeId);
+
+        if (employee?.Store != null)
+        {
+            storeId = employee.StoreId;
+            storeName = employee.Store.Name;
+            storeExternalId = employee.Store.ExternalId;
+        }
+
+        // Load all assigned stores (primarily for Supervisors / Fallback for Managers)
+        var supervisorStoreAssignments = await _context.SupervisorStores
+            .Include(ss => ss.Store)
+            .Where(ss => ss.UserId == user.Id)
+            .ToListAsync();
+
+        storeIds = supervisorStoreAssignments.Select(ss => ss.StoreId).ToList();
+
+        // Fallback for storeName/ExternalId if not found via Employee
+        if (storeId == null && supervisorStoreAssignments.Any())
+        {
+            var primary = supervisorStoreAssignments.First().Store;
+            if (primary != null)
+            {
+                storeId = primary.Id;
+                storeName = primary.Name;
+                storeExternalId = primary.ExternalId;
+            }
+        }
+
         return Ok(new
         {
             token = new JwtSecurityTokenHandler().WriteToken(token),
-            user = new { user.Email, user.FullName, user.CompanyId, user.MustChangePassword, roles, companyName = user.Company?.Name }
+            user = new { 
+                user.Email, 
+                user.FullName, 
+                user.CompanyId, 
+                user.MustChangePassword, 
+                roles, 
+                companyName = user.Company?.Name,
+                storeId,
+                storeName,
+                storeExternalId,
+                storeIds
+            }
         });
     }
 

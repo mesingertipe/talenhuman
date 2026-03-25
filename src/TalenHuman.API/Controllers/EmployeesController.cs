@@ -1,4 +1,5 @@
 using MediatR;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using TalenHuman.Domain.Common;
 using TalenHuman.Application.Common.Interfaces;
@@ -30,11 +31,30 @@ public class EmployeesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<object>>> GetEmployees()
     {
-        var employees = await _context.Employees
+        var userId = Guid.Parse(User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier) ?? Guid.Empty.ToString());
+        var userRoles = User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(r => r.Value).ToList();
+
+        var query = _context.Employees
             .Include(e => e.Store)
             .Include(e => e.Profile)
             .Include(e => e.Jornada)
-            .ToListAsync();
+            .AsQueryable();
+
+        // RBAC: Filter by Managed Stores for Managers and Supervisors
+        if (!userRoles.Contains("SuperAdmin") && !userRoles.Contains("Admin") && !userRoles.Contains("RH"))
+        {
+            if (userRoles.Contains("Supervisor") || userRoles.Contains("Gerente"))
+            {
+                var managedStores = await _context.Set<SupervisorStore>()
+                    .Where(ss => ss.UserId == userId)
+                    .Select(ss => ss.StoreId)
+                    .ToListAsync();
+                
+                query = query.Where(e => managedStores.Contains(e.StoreId));
+            }
+        }
+
+        var employees = await query.ToListAsync();
 
         var result = new List<object>();
         foreach (var emp in employees)

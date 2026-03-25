@@ -40,7 +40,11 @@ const SearchableSelect = ({
   };
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div 
+      className="relative" 
+      ref={containerRef}
+      style={{ zIndex: isOpen ? 100 : 1 }}
+    >
       {label && (
         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
           {label} {required && <span className="text-red-500">*</span>}
@@ -78,7 +82,7 @@ const SearchableSelect = ({
       </div>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute z-[1000] w-full mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="p-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
             <div className="relative">
               <Search size={14} className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" />
@@ -124,8 +128,11 @@ const SearchableSelect = ({
                 );
               })
             ) : (
-              <div className="p-8 text-center text-slate-400 dark:text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] italic">
-                Sin resultados
+              <div className="p-8 text-center bg-slate-50/50 dark:bg-slate-800/30 rounded-xl m-2">
+                <Search size={24} className="mx-auto mb-3 text-slate-300 dark:text-slate-600 opacity-50" />
+                <div className="text-slate-400 dark:text-slate-500 text-[10px] font-black uppercase tracking-[0.2em]">
+                  Sin resultados
+                </div>
               </div>
             )}
           </div>

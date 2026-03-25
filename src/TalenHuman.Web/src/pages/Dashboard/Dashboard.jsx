@@ -1,7 +1,19 @@
 import React from 'react';
 import { Users, Clock, Calendar, AlertCircle } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 const Dashboard = () => {
+    const { isDarkMode } = useTheme();
+    
+    const activeColors = {
+        bg: isDarkMode ? '#0f172a' : '#f8fafc',
+        card: isDarkMode ? '#1e293b' : '#ffffff',
+        border: isDarkMode ? '#334155' : '#f1f5f9',
+        textMain: isDarkMode ? '#f1f5f9' : '#1e293b',
+        textMuted: isDarkMode ? '#94a3b8' : '#64748b',
+        accent: '#4f46e5'
+    };
+
     const stats = [
         { label: 'Empleados Activos', value: '142', icon: <Users size={20} color="var(--primary)" />, trend: '+4 esta semana' },
         { label: 'Turnos Hoy', value: '48', icon: <Calendar size={20} color="var(--secondary)" />, trend: '6 pendientes' },
@@ -10,8 +22,12 @@ const Dashboard = () => {
     ];
 
     return (
-        <div className="dashboard">
-            <h1 style={{ marginBottom: '2rem', fontSize: '1.875rem', fontWeight: '700' }}>Hola, Tito 👋</h1>
+        <div className="page-container animate-in fade-in duration-500" style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto' }}>
+            {/* Elite Header */}
+            <div style={{ marginBottom: '4rem' }}>
+                <h1 style={{ fontSize: '2.2rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.03em' }}>Hola, Tito 👋</h1>
+                <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginTop: '6px' }}>Bienvenido al centro de mando de TalenHuman</p>
+            </div>
             
             <div className="stat-grid" style={{ marginBottom: '3rem' }}>
                 {stats.map((stat, idx) => (

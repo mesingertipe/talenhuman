@@ -6,16 +6,29 @@ import SearchableSelect from '../../components/Shared/SearchableSelect';
 import { useTableData } from '../../hooks/useTableData';
 import Pagination from '../../components/Shared/Pagination';
 import { Search } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 const Stores = () => {
+  const { isDarkMode } = useTheme();
+  const activeColors = {
+    bg: isDarkMode ? '#0f172a' : '#f8fafc',
+    card: isDarkMode ? '#1e293b' : '#ffffff',
+    border: isDarkMode ? '#334155' : '#f1f5f9',
+    textMain: isDarkMode ? '#f1f5f9' : '#1e293b',
+    textMuted: isDarkMode ? '#94a3b8' : '#64748b',
+    accent: '#4f46e5',
+    accentSoft: isDarkMode ? 'rgba(79, 70, 229, 0.15)' : '#eef2ff'
+  };
+
   const [stores, setStores] = useState([]);
   const [brands, setBrands] = useState([]);
+  const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [currentStore, setCurrentStore] = useState(null);
-  const [formData, setFormData] = useState({ name: '', address: '', brandId: '' });
+  const [formData, setFormData] = useState({ name: '', address: '', brandId: '', cityId: '', externalId: '', isActive: true });
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -44,12 +57,14 @@ const Stores = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [storesRes, brandsRes] = await Promise.all([
+      const [storesRes, brandsRes, citiesRes] = await Promise.all([
         api.get('/stores'),
-        api.get('/brands')
+        api.get('/brands'),
+        api.get('/cities')
       ]);
       setStores(storesRes.data);
       setBrands(brandsRes.data);
+      setCities(citiesRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -92,32 +107,42 @@ const Stores = () => {
   };
 
   return (
-    <div className="page-container animate-in fade-in duration-300">
-      <div className="page-header flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="w-full sm:max-w-sm">
-          <input 
-            type="text" 
-            placeholder="Buscar tiendas..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2.5 m-0 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 bg-white shadow-sm font-medium text-sm transition-all"
-            style={{ margin: 0 }}
-          />
+    <div className="page-container animate-in fade-in duration-500" style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto' }}>
+      {/* Elite Header & Toolbar */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4rem', gap: '2rem' }}>
+        <div>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.03em' }}>Gestión de tiendas</h1>
+          <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginTop: '6px' }}>Administración de puntos de venta y sucursales</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-shrink-0">
-          <button 
-            onClick={() => setShowImport(true)}
-            className="btn-premium btn-premium-secondary whitespace-nowrap"
-          >
-            <FileSpreadsheet size={18} /> Importar
-          </button>
-          <button 
-            onClick={() => { setCurrentStore(null); setFormData({ name: '', address: '', brandId: brands[0]?.id || '' }); setShowModal(true); }}
-            className="btn-premium btn-premium-primary whitespace-nowrap"
-          >
-            <Plus size={20} /> Nueva Tienda
-          </button>
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', width: '100%', maxWidth: '750px' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <Search size={18} className="absolute left-4 top-4 text-slate-400" />
+            <input 
+              type="text" 
+              placeholder="Filtrar tiendas..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="input-premium pl-12"
+              style={{ margin: 0, borderRadius: '20px', height: '56px' }}
+            />
+          </div>
+          <div className="flex gap-3">
+            <button 
+              onClick={() => setShowImport(true)}
+              className="btn-premium btn-premium-secondary"
+              style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
+            >
+              <FileSpreadsheet size={18} /> Importar
+            </button>
+            <button 
+              onClick={() => { setCurrentStore(null); setFormData({ name: '', address: '', brandId: '', cityId: '', externalId: '', isActive: true }); setShowModal(true); }}
+              className="btn-premium btn-premium-primary"
+              style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
+            >
+              <Plus size={20} /> Nueva Tienda
+            </button>
+          </div>
         </div>
       </div>
 
@@ -134,36 +159,68 @@ const Stores = () => {
             <thead>
               <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Tienda / Local</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>ID / Ciudad</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Estado</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Marca Asociada</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Dirección</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em', textAlign: 'right' }}>Gestión</th>
               </tr>
             </thead>
             <tbody>
               {currentStores.map((store) => (
-                <tr key={store.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-slate-50 transition-colors">
+                <tr key={store.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
                   <td style={{ padding: '1.25rem 1.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div style={{ width: '38px', height: '38px', background: '#e0e7ff', color: '#4f46e5', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: '38px', height: '38px', background: 'var(--bg-main)', color: '#4f46e5', border: '1px solid var(--border)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Store size={20} />
                       </div>
-                      <div className="font-bold text-slate-800">{store.name}</div>
+                      <div className="font-bold text-slate-800 dark:text-white">{store.name}</div>
                     </div>
+                  </td>
+                  <td style={{ padding: '1.25rem 1.5rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: '900', color: '#4f46e5', textTransform: 'uppercase' }}>{store.externalId || '---'}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <MapPin size={12} /> {cities.find(c => c.id === store.cityId)?.name || 'Sin ciudad'}
+                      </span>
+                    </div>
+                  </td>
+                  <td style={{ padding: '1.25rem 1.5rem' }}>
+                    <span style={{ 
+                      padding: '0.35rem 0.75rem', 
+                      background: store.isActive !== false ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                      color: store.isActive !== false ? '#10b981' : '#ef4444', 
+                      borderRadius: '9999px', 
+                      fontSize: '0.7rem', 
+                      fontWeight: '800',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      textTransform: 'uppercase'
+                    }}>
+                      {store.isActive !== false ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
+                      {store.isActive !== false ? 'Activo' : 'Inactivo'}
+                    </span>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
                     <span style={{ padding: '0.35rem 0.75rem', background: '#f1f5f9', color: '#475569', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
                       <Tag size={12} /> {store.brandName || brands.find(b => b.id === store.brandId)?.name || 'N/A'}
                     </span>
                   </td>
-                  <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <MapPin size={14} className="text-slate-400" /> {store.address}
-                    </div>
-                  </td>
                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
                     <button 
-                      onClick={() => { setCurrentStore(store); setFormData({ name: store.name, address: store.address, brandId: store.brandId }); setShowModal(true); }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '1rem', color: '#6366f1' }}
+                      onClick={() => { 
+                        setCurrentStore(store); 
+                        setFormData({ 
+                          name: store.name, 
+                          address: store.address, 
+                          brandId: store.brandId, 
+                          cityId: store.cityId || '',
+                          externalId: store.externalId || '',
+                          isActive: store.isActive !== false 
+                        }); 
+                        setShowModal(true); 
+                      }}
+                      style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', padding: '0.5rem' }}
                       className="hover:scale-110 transition-transform"
                     >
                       <Edit size={18} />
@@ -180,7 +237,7 @@ const Stores = () => {
               ))}
               {currentStores.length === 0 && (
                 <tr>
-                  <td colSpan="4" style={{ padding: '4rem', textAlign: 'center' }}>
+                  <td colSpan="5" style={{ padding: '4rem', textAlign: 'center' }}>
                     <div className="flex flex-col items-center gap-2 opacity-40">
                       <Store size={48} />
                       <p className="font-medium">No se encontraron tiendas.</p>
@@ -207,14 +264,13 @@ const Stores = () => {
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '520px' }}>
             <div className="modal-header">
-              <h2 className="text-xl font-bold flex items-center gap-2" style={{ margin: 0 }}>
-                {currentStore ? <Edit size={24} className="text-indigo-500" /> : <Plus size={24} className="text-indigo-500" />}
-                {currentStore ? 'Editar Tienda' : 'Nueva Tienda'}
+              <h2 className="text-lg font-bold flex items-center gap-2 dark:text-white" style={{ margin: 0 }}>
+                {currentStore ? <Edit size={22} className="text-indigo-500" /> : <Plus size={22} className="text-indigo-500" />}
+                {currentStore ? 'Editar tienda' : 'Nueva tienda'}
               </h2>
               <button 
                 onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem' }}
+                className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors bg-transparent border-none cursor-pointer p-2 rounded-full"
               >
                 <X size={22} />
               </button>
@@ -223,7 +279,7 @@ const Stores = () => {
             <form onSubmit={handleSave}>
               <div className="modal-body space-y-6">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre de la Tienda</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre de la Tienda *</label>
                   <div className="relative">
                     <Store size={18} className="absolute left-3 top-4 text-slate-400" />
                     <input 
@@ -232,6 +288,33 @@ const Stores = () => {
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
                       className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
                       placeholder="Ej. Sede Central Norte"
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ID Tienda / Código *</label>
+                    <div className="relative">
+                      <Tag size={18} className="absolute left-3 top-4 text-slate-400" />
+                      <input 
+                        required
+                        value={formData.externalId} 
+                        onChange={(e) => setFormData({ ...formData, externalId: e.target.value })} 
+                        className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
+                        placeholder="Ej. T-100"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <SearchableSelect
+                      label="Ciudad"
+                      options={cities.map(c => ({ value: c.id, label: c.name }))}
+                      value={formData.cityId}
+                      onChange={(val) => setFormData({ ...formData, cityId: val })}
+                      placeholder="Seleccionar..."
+                      icon={MapPin}
+                      required
                     />
                   </div>
                 </div>
@@ -249,7 +332,7 @@ const Stores = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Dirección / Ubicación</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Dirección / Ubicación *</label>
                   <div className="relative">
                     <MapPin size={18} className="absolute left-3 top-4 text-slate-400" />
                     <input 
@@ -260,6 +343,28 @@ const Stores = () => {
                       placeholder="Ej. Av. Principal #123"
                     />
                   </div>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-xl ${formData.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                      {formData.isActive ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm dark:text-white">Estado de la Tienda</div>
+                      <div className="text-[10px] text-slate-500 uppercase font-black tracking-widest">
+                        {formData.isActive ? 'Tienda Activa' : 'Tienda Inactiva'}
+                      </div>
+                    </div>
+                  </div>
+                  <label className="premium-switch">
+                    <input 
+                      type="checkbox" 
+                      checked={formData.isActive}
+                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                    />
+                    <span className="premium-switch-slider"></span>
+                  </label>
                 </div>
               </div>
 
@@ -283,7 +388,7 @@ const Stores = () => {
               <div className="mb-6" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
                 <Trash2 size={40} />
               </div>
-              <h2 className="text-2xl font-bold mb-3">¿Eliminar Tienda?</h2>
+              <h2 className="text-xl font-bold mb-3">¿Eliminar tienda?</h2>
               <p className="text-slate-500 text-sm mb-8 px-4" style={{ lineHeight: '1.6' }}>
                 Estás por eliminar permanentemente <strong>{currentStore?.name}</strong>. Esta acción impactará sobre la asignación de empleados.
               </p>

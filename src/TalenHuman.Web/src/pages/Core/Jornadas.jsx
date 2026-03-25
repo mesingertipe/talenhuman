@@ -78,7 +78,7 @@ const Jornadas = () => {
         <div className="page-container animate-in fade-in duration-300">
             <div className="page-header flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-800">Jornadas Laborales</h1>
+                    <h1 className="text-slate-800" style={{ fontSize: '2.2rem', fontWeight: '950', margin: 0, letterSpacing: '-0.03em' }}>Jornadas laborales</h1>
                     <p className="text-slate-500 font-medium">Define los estándares de tiempo para la programación de turnos</p>
                 </div>
                 <button 
@@ -175,9 +175,9 @@ const Jornadas = () => {
                 <div className="modal-overlay">
                     <div className="modal-content" style={{ maxWidth: '500px' }}>
                         <div className="modal-header">
-                            <h2 className="text-xl font-bold flex items-center gap-2" style={{ margin: 0 }}>
-                                {currentJornada ? <Edit size={24} className="text-indigo-500" /> : <Plus size={24} className="text-indigo-500" />}
-                                {currentJornada ? 'Editar Jornada' : 'Nueva Jornada'}
+                            <h2 className="text-lg font-bold flex items-center gap-2" style={{ margin: 0 }}>
+                                {currentJornada ? <Edit size={22} className="text-indigo-500" /> : <Plus size={22} className="text-indigo-500" />}
+                                {currentJornada ? 'Editar jornada' : 'Nueva jornada'}
                             </h2>
                             <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button>
                         </div>
@@ -191,7 +191,7 @@ const Jornadas = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre de la Jornada</label>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre de la Jornada *</label>
                                     <input 
                                         required 
                                         value={formData.nombre} 
@@ -203,7 +203,7 @@ const Jornadas = () => {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Horas Diarias</label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Horas Diarias *</label>
                                         <input 
                                             type="number"
                                             step="0.5"
@@ -214,7 +214,7 @@ const Jornadas = () => {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Horas Semanales</label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Horas Semanales *</label>
                                         <input 
                                             type="number"
                                             step="0.5"
@@ -246,7 +246,7 @@ const Jornadas = () => {
                             <div className="mb-6" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
                                 <Trash2 size={40} />
                             </div>
-                            <h2 className="text-2xl font-bold mb-3">¿Eliminar Jornada?</h2>
+                            <h2 className="text-xl font-bold mb-3">¿Eliminar jornada?</h2>
                             <p className="text-slate-500 text-sm mb-8 px-4" style={{ lineHeight: '1.6' }}>
                                 Estás por descartar permanentemente la jornada <strong>{currentJornada?.nombre}</strong>. Asegúrate de que no haya empleados vinculados.
                             </p>

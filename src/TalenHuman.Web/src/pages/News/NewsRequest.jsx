@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { 
     Plus, X, User as UserIcon, Search, Calendar, FileText, 
-    Paperclip, AlertCircle, CheckCircle, Info, ChevronRight, Layers, ArrowLeft
+    Paperclip, AlertCircle, CheckCircle, Info, ChevronRight, Layers, ArrowLeft,
+    Building2, Store, Briefcase, Smile, Send
 } from 'lucide-react';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 
-const NewsRequest = ({ onComplete, onCancel }) => {
+const NewsRequest = ({ onComplete, onCancel, user }) => {
     const [step, setStep] = useState(1); 
     const [loading, setLoading] = useState(false);
     const [cedula, setCedula] = useState('');
@@ -33,6 +34,17 @@ const NewsRequest = ({ onComplete, onCancel }) => {
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     const { isDarkMode } = useTheme();
 
+    // Unified Premium Colors
+    const activeColors = {
+        bg: isDarkMode ? '#0f172a' : '#f8fafc',
+        card: isDarkMode ? '#1e293b' : '#ffffff',
+        border: isDarkMode ? '#334155' : '#f1f5f9',
+        textMain: isDarkMode ? '#f1f5f9' : '#1e293b',
+        textMuted: isDarkMode ? '#94a3b8' : '#64748b',
+        accent: '#4f46e5',
+        accentHighlight: isDarkMode ? '#6366f1' : '#4f46e5'
+    };
+
     useEffect(() => {
         setLoading(true);
         Promise.all([
@@ -41,11 +53,25 @@ const NewsRequest = ({ onComplete, onCancel }) => {
             api.get('/brands')
         ]).then(([resTypes, resStores, resBrands]) => {
             setNewsTypes(resTypes.data);
-            setStores(resStores.data);
+            
+            const isManager = user?.roles?.includes('Gerente');
+            const isSupervisor = user?.roles?.includes('Supervisor');
+            let filteredStores = resStores.data;
+
+            if (isManager && user?.storeId) {
+                filteredStores = resStores.data.filter(s => s.id === user.storeId);
+            } else if (isSupervisor && user?.storeIds && user.storeIds.length > 0) {
+                filteredStores = resStores.data.filter(s => user.storeIds.includes(s.id));
+            }
+            
+            setStores(filteredStores);
             setBrands(resBrands.data);
-        }).catch(err => {
+            
+            if (filteredStores.length === 1) {
+                setFormData(prev => ({ ...prev, storeId: filteredStores[0].id }));
+            }
+        }).catch(() => {
             api.get('/novedadtipos').then(res => setNewsTypes(res.data));
-            console.error("Error loading support data", err);
         }).finally(() => setLoading(false));
     }, []);
 
@@ -57,24 +83,19 @@ const NewsRequest = ({ onComplete, onCancel }) => {
     const handleTypeSelection = (typeId) => {
         const type = newsTypes.find(t => t.id === typeId);
         setSelectedType(type);
-        setFormData(prev => ({ ...prev, novedadTipoId: typeId }));
-        setFormData(prev => ({ ...prev, empleadoId: '', storeId: '', brandId: '', datosDinamicos: {} }));
+        setFormData(prev => ({ ...prev, novedadTipoId: typeId, empleadoId: '', storeId: '', brandId: '', datosDinamicos: {} }));
         setFoundEmployee(null);
         setCedula('');
 
-        if (type && type.camposConfig) {
+        if (type?.camposConfig) {
             try {
                 const config = JSON.parse(type.camposConfig);
                 setDynamicFields(config);
                 const initialValues = {};
                 config.forEach(f => initialValues[f.name] = '');
                 setFormData(prev => ({ ...prev, datosDinamicos: initialValues }));
-            } catch (e) {
-                setDynamicFields([]);
-            }
-        } else {
-            setDynamicFields([]);
-        }
+            } catch (e) { setDynamicFields([]); }
+        } else { setDynamicFields([]); }
         setStep(2);
     };
 
@@ -86,19 +107,13 @@ const NewsRequest = ({ onComplete, onCancel }) => {
             setFoundEmployee(res.data);
             setFormData(prev => ({ ...prev, empleadoId: res.data.id }));
             setStep(3);
-        } catch (err) {
-            showToast("Empleado no encontrado o no activo", "error");
-        } finally {
-            setLoading(false);
-        }
+        } catch (err) { showToast("Empleado no encontrado", "error"); }
+        finally { setLoading(false); }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.observaciones) {
-            showToast("Las observaciones son obligatorias", "error");
-            return;
-        }
+        if (!formData.observaciones) { showToast("Las observaciones son obligatorias", "error"); return; }
         try {
             setIsSubmitting(true);
             const payload = {
@@ -109,401 +124,302 @@ const NewsRequest = ({ onComplete, onCancel }) => {
                 datosDinamicos: JSON.stringify(formData.datosDinamicos)
             };
             await api.post('/novedades', payload);
-            showToast("Solicitud registrada con éxito");
-            setTimeout(() => {
-                if (onComplete) onComplete();
-            }, 2000);
-        } catch (err) {
-            showToast("Error al registrar solicitud", "error");
-        } finally {
-            setIsSubmitting(false);
-        }
+            showToast("Solicitud registrada");
+            setTimeout(() => { if (onComplete) onComplete(); }, 2000);
+        } catch (err) { showToast("Error al registrar", "error"); }
+        finally { setIsSubmitting(false); }
     };
 
     const getEntityName = () => {
         if (!selectedType) return '';
         if (selectedType.categoria === 0 && foundEmployee) return `${foundEmployee.firstName} ${foundEmployee.lastName}`;
-        if (selectedType.categoria === 1) return stores.find(s => s.id === formData.storeId)?.name || 'Tienda Seleccionada';
-        if (selectedType.categoria === 2) return brands.find(b => b.id === formData.brandId)?.name || 'Marca Seleccionada';
+        if (selectedType.categoria === 1) return stores.find(s => s.id === formData.storeId)?.name || 'Tienda';
+        if (selectedType.categoria === 2) return brands.find(b => b.id === formData.brandId)?.name || 'Marca';
         return '';
     };
 
-    return (
-        <div className="bg-white dark:bg-slate-900 rounded-[48px] shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 flex flex-col md:flex-row w-full relative min-h-[600px]">
-            {/* Sidebar Left */}
-            <div className="bg-indigo-600 md:w-72 p-8 text-white flex shrink-0 relative overflow-hidden" style={{ flexDirection: 'column', justifyContent: 'space-between' }}>
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
-                
-                <div className="relative z-10">
-                    <div className="flex items-center gap-4 mb-10">
-                        <div className="p-2.5 bg-white/10 rounded-[20px] backdrop-blur-md border border-white/20 shadow-xl">
-                            <Plus size={24} className="text-white" />
-                        </div>
-                        <div className="flex flex-col" style={{ flexDirection: 'column' }}>
-                            <h2 className="text-xl font-black uppercase tracking-tight leading-none">Nueva</h2>
-                            <p className="text-indigo-200 text-[9px] font-black uppercase tracking-[0.2em] mt-1 opacity-80">Solicitud</p>
-                        </div>
-                    </div>
-                    
-                    <div className="space-y-8">
-                        {[1, 2, 3, 4].map(s => (
-                            <div key={s} className="flex items-center gap-4 group cursor-default">
-                                <div className={`w-9 h-9 rounded-2xl flex items-center justify-center font-black transition-all duration-500 text-xs ${step === s ? 'bg-white text-indigo-600 shadow-xl scale-110' : step > s ? 'bg-emerald-400 text-white shadow-lg shadow-emerald-500/20' : 'bg-indigo-500/50 text-indigo-100 border border-indigo-400/30'}`}>
-                                    {step > s ? <CheckCircle size={18} /> : s}
-                                </div>
-                                <div className="flex min-w-0" style={{ flexDirection: 'column' }}>
-                                    <p className={`text-[8px] font-black uppercase tracking-[0.2em] leading-none ${step >= s ? 'text-white' : 'text-indigo-300/40'}`}>
-                                        Paso 0{s}
-                                    </p>
-                                    <p className={`text-[10px] font-black uppercase tracking-widest mt-1.5 truncate ${step === s ? 'text-white' : step > s ? 'text-emerald-300' : 'text-indigo-300/30'}`}>
-                                        {s === 1 ? 'Tipificación' : s === 2 ? 'Entidad' : s === 3 ? 'Parámetros' : 'Finalizar'}
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+    const renderContextHeader = () => {
+        if (!selectedType) return null;
+        
+        let title = "";
+        let subtitle = "";
+        let detail = "";
+        let icon = null;
 
-                <div className="relative z-10 pt-8 mt-auto">
-                    <div className="p-5 bg-indigo-700/40 rounded-[24px] border border-indigo-400/20 backdrop-blur-md overflow-hidden" style={{ minWidth: '160px' }}>
-                        <div className="flex items-center gap-2 mb-2">
-                            <Info size={14} className="text-indigo-200 opacity-60 flex-shrink-0" />
-                            <p className="text-[9px] text-indigo-100 font-black uppercase tracking-wider truncate">Aviso Administrativo</p>
-                        </div>
-                        <p className="text-[9px] text-indigo-200/80 font-medium leading-relaxed">
-                            Asegúrese de adjuntar soportes legibles para evitar rechazos técnicos.
-                        </p>
+        if (selectedType.categoria === 0 && foundEmployee) {
+            title = `${foundEmployee.firstName} ${foundEmployee.lastName}`;
+            subtitle = foundEmployee.profileName || 'Colaborador';
+            detail = `CC: ${foundEmployee.identificationNumber} • ${foundEmployee.storeName || ''}`;
+            icon = <UserIcon size={24} />;
+        } else if (selectedType.categoria === 1) {
+            const store = stores.find(s => s.id === formData.storeId);
+            title = store?.name || 'Tienda Seleccionada';
+            subtitle = 'Gestión por Sede';
+            detail = store?.externalId ? `ID: ${store.externalId}` : 'Ubicación operativa';
+            icon = <Store size={24} />;
+        } else if (selectedType.categoria === 2) {
+            const brand = brands.find(b => b.id === formData.brandId);
+            title = brand?.name || 'Marca Seleccionada';
+            subtitle = 'Gestión por Marca';
+            detail = 'Estrategia corporativa';
+            icon = <Building2 size={24} />;
+        } else {
+            return null;
+        }
+
+        return (
+            <div style={{ background: isDarkMode ? '#1e293b' : '#f8fafc', padding: '25px 35px', borderRadius: '32px', border: `1px solid ${activeColors.border}`, marginBottom: '35px', display: 'flex', alignItems: 'center', gap: '25px', animation: 'fadeIn 0.5s ease-out' }}>
+                <div style={{ width: '60px', height: '60px', background: activeColors.accent, color: 'white', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 20px rgba(79, 70, 229, 0.2)' }}>
+                    {icon}
+                </div>
+                <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <h4 style={{ fontSize: '1.25rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.02em' }}>{title}</h4>
+                        <span style={{ fontSize: '8px', padding: '3px 10px', background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#ffffff', border: `1px solid ${activeColors.border}`, borderRadius: '6px', fontWeight: '900', color: activeColors.accent, textTransform: 'uppercase' }}>Validado</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                        <p style={{ fontSize: '0.85rem', fontWeight: '800', color: activeColors.textMuted, margin: 0 }}>{subtitle}</p>
+                        <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#cbd5e1' }}></div>
+                        <p style={{ fontSize: '0.8rem', fontWeight: '900', color: activeColors.accent, margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{detail}</p>
                     </div>
                 </div>
             </div>
+        );
+    };
 
-            {/* Content Area Right */}
-            <div className="flex-1 flex flex-col bg-white dark:bg-slate-900 min-w-0 relative">
-                {/* Fixed Header within Right Side */}
-                <div className="sticky top-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md z-30 p-8 pb-4 border-b border-transparent dark:border-slate-800/50">
-                    <div className="flex justify-between items-start gap-4">
-                        <div className="flex-1 pr-10">
-                            {step === 1 ? (
-                                <>
-                                    <h3 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight leading-none">Categoría</h3>
-                                    <p className="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-widest mt-2">Seleccione la naturaleza de la novedad</p>
-                                    
-                                    <div className="relative mt-5 max-w-md">
-                                        <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                                        <input 
-                                            type="text"
-                                            placeholder="Filtrar tipos de novedad..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
-                                        />
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <h3 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight leading-none">
-                                        {step === 2 ? 'Identificación' : step === 3 ? 'Parámetros' : 'Finalización'}
-                                    </h3>
-                                    <p className="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-widest mt-2">
-                                        {step === 2 ? 'Identifique el destino de la solicitud' : 'Complete la información requerida'}
-                                    </p>
-                                </>
-                            )}
-                        </div>
-
-                        {onCancel && (
-                            <button 
-                                onClick={onCancel} 
-                                className="p-2.5 text-slate-400 hover:text-red-500 dark:hover:text-red-400 bg-slate-50 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all shadow-sm border border-slate-200 dark:border-slate-700"
-                                title="Cerrar"
-                            >
-                                <X size={20} />
-                            </button>
-                        )}
+    return (
+        <div style={{ display: 'flex', flexDirection: 'row', background: activeColors.card, borderRadius: '48px', overflow: 'hidden', minHeight: '650px', width: '100%', border: isDarkMode ? `1px solid ${activeColors.border}` : 'none' }}>
+            {/* Sidebar Flow (Premium Elite) */}
+            <div style={{ width: '320px', background: 'linear-gradient(180deg, #4f46e5 0%, #312e81 100%)', padding: '50px 40px', display: 'flex', flexDirection: 'column', color: 'white' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '60px' }}>
+                    <div style={{ padding: '12px', background: 'rgba(255,255,255,0.1)', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.2)' }}><Plus size={24} /></div>
+                    <div>
+                        <h2 style={{ fontSize: '1.4rem', fontWeight: '950', margin: 0, letterSpacing: '-0.02em' }}>Nueva solicitud</h2>
+                        <p style={{ fontSize: '9px', fontWeight: '800', opacity: 0.6, textTransform: 'uppercase', margin: '4px 0 0', letterSpacing: '0.15em' }}>Proceso Guiado V12</p>
                     </div>
                 </div>
 
-                {/* Scrollable Body */}
-                <div className="flex-1 overflow-y-auto p-8 pt-6 bespoke-scrollbar max-h-[calc(92vh-140px)]">
-                    {step === 1 && (
-                        <div className="grid grid-cols-1 gap-4 animate-in slide-in-from-right-8 duration-500 pb-10">
-                            {newsTypes
-                                .filter(type => 
-                                    type.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                    (type.descripcion && type.descripcion.toLowerCase().includes(searchTerm.toLowerCase()))
-                                )
-                                .map((type) => (
-                                <button
-                                    key={type.id}
-                                    onClick={() => handleTypeSelection(type.id)}
-                                    className={`group flex items-center p-5 rounded-3xl border-2 transition-all duration-300 text-left ${
-                                        formData.novedadTipoId === type.id
-                                            ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/40 shadow-xl shadow-indigo-500/10'
-                                            : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-indigo-200 dark:hover:border-indigo-400/30 hover:shadow-lg'
-                                    }`}
-                                >
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-1.5">
-                                            <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${
-                                                type.categoria === 0 || type.categoria === '0' ? 'bg-blue-50 border-blue-100 text-blue-600 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400' : 
-                                                type.categoria === 1 || type.categoria === '1' ? 'bg-amber-50 border-amber-100 text-amber-600 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400' : 
-                                                'bg-purple-50 border-purple-100 text-purple-600 dark:bg-purple-900/30 dark:border-purple-800 dark:text-purple-400'
-                                            }`}>
-                                                {type.categoria === 0 || type.categoria === '0' ? 'Empleado' : type.categoria === 1 || type.categoria === '1' ? 'Tienda' : 'Marca'}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '35px' }}>
+                    {[1, 2, 3, 4].map(s => (
+                        <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '15px', background: step === s ? 'white' : step > s ? '#10b981' : 'rgba(255,255,255,0.1)', color: step === s ? '#4f46e5' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '950', fontSize: '14px', transition: 'all 0.3s' }}>
+                                {step > s ? <CheckCircle size={20} /> : s}
+                            </div>
+                            <div>
+                                <p style={{ fontSize: '8px', fontWeight: '900', opacity: 0.4, textTransform: 'uppercase', margin: 0 }}>Paso 0{s}</p>
+                                <p style={{ fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', margin: '2px 0 0', color: step === s ? 'white' : 'rgba(255,255,255,0.3)' }}>
+                                    {s === 1 ? 'Concepto' : s === 2 ? 'Entidad' : s === 3 ? 'Datos' : 'Finalizar'}
+                                </p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div style={{ marginTop: 'auto', padding: '25px', background: 'rgba(255,255,255,0.05)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)', fontWeight: '600', lineHeight: '1.6', margin: 0, fontStyle: 'italic' }}>
+                        "Recuerde validar los datos antes de confirmar para asegurar un proceso de auditoría ágil."
+                    </p>
+                </div>
+            </div>
+
+            {/* Content Area (Robust V12) */}
+            <div style={{ flex: 1, padding: '60px', overflowY: 'auto', maxHeight: '90vh', background: activeColors.bg, position: 'relative' }}>
+                <button onClick={onCancel} style={{ position: 'absolute', right: '40px', top: '40px', background: activeColors.card, border: `1px solid ${activeColors.border}`, width: '44px', height: '44px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.textMuted }}>
+                    <X size={24} />
+                </button>
+
+                {step === 1 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                        <div>
+                            <h3 style={{ fontSize: '2rem', fontWeight: '950', color: activeColors.textMain, margin: 0 }}>Concepto operativo</h3>
+                            <p style={{ color: activeColors.textMuted, fontSize: '0.85rem', fontWeight: '700', marginTop: '8px' }}>Categorice la naturaleza de su requerimiento</p>
+                        </div>
+
+                        <div style={{ position: 'relative' }}>
+                            <Search size={18} style={{ position: 'absolute', left: '16px', top: '16px', color: '#94a3b8' }} />
+                            <input 
+                                type="text" 
+                                placeholder="Filtrar tipos de novedad..." 
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{ width: '100%', padding: '14px 20px 14px 50px', borderRadius: '18px', background: activeColors.card, border: `1px solid ${activeColors.border}`, color: activeColors.textMain, fontSize: '0.9rem', fontWeight: '700', boxSizing: 'border-box' }}
+                            />
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            {newsTypes.filter(t => t.nombre.toLowerCase().includes(searchTerm.toLowerCase())).map(type => (
+                                <button key={type.id} onClick={() => handleTypeSelection(type.id)} style={{ display: 'flex', alignItems: 'center', padding: '25px', borderRadius: '28px', border: `1px solid ${activeColors.border}`, background: activeColors.card, textAlign: 'left', cursor: 'pointer', transition: 'all 0.3s' }} className="hover:border-indigo-500 hover:shadow-xl group">
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                                            <span style={{ fontSize: '8px', padding: '4px 10px', borderRadius: '6px', background: '#eef2ff', color: '#4f46e5', fontWeight: '950', textTransform: 'uppercase' }}>
+                                                {type.categoria === 0 ? 'Empleado' : type.categoria === 1 ? 'Tienda' : 'Marca'}
                                             </span>
                                         </div>
-                                        <h4 className="text-base font-black text-slate-800 dark:text-white uppercase tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                                            {type.nombre}
-                                        </h4>
-                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium leading-relaxed">
-                                            {type.descripcion || 'Registro operativo estandarizado'}
-                                        </p>
+                                        <h4 style={{ fontSize: '1.2rem', fontWeight: '950', color: activeColors.textMain, textTransform: 'uppercase', margin: 0 }} className="group-hover:text-indigo-600 transition-colors">{type.nombre}</h4>
+                                        <p style={{ fontSize: '0.75rem', fontWeight: '600', color: activeColors.textMuted, marginTop: '5px' }}>{type.descripcion || 'Registro estándar operativo.'}</p>
                                     </div>
-                                    <div className="ml-4 w-10 h-10 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-300 dark:text-slate-600 group-hover:bg-indigo-500 group-hover:text-white group-hover:scale-110 transition-all duration-500 border border-slate-100 dark:border-slate-700 shadow-sm">
+                                    <div style={{ width: '44px', height: '44px', background: isDarkMode ? '#1e293b' : '#f8fafc', borderRadius: '14px', border: `1px solid ${activeColors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1' }} className="group-hover:bg-indigo-600 group-hover:text-white transition-all">
                                         <ChevronRight size={20} />
                                     </div>
                                 </button>
                             ))}
-                            {newsTypes.filter(type => 
-                                type.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                (type.descripcion && type.descripcion.toLowerCase().includes(searchTerm.toLowerCase()))
-                            ).length === 0 && (
-                                <div className="p-16 text-center bg-slate-50 dark:bg-slate-800/20 rounded-[40px] border border-dashed border-slate-200 dark:border-slate-700">
-                                    <Search size={32} className="mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-                                    <p className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-xs">Sin coincidencias</p>
-                                    <button onClick={() => setSearchTerm('')} className="mt-4 text-indigo-500 text-[10px] font-black uppercase hover:underline">Limpiar búsqueda</button>
-                                </div>
-                            )}
                         </div>
-                    )}
+                    </div>
+                )}
 
-                    {step === 2 && selectedType && (
-                        <div className="animate-in fade-in slide-in-from-right-8 duration-500">
-                            <div className="mb-10">
-                                <h3 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight mb-2">
-                                    {selectedType.categoria === 0 ? 'Empleado' : selectedType.categoria === 1 ? 'Tienda' : 'Marca'}
-                                </h3>
-                                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest">Identifique el destino de la solicitud</p>
-                            </div>
+                {step === 2 && selectedType && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+                        <div>
+                            <h3 style={{ fontSize: '2rem', fontWeight: '950', color: activeColors.textMain, margin: 0 }}>Identificación</h3>
+                            <p style={{ color: activeColors.textMuted, fontSize: '0.85rem', fontWeight: '700', marginTop: '8px' }}>Identifique el {selectedType.categoria === 0 ? 'colaborador' : 'entorno'} afectado</p>
+                        </div>
 
+                        <div style={{ background: activeColors.card, padding: '40px', borderRadius: '32px', border: `1px solid ${activeColors.border}` }}>
                             {selectedType.categoria === 0 ? (
-                                <div className="space-y-6">
-                                    <div className="p-8 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-[32px] shadow-sm">
-                                        <label className="block text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-4 ml-1">Cédula del Colaborador</label>
-                                        <div className="flex gap-4">
-                                            <div className="relative flex-1">
-                                                <UserIcon size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                                                <input 
-                                                    type="text" 
-                                                    value={cedula}
-                                                    onChange={(e) => setCedula(e.target.value)}
-                                                    placeholder="No. Identificación" 
-                                                    className="input-premium pl-12 dark:bg-slate-900 w-full h-[56px] !text-base"
-                                                    onKeyDown={(e) => e.key === 'Enter' && handleSearchEmployee()}
-                                                />
-                                            </div>
-                                            <button onClick={handleSearchEmployee} disabled={loading || !cedula} className="btn-premium btn-premium-primary px-10 h-[56px] text-xs font-black uppercase tracking-widest">
-                                                {loading ? <div className="loader !border-white !w-5 !h-5"></div> : 'Validar'}
-                                            </button>
-                                        </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                    <label style={{ fontSize: '10px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Número de Cédula *</label>
+                                    <div style={{ display: 'flex', gap: '15px' }}>
+                                        <input 
+                                            type="text" 
+                                            value={cedula} 
+                                            onChange={(e) => setCedula(e.target.value)} 
+                                            placeholder="Ingresa la CC..." 
+                                            style={{ flex: 1, padding: '16px', borderRadius: '16px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontSize: '1.1rem', fontWeight: '900', textAlign: 'center' }}
+                                        />
+                                        <button onClick={handleSearchEmployee} disabled={loading || !cedula} style={{ padding: '0 30px', borderRadius: '16px', background: activeColors.accent, color: 'white', border: 'none', fontWeight: '900', fontSize: '12px', textTransform: 'uppercase', cursor: 'pointer' }}>
+                                            {loading ? '...' : 'Validar'}
+                                        </button>
                                     </div>
                                 </div>
                             ) : selectedType.categoria === 1 ? (
-                                <div className="space-y-4">
-                                    <label className="block text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 ml-1">Sedes Corporativas</label>
-                                    <select 
-                                        className="input-premium h-[60px] dark:bg-slate-900 font-bold text-sm"
-                                        value={formData.storeId}
-                                        onChange={(e) => setFormData({...formData, storeId: e.target.value})}
-                                    >
-                                        <option value="">Selecciona una tienda...</option>
-                                        {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                                    </select>
-                                </div>
+                                <select 
+                                    style={{ width: '100%', padding: '18px', borderRadius: '18px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontWeight: '800', fontSize: '1rem' }}
+                                    value={formData.storeId}
+                                    onChange={(e) => setFormData({...formData, storeId: e.target.value})}
+                                >
+                                    <option value="">Selecciona la Tienda...</option>
+                                    {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                </select>
                             ) : (
-                                <div className="space-y-4">
-                                    <label className="block text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 ml-1">Unidades de Marca</label>
-                                    <select 
-                                        className="input-premium h-[60px] dark:bg-slate-900 font-bold text-sm"
-                                        value={formData.brandId}
-                                        onChange={(e) => setFormData({...formData, brandId: e.target.value})}
-                                    >
-                                        <option value="">Selecciona una marca...</option>
-                                        {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                                    </select>
-                                </div>
+                                <select 
+                                    style={{ width: '100%', padding: '18px', borderRadius: '18px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontWeight: '800', fontSize: '1rem' }}
+                                    value={formData.brandId}
+                                    onChange={(e) => setFormData({...formData, brandId: e.target.value})}
+                                >
+                                    <option value="">Selecciona la Marca...</option>
+                                    {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                                </select>
                             )}
-
-                            <div className="flex gap-4 pt-12 mt-8 border-t border-slate-100 dark:border-slate-800">
-                                <button onClick={() => setStep(1)} className="btn-premium btn-premium-secondary !h-14 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest px-8">
-                                    <ArrowLeft size={18} /> Atrás
-                                </button>
-                                {(selectedType.categoria !== 0 || foundEmployee) && (
-                                    <button 
-                                        onClick={() => setStep(3)} 
-                                        disabled={(selectedType.categoria === 1 && !formData.storeId) || (selectedType.categoria === 2 && !formData.brandId)}
-                                        className="btn-premium btn-premium-primary !h-14 flex-1 text-xs font-black uppercase tracking-widest shadow-xl shadow-indigo-100 dark:shadow-none"
-                                    >
-                                        Continuar <ChevronRight size={18} />
-                                    </button>
-                                )}
-                            </div>
                         </div>
-                    )}
 
-                    {step === 3 && (
-                        <div className="animate-in fade-in slide-in-from-right-8 duration-500">
-                            <div className="mb-10">
-                                <h3 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight mb-2 text-indigo-600 dark:text-indigo-400">Vigencia y Datos</h3>
-                                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest">Defina los parámetros operativos</p>
-                            </div>
-                            
-                            <div className="flex items-center gap-5 p-6 bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 rounded-[32px] mb-10">
-                                <div className="w-14 h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-lg shadow-indigo-200 dark:shadow-none">
-                                    {getEntityName()?.[0] || 'N'}
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1">{selectedType?.nombre}</p>
-                                    <p className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight leading-none">{getEntityName()}</p>
-                                </div>
-                            </div>
+                        <div style={{ display: 'flex', gap: '15px', marginTop: 'auto' }}>
+                            <button onClick={() => setStep(1)} style={{ padding: '16px 30px', borderRadius: '16px', background: 'transparent', border: `1px solid ${activeColors.border}`, color: activeColors.textMuted, fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}>Atrás</button>
+                            {(selectedType.categoria !== 0 || foundEmployee) && (
+                                <button onClick={() => setStep(3)} style={{ flex: 1, padding: '16px', borderRadius: '16px', background: activeColors.accent, color: 'white', border: 'none', fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 10px 15px rgba(79, 70, 229, 0.2)' }}>Continuar</button>
+                            )}
+                        </div>
+                    </div>
+                )}
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {step === 3 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                        <div>
+                            <h3 style={{ fontSize: '2rem', fontWeight: '950', color: activeColors.textMain, margin: 0 }}>Vigencia y detalles</h3>
+                            <p style={{ color: activeColors.textMuted, fontSize: '0.85rem', fontWeight: '700', marginTop: '8px' }}>Especifique los parámetros técnicos de la novedad</p>
+                        </div>
+
+                        {renderContextHeader()}
+
+                        <div style={{ background: activeColors.card, padding: '30px', borderRadius: '32px', border: `1px solid ${activeColors.border}` }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                                 <div>
-                                    <label className="block text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 ml-1">Fecha Inicio</label>
-                                    <input type="date" required value={formData.fechaInicio} onChange={(e) => setFormData({...formData, fechaInicio: e.target.value})} className="input-premium h-14 dark:bg-slate-900 font-bold" />
+                                    <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '10px' }}>Desde *</label>
+                                    <input type="date" value={formData.fechaInicio} onChange={(e) => setFormData({...formData, fechaInicio: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontWeight: '800' }} />
                                 </div>
                                 <div>
-                                    <label className="block text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 ml-1">Fecha Fin</label>
-                                    <input type="date" required value={formData.fechaFin} onChange={(e) => setFormData({...formData, fechaFin: e.target.value})} className="input-premium h-14 dark:bg-slate-900 font-bold" />
+                                    <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '10px' }}>Hasta *</label>
+                                    <input type="date" value={formData.fechaFin} onChange={(e) => setFormData({...formData, fechaFin: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontWeight: '800' }} />
                                 </div>
                             </div>
 
                             {dynamicFields.length > 0 && (
-                                <div className="space-y-6 pt-10 mt-10 border-t border-slate-100 dark:border-slate-800">
-                                    <h3 className="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                                        <Layers size={18} className="text-indigo-500" /> Atributos Adicionales
-                                    </h3>
-                                    
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {dynamicFields.map((field, idx) => (
-                                            <div key={idx} className="p-6 bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-slate-700/50 rounded-[28px] shadow-sm">
-                                                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">
-                                                    {field.name} {field.required && <span className="text-red-500">*</span>}
-                                                </label>
-                                                
-                                                {field.type === 'check' ? (
-                                                    <div className="flex items-center gap-3">
-                                                        <input type="checkbox" checked={formData.datosDinamicos[field.name] === 'true'} onChange={(e) => setFormData({ ...formData, datosDinamicos: { ...formData.datosDinamicos, [field.name]: e.target.checked ? 'true' : 'false' }})} className="w-7 h-7 rounded-xl text-indigo-600 border-slate-300 dark:border-slate-700 dark:bg-slate-900 transition-all cursor-pointer" />
-                                                        <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight">Habilitar Opción</span>
-                                                    </div>
-                                                ) : field.type === 'select' ? (
-                                                    <select value={formData.datosDinamicos[field.name] || ''} onChange={(e) => setFormData({ ...formData, datosDinamicos: { ...formData.datosDinamicos, [field.name]: e.target.value }})} className="input-premium h-12 dark:bg-slate-900 font-bold">
-                                                        <option value="">Selecciona...</option>
-                                                        {(field.options || '').split(',').map(opt => <option key={opt} value={opt.trim()}>{opt.trim()}</option>)}
-                                                    </select>
-                                                ) : field.type === 'radio' ? (
-                                                    <div className="flex flex-wrap gap-5">
-                                                        {(field.options || '').split(',').map(opt => {
-                                                            const trimmedOpt = opt.trim();
-                                                            return (
-                                                                <label key={trimmedOpt} className="flex items-center gap-3 cursor-pointer group">
-                                                                    <input 
-                                                                        type="radio" 
-                                                                        name={field.name}
-                                                                        value={trimmedOpt}
-                                                                        checked={formData.datosDinamicos[field.name] === trimmedOpt}
-                                                                        onChange={() => setFormData({ ...formData, datosDinamicos: { ...formData.datosDinamicos, [field.name]: trimmedOpt }})}
-                                                                        className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 border-slate-300 dark:border-slate-700 dark:bg-slate-900 transition-all cursor-pointer"
-                                                                        required={field.required}
-                                                                    />
-                                                                    <span className="text-[11px] font-black text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors uppercase tracking-tight">
-                                                                        {trimmedOpt}
-                                                                    </span>
-                                                                </label>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                ) : (
-                                                    <input type={field.type || 'text'} value={formData.datosDinamicos[field.name] || ''} onChange={(e) => setFormData({ ...formData, datosDinamicos: { ...formData.datosDinamicos, [field.name]: e.target.value }})} className="input-premium h-12 dark:bg-slate-900 font-bold" placeholder="Escriba aquí..." />
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
+                                <div style={{ borderTop: `1px solid ${activeColors.border}`, paddingTop: '30px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+                                    {dynamicFields.map((f, i) => (
+                                        <div key={i}>
+                                            <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '10px' }}>{f.name} *</label>
+                                            {f.type === 'select' || f.type === 'radio' ? (
+                                                <select value={formData.datosDinamicos[f.name]} onChange={(e) => setFormData({...formData, datosDinamicos: {...formData.datosDinamicos, [f.name]: e.target.value}})} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontWeight: '800' }}>
+                                                    <option value="">Selecciona...</option>
+                                                    {f.options.split(',').map(o => <option key={o} value={o.trim()}>{o.trim()}</option>)}
+                                                </select>
+                                            ) : (
+                                                <input type={f.type} value={formData.datosDinamicos[f.name]} onChange={(e) => setFormData({...formData, datosDinamicos: {...formData.datosDinamicos, [f.name]: e.target.value}})} placeholder="..." style={{ width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontWeight: '800' }} />
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
                             )}
-
-                            <div className="flex gap-4 pt-12 mt-10 border-t border-slate-100 dark:border-slate-800">
-                                <button onClick={() => setStep(2)} className="btn-premium btn-premium-secondary !h-14 px-10 flex items-center gap-2 text-xs font-black uppercase tracking-widest">
-                                    <ArrowLeft size={18} /> Atrás
-                                </button>
-                                <button onClick={() => setStep(4)} disabled={!formData.fechaInicio || !formData.fechaFin} className="btn-premium btn-premium-primary !h-14 flex-1 text-xs font-black uppercase tracking-widest shadow-xl shadow-indigo-50 dark:shadow-none">
-                                    Siguiente <ChevronRight size={18} />
-                                </button>
-                            </div>
                         </div>
-                    )}
 
-                    {step === 4 && (
-                        <form onSubmit={handleSubmit} className="animate-in fade-in slide-in-from-right-8 duration-500">
-                            <div className="mb-10">
-                                <h3 className="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight mb-2">Observaciones</h3>
-                                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest">Aclare los motivos de la solicitud</p>
-                            </div>
+                        <div style={{ display: 'flex', gap: '15px' }}>
+                            <button onClick={() => setStep(2)} style={{ padding: '16px 30px', borderRadius: '16px', background: 'transparent', border: `1px solid ${activeColors.border}`, color: activeColors.textMuted, fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}>Atrás</button>
+                            <button onClick={() => setStep(4)} disabled={!formData.fechaInicio || !formData.fechaFin} style={{ flex: 1, padding: '16px', borderRadius: '16px', background: activeColors.accent, color: 'white', border: 'none', fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 10px 15px rgba(79, 70, 229, 0.2)' }}>Continuar</button>
+                        </div>
+                    </div>
+                )}
 
-                            <div className="space-y-8">
-                                <div className="p-8 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-[40px] shadow-sm">
-                                    <label className="block text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4 ml-1">Exposición de Motivos <span className="text-red-500 font-bold">*</span></label>
-                                    <textarea 
-                                        required
-                                        value={formData.observaciones}
-                                        onChange={(e) => setFormData({...formData, observaciones: e.target.value})}
-                                        placeholder="Detalle los pormenores administrativos..."
-                                        className="input-premium h-40 dark:bg-slate-900 !py-6 !text-base font-medium leading-relaxed"
-                                    />
+                {step === 4 && (
+                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                        <div>
+                            <h3 style={{ fontSize: '2rem', fontWeight: '950', color: activeColors.textMain, margin: 0 }}>Finalización</h3>
+                            <p style={{ color: activeColors.textMuted, fontSize: '0.85rem', fontWeight: '700', marginTop: '8px' }}>Exposición de motivos y carga de archivos</p>
+                        </div>
+
+                        {renderContextHeader()}
+
+                        <div style={{ background: activeColors.card, padding: '40px', borderRadius: '40px', border: `1px solid ${activeColors.border}` }}>
+                            <label style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '15px' }}>Comentarios Administrativos *</label>
+                            <textarea 
+                                required 
+                                value={formData.observaciones} 
+                                onChange={(e) => setFormData({...formData, observaciones: e.target.value})} 
+                                placeholder="Especifique los detalles de la solicitud..." 
+                                style={{ width: '100%', minHeight: '150px', padding: '20px', borderRadius: '24px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontSize: '1rem', fontWeight: '600', lineHeight: '1.6', boxSizing: 'border-box' }}
+                            />
+                        </div>
+
+                        {selectedType?.requiereAdjunto && (
+                            <div style={{ background: isDarkMode ? '#1e293b50' : '#f8fafc', padding: '30px', borderRadius: '32px', border: `2px dashed ${activeColors.border}`, textAlign: 'center' }}>
+                                <div style={{ width: '60px', height: '60px', background: activeColors.accent, color: 'white', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                                    <Paperclip size={28} />
                                 </div>
-
-                                {selectedType && selectedType.requiereAdjunto && (
-                                    <div className="p-8 bg-white dark:bg-slate-800/20 border-2 border-dashed border-slate-200 dark:border-slate-700/50 rounded-[40px] text-center">
-                                        <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                                            <Paperclip size={32} />
-                                        </div>
-                                        <label className="block text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-[0.2em] mb-2">Evidencia Documental</label>
-                                        <p className="text-xs text-slate-400 dark:text-slate-500 mb-6 font-medium">Adjunte PDF o JPG para validar la solicitud</p>
-                                        <input 
-                                            type="text" 
-                                            value={formData.adjuntoUrl}
-                                            onChange={(e) => setFormData({...formData, adjuntoUrl: e.target.value})}
-                                            placeholder="URL de archivo soporte..."
-                                            className="input-premium dark:bg-slate-900 text-center !h-12 !text-xs font-black uppercase"
-                                        />
-                                    </div>
-                                )}
+                                <h4 style={{ fontSize: '11px', fontWeight: '950', color: activeColors.textMain, textTransform: 'uppercase', margin: 0 }}>Carga de Evidencia</h4>
+                                <p style={{ fontSize: '10px', color: activeColors.textMuted, fontWeight: '700', margin: '8px 0 20px' }}>Ingrese la URL del documento soporte (PDF/JPG)</p>
+                                <input 
+                                    type="text" 
+                                    value={formData.adjuntoUrl} 
+                                    onChange={(e) => setFormData({...formData, adjuntoUrl: e.target.value})} 
+                                    placeholder="https://servidor.com/archivo.pdf" 
+                                    style={{ width: '100%', padding: '14px', borderRadius: '14px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontWeight: '800', textAlign: 'center' }}
+                                />
                             </div>
+                        )}
 
-                            <div className="flex gap-4 pt-12 mt-10 border-t border-slate-100 dark:border-slate-800">
-                                <button type="button" onClick={() => setStep(3)} className="btn-premium btn-premium-secondary !h-16 px-10 flex items-center gap-2 text-xs font-black uppercase tracking-widest">
-                                    <ArrowLeft size={18} /> Atrás
-                                </button>
-                                <button 
-                                    type="submit" 
-                                    disabled={isSubmitting || !formData.observaciones || (selectedType?.requiereAdjunto && !formData.adjuntoUrl)}
-                                    className="btn-premium btn-premium-primary flex-1 h-16 text-sm font-black uppercase tracking-[0.2em] shadow-2xl shadow-indigo-100 dark:shadow-none"
-                                >
-                                    {isSubmitting ? <div className="loader !border-white !w-6 !h-6"></div> : 'Confirmar Registro'}
-                                </button>
-                            </div>
-                        </form>
-                    )}
-                </div>
+                        <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
+                            <button type="button" onClick={() => setStep(3)} style={{ padding: '16px 30px', borderRadius: '16px', background: 'transparent', border: `1px solid ${activeColors.border}`, color: activeColors.textMuted, fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}>Atrás</button>
+                            <button type="submit" disabled={isSubmitting || !formData.observaciones} style={{ flex: 1, padding: '16px', borderRadius: '20px', background: activeColors.accent, color: 'white', border: 'none', fontWeight: '950', fontSize: '12px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 20px 40px rgba(79, 70, 229, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
+                                {isSubmitting ? 'Procesando...' : <><Send size={20} /> Confirmar Solicitud</>}
+                            </button>
+                        </div>
+                    </form>
+                )}
             </div>
 
+            {/* Local Toast V12 */}
             {toast.show && (
-                <div className="toast-container">
-                    <div className={`toast ${toast.type === 'success' ? 'toast-success' : 'toast-error'}`}>
-                        {toast.type === 'success' ? <CheckCircle size={24} /> : <AlertCircle size={24} />}
-                        <span className="font-black uppercase tracking-tight">{toast.message}</span>
-                    </div>
+                <div style={{ position: 'fixed', bottom: '40px', right: '40px', zIndex: 11000, background: toast.type === 'success' ? '#10b981' : '#ef4444', color: 'white', padding: '16px 30px', borderRadius: '20px', fontWeight: '900', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.15em', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 15px 30px rgba(0,0,0,0.2)' }}>
+                    {toast.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+                    {toast.message}
                 </div>
             )}
         </div>

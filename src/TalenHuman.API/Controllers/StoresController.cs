@@ -53,6 +53,9 @@ public class StoresController : ControllerBase
         existing.Name = store.Name;
         existing.Address = store.Address;
         existing.BrandId = store.BrandId;
+        existing.CityId = store.CityId;
+        existing.ExternalId = store.ExternalId;
+        existing.IsActive = store.IsActive;
         
         await _context.SaveChangesAsync();
         return NoContent();

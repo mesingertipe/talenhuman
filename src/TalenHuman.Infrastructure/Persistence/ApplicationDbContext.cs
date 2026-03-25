@@ -21,6 +21,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<Brand> Brands => Set<Brand>();
     public DbSet<Store> Stores => Set<Store>();
+    public DbSet<City> Cities => Set<City>();
     public DbSet<Profile> Profiles => Set<Profile>();
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<Shift> Shifts => Set<Shift>();
@@ -42,6 +43,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<User>().HasQueryFilter(u => u.CompanyId == TenantId);
         builder.Entity<Brand>().HasQueryFilter(b => b.CompanyId == TenantId);
         builder.Entity<Store>().HasQueryFilter(s => s.CompanyId == TenantId);
+        builder.Entity<City>().HasQueryFilter(c => c.CompanyId == TenantId);
         builder.Entity<Profile>().HasQueryFilter(p => p.CompanyId == TenantId);
         builder.Entity<Employee>().HasQueryFilter(e => e.CompanyId == TenantId);
         builder.Entity<Shift>().HasQueryFilter(s => s.CompanyId == TenantId);
@@ -79,6 +81,12 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
             .WithMany(b => b.Stores)
             .HasForeignKey(s => s.BrandId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Store>()
+            .HasOne(s => s.City)
+            .WithMany(c => c.Stores)
+            .HasForeignKey(s => s.CityId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.Entity<Employee>()
             .HasOne(e => e.Store)

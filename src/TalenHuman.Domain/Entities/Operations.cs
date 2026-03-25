@@ -52,6 +52,7 @@ public class Shift : BaseEntity, IMultitenant
 
     public bool IsDescanso { get; set; }
     public bool IsFuera { get; set; }
+    public string? Observation { get; set; }
 }
 
 public enum ShiftStatus

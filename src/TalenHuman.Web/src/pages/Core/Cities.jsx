@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit, X, Building2, FileSpreadsheet, CheckCircle, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, Edit, X, MapPin, FileSpreadsheet, CheckCircle, AlertCircle, Search } from 'lucide-react';
 import api from '../../services/api';
 import BulkImportModal from '../../components/Shared/BulkImportModal';
 import { useTableData } from '../../hooks/useTableData';
 import Pagination from '../../components/Shared/Pagination';
-import { Search } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 
-const Brands = () => {
+const Cities = () => {
   const { isDarkMode } = useTheme();
   const activeColors = {
     bg: isDarkMode ? '#0f172a' : '#f8fafc',
@@ -19,19 +18,19 @@ const Brands = () => {
     accentSoft: isDarkMode ? 'rgba(79, 70, 229, 0.15)' : '#eef2ff'
   };
 
-  const [brands, setBrands] = useState([]);
+  const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showImport, setShowImport] = useState(false);
-  const [currentBrand, setCurrentBrand] = useState(null);
-  const [formData, setFormData] = useState({ name: '', isActive: true });
+  const [currentCity, setCurrentCity] = useState(null);
+  const [formData, setFormData] = useState({ name: '' });
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { 
-    data: currentBrands, 
+    data: currentCities, 
     searchTerm, 
     setSearchTerm, 
     currentPage, 
@@ -40,10 +39,10 @@ const Brands = () => {
     totalItems, 
     itemsPerPage, 
     setItemsPerPage 
-  } = useTableData(brands, ['name']);
+  } = useTableData(cities, ['name']);
 
   useEffect(() => {
-    fetchBrands();
+    fetchCities();
   }, []);
 
   const showToast = (message, type = 'success') => {
@@ -51,13 +50,14 @@ const Brands = () => {
     setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
   };
 
-  const fetchBrands = async () => {
+  const fetchCities = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/brands');
-      setBrands(res.data);
+      const res = await api.get('/cities');
+      setCities(res.data);
     } catch (err) {
       console.error(err);
+      showToast("Error al cargar ciudades", "error");
     } finally {
       setLoading(false);
     }
@@ -67,17 +67,17 @@ const Brands = () => {
     e.preventDefault();
     try {
       setIsSubmitting(true);
-      if (currentBrand) {
-        await api.put(`/brands/${currentBrand.id}`, formData);
-        showToast("Marca actualizada con éxito");
+      if (currentCity) {
+        await api.put(`/cities/${currentCity.id}`, formData);
+        showToast("Ciudad actualizada con éxito");
       } else {
-        await api.post('/brands', formData);
-        showToast("Marca creada con éxito");
+        await api.post('/cities', formData);
+        showToast("Ciudad creada con éxito");
       }
       setShowModal(false);
-      fetchBrands();
+      fetchCities();
     } catch (err) {
-      showToast("Error al guardar la marca", "error");
+      showToast("Error al guardar la ciudad", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -86,12 +86,12 @@ const Brands = () => {
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      await api.delete(`/brands/${currentBrand.id}`);
-      showToast("Marca eliminada correctamente");
+      await api.delete(`/cities/${currentCity.id}`);
+      showToast("Ciudad eliminada correctamente");
       setShowConfirm(false);
-      fetchBrands();
+      fetchCities();
     } catch (err) {
-      showToast("Error al eliminar la marca", "error");
+      showToast(err.response?.data?.message || "Error al eliminar la ciudad", "error");
     } finally {
       setIsDeleting(false);
     }
@@ -102,8 +102,8 @@ const Brands = () => {
       {/* Elite Header & Toolbar */}
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4rem', gap: '2rem' }}>
         <div>
-          <h1 style={{ fontSize: '2.2rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.03em' }}>Gestión de marcas</h1>
-          <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginTop: '6px' }}>Catálogo corporativo de marcas y franquicias</p>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.03em' }}>Gestión de ciudades</h1>
+          <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginTop: '6px' }}>Catálogo geográfico para la ubicación de tiendas</p>
         </div>
 
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center', width: '100%', maxWidth: '700px' }}>
@@ -111,7 +111,7 @@ const Brands = () => {
             <Search size={18} className="absolute left-4 top-4 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Filtrar marcas..." 
+              placeholder="Filtrar ciudades..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-premium pl-12"
@@ -120,18 +120,11 @@ const Brands = () => {
           </div>
           <div className="flex gap-3">
             <button 
-              onClick={() => setShowImport(true)}
-              className="btn-premium btn-premium-secondary"
-              style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
-            >
-              <FileSpreadsheet size={18} /> Importar
-            </button>
-            <button 
-              onClick={() => { setCurrentBrand(null); setFormData({ name: '', isActive: true }); setShowModal(true); }}
+              onClick={() => { setCurrentCity(null); setFormData({ name: '' }); setShowModal(true); }}
               className="btn-premium btn-premium-primary"
               style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
             >
-              <Plus size={20} /> Nueva Marca
+              <Plus size={20} /> Nueva Ciudad
             </button>
           </div>
         </div>
@@ -149,49 +142,31 @@ const Brands = () => {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Nombre de la Marca</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Estado</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Nombre de la Ciudad</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em', textAlign: 'right' }}>Gestión</th>
               </tr>
             </thead>
             <tbody>
-              {currentBrands.map((brand) => (
-                <tr key={brand.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+              {currentCities.map((city) => (
+                <tr key={city.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
                   <td style={{ padding: '1.25rem 1.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                       <div style={{ width: '40px', height: '40px', background: 'var(--bg-main)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366f1', border: '1px solid var(--border)' }}>
-                        <Building2 size={20} />
+                        <MapPin size={20} />
                       </div>
-                      <div className="font-bold text-slate-800 dark:text-white">{brand.name}</div>
+                      <div className="font-bold text-slate-800 dark:text-white">{city.name}</div>
                     </div>
-                  </td>
-                  <td style={{ padding: '1.25rem 1.5rem' }}>
-                    <span style={{ 
-                      padding: '0.35rem 0.75rem', 
-                      background: brand.isActive !== false ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
-                      color: brand.isActive !== false ? '#10b981' : '#ef4444', 
-                      borderRadius: '9999px', 
-                      fontSize: '0.7rem', 
-                      fontWeight: '800',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.4rem',
-                      textTransform: 'uppercase'
-                    }}>
-                      {brand.isActive !== false ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
-                      {brand.isActive !== false ? 'Activo' : 'Inactivo'}
-                    </span>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
                     <button 
-                      onClick={() => { setCurrentBrand(brand); setFormData({ name: brand.name, isActive: brand.isActive !== false }); setShowModal(true); }}
+                      onClick={() => { setCurrentCity(city); setFormData({ name: city.name }); setShowModal(true); }}
                       style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', padding: '0.5rem' }}
                       className="hover:scale-110 transition-transform"
                     >
                       <Edit size={20} />
                     </button>
                     <button 
-                      onClick={() => { setCurrentBrand(brand); setShowConfirm(true); }}
+                      onClick={() => { setCurrentCity(city); setShowConfirm(true); }}
                       style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.5rem' }}
                       className="hover:scale-110 transition-transform"
                     >
@@ -200,12 +175,12 @@ const Brands = () => {
                   </td>
                 </tr>
               ))}
-              {currentBrands.length === 0 && (
+              {currentCities.length === 0 && (
                 <tr>
-                  <td colSpan="3" style={{ padding: '4rem', textAlign: 'center' }}>
+                  <td colSpan="2" style={{ padding: '4rem', textAlign: 'center' }}>
                     <div className="flex flex-col items-center gap-2 opacity-30">
-                      <Building2 size={48} />
-                      <p className="font-bold">No se encontraron marcas.</p>
+                      <MapPin size={48} />
+                      <p className="font-bold">No se encontraron ciudades.</p>
                     </div>
                   </td>
                 </tr>
@@ -227,11 +202,11 @@ const Brands = () => {
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '520px' }}>
+          <div className="modal-content" style={{ maxWidth: '420px' }}>
             <div className="modal-header">
               <h2 className="text-lg font-bold flex items-center gap-2 dark:text-white" style={{ margin: 0 }}>
-                {currentBrand ? <Edit size={22} className="text-indigo-500" /> : <Plus size={22} className="text-indigo-500" />}
-                {currentBrand ? 'Editar marca' : 'Nueva marca'}
+                {currentCity ? <Edit size={22} className="text-indigo-500" /> : <Plus size={22} className="text-indigo-500" />}
+                {currentCity ? 'Editar ciudad' : 'Nueva ciudad'}
               </h2>
               <button 
                 onClick={() => setShowModal(false)}
@@ -244,53 +219,27 @@ const Brands = () => {
             <form onSubmit={handleSave}>
               <div className="modal-body space-y-6">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre de la Marca *</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre de la Ciudad *</label>
                   <div className="relative">
-                    <Building2 size={18} className="absolute left-3 top-4 text-slate-400" />
+                    <MapPin size={18} className="absolute left-3 top-4 text-slate-400" />
                     <input 
                       required 
                       value={formData.name} 
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
                       className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
-                      placeholder="Ej. Adidas, Nike, etc."
+                      placeholder="Ej. Bogotá, Medellín, etc."
                     />
                   </div>
-                  <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-500 flex items-start gap-3">
-                    <AlertCircle size={16} className="text-indigo-500 mt-0.5" />
-                    <p>Las marcas registradas aquí podrán ser seleccionadas al crear nuevas tiendas y asignar inventarios.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-xl ${formData.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
-                      {formData.isActive ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
-                    </div>
-                    <div>
-                      <div className="font-bold text-sm dark:text-white">Estado de la Marca</div>
-                      <div className="text-[10px] text-slate-500 uppercase font-black tracking-widest">
-                        {formData.isActive ? 'Marca Activa' : 'Marca Inactiva'}
-                      </div>
-                    </div>
-                  </div>
-                  <label className="premium-switch">
-                    <input 
-                      type="checkbox" 
-                      checked={formData.isActive}
-                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                    />
-                    <span className="premium-switch-slider"></span>
-                  </label>
                 </div>
               </div>
 
               <div className="modal-footer">
                 <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary" disabled={isSubmitting}>
-              Cancelar
-            </button>
-            <button type="submit" className="btn-premium btn-premium-primary" disabled={isSubmitting}>
-              {isSubmitting ? <div className="loader"></div> : (currentBrand ? 'Actualizar' : 'Guardar')}
-            </button>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-premium btn-premium-primary" disabled={isSubmitting}>
+                  {isSubmitting ? <div className="loader"></div> : (currentCity ? 'Actualizar' : 'Guardar')}
+                </button>
               </div>
             </form>
           </div>
@@ -304,29 +253,22 @@ const Brands = () => {
               <div className="mb-6" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
                 <Trash2 size={40} />
               </div>
-              <h2 className="text-xl font-bold mb-3">¿Eliminar marca?</h2>
+              <h2 className="text-xl font-bold mb-3">¿Eliminar ciudad?</h2>
               <p className="text-slate-500 text-sm mb-8 px-4" style={{ lineHeight: '1.6' }}>
-                Estás por descartar permanentemente la marca <strong>{currentBrand?.name}</strong>. Asegúrate de que no haya tiendas vinculadas activas.
+                Estás por descartar permanentemente la ciudad <strong>{currentCity?.name}</strong>. Asegúrate de que no haya tiendas vinculadas.
               </p>
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <button onClick={() => setShowConfirm(false)} className="btn-premium btn-premium-secondary" disabled={isDeleting}>
-              No, cancelar
-            </button>
-            <button onClick={handleDelete} className="btn-premium btn-premium-danger" disabled={isDeleting}>
-              {isDeleting ? <div className="loader"></div> : 'Si, eliminar'}
-            </button>
+                  No, cancelar
+                </button>
+                <button onClick={handleDelete} className="btn-premium btn-premium-danger" disabled={isDeleting}>
+                  {isDeleting ? <div className="loader"></div> : 'Si, eliminar'}
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
-
-      <BulkImportModal 
-        isOpen={showImport} 
-        onClose={() => setShowImport(false)} 
-        type="brands" 
-        onComplete={fetchBrands} 
-      />
 
       {toast.show && (
         <div className="toast-container">
@@ -340,4 +282,4 @@ const Brands = () => {
   );
 };
 
-export default Brands;
+export default Cities;

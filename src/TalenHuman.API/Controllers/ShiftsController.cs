@@ -44,7 +44,8 @@ public class ShiftsController : ControllerBase
                 EndTime = s.EndTime,
                 Status = s.Status,
                 IsDescanso = s.IsDescanso,
-                IsFuera = s.IsFuera
+                IsFuera = s.IsFuera,
+                Observation = s.Observation
             })
             .ToListAsync();
 
@@ -103,6 +104,7 @@ public class ShiftsController : ControllerBase
                 Status = sDto.Status,
                 IsDescanso = sDto.IsDescanso,
                 IsFuera = sDto.IsFuera,
+                Observation = dto.Comment, // Use the bulk comment
                 CompanyId = Guid.Empty // Set by interceptor usually
             });
         }
@@ -121,6 +123,7 @@ public class ShiftDto
     public ShiftStatus Status { get; set; }
     public bool IsDescanso { get; set; }
     public bool IsFuera { get; set; }
+    public string? Observation { get; set; }
 }
 
 public class BulkShiftUpdateDto
@@ -128,5 +131,6 @@ public class BulkShiftUpdateDto
     public Guid StoreId { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
+    public string? Comment { get; set; }
     public List<ShiftDto> Shifts { get; set; } = new();
 }

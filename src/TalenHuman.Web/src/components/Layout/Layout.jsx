@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Users, Clock, Calendar, FileText, Settings, 
   LogOut, Store, Sun, Moon, Pin, PinOff, ChevronLeft, ChevronRight,
-  Briefcase, Boxes, Building, Link, ChevronDown, ChevronUp, User as UserIcon
+  Briefcase, Boxes, Building, Link, ChevronDown, ChevronUp, User as UserIcon, MapPin
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
@@ -23,6 +23,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
       isHeader: true,
       children: [
         { icon: <Boxes size={20} />, label: 'Marcas', roles: ['SuperAdmin', 'Admin'] },
+        { icon: <MapPin size={20} />, label: 'Ciudades', roles: ['SuperAdmin', 'Admin'] },
         { icon: <Briefcase size={20} />, label: 'Cargos', roles: ['SuperAdmin', 'Admin'] },
         { icon: <Calendar size={20} />, label: 'Jornadas', roles: ['SuperAdmin', 'Admin'] },
         { icon: <Store size={20} />, label: 'Tiendas', roles: ['SuperAdmin', 'Admin'] },
@@ -43,7 +44,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
       isHeader: true,
       children: [
         { icon: <Settings size={20} />, label: 'Usuarios', roles: ['SuperAdmin', 'Admin'] },
-        { icon: <FileText size={20} />, label: 'Configuración Novedades', roles: ['SuperAdmin', 'Admin'] },
+        { icon: <FileText size={20} />, label: 'Configuración novedades', roles: ['SuperAdmin', 'Admin'] },
         { icon: <Building size={20} />, label: 'Empresas', roles: ['SuperAdmin'] },
       ]
     },
@@ -177,17 +178,18 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
 
 const getPageInfo = (page) => {
   switch (page) {
-    case 'Marcas': return { title: 'Marcas', subtitle: 'Gestión de marcas corporativas y tenants' };
-    case 'Cargos': return { title: 'Cargos', subtitle: 'Estructura jerárquica y perfiles laborales' };
-    case 'Tiendas': return { title: 'Puntos de Venta', subtitle: 'Administración de sedes y ubicaciones físicas' };
-    case 'Jornadas': return { title: 'Horarios', subtitle: 'Definición de jornadas y horas semanales' };
-    case 'Empleados': return { title: 'Personal', subtitle: 'Ficha técnica de colaboradores y sedes' };
-    case 'Usuarios': return { title: 'Usuarios', subtitle: 'Gestión de credenciales y niveles de acceso' };
-    case 'Novedades': return { title: 'Novedades', subtitle: 'Bandeja de solicitudes y tracking de incidencias' };
-    case 'Configuración Novedades': return { title: 'Diseñador', subtitle: 'Configuración dinámica de tipos de novedad' };
-    case 'Turnos': return { title: 'Programador', subtitle: 'Asignación semanal y balance de recursos' };
-    case 'Marcaciones': return { title: 'Marcaciones', subtitle: 'Registro de asistencia y control biométrico' };
-    case 'Empresas': return { title: 'Tenants', subtitle: 'Administración global de organizaciones' };
+    case 'Marcas': return { title: 'Marcas', subtitle: 'Catálogo corporativo de marcas y franquicias' };
+    case 'Ciudades': return { title: 'Ciudades', subtitle: 'Configuración geográfica de sedes' };
+    case 'Cargos': return { title: 'Cargos', subtitle: 'Definición de perfiles y funciones laborales' };
+    case 'Tiendas': return { title: 'Tiendas', subtitle: 'Administración de sedes y sucursales' };
+    case 'Jornadas': return { title: 'Jornadas', subtitle: 'Estándares de tiempo y programación' };
+    case 'Empleados': return { title: 'Empleados', subtitle: 'Administración de nómina y ficha de colaboradores' };
+    case 'Usuarios': return { title: 'Usuarios', subtitle: 'Administración de accesos y roles' };
+    case 'Novedades': return { title: 'Bandeja de Novedades', subtitle: 'Trazabilidad y auditoría de solicitudes' };
+    case 'Configuración novedades': return { title: 'Configuración novedades', subtitle: 'Configuración dinámica de tipos de novedad' };
+    case 'Turnos': return { title: 'Turnos', subtitle: 'Programación inteligente y cobertura' };
+    case 'Marcaciones': return { title: 'Marcaciones', subtitle: 'Trazabilidad de ingresos y salidas' };
+    case 'Empresas': return { title: 'Empresas', subtitle: 'Configuración de inquilinos corporativos' };
     default: return { title: page, subtitle: '' };
   }
 };
@@ -217,6 +219,41 @@ const Header = ({ user, activePage, currentCompanyName }) => {
         )}
       </div>
       <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+        {user?.roles?.includes('Gerente') && user?.storeName && (
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            padding: '8px 16px', 
+            background: 'var(--bg-card)', 
+            border: '1.5px solid var(--border)', 
+            borderRadius: '14px',
+            boxShadow: 'var(--shadow-sm)'
+          }}>
+            <Store size={16} className="text-indigo-500" />
+            <span style={{ fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase', color: 'var(--text-main)', letterSpacing: '0.02em' }}>
+              {user.storeExternalId ? `${user.storeExternalId} - ` : ''}{user.storeName}
+            </span>
+          </div>
+        )}
+        
+        {user?.roles?.includes('Supervisor') && !user?.roles?.includes('Gerente') && (
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px', 
+            padding: '8px 16px', 
+            background: 'rgba(79, 70, 229, 0.1)', 
+            border: '1.5px solid rgba(79, 70, 229, 0.2)', 
+            borderRadius: '14px'
+          }}>
+            <Shield size={16} className="text-indigo-500" />
+            <span style={{ fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase', color: 'var(--text-main)', letterSpacing: '0.02em' }}>
+              Multisede • {user.storeIds?.length || 0} tiendas
+            </span>
+          </div>
+        )}
+        
         <button 
           onClick={toggleTheme}
           style={{ 

@@ -6,8 +6,20 @@ import SearchableSelect from '../../components/Shared/SearchableSelect';
 import { useTableData } from '../../hooks/useTableData';
 import Pagination from '../../components/Shared/Pagination';
 import { Search, Calendar, ToggleRight, ToggleLeft, Briefcase, Clock } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
-const Employees = () => {
+const Employees = ({ user }) => {
+  const { isDarkMode } = useTheme();
+  const activeColors = {
+    bg: isDarkMode ? '#0f172a' : '#f8fafc',
+    card: isDarkMode ? '#1e293b' : '#ffffff',
+    border: isDarkMode ? '#334155' : '#f1f5f9',
+    textMain: isDarkMode ? '#f1f5f9' : '#1e293b',
+    textMuted: isDarkMode ? '#94a3b8' : '#64748b',
+    accent: '#4f46e5',
+    accentSoft: isDarkMode ? 'rgba(79, 70, 229, 0.15)' : '#eef2ff'
+  };
+
   const [employees, setEmployees] = useState([]);
   const [stores, setStores] = useState([]);
   const [profiles, setProfiles] = useState([]);
@@ -46,7 +58,7 @@ const Employees = () => {
   } = useTableData(employees, ['firstName', 'lastName', 'identificationNumber', 'storeName', 'profileName']);
 
   useEffect(() => {
-    fetchData();
+    fetchInitialData();
   }, []);
 
   const showToast = (message, type = 'success') => {
@@ -54,21 +66,33 @@ const Employees = () => {
     setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
   };
 
-  const fetchData = async () => {
+  const fetchInitialData = async () => {
     try {
       setLoading(true);
-      const [empRes, storeRes, profRes, jorRes] = await Promise.all([
+      const [empRes, storeRes, profileRes, jornadaRes] = await Promise.all([
         api.get('/employees'),
         api.get('/stores'),
         api.get('/profiles'),
         api.get('/jornadas')
       ]);
+      
       setEmployees(empRes.data);
-      setStores(storeRes.data);
-      setProfiles(profRes.data);
-      setJornadas(jorRes.data);
+      
+      const isManager = user?.roles?.includes('Gerente');
+      const isSupervisor = user?.roles?.includes('Supervisor');
+      let filteredStores = storeRes.data;
+
+      if (isManager && user?.storeId) {
+          filteredStores = storeRes.data.filter(s => s.id === user.storeId);
+      } else if (isSupervisor && user?.storeIds && user.storeIds.length > 0) {
+          filteredStores = storeRes.data.filter(s => user.storeIds.includes(s.id));
+      }
+
+      setStores(filteredStores);
+      setProfiles(profileRes.data);
+      setJornadas(jornadaRes.data);
     } catch (err) {
-      console.error(err);
+      setToast({ show: true, message: 'Error al cargar datos iniciales', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -91,7 +115,7 @@ const Employees = () => {
         showToast("Nuevo colaborador registrado");
       }
       setShowModal(false);
-      fetchData();
+      fetchInitialData();
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.response?.data || "Error al procesar el registro";
       showToast(errorMsg, "error");
@@ -106,7 +130,7 @@ const Employees = () => {
       await api.delete(`/employees/${currentEmployee.id}`);
       showToast("Registro inactivado correctamente");
       setShowConfirm(false);
-      fetchData();
+      fetchInitialData();
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.response?.data || "Error al eliminar colaborador";
       showToast(errorMsg, "error");
@@ -116,72 +140,79 @@ const Employees = () => {
   };
 
   return (
-    <div className="page-container animate-in fade-in duration-300">
-      <div className="page-header flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="w-full sm:max-w-sm">
-          <div className="relative">
-            <Search size={18} className="absolute left-3 top-3 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Buscar personal..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-premium pl-10"
-              style={{ margin: 0 }}
-            />
-          </div>
+    <div className="page-container animate-in fade-in duration-500" style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto' }}>
+      {/* Elite Header & Toolbar */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4rem', gap: '2rem' }}>
+        <div>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.03em' }}>Gestión de empleados</h1>
+          <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginTop: '6px' }}>Administración de nómina y ficha de colaboradores</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-shrink-0">
-          <button 
-            onClick={() => setShowImport(true)}
-            className="btn-premium btn-premium-secondary whitespace-nowrap"
-          >
-            <FileSpreadsheet size={18} /> Importar
-          </button>
-          <button 
-            onClick={() => { 
-                setCurrentEmployee(null); 
-                setFormData({ 
-                    firstName: '', lastName: '', 
-                    identificationNumber: '', birthDate: '',
-                    storeId: stores[0]?.id || '', 
-                    profileId: profiles[0]?.id || '',
-                    jornadaId: jornadas[0]?.id || '',
-                    dateOfEntry: new Date().toISOString().split('T')[0],
-                    isActive: true
-                }); 
-                setShowModal(true); 
-            }}
-            className="btn-premium btn-premium-primary whitespace-nowrap"
-          >
-            <Plus size={20} /> Nuevo Colaborador
-          </button>
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', width: '100%', maxWidth: '750px' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <Search size={18} className="absolute left-4 top-4 text-slate-400" />
+            <input 
+              type="text" 
+              placeholder="Filtrar colaboradores..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="input-premium pl-12"
+              style={{ margin: 0, borderRadius: '20px', height: '56px' }}
+            />
+          </div>
+          <div className="flex gap-3">
+            <button 
+              onClick={() => setShowImport(true)}
+              className="btn-premium btn-premium-secondary"
+              style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
+            >
+              <FileSpreadsheet size={18} /> Importar
+            </button>
+            <button 
+              onClick={() => { 
+                  setCurrentEmployee(null); 
+                  setFormData({ 
+                      firstName: '', lastName: '', 
+                      identificationNumber: '', birthDate: '',
+                      storeId: stores[0]?.id || '', 
+                      profileId: profiles[0]?.id || '',
+                      jornadaId: jornadas[0]?.id || '',
+                      dateOfEntry: new Date().toISOString().split('T')[0],
+                      isActive: true
+                  }); 
+                  setShowModal(true); 
+              }}
+              className="btn-premium btn-premium-primary"
+              style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
+            >
+              <Plus size={20} /> Nuevo Colaborador
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="card flex flex-col dark:bg-slate-900" style={{ padding: 0, overflow: 'hidden', minHeight: '60vh' }}>
+      <div className="card flex flex-col" style={{ padding: 0, overflow: 'hidden', minHeight: '60vh' }}>
         {loading ? (
           <div style={{ padding: '6rem', textAlign: 'center' }}>
             <div className="flex flex-col items-center gap-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-              <p className="text-slate-500 font-medium">Buscando personal activo...</p>
+              <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Sincronizando Nómina...</p>
             </div>
           </div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ textAlign: 'left', background: 'var(--bg-card)', borderBottom: '1px solid var(--border)' }} className="bg-slate-50 dark:bg-slate-800/80">
+              <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Colaborador</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Identificación</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Sede / Cargo / Jornada</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Fecha Ingreso</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Estado</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em', textAlign: 'right' }}>Gestión</th>
               </tr>
             </thead>
             <tbody>
               {currentEmployees.map((emp) => (
-                <tr key={emp.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-slate-50 dark:hover:bg-slate-800/10 transition-colors">
+                <tr key={emp.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
                   <td style={{ padding: '1.25rem 1.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                       <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white flex items-center justify-center font-black text-xs shadow-lg shadow-indigo-500/20 uppercase">
@@ -208,9 +239,21 @@ const Employees = () => {
                     </div>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
-                    <div className="text-slate-600 dark:text-slate-400 font-bold text-sm">
-                      {emp.dateOfEntry ? new Date(emp.dateOfEntry).toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
-                    </div>
+                    <span style={{ 
+                      padding: '0.35rem 0.75rem', 
+                      background: emp.isActive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                      color: emp.isActive ? '#10b981' : '#ef4444', 
+                      borderRadius: '9999px', 
+                      fontSize: '0.72rem', 
+                      fontWeight: '800',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      textTransform: 'uppercase'
+                    }}>
+                      {emp.isActive ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
+                      {emp.isActive ? 'Activo' : 'Inactivo'}
+                    </span>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
                     <button 
@@ -259,11 +302,11 @@ const Employees = () => {
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-content shadow-2xl" style={{ maxWidth: '800px', borderRadius: '24px' }}>
+          <div className="modal-content shadow-2xl" style={{ maxWidth: '800px' }}>
             <div className="modal-header">
-              <h2 className="text-xl font-bold flex items-center gap-2 dark:text-white" style={{ margin: 0 }}>
-                {currentEmployee ? <Edit size={24} className="text-indigo-500" /> : <Plus size={24} className="text-indigo-500" />}
-                {currentEmployee ? 'Editar Perfil del Colaborador' : 'Registro de Nuevo Colaborador'}
+              <h2 className="text-lg font-bold flex items-center gap-2 dark:text-white" style={{ margin: 0 }}>
+                {currentEmployee ? <Edit size={22} className="text-indigo-500" /> : <Plus size={22} className="text-indigo-500" />}
+                {currentEmployee ? 'Ficha del colaborador' : 'Nuevo colaborador'}
               </h2>
               <button 
                 onClick={() => setShowModal(false)}
@@ -277,7 +320,7 @@ const Employees = () => {
               <div className="modal-body space-y-6 p-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Nombre Completo <span className="text-red-500">*</span></label>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Nombre Completo*</label>
                     <div className="relative">
                       <UserIcon size={18} className="absolute left-3 top-3.5 text-slate-400" />
                       <input 
@@ -290,7 +333,7 @@ const Employees = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Apellidos <span className="text-red-500">*</span></label>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Apellidos*</label>
                     <div className="relative">
                       <UserIcon size={18} className="absolute left-3 top-3.5 text-slate-400" />
                       <input 
@@ -303,7 +346,7 @@ const Employees = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Identificación <span className="text-red-500">*</span></label>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Identificación*</label>
                     <div className="relative">
                       <Hash size={18} className="absolute left-3 top-3.5 text-slate-400" />
                       <input 
@@ -316,7 +359,7 @@ const Employees = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Fecha Nacimiento <span className="text-red-500">*</span></label>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Fecha Nacimiento*</label>
                     <div className="relative">
                       <Calendar size={18} className="absolute left-3 top-3.5 text-slate-400" />
                       <input 
@@ -329,7 +372,7 @@ const Employees = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Fecha Ingreso <span className="text-red-500">*</span></label>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Fecha Ingreso*</label>
                     <div className="relative">
                       <Calendar size={18} className="absolute left-3 top-3.5 text-slate-400" />
                       <input 
@@ -381,10 +424,14 @@ const Employees = () => {
                       <p className="font-bold text-slate-800 dark:text-white text-sm mb-1">Vinculación Activa</p>
                       <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Determina si el colaborador está vigente en la nómina</p>
                   </div>
-                  <div 
-                      onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
-                      className={`premium-switch ${formData.isActive ? 'active' : ''}`}
-                  />
+                  <label className="premium-switch">
+                      <input 
+                          type="checkbox" 
+                          checked={formData.isActive}
+                          onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                      />
+                      <span className="premium-switch-slider"></span>
+                  </label>
                 </div>
 
                 <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 flex items-start gap-3">
@@ -415,7 +462,7 @@ const Employees = () => {
               <div className="mb-6" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
                 <Trash2 size={40} />
               </div>
-              <h2 className="text-2xl font-bold mb-3 dark:text-white">¿Desvincular Equipo?</h2>
+              <h2 className="text-xl font-bold mb-3 dark:text-white">¿Desvincular colaborador?</h2>
               <p className="text-slate-500 dark:text-slate-400 text-sm mb-8" style={{ lineHeight: '1.6' }}>
                 Estás a punto de inactivar a <strong>{currentEmployee?.firstName} {currentEmployee?.lastName}</strong>. Se conservará su histórico laboral.
               </p>
@@ -445,7 +492,7 @@ const Employees = () => {
         isOpen={showImport} 
         onClose={() => setShowImport(false)} 
         type="employees" 
-        onComplete={fetchData} 
+        onComplete={fetchInitialData} 
       />
     </div>
   );

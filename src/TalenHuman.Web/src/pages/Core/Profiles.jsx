@@ -5,15 +5,27 @@ import BulkImportModal from '../../components/Shared/BulkImportModal';
 import { useTableData } from '../../hooks/useTableData';
 import Pagination from '../../components/Shared/Pagination';
 import { Search } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 const Profiles = () => {
+  const { isDarkMode } = useTheme();
+  const activeColors = {
+    bg: isDarkMode ? '#0f172a' : '#f8fafc',
+    card: isDarkMode ? '#1e293b' : '#ffffff',
+    border: isDarkMode ? '#334155' : '#f1f5f9',
+    textMain: isDarkMode ? '#f1f5f9' : '#1e293b',
+    textMuted: isDarkMode ? '#94a3b8' : '#64748b',
+    accent: '#4f46e5',
+    accentSoft: isDarkMode ? 'rgba(79, 70, 229, 0.15)' : '#eef2ff'
+  };
+
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [currentProfile, setCurrentProfile] = useState(null);
-  const [formData, setFormData] = useState({ name: '', description: '' });
+  const [formData, setFormData] = useState({ name: '', description: '', isActive: true });
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -86,32 +98,42 @@ const Profiles = () => {
   };
 
   return (
-    <div className="page-container animate-in fade-in duration-300">
-      <div className="page-header flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="w-full sm:max-w-sm">
-          <input 
-            type="text" 
-            placeholder="Buscar cargos..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2.5 m-0 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 bg-white shadow-sm font-medium text-sm transition-all"
-            style={{ margin: 0 }}
-          />
+    <div className="page-container animate-in fade-in duration-500" style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto' }}>
+      {/* Elite Header & Toolbar */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4rem', gap: '2rem' }}>
+        <div>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.03em' }}>Gestión de cargos</h1>
+          <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginTop: '6px' }}>Definición de perfiles y funciones laborales</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-shrink-0">
-          <button 
-            onClick={() => setShowImport(true)}
-            className="btn-premium btn-premium-secondary whitespace-nowrap"
-          >
-            <FileSpreadsheet size={18} /> Importar
-          </button>
-          <button 
-            onClick={() => { setCurrentProfile(null); setFormData({ name: '', description: '' }); setShowModal(true); }}
-            className="btn-premium btn-premium-primary whitespace-nowrap"
-          >
-            <Plus size={20} /> Nuevo Cargo
-          </button>
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', width: '100%', maxWidth: '700px' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <Search size={18} className="absolute left-4 top-4 text-slate-400" />
+            <input 
+              type="text" 
+              placeholder="Filtrar cargos..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="input-premium pl-12"
+              style={{ margin: 0, borderRadius: '20px', height: '56px' }}
+            />
+          </div>
+          <div className="flex gap-3">
+            <button 
+              onClick={() => setShowImport(true)}
+              className="btn-premium btn-premium-secondary"
+              style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
+            >
+              <FileSpreadsheet size={18} /> Importar
+            </button>
+            <button 
+              onClick={() => { setCurrentProfile(null); setFormData({ name: '', description: '', isActive: true }); setShowModal(true); }}
+              className="btn-premium btn-premium-primary"
+              style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
+            >
+              <Plus size={20} /> Nuevo Cargo
+            </button>
+          </div>
         </div>
       </div>
 
@@ -128,25 +150,43 @@ const Profiles = () => {
             <thead>
               <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Nombre del Cargo</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Estado</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Descripción</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em', textAlign: 'right' }}>Acciones</th>
-              </tr>
+                </tr>
             </thead>
             <tbody>
               {currentProfiles.map((p) => (
-                <tr key={p.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-slate-50 transition-colors">
+                <tr key={p.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
                   <td style={{ padding: '1.25rem 1.5rem', fontWeight: '600' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div style={{ width: '40px', height: '40px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
+                      <div style={{ width: '40px', height: '40px', background: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366f1' }}>
                         <Briefcase size={20} />
                       </div>
-                      <div className="text-slate-800">{p.name}</div>
+                      <div className="text-slate-800 dark:text-white font-bold">{p.name}</div>
                     </div>
+                  </td>
+                  <td style={{ padding: '1.25rem 1.5rem' }}>
+                    <span style={{ 
+                      padding: '0.35rem 0.75rem', 
+                      background: p.isActive !== false ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                      color: p.isActive !== false ? '#10b981' : '#ef4444', 
+                      borderRadius: '9999px', 
+                      fontSize: '0.7rem', 
+                      fontWeight: '800',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      textTransform: 'uppercase'
+                    }}>
+                      {p.isActive !== false ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
+                      {p.isActive !== false ? 'Activo' : 'Inactivo'}
+                    </span>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>{p.description || '-- Sin descripción --'}</td>
                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
                     <button 
-                      onClick={() => { setCurrentProfile(p); setFormData({ name: p.name, description: p.description }); setShowModal(true); }}
+                      onClick={() => { setCurrentProfile(p); setFormData({ name: p.name, description: p.description || '', isActive: p.isActive !== false }); setShowModal(true); }}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '1rem', color: '#6366f1' }}
                       className="hover:scale-110 transition-transform"
                     >
@@ -164,7 +204,7 @@ const Profiles = () => {
               ))}
               {currentProfiles.length === 0 && (
                 <tr>
-                  <td colSpan="3" style={{ padding: '4rem', textAlign: 'center' }}>
+                  <td colSpan="4" style={{ padding: '4rem', textAlign: 'center' }}>
                     <div className="flex flex-col items-center gap-2 opacity-40">
                       <Layout size={48} />
                       <p className="font-medium">No se encontraron cargos.</p>
@@ -191,14 +231,13 @@ const Profiles = () => {
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '520px' }}>
             <div className="modal-header">
-              <h2 className="text-xl font-bold flex items-center gap-2" style={{ margin: 0 }}>
-                {currentProfile ? <Edit size={24} className="text-indigo-500" /> : <Plus size={24} className="text-indigo-500" />}
-                {currentProfile ? 'Editar Cargo' : 'Nuevo Cargo'}
+              <h2 className="text-lg font-bold flex items-center gap-2 dark:text-white" style={{ margin: 0 }}>
+                {currentProfile ? <Edit size={22} className="text-indigo-500" /> : <Plus size={22} className="text-indigo-500" />}
+                {currentProfile ? 'Editar cargo' : 'Nuevo cargo'}
               </h2>
               <button 
                 onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem' }}
+                className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors bg-transparent border-none cursor-pointer p-2 rounded-full"
               >
                 <X size={22} />
               </button>
@@ -207,7 +246,7 @@ const Profiles = () => {
             <form onSubmit={handleSave}>
               <div className="modal-body space-y-6">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre del Perfil de Cargo</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre del Perfil de Cargo *</label>
                   <div className="relative">
                     <Briefcase size={18} className="absolute left-3 top-4 text-slate-400" />
                     <input 
@@ -234,6 +273,33 @@ const Profiles = () => {
                     />
                   </div>
                 </div>
+
+                <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-100 text-[11px] text-slate-500 flex items-start gap-3">
+                  <AlertCircle size={16} className="text-indigo-500 mt-0.5" />
+                  <p>Los cargos permiten estructurar la jerarquía operativa y asignar permisos específicos a los colaboradores.</p>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-xl ${formData.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                      {formData.isActive ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm dark:text-white">Estado del Cargo</div>
+                      <div className="text-[10px] text-slate-500 uppercase font-black tracking-widest">
+                        {formData.isActive ? 'Cargo Activo' : 'Cargo Inactivo'}
+                      </div>
+                    </div>
+                  </div>
+                  <label className="premium-switch">
+                    <input 
+                      type="checkbox" 
+                      checked={formData.isActive}
+                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                    />
+                    <span className="premium-switch-slider"></span>
+                  </label>
+                </div>
               </div>
 
               <div className="modal-footer">
@@ -256,7 +322,7 @@ const Profiles = () => {
               <div className="mb-6" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
                 <Trash2 size={40} />
               </div>
-              <h2 className="text-2xl font-bold mb-3">¿Eliminar Cargo?</h2>
+              <h2 className="text-xl font-bold mb-3">¿Eliminar cargo?</h2>
               <p className="text-slate-500 text-sm mb-8 px-4" style={{ lineHeight: '1.6' }}>
                 Estás por eliminar permanentemente el perfil de <strong>{currentProfile?.name}</strong>. Esta acción afectará a los empleados que tengan este cargo asignado.
               </p>

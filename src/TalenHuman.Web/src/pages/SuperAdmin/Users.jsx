@@ -6,8 +6,20 @@ import MultiSearchableSelect from '../../components/Shared/MultiSearchableSelect
 import { useTableData } from '../../hooks/useTableData';
 import Pagination from '../../components/Shared/Pagination';
 import { Search } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 const Users = () => {
+  const { isDarkMode } = useTheme();
+  const activeColors = {
+    bg: isDarkMode ? '#0f172a' : '#f8fafc',
+    card: isDarkMode ? '#1e293b' : '#ffffff',
+    border: isDarkMode ? '#334155' : '#f1f5f9',
+    textMain: isDarkMode ? '#f1f5f9' : '#1e293b',
+    textMuted: isDarkMode ? '#94a3b8' : '#64748b',
+    accent: '#4f46e5',
+    accentSoft: isDarkMode ? 'rgba(79, 70, 229, 0.15)' : '#eef2ff'
+  };
+
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [stores, setStores] = useState([]);
@@ -165,62 +177,72 @@ const Users = () => {
     }
   };
 
-  return (
-    <div className="page-container animate-in fade-in duration-300">
-      <div className="page-header flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="w-full sm:max-w-sm">
-          <input 
-            type="text" 
-            placeholder="Buscar usuarios..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="input-premium"
-            style={{ margin: 0 }}
-          />
+  return (    <div className="page-container animate-in fade-in duration-500" style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto' }}>
+      {/* Elite Header & Toolbar */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4rem', gap: '2rem' }}>
+        <div>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.03em' }}>Gestión de usuarios</h1>
+          <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginTop: '6px' }}>Administración de accesos y roles del sistema</p>
         </div>
-        
-        <div className="flex items-center gap-3 flex-shrink-0">
-          {isSuperAdminUser && (
+
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', width: '100%', maxWidth: '800px' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <Search size={18} className="absolute left-4 top-4 text-slate-400" />
+            <input 
+              type="text" 
+              placeholder="Filtrar usuarios..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="input-premium pl-12"
+              style={{ margin: 0, borderRadius: '20px', height: '56px' }}
+            />
+          </div>
+          <div className="flex gap-3">
+            {isSuperAdminUser && (
+              <button 
+                onClick={handleSyncEmployees}
+                disabled={syncLoading}
+                className="btn-premium btn-premium-secondary"
+                style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
+              >
+                {syncLoading ? <div className="loader loader-indigo"></div> : <CheckCircle size={18} />} Sincronizar
+              </button>
+            )}
             <button 
-              onClick={handleSyncEmployees}
-              disabled={syncLoading}
-              className="px-4 py-2.5 rounded-xl border border-indigo-200 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 font-bold text-sm hover:bg-indigo-100 transition-colors flex items-center gap-2"
+              onClick={() => {
+                setCurrentUser(null);
+                const selectedTenant = localStorage.getItem('tenantId');
+                const defaultTenant = '11111111-1111-1111-1111-111111111111';
+                setFormData({ 
+                    fullName: '', email: '', password: '', 
+                    companyId: isSuperAdminUser 
+                      ? (selectedTenant && selectedTenant !== defaultTenant ? selectedTenant : '') 
+                      : (JSON.parse(localStorage.getItem('user'))?.companyId || ''), 
+                    roles: ['Admin'], isActive: true, mustChangePassword: true,
+                    storeIds: []
+                });
+                setShowModal(true);
+              }}
+              className="btn-premium btn-premium-primary"
+              style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
             >
-              {syncLoading ? <div className="loader loader-indigo"></div> : <CheckCircle size={18} />} Sincronizar Empleados
+              <Plus size={20} /> Nuevo Usuario
             </button>
-          )}
-          <button 
-            onClick={() => {
-              setCurrentUser(null);
-              const selectedTenant = localStorage.getItem('tenantId');
-              const defaultTenant = '11111111-1111-1111-1111-111111111111';
-              setFormData({ 
-                  fullName: '', email: '', password: '', 
-                  companyId: isSuperAdminUser 
-                    ? (selectedTenant && selectedTenant !== defaultTenant ? selectedTenant : '') 
-                    : (JSON.parse(localStorage.getItem('user'))?.companyId || ''), 
-                  roles: ['Admin'], isActive: true, mustChangePassword: true,
-                  storeIds: []
-              });
-              setShowModal(true);
-            }}
-            className="btn-premium btn-premium-primary whitespace-nowrap"
-          >
-            <Plus size={20} /> Nuevo Usuario
-          </button>
+          </div>
         </div>
       </div>
 
-      <div className="card flex flex-col dark:bg-slate-900" style={{ padding: 0, overflow: 'hidden', minHeight: '60vh' }}>
+
+      <div className="card flex flex-col" style={{ padding: 0, overflow: 'hidden', minHeight: '60vh' }}>
         {loading ? (
           <div style={{ padding: '6rem', textAlign: 'center' }}>
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p className="text-slate-500 font-medium font-bold">Cargando base de usuarios...</p>
+            <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Sincronizando Usuarios...</p>
           </div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ textAlign: 'left', background: 'var(--bg-card)', borderBottom: '1px solid var(--border)' }} className="bg-slate-50 dark:bg-slate-800/80">
+              <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Usuario</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Empresa / Sede</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Roles de Acceso</th>
@@ -230,15 +252,15 @@ const Users = () => {
             </thead>
             <tbody>
               {currentUsers.map((u) => (
-                <tr key={u.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-slate-50 dark:hover:bg-slate-800/10 transition-colors">
+                <tr key={u.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
                   <td style={{ padding: '1.25rem 1.5rem' }}>
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 border border-slate-200 dark:border-slate-600 flex items-center justify-center shadow-sm">
-                        <UserIcon size={20} className="text-slate-500 dark:text-slate-400" />
+                      <div className="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-sm">
+                        <UserIcon size={20} className="text-indigo-500 dark:text-indigo-400" />
                       </div>
                       <div>
                         <div className="font-bold text-slate-800 dark:text-white leading-tight">{u.fullName}</div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">{u.email}</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">{u.email}</div>
                       </div>
                     </div>
                   </td>
@@ -249,8 +271,8 @@ const Users = () => {
                             {u.companyName}
                         </div>
                         {u.storeNames?.length > 0 && (
-                            <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-extrabold text-[10px] uppercase tracking-wider bg-indigo-50 dark:bg-indigo-900/20 px-2 py-0.5 rounded-md w-fit border border-indigo-100 dark:border-indigo-800/50">
-                                <MapPin size={10} />
+                            <div className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] uppercase tracking-widest bg-indigo-50/50 dark:bg-indigo-500/10 px-2.5 py-1 rounded-full w-fit border border-indigo-100/50 dark:border-indigo-500/20">
+                                <MapPin size={10} className="opacity-70" />
                                 {u.storeNames.join(', ')}
                             </div>
                         )}
@@ -269,12 +291,21 @@ const Users = () => {
                     </div>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
-                    <div className={`flex items-center gap-2 text-[11px] font-black uppercase tracking-widest ${
-                        u.isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'
-                    }`}>
-                      <div className={`w-1.5 h-1.5 rounded-full ${u.isActive ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'}`}></div>
+                    <span style={{ 
+                      padding: '0.35rem 0.75rem', 
+                      background: u.isActive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                      color: u.isActive ? '#10b981' : '#ef4444', 
+                      borderRadius: '9999px', 
+                      fontSize: '0.7rem', 
+                      fontWeight: '800',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      textTransform: 'uppercase'
+                    }}>
+                      {u.isActive ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
                       {u.isActive ? 'Activo' : 'Inactivo'}
-                    </div>
+                    </span>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
                       <button 
@@ -335,11 +366,11 @@ const Users = () => {
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-content shadow-2xl" style={{ maxWidth: '600px', borderRadius: '24px' }}>
+          <div className="modal-content shadow-2xl" style={{ maxWidth: '600px' }}>
             <div className="modal-header">
-              <h2 className="text-xl font-bold flex items-center gap-2 dark:text-white" style={{ margin: 0 }}>
+              <h2 className="text-lg font-bold flex items-center gap-2 dark:text-white" style={{ margin: 0 }}>
                 {currentUser ? <Edit size={22} className="text-indigo-500" /> : <Plus size={22} className="text-indigo-500" />}
-                {currentUser ? 'Editar Usuario' : 'Nuevo Usuario Administrativo'}
+                {currentUser ? 'Editar usuario' : 'Nuevo usuario administrativo'}
               </h2>
               <button 
                 onClick={() => setShowModal(false)}
@@ -353,14 +384,14 @@ const Users = () => {
               <div className="modal-body space-y-6 p-8">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Nombre Completo</label>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Nombre Completo *</label>
                     <div className="relative">
                       <UserIcon size={18} className="absolute left-3 top-3.5 text-slate-400" />
                       <input required value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} className="input-premium pl-10" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Correo Electrónico</label>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Correo Electrónico *</label>
                     <div className="relative">
                       <Mail size={18} className="absolute left-3 top-3.5 text-slate-400" />
                       <input 
@@ -372,7 +403,7 @@ const Users = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">{currentUser ? 'Nueva Contraseña (Opcional)' : 'Contraseña'}</label>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">{currentUser ? 'Nueva Contraseña (Opcional)' : 'Contraseña *'}</label>
                     <div className="relative">
                       <Lock size={18} className="absolute left-3 top-3.5 text-slate-400" />
                       <input 
@@ -449,10 +480,14 @@ const Users = () => {
                             <p className="font-bold text-slate-800 dark:text-white text-sm">Estado de la cuenta</p>
                             <p className="text-xs text-slate-500 dark:text-slate-400">Permitir o denegar el acceso</p>
                         </div>
-                        <div 
-                            onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
-                            className={`premium-switch ${formData.isActive ? 'active' : ''}`}
-                        />
+                        <label className="premium-switch">
+                            <input 
+                                type="checkbox" 
+                                checked={formData.isActive}
+                                onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                            />
+                            <span className="premium-switch-slider"></span>
+                        </label>
                     </div>
 
                     <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
@@ -460,10 +495,14 @@ const Users = () => {
                             <p className="font-bold text-slate-800 dark:text-white text-sm">Cambio Obligatorio</p>
                             <p className="text-xs text-slate-500 dark:text-slate-400">Forzar cambio al ingresar</p>
                         </div>
-                        <div 
-                            onClick={() => setFormData({ ...formData, mustChangePassword: !formData.mustChangePassword })}
-                            className={`premium-switch ${formData.mustChangePassword ? 'active' : ''}`}
-                        />
+                        <label className="premium-switch">
+                            <input 
+                                type="checkbox" 
+                                checked={formData.isActive}
+                                onChange={(e) => setFormData({ ...formData, mustChangePassword: e.target.checked })}
+                            />
+                            <span className="premium-switch-slider"></span>
+                        </label>
                     </div>
                 </div>
               </div>
@@ -488,7 +527,7 @@ const Users = () => {
               <div className="mb-6" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
                 <Trash2 size={40} />
               </div>
-              <h2 className="text-2xl font-bold mb-3 dark:text-white">¿Eliminar Usuario?</h2>
+              <h2 className="text-xl font-bold mb-3 dark:text-white">¿Eliminar usuario?</h2>
               <p className="text-slate-500 dark:text-slate-400 text-sm mb-8" style={{ lineHeight: '1.6' }}>
                 ¿Estás seguro de que deseas eliminar permanentemente a <strong>{currentUser?.fullName}</strong>? Esta acción no se puede deshacer.
               </p>
