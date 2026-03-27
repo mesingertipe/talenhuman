@@ -78,16 +78,28 @@ using (var scope = app.Services.CreateScope())
             var context = services.GetRequiredService<TalenHuman.Infrastructure.Persistence.ApplicationDbContext>();
             var userManager = services.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<TalenHuman.Domain.Entities.User>>();
             var roleManager = services.GetRequiredService<Microsoft.AspNetCore.Identity.RoleManager<TalenHuman.Domain.Entities.Role>>();
-            await context.Database.MigrateAsync();
+            
+            var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+            if (pendingMigrations.Any())
+            {
+                logger.LogInformation("Found {Count} pending migrations: {Migrations}. Applying now...", pendingMigrations.Count(), string.Join(", ", pendingMigrations));
+                await context.Database.MigrateAsync();
+                logger.LogInformation("Database migrated successfully.");
+            }
+            else
+            {
+                logger.LogInformation("No pending migrations found.");
+            }
+            
             await TalenHuman.Infrastructure.Persistence.DbInitializer.SeedAsync(context, userManager, roleManager);
-            logger.LogInformation("Database seeded successfully.");
+            logger.LogInformation("Database seed check completed.");
             break;
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "DB seed attempt {Attempt}/{Max} failed. Retrying in 3s...", attempt, maxRetries);
+            logger.LogError(ex, "CRITICAL: Database migration/seed attempt {Attempt}/{Max} failed.", attempt, maxRetries);
             if (attempt == maxRetries)
-                logger.LogError("Could not seed database after {Max} attempts. App will continue without seed.", maxRetries);
+                logger.LogError("Could not finalize DB setup after {Max} attempts. Check connection or SQL permissions.", maxRetries);
             else
                 await Task.Delay(TimeSpan.FromSeconds(3));
         }
