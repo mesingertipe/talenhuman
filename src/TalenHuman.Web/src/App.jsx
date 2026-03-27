@@ -18,6 +18,7 @@ import NewsDesigner from './pages/Admin/NewsDesigner';
 import ShiftScheduler from './pages/Scheduling/ShiftScheduler';
 import Marcaciones from './pages/Core/Marcaciones';
 import Cities from './pages/Core/Cities';
+import SystemSettings from './pages/SuperAdmin/SystemSettings';
 
 function App() {
   const [user, setUser] = React.useState(null);
@@ -119,6 +120,9 @@ function App() {
         return <Dashboard />;
       case 'Empresas': 
         if (isSuperAdmin) return <Companies />;
+        return <Dashboard />;
+      case 'Configuración Sistema':
+        if (isSuperAdmin) return <SystemSettings />;
         return <Dashboard />;
       default: return <Dashboard />;
     }

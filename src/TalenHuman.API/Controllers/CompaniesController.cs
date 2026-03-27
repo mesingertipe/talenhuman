@@ -48,6 +48,8 @@ public class CompaniesController : ControllerBase
         existing.Name = company.Name;
         existing.TaxId = company.TaxId;
         existing.IsActive = company.IsActive;
+        existing.CountryCode = company.CountryCode;
+        existing.TimeZoneId = company.TimeZoneId;
 
         await _context.SaveChangesAsync();
         return NoContent();

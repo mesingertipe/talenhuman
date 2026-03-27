@@ -7,6 +7,7 @@ import { useTableData } from '../../hooks/useTableData';
 import Pagination from '../../components/Shared/Pagination';
 import { Search } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import HelpIcon from '../../components/Shared/HelpIcon';
 
 const Users = () => {
   const { isDarkMode } = useTheme();
@@ -259,8 +260,8 @@ const Users = () => {
                         <UserIcon size={20} className="text-indigo-500 dark:text-indigo-400" />
                       </div>
                       <div>
-                        <div className="font-bold text-slate-800 dark:text-white leading-tight">{u.fullName}</div>
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">{u.email}</div>
+                        <div className="font-bold leading-tight" style={{ color: isDarkMode ? '#ffffff' : '#1e293b' }}>{u.fullName}</div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: isDarkMode ? '#cbd5e1' : '#64748b' }}>{u.email}</div>
                       </div>
                     </div>
                   </td>
@@ -308,34 +309,37 @@ const Users = () => {
                     </span>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
-                      <button 
-                        onClick={() => {
-                          setCurrentUser(u);
-                          setFormData({ 
-                              fullName: u.fullName, email: u.email, 
-                              password: '', companyId: u.companyId, 
-                              roles: u.roles, isActive: u.isActive,
-                              mustChangePassword: u.mustChangePassword,
-                              storeIds: u.storeIds || []
-                          });
-                          setShowModal(true);
-                        }}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '1rem', color: '#6366f1' }}
-                        className="hover:scale-110 transition-transform dark:text-indigo-400"
-                        title="Editar Usuario"
-                      >
-                        <Edit size={18} />
-                      </button>
-                      {!u.roles?.includes('SuperAdmin') && (
-                          <button 
-                              onClick={() => { setCurrentUser(u); setShowConfirm(true); }}
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
-                              className="hover:scale-110 transition-transform dark:text-red-400"
-                              title="Eliminar Usuario"
-                          >
-                              <Trash2 size={18} />
-                          </button>
-                      )}
+                    <button 
+                      onClick={() => { 
+                        setCurrentUser(u); 
+                        setFormData({ 
+                          fullName: u.fullName, 
+                          email: u.email, 
+                          password: '', 
+                          roles: u.roles || [], 
+                          companyId: u.companyId || '',
+                          storeIds: u.storeIds || [],
+                          isActive: u.isActive,
+                          mustChangePassword: u.mustChangePassword
+                        }); 
+                        setShowModal(true); 
+                      }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '1rem', color: '#6366f1' }}
+                      className="hover:scale-110 transition-transform dark:text-indigo-400"
+                      data-v12-tooltip="Modificar permisos y datos del usuario"
+                    >
+                      <Edit size={18} />
+                    </button>
+                    {!u.roles?.includes('SuperAdmin') && (
+                        <button 
+                            onClick={() => { setCurrentUser(u); setShowConfirm(true); }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
+                            className="hover:scale-110 transition-transform dark:text-red-400"
+                            data-v12-tooltip="Desactivar acceso administrativo"
+                        >
+                            <Trash2 size={18} />
+                        </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -476,9 +480,9 @@ const Users = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                        <div>
-                            <p className="font-bold text-slate-800 dark:text-white text-sm">Estado de la cuenta</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">Permitir o denegar el acceso</p>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Usuario Activo</span>
+                            <HelpIcon text="Habilita o deshabilitar el acceso total de este usuario al sistema" />
                         </div>
                         <label className="premium-switch">
                             <input 
@@ -491,14 +495,14 @@ const Users = () => {
                     </div>
 
                     <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                        <div>
-                            <p className="font-bold text-slate-800 dark:text-white text-sm">Cambio Obligatorio</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">Forzar cambio al ingresar</p>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Forzar cambio de clave</span>
+                            <HelpIcon text="Obliga al usuario a actualizar su contraseña en el próximo inicio de sesión por seguridad" />
                         </div>
                         <label className="premium-switch">
                             <input 
                                 type="checkbox" 
-                                checked={formData.isActive}
+                                checked={formData.mustChangePassword}
                                 onChange={(e) => setFormData({ ...formData, mustChangePassword: e.target.checked })}
                             />
                             <span className="premium-switch-slider"></span>

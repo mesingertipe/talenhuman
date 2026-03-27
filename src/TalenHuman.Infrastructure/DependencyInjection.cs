@@ -32,7 +32,12 @@ public static class DependencyInjection
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
         services.AddScoped<ITenantProvider, TenantProvider>();
+        services.AddScoped<ITenantTimeProvider, TenantTimeProvider>();
+        services.AddScoped<ISystemSettingsService, SystemSettingsService>();
+        services.AddScoped<IFileStorageService, DigitalOceanSpacesService>();
+        services.AddScoped<IEmailService, ResendEmailService>();
         services.AddScoped<IIdentityService, Identity.IdentityService>();
+        services.AddHttpClient();
         services.AddHttpContextAccessor();
 
         return services;

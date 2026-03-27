@@ -135,6 +135,7 @@ public class EmployeesController : ControllerBase
             {
                 user.FullName = $"{dto.FirstName} {dto.LastName}";
                 user.IsActive = dto.IsActive;
+                user.MustChangePassword = dto.MustChangePassword;
                 await _userManager.UpdateAsync(user);
 
                 var currentRoles = await _userManager.GetRolesAsync(user);
@@ -208,5 +209,6 @@ public class UpdateEmployeeDto
     public DateTime? BirthDate { get; set; }
     public DateTime DateOfEntry { get; set; }
     public bool IsActive { get; set; }
+    public bool MustChangePassword { get; set; }
     public string Role { get; set; } = "Empleado";
 }

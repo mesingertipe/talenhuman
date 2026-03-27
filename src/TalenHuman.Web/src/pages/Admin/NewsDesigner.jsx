@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
+import HelpIcon from '../../components/Shared/HelpIcon';
+import SearchableSelect from '../../components/Shared/SearchableSelect';
 
 const NewsDesigner = () => {
     const { isDarkMode } = useTheme();
@@ -144,7 +146,7 @@ const NewsDesigner = () => {
                 </div>
 
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center', width: '100%', maxWidth: '700px' }}>
-                    <div style={{ position: 'relative', flex: 1 }}>
+                    <div style={{ position: 'relative', flex: 1 }} data-v12-tooltip="Filtrar estructuras de novedades por nombre">
                         <Search style={{ position: 'absolute', left: '18px', top: '18px', color: '#94a3b8' }} size={18} />
                         <input 
                             type="text" 
@@ -158,6 +160,7 @@ const NewsDesigner = () => {
                         onClick={() => handleOpenModal()} 
                         style={{ background: activeColors.accent, color: 'white', padding: '16px 36px', borderRadius: '20px', border: 'none', fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.15em', cursor: 'pointer', boxShadow: '0 10px 25px rgba(79, 70, 229, 0.3)', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.3s' }}
                         className="hover:scale-105 active:scale-95"
+                        data-v12-tooltip="Crear una nueva configuración de novedad"
                     >
                         <Plus size={18} strokeWidth={3} /> Nueva Estructura
                     </button>
@@ -176,7 +179,10 @@ const NewsDesigner = () => {
                                     <Layout size={24} />
                                 </div>
                                 {type.requiereAdjunto && (
-                                    <div style={{ fontSize: '9px', fontWeight: '950', padding: '8px 16px', borderRadius: '99px', background: isDarkMode ? 'rgba(16, 185, 129, 0.15)' : '#ecfdf5', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.12em', border: `1px solid ${isDarkMode ? 'rgba(16, 185, 129, 0.3)' : '#d1fae5'}` }}>
+                                    <div 
+                                        style={{ fontSize: '9px', fontWeight: '950', padding: '8px 16px', borderRadius: '99px', background: isDarkMode ? 'rgba(16, 185, 129, 0.15)' : '#ecfdf5', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.12em', border: `1px solid ${isDarkMode ? 'rgba(16, 185, 129, 0.3)' : '#d1fae5'}` }}
+                                        data-v12-tooltip="El colaborador deberá adjuntar un soporte documental"
+                                    >
                                         Adjunto Obligatorio
                                     </div>
                                 )}
@@ -201,6 +207,7 @@ const NewsDesigner = () => {
                                 onClick={() => handleOpenModal(type)} 
                                 style={{ flex: 1, padding: '16px', borderRadius: '18px', border: 'none', background: isDarkMode ? '#334155' : '#f1f5f9', color: isDarkMode ? 'white' : activeColors.accent, fontWeight: '900', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', transition: 'all 0.2s' }}
                                 className="hover:bg-indigo-600 hover:text-white"
+                                data-v12-tooltip="Editar los campos y reglas de aprobación"
                             >
                                 <Edit3 size={16} /> Configurar
                             </button>
@@ -208,6 +215,7 @@ const NewsDesigner = () => {
                                 onClick={() => { setCurrentType(type); setShowConfirm(true); }}
                                 style={{ width: '52px', height: '52px', borderRadius: '18px', border: 'none', background: isDarkMode ? '#451a1a' : '#fef2f2', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
                                 className="hover:bg-red-600 hover:text-white"
+                                data-v12-tooltip="Eliminar esta estructura"
                             >
                                 <Trash2 size={20} />
                             </button>
@@ -258,20 +266,18 @@ const NewsDesigner = () => {
                                         />
                                     </div>
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.1em' }}>Nivel de Autoridad (Aprobador) *</label>
-                                        <div style={{ position: 'relative' }}>
-                                            <select 
-                                                value={formData.rolAprobador} 
-                                                onChange={(e) => setFormData({ ...formData, rolAprobador: e.target.value })}
-                                                style={{ width: '100%', padding: '18px 24px', borderRadius: '18px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', boxSizing: 'border-box', appearance: 'none', outline: 'none' }}
-                                                className="focus:border-indigo-500"
-                                            >
-                                                <option value="RH">Talento Humano (RH)</option>
-                                                <option value="Admin">Administrador Master</option>
-                                                <option value="Supervisor">Supervisor Directo</option>
-                                            </select>
-                                            <ChevronRight size={20} style={{ position: 'absolute', right: '20px', top: '20px', transform: 'rotate(90deg)', pointerEvents: 'none', color: activeColors.textMuted }} />
-                                        </div>
+                                        <SearchableSelect
+                                            label="Nivel de Autoridad (Aprobador) *"
+                                            options={[
+                                                { id: 'RH', name: 'Talento Humano (RH)' },
+                                                { id: 'Admin', name: 'Administrador Master' },
+                                                { id: 'Supervisor', name: 'Supervisor Directo' }
+                                            ]}
+                                            value={formData.rolAprobador}
+                                            onChange={(val) => setFormData({ ...formData, rolAprobador: val })}
+                                            placeholder="Seleccionar autoridad..."
+                                            icon={UserCircle2}
+                                        />
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', background: activeColors.accentSoft, borderRadius: '18px', border: `1px solid ${isDarkMode ? 'rgba(79, 70, 229, 0.2)' : '#d1daff'}` }}>
                                         <div>
@@ -324,18 +330,19 @@ const NewsDesigner = () => {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '10px' }}>Tipo de Dato *</label>
-                                                    <select 
-                                                        value={f.type} 
-                                                        onChange={(e) => { const n = [...fields]; n[idx].type = e.target.value; setFields(n); }}
-                                                        style={{ width: '100%', padding: '14px 20px', borderRadius: '14px', border: `1px solid ${activeColors.border}`, background: activeColors.bg, color: activeColors.textMain, fontWeight: '700', cursor: 'pointer', boxSizing: 'border-box', outline: 'none' }}
-                                                    >
-                                                        <option value="text">Texto Libre</option>
-                                                        <option value="number">Número</option>
-                                                        <option value="date">Fecha</option>
-                                                        <option value="select">Lista Desplegable</option>
-                                                        <option value="radio">Selección Única</option>
-                                                    </select>
+                                                    <SearchableSelect
+                                                        label="Tipo de Dato *"
+                                                        options={[
+                                                            { id: 'text', name: 'Texto Libre' },
+                                                            { id: 'number', name: 'Número' },
+                                                            { id: 'date', name: 'Fecha' },
+                                                            { id: 'select', name: 'Lista Desplegable' },
+                                                            { id: 'radio', name: 'Selección Única' }
+                                                        ]}
+                                                        value={f.type}
+                                                        onChange={(val) => { const n = [...fields]; n[idx].type = val; setFields(n); }}
+                                                        placeholder="Tipo..."
+                                                    />
                                                 </div>
                                                 <button 
                                                     type="button" 

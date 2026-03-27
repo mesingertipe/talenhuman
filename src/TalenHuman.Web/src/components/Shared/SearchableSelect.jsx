@@ -9,7 +9,8 @@ const SearchableSelect = ({
   label = "",
   icon: Icon,
   disabled = false,
-  required = false
+  required = false,
+  variant = "classic" // classic | minimal
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,7 +42,7 @@ const SearchableSelect = ({
 
   return (
     <div 
-      className="relative" 
+      className="relative w-full" 
       ref={containerRef}
       style={{ zIndex: isOpen ? 100 : 1 }}
     >
@@ -62,19 +63,21 @@ const SearchableSelect = ({
       
       <div 
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`relative flex items-center p-3 rounded-xl border transition-all cursor-pointer ${
-          disabled ? 'bg-slate-100 dark:bg-slate-800/50 cursor-not-allowed opacity-80 border-slate-200 dark:border-slate-700' :
-          isOpen ? 'bg-white dark:bg-slate-900 border-indigo-500 dark:border-indigo-400 ring-4 ring-indigo-50 dark:ring-indigo-900/20 shadow-sm' : 
-          'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+        className={`relative flex items-center w-full p-3 rounded-xl transition-all cursor-pointer ${
+          variant === "minimal" 
+            ? (isOpen ? 'bg-white dark:bg-slate-900 border border-indigo-500 dark:border-indigo-400 ring-4 ring-indigo-50 dark:ring-indigo-900/20 shadow-sm' : 'bg-transparent border-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/30')
+            : (disabled ? 'bg-slate-100 dark:bg-slate-800/50 cursor-not-allowed opacity-80 border-slate-200 dark:border-slate-700' :
+               isOpen ? 'bg-white dark:bg-slate-900 border-indigo-500 dark:border-indigo-400 ring-4 ring-indigo-50 dark:ring-indigo-900/20 shadow-sm' : 
+               'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 border')
         }`}
       >
         {Icon && <Icon size={18} className={`mr-3 ${isOpen ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}`} />}
         
         <div className="flex-1 truncate">
           {selectedOption ? (
-            <span className="font-bold text-slate-800 dark:text-white text-sm uppercase tracking-tight">{selectedOption.name || selectedOption.label}</span>
+            <span className="font-black text-slate-800 dark:text-white text-sm uppercase tracking-tight">{selectedOption.name || selectedOption.label}</span>
           ) : (
-            <span className="text-slate-400 dark:text-slate-500 text-sm font-medium">{placeholder}</span>
+            <span className="text-slate-400 dark:text-slate-300 text-sm font-black uppercase tracking-widest">{placeholder}</span>
           )}
         </div>
         
@@ -112,8 +115,8 @@ const SearchableSelect = ({
                     }}
                     className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all mb-1 last:mb-0 ${
                       isSelected 
-                        ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400' 
-                        : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:translate-x-1'
+                        ? 'bg-indigo-50 dark:bg-indigo-600 text-indigo-700 dark:text-white' 
+                        : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-100 hover:translate-x-2'
                     }`}
                   >
                     <span className={`text-[13px] uppercase tracking-tight ${isSelected ? 'font-black' : 'font-bold'}`}>

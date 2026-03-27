@@ -21,11 +21,15 @@ import {
     FileDown,
     FileSpreadsheet,
     Copy as CopyIcon,
-    ArrowRight
+    ArrowRight,
+    FileText
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import HelpIcon from '../../components/Shared/HelpIcon';
+import { formatTenantDate } from '../../utils/localization';
+import SearchableSelect from '../../components/Shared/SearchableSelect';
 
-const ShiftScheduler = ({ user }) => {
+const ShiftScheduler = ({ user, tenantSettings }) => {
     const { isDarkMode } = useTheme();
     const [employees, setEmployees] = useState([]);
     const [shifts, setShifts] = useState([]);
@@ -34,6 +38,9 @@ const ShiftScheduler = ({ user }) => {
     const [selectedStore, setSelectedStore] = useState('');
     const [loading, setLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
+    const [exportUrl, setExportUrl] = useState('');
+    const [exportFileName, setExportFileName] = useState('');
     const [jornadas, setJornadas] = useState([]);
     const [weekOffset, setWeekOffset] = useState(0);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
@@ -67,19 +74,19 @@ const ShiftScheduler = ({ user }) => {
         api.get('/stores').then(res => {
             const isManager = user?.roles?.includes('Gerente');
             const isSupervisor = user?.roles?.includes('Supervisor');
-            let filteredStores = res.data;
+            let filteredStores = res.data.filter(s => s.isActive);
 
             if (isManager && user?.storeId) {
-                filteredStores = res.data.filter(s => s.id === user.storeId);
+                filteredStores = filteredStores.filter(s => s.id === user.storeId);
                 setStores(filteredStores);
                 setSelectedStore(user.storeId);
             } else if (isSupervisor && user?.storeIds && user.storeIds.length > 0) {
-                filteredStores = res.data.filter(s => user.storeIds.includes(s.id));
+                filteredStores = filteredStores.filter(s => user.storeIds.includes(s.id));
                 setStores(filteredStores);
                 if (filteredStores.length > 0) setSelectedStore(filteredStores[0].id);
             } else {
-                setStores(res.data);
-                if (res.data.length > 0) setSelectedStore(res.data[0].id);
+                setStores(filteredStores);
+                if (filteredStores.length > 0) setSelectedStore(filteredStores[0].id);
             }
         });
 
@@ -148,7 +155,8 @@ const ShiftScheduler = ({ user }) => {
                 endTime: s.endTime || s.EndTime,
                 isDescanso: s.isDescanso !== undefined ? s.isDescanso : s.IsDescanso,
                 isFuera: s.isFuera !== undefined ? s.isFuera : s.IsFuera,
-                status: s.status !== undefined ? s.status : s.Status
+                status: s.status !== undefined ? s.status : s.Status,
+                observation: s.observation || s.Observation
             }));
 
             setShifts(normalizedShifts);
@@ -315,6 +323,7 @@ const ShiftScheduler = ({ user }) => {
                 shifts: localizedShifts,
                 comment: saveComment
             });
+            setLastSaveComment(saveComment);
             showToast("Programación guardada exitosamente");
             setShowSaveModal(false); fetchData();
         } catch (err) { showToast(err.response?.data?.message || "Error al guardar", "error"); } finally { setIsSaving(false); }
@@ -348,179 +357,193 @@ const ShiftScheduler = ({ user }) => {
     };
 
     const exportToPDF = () => {
-        if (!window.html2canvas || !window.jspdf) { showToast("Iniciando motor PDF...", "info"); return; }
         const element = document.getElementById('printable-area');
+        if (!element) {
+            showToast("No se encontró el área de impresión", "error");
+            return;
+        }
+
+        if (!window.html2pdf) {
+            showToast("Cargando motor de PDF... Reintente en 3 segundos", "info");
+            return;
+        }
+
+        if (isExporting) return;
+        setIsExporting(true);
+        showToast("Generando reporte PDF HD... Espere por favor", "success");
         const storeName = stores.find(s => s.id === selectedStore)?.name || 'Sede';
-        const fileName = `Turnos_${storeName}_${currentWeekStart.toISOString().split('T')[0]}.pdf`;
+        const safeName = storeName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20);
+        const fileName = `Programacion_${safeName}.pdf`;
+        
         const style = document.createElement('style');
         style.innerHTML = `
-            #printable-area .print-only { display: block !important; }
+            #printable-area .print-only { display: block !important; visibility: visible !important; }
             #printable-area .no-print { display: none !important; }
-            #printable-area { background: #fff !important; padding: 30px !important; width: 1400px !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            #printable-area table { border-collapse: collapse !important; width: 100% !important; }
-            #printable-area th, #printable-area td { border: 1px solid #cbd5e1 !important; padding: 6px !important; font-size: 8.5pt !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            .grid-event-turno { background-color: #4f46e5 !important; color: #ffffff !important; -webkit-print-color-adjust: exact !important; font-weight: 800 !important; }
-            .grid-event-descanso { background-color: #f59e0b !important; color: #ffffff !important; -webkit-print-color-adjust: exact !important; font-weight: 800 !important; }
-            .grid-event-fuera { background-color: #9333ea !important; color: #ffffff !important; -webkit-print-color-adjust: exact !important; font-weight: 800 !important; }
-            .print-comment-box { border: 1px solid #000 !important; padding: 10px !important; margin-top: 20px !important; background: #f8fafc !important; }
+            #printable-area { 
+                background: white !important; 
+                padding: 40px !important; 
+                width: 1600px !important; 
+            }
+            #printable-area .card { overflow: visible !important; border-radius: 0 !important; border: none !important; }
+            #printable-area .grid-container { width: 100% !important; }
+            #printable-area .turno-bubble { 
+                padding: 4px 8px !important; 
+                font-size: 10px !important; 
+                min-width: 90px !important;
+                white-space: nowrap !important;
+            }
+            #printable-area th, #printable-area td { 
+                padding: 12px 6px !important; 
+            }
         `;
         document.head.appendChild(style);
-        window.html2canvas(element, {
-            scale: 3,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            logging: false,
-            allowTaint: true,
-            windowWidth: 1400,
-            onclone: (clonedDoc) => {
-                const ce = clonedDoc.getElementById('printable-area');
-                ce.style.width = '1400px';
-                ce.style.padding = '40px';
-                ce.style.background = '#ffffff';
-                // Force visibility of print-only elements in the clone
-                const po = ce.querySelectorAll('.print-only');
-                po.forEach(el => el.style.display = 'block !important');
-            }
-        }).then(canvas => {
-            const imgData = canvas.toDataURL('image/png', 0.95);
-            const jsPDF = window.jspdf?.jsPDF || window.jspdf;
-            // PDF en puntos para mayor precisión
-            const pdf = new jsPDF('l', 'pt', [canvas.width, canvas.height]);
-            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-            pdf.save(fileName);
+
+        const opt = {
+            margin: 0,
+            filename: fileName,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 2, 
+                useCORS: true, 
+                logging: false,
+                width: 1600
+            },
+            jsPDF: { unit: 'px', format: [1600, 1100], orientation: 'landscape' }
+        };
+
+        window.html2pdf().from(element).set(opt).outputPdf('blob').then((blob) => {
+            const fileNameFinal = `Turnos_${safeName}_${Math.floor(Date.now()/1000)}.pdf`;
+            const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/octet-stream' }));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileNameFinal;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 5000);
+            
+            document.head.removeChild(style);
+            setIsExporting(false);
+            showToast("PDF generado con éxito");
+        }).catch(err => {
+            console.error("PDF Error:", err);
+            setIsExporting(false);
+            showToast("Error al generar PDF", "error");
             document.head.removeChild(style);
         });
     };
 
     const exportToExcel = async () => {
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Programación');
-        const storeName = (stores.find(s => s.id === selectedStore)?.name || 'Sede').toUpperCase();
-        const dateRange = `${currentWeekStart.toLocaleDateString()} — ${new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString()}`;
+        if (isExporting) return;
+        try {
+            setIsExporting(true);
+            showToast("Preparando Excel Corporativo...", "success");
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Programación');
+            const storeNameOrg = stores.find(s => s.id === selectedStore)?.name || 'Sede';
+            const safeStoreName = storeNameOrg.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20);
+            const fileNameExcel = `Programacion_${safeStoreName}.xlsx`;
+            const dateRange = `${currentWeekStart.toLocaleDateString()} — ${new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString()}`;
 
-        // Configuración de Columnas
-        worksheet.columns = [
-            { header: 'ID/CÉDULA', key: 'id', width: 18 },
-            { header: 'COLABORADOR', key: 'name', width: 35 },
-            ...days.map((day, i) => ({ 
-                header: day.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric' }).toUpperCase(), 
-                key: `day_${i}`, 
-                width: 15 
-            })),
-            { header: 'TOTAL HRS', key: 'total', width: 15 }
-        ];
-
-        // 1. Título Principal
-        worksheet.mergeCells('A1:J1');
-        const titleRow = worksheet.getRow(1);
-        titleRow.getCell(1).value = 'PROGRAMACION DE LA SEMANA';
-        titleRow.getCell(1).font = { name: 'Segoe UI', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
-        titleRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
-        titleRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
-        titleRow.height = 40;
-
-        // 2. Metadatos (Sede y Periodo)
-        worksheet.addRow([]); // Espacio
-
-        const sedeRow = worksheet.addRow([`SEDE: ${storeName}`]);
-        worksheet.mergeCells(`A3:J3`);
-        sedeRow.getCell(1).font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF475569' } };
-        sedeRow.getCell(1).alignment = { horizontal: 'center' };
-
-        const periodRow = worksheet.addRow([`PERIODO: ${dateRange}`]);
-        worksheet.mergeCells(`A4:J4`);
-        periodRow.getCell(1).font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF475569' } };
-        periodRow.getCell(1).alignment = { horizontal: 'center' };
-
-        worksheet.addRow([]); // Espacio
-
-        // 3. Encabezados de Tabla
-        const headerRow = worksheet.addRow(['ID/CÉDULA', 'COLABORADOR', ...days.map(d => d.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric' }).toUpperCase()), 'TOTAL HRS']);
-        headerRow.eachCell((cell) => {
-            cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FFFFFFFF' } };
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
-            cell.alignment = { vertical: 'middle', horizontal: 'center' };
-            cell.border = { top: { style: 'thin', color: { argb: 'FFFFFFFF' } }, left: { style: 'thin', color: { argb: 'FFFFFFFF' } }, bottom: { style: 'thin', color: { argb: 'FFFFFFFF' } }, right: { style: 'thin', color: { argb: 'FFFFFFFF' } } };
-        });
-        headerRow.height = 25;
-
-        // 4. Datos de Empleados
-        const getShiftHours = (s) => {
-            if (!s || s.isDescanso) return 0;
-            const start = new Date(s.startTime);
-            const end = new Date(s.endTime);
-            let diff = (end - start) / (1000 * 60 * 60);
-            if (diff < 0) diff += 24; 
-            return diff;
-        };
-
-        employees.forEach((emp, idx) => {
-            const empShifts = shifts.filter(s => s.employeeId === emp.id);
-            const totalHours = empShifts.reduce((acc, s) => acc + getShiftHours(s), 0);
-            
-            const rowValues = [
-                emp.documento || '---',
-                `${emp.firstName} ${emp.lastName}`.toUpperCase()
+            // Configuración de Columnas
+            worksheet.columns = [
+                { header: 'ID/CÉDULA', key: 'id', width: 18 },
+                { header: 'COLABORADOR', key: 'name', width: 35 },
+                ...days.map((day, i) => ({ 
+                    header: day.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric' }).toUpperCase(), 
+                    key: `day_${i}`, 
+                    width: 15 
+                })),
+                { header: 'TOTAL HRS', key: 'total', width: 15 }
             ];
 
-            days.forEach(day => {
-                const shift = empShifts.find(s => new Date(s.startTime).toDateString() === day.toDateString());
-                if (shift) {
-                    if (shift.isDescanso) rowValues.push("DESCANSO");
-                    else if (shift.isFuera) rowValues.push("FUERA");
-                    else {
-                        const sTime = new Date(shift.startTime);
-                        const eTime = new Date(shift.endTime);
-                        rowValues.push(`${sTime.getHours().toString().padStart(2, '0')}:${sTime.getMinutes().toString().padStart(2, '0')} - ${eTime.getHours().toString().padStart(2, '0')}:${eTime.getMinutes().toString().padStart(2, '0')}`);
-                    }
-                } else {
-                    rowValues.push("—");
-                }
-            });
+            // 1. Título V12
+            worksheet.mergeCells('A1:J1');
+            const titleRow = worksheet.getRow(1);
+            titleRow.getCell(1).value = 'PROGRAMACION DE TURNOS ELITE';
+            titleRow.getCell(1).font = { name: 'Segoe UI', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+            titleRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
+            titleRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+            titleRow.height = 40;
 
-            rowValues.push(formatHours(totalHours));
-            
-            const dataRow = worksheet.addRow(rowValues);
-            
-            // Zebra striping y bordes
-            const isEven = idx % 2 === 0;
-            dataRow.eachCell((cell, colNumber) => {
-                cell.font = { name: 'Segoe UI', size: 8, bold: colNumber === 2 };
-                cell.alignment = { vertical: 'middle', horizontal: colNumber === 2 ? 'left' : 'center' };
+            // 2. Metadatos
+            worksheet.addRow([]);
+            const sedeRow = worksheet.addRow([`SEDE: ${storeNameOrg.toUpperCase()}`]);
+            worksheet.mergeCells(`A3:J3`);
+            sedeRow.getCell(1).font = { bold: true };
+            sedeRow.getCell(1).alignment = { horizontal: 'center' };
+
+            const periodRow = worksheet.addRow([`PERIODO: ${dateRange}`]);
+            worksheet.mergeCells(`A4:J4`);
+            periodRow.getCell(1).alignment = { horizontal: 'center' };
+            worksheet.addRow([]);
+
+            // 3. Encabezados
+            const headerRow = worksheet.addRow(['ID/CÉDULA', 'COLABORADOR', ...days.map(d => d.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric' }).toUpperCase()), 'TOTAL HRS']);
+            headerRow.eachCell((cell) => {
+                cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
+                cell.alignment = { horizontal: 'center' };
                 cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
-                if (!isEven) {
-                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
-                }
-                // Highlight total
-                if (colNumber === days.length + 3) {
-                    cell.font = { bold: true, color: { argb: 'FF4F46E5' } };
-                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
-                }
             });
-            dataRow.height = 22;
-        });
 
-        // 5. Sección de Firmas
-        worksheet.addRow([]);
-        worksheet.addRow([]);
-        const signRow = worksheet.addRow(['', '_______________________', '', '', '', '', '', '', '_______________________']);
-        const signTextRow = worksheet.addRow(['', 'FIRMA JEFE DE SEDE', '', '', '', '', '', '', 'FIRMA TALENTO HUMANO']);
-        
-        signTextRow.eachCell((cell) => {
-            cell.font = { name: 'Segoe UI', size: 9, bold: true };
-            cell.alignment = { horizontal: 'center' };
-        });
+            // 4. Datos con Zebra
+            const getShiftHours = (s) => {
+                if (!s || s.isDescanso) return 0;
+                const start = new Date(s.startTime); const end = new Date(s.endTime);
+                let diff = (end - start) / (1000 * 60 * 60);
+                if (diff < 0) diff += 24; return diff;
+            };
 
-        // Generar Archivo
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Programacion_${storeName}_${new Date().getTime()}.xlsx`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-        showToast("Excel .xlsx corporativo generado");
+            employees.forEach((emp, idx) => {
+                const empShifts = shifts.filter(s => s.employeeId === emp.id);
+                const totalHours = empShifts.reduce((acc, s) => acc + getShiftHours(s), 0);
+                const rowValues = [emp.documento || '---', `${emp.firstName} ${emp.lastName}`.toUpperCase()];
+                days.forEach(day => {
+                    const shift = empShifts.find(s => new Date(s.startTime).toDateString() === day.toDateString());
+                    if (shift) {
+                        if (shift.isDescanso) rowValues.push("DESCANSO");
+                        else if (shift.isFuera) rowValues.push("FUERA");
+                        else {
+                            const st = new Date(shift.startTime); const et = new Date(shift.endTime);
+                            rowValues.push(`${String(st.getHours()).padStart(2, '0')}:${String(st.getMinutes()).padStart(2, '0')} - ${String(et.getHours()).padStart(2, '0')}:${String(et.getMinutes()).padStart(2, '0')}`);
+                        }
+                    } else rowValues.push("—");
+                });
+                rowValues.push(formatHours(totalHours));
+                const dr = worksheet.addRow(rowValues);
+                if (idx % 2 !== 0) dr.eachCell(c => c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } });
+                dr.eachCell(c => c.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } });
+            });
+
+            // 5. Firma y Descarga
+            worksheet.addRow([]); worksheet.addRow([]);
+            const signRow = worksheet.addRow(['', '_______________________', '', '', '', '', '', '', '_______________________']);
+            const signText = worksheet.addRow(['', 'FIRMA JEFE DE SEDE', '', '', '', '', '', '', 'FIRMA TALENTO HUMANO']);
+            signText.eachCell(c => { c.font = { bold: true }; c.alignment = { horizontal: 'center' }; });
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const fileNameFinal = `Excel_${safeStoreName}_${Math.floor(Date.now()/1000)}.xlsx`;
+            const url = window.URL.createObjectURL(new Blob([buffer], { type: 'application/octet-stream' }));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileNameFinal;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 5000);
+            
+            setIsExporting(false);
+            showToast("Excel generado con éxito");
+        } catch (error) {
+            console.error("Excel Error:", error);
+            setIsExporting(false);
+            showToast("Error al generar Excel", "error");
+        }
     };
 
     return (
@@ -554,7 +577,9 @@ const ShiftScheduler = ({ user }) => {
                     <div className="flex justify-between items-end">
                         <div>
                             <h1 className="text-4xl font-[950] uppercase text-slate-900 tracking-tighter">Programación de Turnos</h1>
-                            <p className="text-slate-500 font-bold mt-1">Elite V12 - Gestión de Capital Humano</p>
+                            <p className="text-slate-500 font-bold mt-2 text-xs uppercase tracking-widest">
+                                Generado por: {user?.fullName || user?.name || 'ADMINISTRADOR'} | {formatTenantDate(new Date(), tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour12: true })}
+                            </p>
                         </div>
                         <div className="text-right">
                             <p className="text-xl font-[950] text-slate-900">{stores.find(s => s.id === selectedStore)?.name}</p>
@@ -566,47 +591,85 @@ const ShiftScheduler = ({ user }) => {
                 </div>
 
                 {/* 2. UI Principal (V12 Elite Command Center) */}
-                <div className="no-print flex flex-col gap-6 mb-10">
-                    {/* Fila 1: Selectores y Navegación (Legacy Elite V12) */}
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex items-center bg-white dark:bg-slate-800 border-2 dark:border-slate-700 h-[56px] shadow-lg rounded-2xl overflow-hidden p-1">
-                            <div className="flex items-center px-6 gap-3 border-r dark:border-slate-700 h-full hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                                <Store size={18} className="text-indigo-500" />
-                                <select
+                <div className="no-print space-y-32 mb-32">
+                    {/* Fila 1: Selectores y Navegación Elite V12 (Clean & Minimalist) */}
+                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-12 p-8 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-indigo-500/20 shadow-2xl shadow-indigo-100/20 dark:shadow-none transition-all duration-300"
+                         style={{ borderRadius: '48px' }}>
+                        
+                        {/* LEFT: Sede Selector (Equitable 1/3) */}
+                        <div className="flex-1 flex justify-start">
+                            <div className="flex items-center h-[64px] w-full max-w-[450px]" data-v12-tooltip="Cambiar Sede de Operación">
+                                <SearchableSelect
+                                    options={stores}
                                     value={selectedStore}
-                                    onChange={(e) => setSelectedStore(e.target.value)}
-                                    className="bg-transparent border-none font-black text-[12px] uppercase focus:ring-0 min-w-[200px] cursor-pointer text-slate-800 dark:text-slate-100"
-                                >
-                                    {stores.map(s => <option key={s.id} value={s.id} className="dark:bg-slate-800">{s.name}</option>)}
-                                </select>
-                            </div>
-                            <div className="flex items-center px-2 min-w-[280px] h-full">
-                                <button onClick={() => setWeekOffset(prev => prev - 1)} className="p-2 text-slate-400 hover:text-indigo-500 transition-all active:scale-90"><ChevronLeft size={20} strokeWidth={3} /></button>
-                                <span className="text-[11px] font-[950] uppercase tracking-widest text-slate-700 dark:text-slate-200 text-center flex-1 whitespace-nowrap px-4">
-                                    {currentWeekStart.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} — {new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
-                                </span>
-                                <button onClick={() => setWeekOffset(prev => prev + 1)} className="p-2 text-slate-400 hover:text-indigo-500 transition-all active:scale-90"><ChevronRight size={20} strokeWidth={3} /></button>
+                                    onChange={(val) => setSelectedStore(val)}
+                                    placeholder="SELECCIONAR SEDE..."
+                                    icon={Store}
+                                    variant="minimal"
+                                />
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-4">
-                            <div className="px-5 py-2.5 bg-slate-100/50 dark:bg-slate-800/50 rounded-xl border dark:border-slate-700 flex items-center gap-3">
-                                <UsersIcon size={14} className="text-indigo-500" />
-                                <span className="text-[10px] font-[950] text-slate-600 dark:text-slate-400 uppercase tracking-widest">{employees.length} Colaboradores Activos</span>
+                        {/* CENTER: Week Navigation (Equitable 1/3) */}
+                        <div className="flex-1 flex justify-center">
+                            <div className="flex items-center justify-center h-[64px] gap-4">
+                                <button onClick={() => setWeekOffset(prev => prev - 1)} 
+                                        className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-xl transition-all active:scale-90" 
+                                        data-v12-tooltip="Semana Anterior"><ChevronLeft size={24} strokeWidth={3} /></button>
+                                <span className="text-[14px] font-[1000] uppercase tracking-[0.25em] text-slate-700 dark:text-white text-center whitespace-nowrap px-4 border-x border-slate-100 dark:border-slate-800">
+                                    {currentWeekStart.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} — {new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
+                                </span>
+                                <button onClick={() => setWeekOffset(prev => prev + 1)} 
+                                        className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-xl transition-all active:scale-90" 
+                                        data-v12-tooltip="Semana Siguiente"><ChevronRight size={24} strokeWidth={3} /></button>
                             </div>
                         </div>
+
+                        {/* RIGHT: Stats & Help (Equitable 1/3) */}
+                        <div className="flex-1 flex items-center justify-end gap-6">
+                            <div className="flex items-center justify-end gap-4 h-[64px]">
+                                <div className="flex items-center gap-3">
+                                    <UsersIcon size={18} className="text-indigo-500" />
+                                    <span className="text-[11px] font-[1000] uppercase tracking-[0.2em] text-slate-600 dark:text-white whitespace-nowrap">
+                                        {employees.length} Colaboradores Activos
+                                    </span>
+                                </div>
+                                <HelpIcon text="Utilice los selectores para navegar por sedes y semanas. Arrastre los eventos al grid y guarde para oficializar la programación." />
+                            </div>
+                        </div>
+                    </div>
+
+                    {lastSaveComment && (
+                        <div className="flex items-center gap-4 p-5 bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/50 rounded-3xl animate-in slide-in-from-top-2 duration-500">
+                            <div className="flex-shrink-0 w-10 h-10 bg-white dark:bg-indigo-950 rounded-2xl flex items-center justify-center shadow-sm">
+                                <FileText size={18} className="text-indigo-600 dark:text-indigo-400" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[10px] font-black uppercase text-indigo-500 tracking-widest mb-0.5">Observaciones vigentes de la programación:</p>
+                                <p className="text-sm font-bold text-slate-700 dark:text-slate-300 truncate">{lastSaveComment}</p>
+                            </div>
+                            <div className="flex-shrink-0">
+                                <div className="text-[10px] font-black px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full uppercase tracking-tighter">
+                                    Sincronizado con Reporte PDF
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Fila 2: Command Center Ultra-Visibilidad V12 (Espaciado e Impacto) */}
-                    <div className="w-full flex flex-col xl:flex-row items-center justify-between gap-16 bg-white dark:bg-slate-900 shadow-xl p-8 border-[1px] border-slate-200 dark:border-slate-800 mb-32" style={{ borderRadius: '48px' }}>
+                    <div className="w-full flex flex-col xl:flex-row items-center justify-between gap-16 bg-white dark:bg-slate-900 shadow-xl p-8 border-[1px] border-slate-200 dark:border-slate-800" style={{ borderRadius: '48px' }}>
                         {/* Izquierda: Toolkit de Operaciones (Ultra-Espaciado) */}
-                        <div className="flex flex-wrap items-center justify-center lg:justify-start gap-16 p-4 bg-slate-50/50 dark:bg-slate-800/20 border-[1px] border-slate-200 dark:border-slate-700/50" style={{ borderRadius: '24px' }}>
+                        <div className="flex flex-wrap items-center justify-center lg:justify-start p-8 bg-slate-50/50 dark:bg-slate-800/20 border-[1px] border-slate-200 dark:border-slate-700/50" 
+                             style={{ borderRadius: '24px', gap: '2rem' }}>
                             {[
-                                { type: 'Turno', color: 'bg-indigo-600', icon: Clock, label: 'TURNO' },
-                                { type: 'Descanso', color: 'bg-amber-500', icon: Calendar, label: 'DESC' },
-                                { type: 'Turno Fuera', color: 'bg-purple-600', icon: AlertCircle, label: 'FUERA' }
+                                { type: 'Turno', color: 'bg-indigo-600', icon: Clock, label: 'TURNO', tip: 'Turno de Trabajo (Arrastrar al grid)' },
+                                { type: 'Descanso', color: 'bg-amber-500', icon: Calendar, label: 'DESC', tip: 'Descanso (Arrastrar al grid)' },
+                                { type: 'Turno Fuera', color: 'bg-purple-600', icon: AlertCircle, label: 'FUERA', tip: 'Turno Fuera de Sede (Arrastrar al grid)' }
                             ].map((tool, idx) => (
                                 <div key={idx} draggable onDragStart={(e) => handleDragStart(e, 'PANEL', { type: tool.type })} 
                                     className={`flex-shrink-0 ${tool.color} text-white flex flex-col items-center justify-center cursor-grab shadow-sm hover:scale-105 active:scale-95 transition-all group relative`}
                                     style={{ width: '96px', height: '64px', borderRadius: '16px' }}
+                                    data-v12-tooltip={tool.tip}
                                 >
                                     <tool.icon size={22} strokeWidth={2.5} className="mb-1" />
                                     <span className="text-[9px] font-black uppercase tracking-widest text-center">
@@ -617,7 +680,8 @@ const ShiftScheduler = ({ user }) => {
                             <div className="hidden 2xl:block w-[1px] h-10 bg-slate-200 dark:bg-slate-700 flex-shrink-0"></div>
                             <div onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnTrash} 
                                 className="flex-shrink-0 bg-rose-50 dark:bg-rose-900/10 text-rose-500 flex flex-col items-center justify-center gap-1 border-2 border-dashed border-rose-200 dark:border-rose-900/40 hover:bg-rose-600 hover:text-white hover:border-solid transition-all cursor-pointer group relative"
-                                style={{ width: '120px', height: '64px', borderRadius: '16px' }}
+                                style={{ width: '120px', height: '64px', borderRadius: '16px', marginLeft: '0.5rem' }}
+                                data-v12-tooltip="Arrastra un turno aquí para eliminarlo"
                             >
                                 <Trash2 size={22} strokeWidth={2.5} />
                                 <span className="text-[8px] font-black uppercase tracking-widest text-center">BORRAR</span>
@@ -625,27 +689,38 @@ const ShiftScheduler = ({ user }) => {
                         </div>
 
                         {/* Derecha: Acciones Globales (Ultra-Visibility & Gap-16) */}
-                        <div className="flex flex-wrap items-center justify-center lg:justify-end gap-16 p-4 bg-slate-50/50 dark:bg-slate-800/20 border-[1px] border-slate-200 dark:border-slate-700/50" style={{ borderRadius: '24px' }}>
-                            <button onClick={exportToExcel} className="flex-shrink-0 bg-emerald-600 text-white flex flex-col items-center justify-center gap-1 hover:bg-emerald-700 transition-all group shadow-md" style={{ width: '96px', height: '64px', borderRadius: '16px' }}>
+                        <div className="flex flex-wrap items-center justify-center lg:justify-end p-8 bg-slate-50/50 dark:bg-slate-800/20 border-[1px] border-slate-200 dark:border-slate-700/50" 
+                             style={{ borderRadius: '24px', gap: '2rem' }}>
+                            <button 
+                                onClick={exportToExcel} 
+                                disabled={isExporting}
+                                className={`flex-shrink-0 bg-emerald-600 text-white flex flex-col items-center justify-center gap-1 hover:bg-emerald-700 transition-all group shadow-md ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                                style={{ width: '96px', height: '64px', borderRadius: '16px' }} 
+                                data-v12-tooltip="Exportar programación a Excel .xlsx"
+                            >
                                 <FileSpreadsheet size={22} className="group-hover:scale-110 transition-transform" />
                                 <span className="text-[9px] font-black uppercase tracking-widest">EXCEL</span>
                             </button>
-                            <button onClick={exportToPDF} className="flex-shrink-0 flex flex-col items-center justify-center gap-1 hover:brightness-110 transition-all group shadow-md" style={{ width: '96px', height: '64px', borderRadius: '16px', backgroundColor: '#dc2626', color: 'white' }}>
+                            <button 
+                                onClick={exportToPDF} 
+                                disabled={isExporting}
+                                className={`flex-shrink-0 flex flex-col items-center justify-center gap-1 hover:brightness-110 transition-all group shadow-md ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                                style={{ width: '96px', height: '64px', borderRadius: '16px', backgroundColor: '#dc2626', color: 'white' }} 
+                                data-v12-tooltip="Generar reporte PDF para impresión"
+                            >
                                 <FileDown size={22} className="group-hover:scale-110 transition-transform" />
                                 <span className="text-[9px] font-black uppercase tracking-widest">PDF</span>
                             </button>
-                            <button onClick={copyFromPreviousWeek} className="flex-shrink-0 bg-indigo-600 text-white flex flex-col items-center justify-center gap-1 hover:bg-indigo-700 transition-all group shadow-md" style={{ width: '96px', height: '64px', borderRadius: '16px' }}>
+                            <button onClick={copyFromPreviousWeek} className="flex-shrink-0 bg-indigo-600 text-white flex flex-col items-center justify-center gap-1 hover:bg-indigo-700 transition-all group shadow-md" style={{ width: '96px', height: '64px', borderRadius: '16px' }} data-v12-tooltip="Copiar toda la programación de la semana anterior">
                                 <CopyIcon size={22} className="group-hover:scale-110 transition-transform" />
                                 <span className="text-[9px] font-black uppercase tracking-widest text-center">CLONAR</span>
                             </button>
-                            <button onClick={handleSave} className="flex-shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white flex flex-col items-center justify-center gap-1 shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.05] active:scale-95 group" style={{ width: '96px', height: '64px', borderRadius: '16px' }}>
-                                {isSaving ? <div className="loader !w-5 !h-5 !border-white"></div> : <><Save size={22} /><span className="text-[9px] font-black uppercase tracking-widest">GUARDAR</span></>}
+                            <button onClick={handleSave} disabled={isExporting} className={`flex-shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white flex flex-col items-center justify-center gap-1 shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.05] active:scale-95 group ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ width: '96px', height: '64px', borderRadius: '16px' }} data-v12-tooltip="Guardar todos los cambios en el servidor">
+                                {isSaving ? <div className="loader !w-5 !h-5 !border-white"></div> : <><Save size={22} /><span className="text-[9px] font-black uppercase">GUARDAR</span></>}
                             </button>
                         </div>
                     </div>
-                    </div>
-                </div>
-
+                
                 {/* 3. Grid V12 Elite Classic */}
                 <div className="card shadow-[0_40px_100px_rgba(0,0,0,0.12)] bg-white dark:bg-slate-900 border-2 dark:border-slate-800" style={{ borderRadius: '48px', overflow: 'hidden' }}>
                     {loading ? (
@@ -657,9 +732,13 @@ const ShiftScheduler = ({ user }) => {
                         <div className="overflow-x-auto">
                             <table className="w-full border-collapse">
                                 <thead>
-                                    <tr className="bg-slate-50 dark:bg-slate-800/90 border-b dark:border-slate-700">
-                                        <th className="p-8 text-left sticky left-0 z-10 bg-slate-50 dark:bg-slate-800 border-r dark:border-slate-700" style={{ width: '320px' }}>
-                                            <span className="text-[11px] font-[950] uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Colaborador (Cédula) / Jornada</span>
+                                    <tr className="bg-slate-50 dark:bg-slate-800 border-b-2 dark:border-indigo-500/20">
+                                        <th className="p-8 text-left sticky left-0 z-10 border-r dark:border-slate-800" 
+                                            style={{ backgroundColor: isDarkMode ? '#060914' : '#f8fafc', width: '320px' }}>
+                                            <span className="text-[11px] font-[1000] uppercase tracking-[0.2em]"
+                                                  style={{ color: isDarkMode ? '#cbd5e1' : '#64748b' }}>
+                                                Colaborador (Cédula) / Jornada
+                                            </span>
                                         </th>
                                         {days.map((day, i) => (
                                             <th key={i} className="p-4 text-center border-r dark:border-slate-700 min-w-[140px]">
@@ -667,7 +746,7 @@ const ShiftScheduler = ({ user }) => {
                                                 <p className="text-2xl font-[950] text-slate-800 dark:text-white leading-none tracking-tighter">{day.getDate()}</p>
                                             </th>
                                         ))}
-                                        <th className="p-4 text-center bg-slate-100/30 dark:bg-slate-800/20 w-[160px] min-w-[160px] font-[950] text-[11px] uppercase text-slate-400 tracking-[0.2em] border-l dark:border-slate-700">Hrs</th>
+                                        <th className="p-4 text-center bg-slate-100/30 dark:bg-slate-800/40 w-[160px] min-w-[160px] font-[950] text-[11px] uppercase text-slate-400 dark:text-indigo-300 tracking-[0.2em] border-l dark:border-slate-700">Hrs</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -681,8 +760,9 @@ const ShiftScheduler = ({ user }) => {
                                             return acc + diff;
                                         }, 0);
                                         return (
-                                            <tr key={emp.id} className="border-b dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors group">
-                                                <td className="sticky left-0 z-10 bg-white dark:bg-slate-900 p-6 pl-10 border-r dark:border-slate-800 shadow-[10px_0_20px_rgba(0,0,0,0.03)]">
+                                            <tr key={emp.id} className="border-b dark:border-slate-800 transition-colors group">
+                                                <td className="sticky left-0 z-10 p-6 pl-10 border-r dark:border-slate-800 shadow-[10px_0_20px_rgba(0,0,0,0.03)]"
+                                                    style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff' }}>
                                                     <div className="flex items-center gap-4">
                                                         <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center font-black text-white text-sm shadow-lg shadow-indigo-100 dark:shadow-none translate-y-[-2px]">
                                                             {emp.firstName[0]}{emp.lastName[0]}
@@ -765,12 +845,10 @@ const ShiftScheduler = ({ user }) => {
                                                         </td>
                                                     );
                                                 })}
-                                                <td className="p-4 text-center bg-slate-50/50 dark:bg-slate-800/40 border-l dark:border-slate-700">
-                                                    <div className="inline-flex items-center justify-center px-4 py-2 bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-200 dark:border-slate-700 shadow-sm min-w-[100px]">
-                                                        <span className="text-[13px] font-black text-slate-800 dark:text-slate-200 whitespace-nowrap">
-                                                            {formatHours(total)}
-                                                        </span>
-                                                    </div>
+                                                <td className="p-4 text-center bg-slate-50/50 dark:bg-slate-900/50 border-l dark:border-slate-800">
+                                                    <strong className="text-[14px] font-[950] block" style={{ color: isDarkMode ? '#ffffff' : '#1e293b' }}>
+                                                        {formatHours(total)}
+                                                    </strong>
                                                 </td>
                                             </tr>
                                         );
@@ -780,12 +858,15 @@ const ShiftScheduler = ({ user }) => {
                         </div>
                     )}
                 </div>
+            </div>
 
                 {/* Justificación de la semana (Print) */}
-                {lastSaveComment && (
-                    <div className="print-only mt-8 bg-slate-50 p-6 rounded-2xl border-2 border-slate-900">
-                        <p className="text-[10px] font-black uppercase text-slate-500 mb-2">Observaciones de la programación:</p>
-                        <p className="text-sm font-bold text-slate-800 leading-relaxed italic">"{lastSaveComment}"</p>
+                {(saveComment || lastSaveComment) && (
+                    <div className="print-only print-comment-box mt-10 p-6 bg-slate-50 border-2 border-slate-200 rounded-3xl">
+                        <p className="text-[10px] font-black uppercase text-indigo-600 mb-2 tracking-widest">Observaciones de la programación:</p>
+                        <p className="text-[13px] font-bold text-slate-800 leading-relaxed italic">
+                            "{saveComment || lastSaveComment}"
+                        </p>
                     </div>
                 )}
 
@@ -926,6 +1007,18 @@ const ShiftScheduler = ({ user }) => {
                     )}
                 </>,
                 document.getElementById('modal-root') || document.body
+            )}
+            {isExporting && (
+                <div className="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-slate-900 p-8 md:p-12 rounded-[3.5rem] shadow-2xl border border-white/10 flex flex-col items-center max-w-md w-full text-center animate-in zoom-in-95 duration-300">
+                        <div className="relative mb-8">
+                            <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 animate-pulse"></div>
+                            <div className="w-20 h-20 border-4 border-slate-100 dark:border-slate-800 border-t-indigo-600 rounded-full animate-spin relative z-10"></div>
+                        </div>
+                        <h3 className="text-xl font-[950] text-slate-800 dark:text-white mb-2 uppercase tracking-tight">Generando Reporte Elite</h3>
+                        <p className="text-sm font-bold text-slate-400 leading-relaxed px-4">Optimizando calidad HD y preparando datos seguros. Esto puede tardar unos segundos...</p>
+                    </div>
+                </div>
             )}
         </>
     );

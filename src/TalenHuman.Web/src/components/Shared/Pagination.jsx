@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import SearchableSelect from './SearchableSelect';
 
 const Pagination = ({ 
   currentPage, 
@@ -18,16 +19,19 @@ const Pagination = ({
           Mostrando {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)} a {Math.min(currentPage * itemsPerPage, totalItems)} de {totalItems} resultados
         </span>
         
-        <select
-          value={itemsPerPage}
-          onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-          className="ml-2 border border-slate-200 rounded-lg text-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500 p-1 text-xs font-bold"
-        >
-          <option value={10}>10 / pág</option>
-          <option value={25}>25 / pág</option>
-          <option value={50}>50 / pág</option>
-          <option value={100}>100 / pág</option>
-        </select>
+        <div className="w-32 ml-2">
+            <SearchableSelect
+                options={[
+                    { id: 10, name: '10 / pág' },
+                    { id: 25, name: '25 / pág' },
+                    { id: 50, name: '50 / pág' },
+                    { id: 100, name: '100 / pág' }
+                ]}
+                value={itemsPerPage}
+                onChange={(val) => onItemsPerPageChange(Number(val))}
+                placeholder="Ver..."
+            />
+        </div>
       </div>
       
       <div className="flex items-center space-x-1">

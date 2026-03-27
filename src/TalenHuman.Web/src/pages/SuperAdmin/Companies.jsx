@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit, X, Building2, Hash, Shield, AlertCircle, CheckCircle } from 'lucide-react';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
+import SearchableSelect from '../../components/Shared/SearchableSelect';
 
 const Companies = () => {
   const { isDarkMode } = useTheme();
@@ -20,7 +21,21 @@ const Companies = () => {
   const [showModal, setShowModal] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [currentCompany, setCurrentCompany] = useState(null);
-  const [formData, setFormData] = useState({ id: '', name: '', taxId: '', isActive: true });
+  const [formData, setFormData] = useState({ 
+    id: '', 
+    name: '', 
+    taxId: '', 
+    isActive: true,
+    countryCode: 'CO',
+    timeZoneId: 'SA Pacific Standard Time'
+  });
+
+  const countries = [
+    { code: 'CO', name: 'Colombia', zone: 'SA Pacific Standard Time' },
+    { code: 'MX', name: 'México', zone: 'Central Standard Time (Mexico)' },
+    { code: 'PA', name: 'Panamá', zone: 'SA Pacific Standard Time' },
+    { code: 'EC', name: 'Ecuador', zone: 'SA Pacific Standard Time' },
+  ];
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
@@ -59,6 +74,8 @@ const Companies = () => {
       }
       setShowModal(false);
       fetchCompanies();
+      // Elite V12: Notify Layout to refresh header clocks/flags
+      window.dispatchEvent(new CustomEvent('tenantSettingsUpdated'));
     } catch (err) {
       console.error("Save error:", err);
       showToast("Error al procesar la solicitud", "error");
@@ -86,7 +103,7 @@ const Companies = () => {
         </div>
 
         <button 
-          onClick={() => { setFormData({ id: '', name: '', taxId: '', isActive: true }); setShowModal(true); }}
+          onClick={() => { setFormData({ id: '', name: '', taxId: '', isActive: true, countryCode: 'CO', timeZoneId: 'SA Pacific Standard Time' }); setShowModal(true); }}
           className="btn-premium btn-premium-primary"
           style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
         >
@@ -106,7 +123,7 @@ const Companies = () => {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Empresa</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Sede/País</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Identificación (NIT)</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Estado</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em', textAlign: 'right' }}>Gestión</th>
@@ -120,7 +137,19 @@ const Companies = () => {
                       <div style={{ width: '44px', height: '44px', background: 'var(--bg-main)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366f1', border: '1px solid #eef2ff' }}>
                         <Building2 size={22} />
                       </div>
-                      <div className="font-bold text-slate-800">{c.name}</div>
+                      <div className="flex flex-col">
+                        <div className="font-bold text-slate-800">{c.name}</div>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <img 
+                            src={`https://flagcdn.com/w20/${(c.countryCode || 'co').toLowerCase()}.png`} 
+                            alt={c.countryCode}
+                            className="w-4 h-auto rounded-[2px]" 
+                          />
+                          <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">
+                            {countries.find(con => con.code === c.countryCode)?.name || 'Colombia'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontWeight: '500' }}>{c.taxId || 'N/A'}</td>
@@ -143,7 +172,7 @@ const Companies = () => {
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
                     <button 
-                      onClick={() => { setFormData({ id: c.id, name: c.name, taxId: c.taxId, isActive: c.isActive }); setShowModal(true); }}
+                      onClick={() => { setFormData({ id: c.id, name: c.name, taxId: c.taxId, isActive: c.isActive, countryCode: c.countryCode || 'CO', timeZoneId: c.timeZoneId || 'SA Pacific Standard Time' }); setShowModal(true); }}
                       style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', padding: '0.5rem' }}
                       className="hover:scale-110 transition-transform"
                     >
@@ -227,6 +256,40 @@ const Companies = () => {
                       />
                       <span className="premium-switch-slider"></span>
                     </label>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">País de Operación</label>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-10 h-8 bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center overflow-hidden shadow-inner">
+                        <img 
+                          src={`https://flagcdn.com/w40/${formData.countryCode.toLowerCase()}.png`} 
+                          alt="preview"
+                          className="w-full h-auto object-cover" 
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <SearchableSelect
+                            options={countries.map(c => ({ id: c.code, name: c.name }))}
+                            value={formData.countryCode}
+                            onChange={(val) => {
+                                const country = countries.find(c => c.code === val);
+                                setFormData({ ...formData, countryCode: val, timeZoneId: country.zone });
+                            }}
+                            placeholder="Seleccionar País..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Zona Horaria (UTC)</label>
+                    <input 
+                      readOnly
+                      value={formData.timeZoneId} 
+                      className="w-full p-3 rounded-xl border-slate-200 bg-slate-100 font-bold text-[10px] text-slate-500 uppercase tracking-tighter" 
+                    />
                   </div>
                 </div>
               </div>

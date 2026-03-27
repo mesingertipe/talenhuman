@@ -8,6 +8,11 @@ public class Company : BaseEntity
     public string TaxId { get; set; } = string.Empty; // NIT
     public string? LogoUrl { get; set; }
     public bool IsActive { get; set; } = true;
+    [System.Text.Json.Serialization.JsonPropertyName("countryCode")]
+    public string CountryCode { get; set; } = "CO"; // Default Colombia
+
+    [System.Text.Json.Serialization.JsonPropertyName("timeZoneId")]
+    public string TimeZoneId { get; set; } = "SA Pacific Standard Time"; // Default UTC-5
 
     // Relationships
     public ICollection<Brand> Brands { get; set; } = new List<Brand>();
@@ -69,10 +74,19 @@ public class Profile : BaseEntity, IMultitenant
 public class City : BaseEntity, IMultitenant
 {
     public string Name { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true;
     
     public Guid CompanyId { get; set; }
     public Company? Company { get; set; }
     
     // Relationships
     public ICollection<Store> Stores { get; set; } = new List<Store>();
+}
+
+public class SystemSetting : BaseEntity
+{
+    public string Key { get; set; } = string.Empty;
+    public string Value { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string Group { get; set; } = "General"; // e.g., "Storage", "Email"
 }

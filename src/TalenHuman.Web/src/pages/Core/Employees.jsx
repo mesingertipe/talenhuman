@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit, X, User as UserIcon, Mail, Tag, Store, FileSpreadsheet, AlertCircle, Hash, Shield, CheckCircle } from 'lucide-react';
+import { 
+  Plus, Trash2, Edit, X, User as UserIcon, Mail, Tag, Store, 
+  FileSpreadsheet, AlertCircle, Hash, Shield, CheckCircle,
+  Search, Calendar, ToggleRight, ToggleLeft, Briefcase, Clock, UserPlus
+} from 'lucide-react';
 import api from '../../services/api';
 import BulkImportModal from '../../components/Shared/BulkImportModal';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
 import { useTableData } from '../../hooks/useTableData';
 import Pagination from '../../components/Shared/Pagination';
-import { Search, Calendar, ToggleRight, ToggleLeft, Briefcase, Clock } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import HelpIcon from '../../components/Shared/HelpIcon';
 
 const Employees = ({ user }) => {
   const { isDarkMode } = useTheme();
@@ -42,7 +46,8 @@ const Employees = ({ user }) => {
     profileId: '',
     jornadaId: '',
     dateOfEntry: new Date().toISOString().split('T')[0],
-    isActive: true
+    isActive: true,
+    mustChangePassword: false
   });
 
   const { 
@@ -165,6 +170,7 @@ const Employees = ({ user }) => {
               onClick={() => setShowImport(true)}
               className="btn-premium btn-premium-secondary"
               style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
+              data-v12-tooltip="Carga masiva desde archivo Excel .xlsx"
             >
               <FileSpreadsheet size={18} /> Importar
             </button>
@@ -177,15 +183,15 @@ const Employees = ({ user }) => {
                       storeId: stores[0]?.id || '', 
                       profileId: profiles[0]?.id || '',
                       jornadaId: jornadas[0]?.id || '',
-                      dateOfEntry: new Date().toISOString().split('T')[0],
-                      isActive: true
+                      email: '', isActive: true, mustChangePassword: false
                   }); 
                   setShowModal(true); 
               }}
-              className="btn-premium btn-premium-primary"
+              className="btn-premium btn-premium-primary whitespace-nowrap"
               style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
+              data-v12-tooltip="Registrar un nuevo colaborador manualmente"
             >
-              <Plus size={20} /> Nuevo Colaborador
+              <UserPlus size={18} /> Nuevo Colaborador
             </button>
           </div>
         </div>
@@ -215,7 +221,7 @@ const Employees = ({ user }) => {
                 <tr key={emp.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
                   <td style={{ padding: '1.25rem 1.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white flex items-center justify-center font-black text-xs shadow-lg shadow-indigo-500/20 uppercase">
+                      <div className="w-11 h-11 rounded-2xl bg-indigo-600 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white flex items-center justify-center font-black text-xs shadow-lg shadow-indigo-500/20 uppercase">
                         {emp.firstName[0]}{emp.lastName[0]}
                       </div>
                       <div>
@@ -257,18 +263,22 @@ const Employees = ({ user }) => {
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
                     <button 
-                      onClick={() => { setCurrentEmployee(emp); setFormData({ ...emp }); setShowModal(true); }}
+                      onClick={() => { 
+                        setCurrentEmployee(emp); 
+                        setFormData({ ...emp, mustChangePassword: false }); 
+                        setShowModal(true); 
+                      }}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '1rem', color: '#6366f1' }}
                       className="hover:scale-110 transition-transform dark:text-indigo-400"
-                      title="Editar Colaborador"
+                      data-v12-tooltip="Editar información del colaborador"
                     >
                       <Edit size={18} />
                     </button>
                     <button 
                       onClick={() => { setCurrentEmployee(emp); setShowConfirm(true); }}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
-                      className="hover:scale-110 transition-transform dark:text-red-400"
-                      title="Eliminar Colaborador"
+                      className="hover:scale-110 transition-transform dark:text-red-400 font-bold"
+                      data-v12-tooltip="Retirar colaborador del sistema"
                     >
                       <Trash2 size={18} />
                     </button>
@@ -429,6 +439,21 @@ const Employees = ({ user }) => {
                           type="checkbox" 
                           checked={formData.isActive}
                           onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                      />
+                      <span className="premium-switch-slider"></span>
+                  </label>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-sm">
+                  <div>
+                      <p className="font-bold text-slate-800 dark:text-white text-sm mb-1">Cambio Obligatorio de Clave</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Forzar al colaborador a cambiar contraseña al ingresar</p>
+                  </div>
+                  <label className="premium-switch">
+                      <input 
+                          type="checkbox" 
+                          checked={formData.mustChangePassword}
+                          onChange={(e) => setFormData({ ...formData, mustChangePassword: e.target.checked })}
                       />
                       <span className="premium-switch-slider"></span>
                   </label>

@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Users, Clock, Calendar, FileText, Settings, 
   LogOut, Store, Sun, Moon, Pin, PinOff, ChevronLeft, ChevronRight,
-  Briefcase, Boxes, Building, Link, ChevronDown, ChevronUp, User as UserIcon, MapPin
+  Briefcase, Boxes, Building, Link, ChevronDown, ChevronUp, User as UserIcon, MapPin, Cpu
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
+import SearchableSelect from '../Shared/SearchableSelect';
 
 const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePage, setPage, onLogout, user, companies, selectedTenant, onTenantChange }) => {
   const isSuperAdmin = user?.roles?.includes('SuperAdmin');
@@ -46,6 +47,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
         { icon: <Settings size={20} />, label: 'Usuarios', roles: ['SuperAdmin', 'Admin'] },
         { icon: <FileText size={20} />, label: 'Configuración novedades', roles: ['SuperAdmin', 'Admin'] },
         { icon: <Building size={20} />, label: 'Empresas', roles: ['SuperAdmin'] },
+        { icon: <Cpu size={20} />, label: 'Configuración Sistema', roles: ['SuperAdmin'] },
       ]
     },
   ];
@@ -128,29 +130,16 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
 
       <div className="sidebar-footer" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '1rem 0' }}>
         {isSuperAdmin && !isCollapsed && (
-          <div style={{ padding: '0 1.25rem 1rem 1.25rem' }}>
-            <p style={{ fontSize: '0.6rem', textTransform: 'uppercase', color: '#4b5563', marginBottom: '0.5rem', fontWeight: '800', trackingWidest: '0.05em' }}>Tenant Activo</p>
-            <div className="relative">
-              <Building size={14} className="absolute left-2.5 top-2.5 text-slate-500" />
-              <select 
+          <div style={{ padding: '0 1.25rem 1rem 1.25rem' }} className="dark">
+            <p style={{ fontSize: '0.6rem', textTransform: 'uppercase', color: '#64748b', marginBottom: '0.5rem', fontWeight: '800', trackingWidest: '0.05em' }}>Tenant Activo</p>
+            <div className="p-0">
+              <SearchableSelect
+                options={companies}
                 value={selectedTenant}
-                onChange={onTenantChange}
-                style={{ 
-                  width: '100%',
-                  background: '#1e293b', 
-                  border: '1px solid #334155', 
-                  borderRadius: '10px', 
-                  padding: '0.6rem 0.75rem 0.6rem 2.2rem', 
-                  fontSize: '0.75rem',
-                  fontWeight: '700',
-                  color: 'white',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  appearance: 'none'
-                }}
-              >
-                {companies.map(c => <option key={c.id} value={c.id} style={{ color: 'black' }}>{c.name}</option>)}
-              </select>
+                onChange={(val) => onTenantChange({ target: { value: val } })}
+                placeholder="CAMBIAR TENANT..."
+                icon={Building}
+              />
             </div>
           </div>
         )}
@@ -190,11 +179,14 @@ const getPageInfo = (page) => {
     case 'Turnos': return { title: 'Turnos', subtitle: 'Programación inteligente y cobertura' };
     case 'Marcaciones': return { title: 'Marcaciones', subtitle: 'Trazabilidad de ingresos y salidas' };
     case 'Empresas': return { title: 'Empresas', subtitle: 'Configuración de inquilinos corporativos' };
+    case 'Configuración Sistema': return { title: 'Parámetros del Sistema', subtitle: 'Configuración de infraestructura y servicios core' };
     default: return { title: page, subtitle: '' };
   }
 };
 
-const Header = ({ user, activePage, currentCompanyName }) => {
+import RealTimeClock from '../Shared/RealTimeClock';
+
+const Header = ({ user, activePage, currentCompanyName, tenantSettings }) => {
   const { isDarkMode, toggleTheme } = useTheme();
   const showTenantInfo = !!user;
   const pageInfo = getPageInfo(activePage);
@@ -203,35 +195,47 @@ const Header = ({ user, activePage, currentCompanyName }) => {
     <header className="header" style={{ padding: '0 2rem', display: 'flex', alignItems: 'center', minHeight: '90px', borderBottom: '1px solid var(--border)' }}>
       <div className="header-left" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
-          <h1 className="text-3xl font-black tracking-tight text-slate-800 dark:text-white" style={{ margin: 0, lineHeight: 1 }}>
+          <h1 className="text-3xl font-[1000] tracking-tighter animate-in slide-in-from-left-2" 
+              style={{ margin: 0, lineHeight: 1, color: isDarkMode ? '#ffffff' : '#1e293b' }}>
             {activePage === 'Dashboard' 
               ? (currentCompanyName || 'Dashboard') 
               : pageInfo.title}
           </h1>
           {activePage !== 'Dashboard' && showTenantInfo && currentCompanyName && (
-             <span className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide opacity-80 ml-1">
+             <span className="text-sm font-black uppercase tracking-widest opacity-80 ml-1"
+                   style={{ color: isDarkMode ? '#818cf8' : '#64748b' }}>
                @ {currentCompanyName}
              </span>
           )}
         </div>
         {pageInfo.subtitle && (
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 ml-0.5">{pageInfo.subtitle}</p>
+            <p className="text-xs font-black uppercase tracking-widest mt-2 ml-0.5"
+               style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
+              {pageInfo.subtitle}
+            </p>
         )}
       </div>
       <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+        {/* Elite V12 RealTime Clock & Flag Support */}
+        {tenantSettings && (
+          <RealTimeClock 
+            countryCode={tenantSettings.countryCode} 
+            timeZoneId={tenantSettings.timeZoneId} 
+          />
+        )}
         {user?.roles?.includes('Gerente') && user?.storeName && (
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
             gap: '8px', 
             padding: '8px 16px', 
-            background: 'var(--bg-card)', 
-            border: '1.5px solid var(--border)', 
+            background: isDarkMode ? 'rgba(79, 70, 229, 0.15)' : 'var(--bg-card)', 
+            border: isDarkMode ? '1.5px solid rgba(79, 70, 229, 0.3)' : '1.5px solid var(--border)', 
             borderRadius: '14px',
-            boxShadow: 'var(--shadow-sm)'
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
           }}>
-            <Store size={16} className="text-indigo-500" />
-            <span style={{ fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase', color: 'var(--text-main)', letterSpacing: '0.02em' }}>
+            <Store size={16} className="text-indigo-500 dark:text-indigo-400" />
+            <span style={{ fontSize: '0.75rem', fontVariationSettings: '"wght" 900', fontWeight: '900', textTransform: 'uppercase', color: isDarkMode ? '#fff' : 'var(--text-main)', letterSpacing: '0.05em' }}>
               {user.storeExternalId ? `${user.storeExternalId} - ` : ''}{user.storeName}
             </span>
           </div>
@@ -319,7 +323,10 @@ const Layout = ({ children, activePage, setPage, user, onLogout }) => {
       }
     };
     fetchCompanies();
-  }, []);
+    
+    window.addEventListener('tenantSettingsUpdated', fetchCompanies);
+    return () => window.removeEventListener('tenantSettingsUpdated', fetchCompanies);
+  }, [isSuperAdmin]);
 
   const handleTenantChange = (e) => {
     const newId = e.target.value;
@@ -329,9 +336,18 @@ const Layout = ({ children, activePage, setPage, user, onLogout }) => {
   };
 
   const effectiveTenantId = selectedTenant || user?.companyId;
-  const currentCompanyName = companies.find(c => 
+  const currentCompany = companies.find(c => 
     c.id?.toString().toLowerCase() === effectiveTenantId?.toString().toLowerCase()
-  )?.name || user?.companyName;
+  );
+  
+  const currentCompanyName = currentCompany?.name || user?.companyName;
+  const tenantSettings = currentCompany ? {
+    countryCode: currentCompany.countryCode || 'CO',
+    timeZoneId: currentCompany.timeZoneId || 'America/Bogota'
+  } : user?.companyId ? { 
+    countryCode: user.countryCode || 'CO', 
+    timeZoneId: user.timeZoneId || 'America/Bogota' 
+  } : null;
 
   return (
     <div className="app-container">
@@ -349,9 +365,19 @@ const Layout = ({ children, activePage, setPage, user, onLogout }) => {
         onTenantChange={handleTenantChange}
       />
       <div className="main-content">
-        <Header user={user} activePage={activePage} currentCompanyName={currentCompanyName} />
+        <Header 
+          user={user} 
+          activePage={activePage} 
+          currentCompanyName={currentCompanyName} 
+          tenantSettings={tenantSettings}
+        />
         <main className="content-body" style={{ flex: 1 }}>
-          {children}
+          {React.Children.map(children, child => {
+            if (React.isValidElement(child)) {
+              return React.cloneElement(child, { tenantSettings });
+            }
+            return child;
+          })}
         </main>
         <footer className="main-footer" style={{ 
             padding: '1.5rem', 

@@ -10,12 +10,15 @@ namespace TalenHuman.Infrastructure.Persistence;
 public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplicationDbContext
 {
     private readonly ITenantProvider _tenantProvider;
+    private readonly ITenantTimeProvider _tenantTimeProvider;
 
     public ApplicationDbContext(
         DbContextOptions<ApplicationDbContext> options,
-        ITenantProvider tenantProvider) : base(options)
+        ITenantProvider tenantProvider,
+        ITenantTimeProvider tenantTimeProvider) : base(options)
     {
         _tenantProvider = tenantProvider;
+        _tenantTimeProvider = tenantTimeProvider;
     }
 
     public DbSet<Company> Companies => Set<Company>();
@@ -32,6 +35,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<NovedadTipo> NovedadTipos => Set<NovedadTipo>();
     public DbSet<Novedad> Novedades => Set<Novedad>();
     public DbSet<NovedadLog> NovedadLogs => Set<NovedadLog>();
+    public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
 
     public Guid TenantId => _tenantProvider.GetTenantId();
 
@@ -110,6 +114,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         var tenantId = _tenantProvider.GetTenantId();
+        var now = _tenantTimeProvider.Now;
 
         foreach (var entry in ChangeTracker.Entries<IMultitenant>())
         {
@@ -124,10 +129,10 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
             switch (entry.State)
             {
                 case EntityState.Added:
-                    entry.Entity.CreatedAt = ColombiaTime.Now;
+                    entry.Entity.CreatedAt = now;
                     break;
                 case EntityState.Modified:
-                    entry.Entity.UpdatedAt = ColombiaTime.Now;
+                    entry.Entity.UpdatedAt = now;
                     break;
             }
         }

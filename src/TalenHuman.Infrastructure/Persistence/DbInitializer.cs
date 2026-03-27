@@ -20,8 +20,18 @@ public static class DbInitializer
         // Seed Companies (Tenants)
         if (!context.Companies.Any())
         {
-            var company1 = new Company { Name = "TalenHuman Corp", Id = Guid.Parse("11111111-1111-1111-1111-111111111111") };
-            var company2 = new Company { Name = "RestoBar Group", Id = Guid.Parse("22222222-2222-2222-2222-222222222222") };
+            var company1 = new Company { 
+                Name = "TalenHuman Corp", 
+                Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                CountryCode = "CO",
+                TimeZoneId = "SA Pacific Standard Time"
+            };
+            var company2 = new Company { 
+                Name = "RestoBar Group", 
+                Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+                CountryCode = "MX",
+                TimeZoneId = "Central Standard Time (Mexico)"
+            };
             
             context.Companies.AddRange(company1, company2);
             await context.SaveChangesAsync();

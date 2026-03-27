@@ -8,6 +8,7 @@ public interface IApplicationDbContext
     DbSet<Company> Companies { get; }
     DbSet<Brand> Brands { get; }
     DbSet<Store> Stores { get; }
+    DbSet<City> Cities { get; }
     DbSet<Profile> Profiles { get; }
     DbSet<Employee> Employees { get; }
     DbSet<Shift> Shifts { get; }
@@ -18,6 +19,7 @@ public interface IApplicationDbContext
     DbSet<NovedadTipo> NovedadTipos { get; }
     DbSet<Novedad> Novedades { get; }
     DbSet<NovedadLog> NovedadLogs { get; }
+    DbSet<SystemSetting> SystemSettings { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

@@ -16,15 +16,18 @@ public class ImportService : IImportService
 {
     private readonly IApplicationDbContext _context;
     private readonly ITenantProvider _tenantProvider;
+    private readonly ITenantTimeProvider _timeProvider;
     private readonly IMediator _mediator;
 
     public ImportService(
         IApplicationDbContext context, 
         ITenantProvider tenantProvider,
+        ITenantTimeProvider timeProvider,
         IMediator mediator)
     {
         _context = context;
         _tenantProvider = tenantProvider;
+        _timeProvider = timeProvider;
         _mediator = mediator;
     }
     public async Task<byte[]> GenerateTemplateAsync(string type)
@@ -83,21 +86,28 @@ public class ImportService : IImportService
         {
             var ws = workbook.Worksheets.Add("Tiendas");
             ws.Cell(1, 1).Value = "Nombre de la Sede";
-            ws.Cell(1, 2).Value = "Dirección";
-            ws.Cell(1, 3).Value = "Marca Comercial";
+            ws.Cell(1, 2).Value = "ID Tienda (Código)";
+            ws.Cell(1, 3).Value = "Ciudad";
+            ws.Cell(1, 4).Value = "Dirección";
+            ws.Cell(1, 5).Value = "Marca Comercial";
 
-            var header = ws.Range("A1:C1");
+            var header = ws.Range("A1:E1");
             header.Style.Font.Bold = true;
             header.Style.Fill.BackgroundColor = XLColor.FromHtml("#4f46e5");
             header.Style.Font.FontColor = XLColor.White;
 
             // Example row
             ws.Cell(2, 1).Value = "Sede Chapinero";
-            ws.Cell(2, 2).Value = "Calle 53 # 20-12, Bogotá";
+            ws.Cell(2, 2).Value = "CH-001";
+            ws.Cell(2, 3).Value = "Bogotá";
+            ws.Cell(2, 4).Value = "Calle 53 # 20-12";
+            ws.Cell(2, 5).Value = "Marca Ejemplo";
 
             ws.Column(1).Width = 30;
-            ws.Column(2).Width = 40;
-            ws.Column(3).Width = 30;
+            ws.Column(2).Width = 20;
+            ws.Column(3).Width = 25;
+            ws.Column(4).Width = 40;
+            ws.Column(5).Width = 30;
 
             // Reference sheet (visible for cross-sheet validation compatibility)
             var wsBrands = workbook.Worksheets.Add("Marcas_Referencia");
@@ -107,19 +117,36 @@ public class ImportService : IImportService
             for (int i = 0; i < brands.Count; i++) wsBrands.Cell(i + 2, 1).Value = brands[i].Name;
             wsBrands.Column(1).Width = 35;
 
-            // Dropdown for Marca Comercial (col C) using formula string
+            // Dropdown for Marca Comercial (col E) using formula string
             if (brands.Count > 0)
             {
-                var brandValidation = ws.Range("C2:C500").CreateDataValidation();
+                var brandValidation = ws.Range("E2:E500").CreateDataValidation();
                 brandValidation.List($"Marcas_Referencia!$A$2:$A${brands.Count + 1}", true);
+            }
+
+            // Reference sheet for Cities
+            var wsCities = workbook.Worksheets.Add("Ciudades_Referencia");
+            wsCities.Cell(1, 1).Value = "Nombre de la Ciudad";
+            wsCities.Cell(1, 1).Style.Font.Bold = true;
+            var cities = await _context.Cities.ToListAsync();
+            for (int i = 0; i < cities.Count; i++) wsCities.Cell(i + 2, 1).Value = cities[i].Name;
+            wsCities.Column(1).Width = 35;
+
+            // Dropdown for Ciudad (col C)
+            if (cities.Count > 0)
+            {
+                var cityValidation = ws.Range("C2:C500").CreateDataValidation();
+                cityValidation.List($"Ciudades_Referencia!$A$2:$A${cities.Count + 1}", true);
             }
 
             var wsHelp = workbook.Worksheets.Add("Instrucciones");
             wsHelp.Cell(1, 1).Value = "Instrucciones";
             wsHelp.Cell(1, 1).Style.Font.Bold = true;
             wsHelp.Cell(2, 1).Value = "- Nombre de la Sede: nombre único del punto de venta.";
-            wsHelp.Cell(3, 1).Value = "- Dirección: dirección física completa.";
-            wsHelp.Cell(4, 1).Value = "- Marca Comercial: seleccione del listón desplegable (solo marcas registradas).";
+            wsHelp.Cell(3, 1).Value = "- ID Tienda (Código): identificador interno único de la tienda.";
+            wsHelp.Cell(4, 1).Value = "- Ciudad: seleccione del listón desplegable.";
+            wsHelp.Cell(5, 1).Value = "- Dirección: dirección física completa.";
+            wsHelp.Cell(6, 1).Value = "- Marca Comercial: seleccione del listón desplegable (solo marcas registradas).";
             wsHelp.Columns().AdjustToContents();
         }
         else if (type.ToLower() == "employees")
@@ -240,6 +267,18 @@ public class ImportService : IImportService
                 if (string.IsNullOrEmpty(name))
                     importRow.Errors.Add(new ImportFieldError { Field = "Nombre de la Sede", Message = "El nombre de la sede es requerido" });
 
+                var code = importRow.Data.GetValueOrDefault("ID Tienda (Código)");
+                if (string.IsNullOrEmpty(code))
+                    importRow.Errors.Add(new ImportFieldError { Field = "ID Tienda (Código)", Message = "El ID de la tienda es requerido" });
+
+                var cityName = importRow.Data.GetValueOrDefault("Ciudad");
+                if (!string.IsNullOrEmpty(cityName))
+                {
+                    var city = await _context.Cities.AnyAsync(c => c.Name == cityName);
+                    if (!city)
+                        importRow.Errors.Add(new ImportFieldError { Field = "Ciudad", Message = $"La ciudad '{cityName}' no existe" });
+                }
+
                 var brandName = importRow.Data.GetValueOrDefault("Marca Comercial");
                 var brand = await _context.Brands.AnyAsync(b => b.Name == brandName);
                 if (!brand)
@@ -331,13 +370,28 @@ public class ImportService : IImportService
                 try 
                 {
                     var name = row.Data["Nombre de la Sede"];
+                    var externalId = row.Data.GetValueOrDefault("ID Tienda (Código)");
+                    var cityName = row.Data.GetValueOrDefault("Ciudad");
                     var address = row.Data.GetValueOrDefault("Dirección");
                     var brandName = row.Data["Marca Comercial"];
                     
                     var brand = await _context.Brands.FirstOrDefaultAsync(b => b.Name == brandName);
+                    var city = !string.IsNullOrEmpty(cityName) ? await _context.Cities.FirstOrDefaultAsync(c => c.Name == cityName) : null;
+                    
                     if (brand != null && !await _context.Stores.AnyAsync(s => s.Name == name))
                     {
-                        _context.Stores.Add(new Store { Name = name, Address = address ?? string.Empty, BrandId = brand.Id, CompanyId = companyId });
+                        var store = new Store 
+                        { 
+                            Name = name, 
+                            Address = address ?? string.Empty, 
+                            BrandId = brand.Id, 
+                            CompanyId = companyId,
+                            ExternalId = externalId
+                        };
+                        
+                        if (city != null) store.CityId = city.Id;
+                        
+                        _context.Stores.Add(store);
                         result.SuccessCount++;
                     }
                 }
@@ -369,7 +423,7 @@ public class ImportService : IImportService
                         : null;
 
                     DateTime? birthDate = DateTime.TryParse(birthDateStr, out var parsedBirth) ? parsedBirth : null;
-                    DateTime dateOfEntry = DateTime.TryParse(dateStr, out var parsedDate) ? parsedDate : ColombiaTime.Now;
+                    DateTime dateOfEntry = DateTime.TryParse(dateStr, out var parsedDate) ? parsedDate : _timeProvider.Now;
 
                     var command = new CreateEmployeeCommand
                     {
@@ -440,12 +494,16 @@ public class ImportService : IImportService
             try
             {
                 var name = row["Nombre de la Sede"]?.ToString()?.Trim();
+                var externalId = row["ID Tienda (Código)"]?.ToString()?.Trim();
+                var cityName = row["Ciudad"]?.ToString()?.Trim();
                 var address = row["Dirección"]?.ToString()?.Trim();
                 var brandName = row["Marca Comercial"]?.ToString()?.Trim();
                 
                 if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(brandName)) continue;
 
                 var brand = await _context.Brands.FirstOrDefaultAsync(b => b.Name == brandName);
+                var city = !string.IsNullOrEmpty(cityName) ? await _context.Cities.FirstOrDefaultAsync(c => c.Name == cityName) : null;
+
                 if (brand == null)
                 {
                     errors.Add($"Marca '{brandName}' no encontrada para la sede '{name}'");
@@ -454,13 +512,18 @@ public class ImportService : IImportService
 
                 if (await _context.Stores.AnyAsync(s => s.Name == name)) continue;
 
-                _context.Stores.Add(new Store 
+                var store = new Store 
                 { 
                     Name = name, 
                     Address = address ?? "", 
                     BrandId = brand.Id,
-                    CompanyId = companyId 
-                });
+                    CompanyId = companyId,
+                    ExternalId = externalId
+                };
+                
+                if (city != null) store.CityId = city.Id;
+
+                _context.Stores.Add(store);
                 count++;
             }
             catch (Exception ex)
@@ -542,7 +605,7 @@ public class ImportService : IImportService
                 }
 
                 DateTime? birthDate = DateTime.TryParse(birthDateStr, out var parsedBirth) ? parsedBirth : null;
-                DateTime dateOfEntry = DateTime.TryParse(dateStr, out var parsedDate) ? parsedDate : DateTime.UtcNow;
+                DateTime dateOfEntry = DateTime.TryParse(dateStr, out var parsedDate) ? parsedDate : _timeProvider.Now;
 
                 var command = new CreateEmployeeCommand
                 {

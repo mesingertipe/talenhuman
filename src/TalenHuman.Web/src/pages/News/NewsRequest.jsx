@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { 
     Plus, X, User as UserIcon, Search, Calendar, FileText, 
     Paperclip, AlertCircle, CheckCircle, Info, ChevronRight, Layers, ArrowLeft,
-    Building2, Store, Briefcase, Smile, Send
+    Building2, Store, Briefcase, Smile, Send, Upload, File
 } from 'lucide-react';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
+import SearchableSelect from '../../components/Shared/SearchableSelect';
 
 const NewsRequest = ({ onComplete, onCancel, user }) => {
     const [step, setStep] = useState(1); 
@@ -31,6 +32,9 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
     });
     const [dynamicFields, setDynamicFields] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [uploadedFile, setUploadedFile] = useState(null);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     const { isDarkMode } = useTheme();
 
@@ -56,12 +60,12 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
             
             const isManager = user?.roles?.includes('Gerente');
             const isSupervisor = user?.roles?.includes('Supervisor');
-            let filteredStores = resStores.data;
+            let filteredStores = resStores.data.filter(s => s.isActive);
 
             if (isManager && user?.storeId) {
-                filteredStores = resStores.data.filter(s => s.id === user.storeId);
+                filteredStores = filteredStores.filter(s => s.id === user.storeId);
             } else if (isSupervisor && user?.storeIds && user.storeIds.length > 0) {
-                filteredStores = resStores.data.filter(s => user.storeIds.includes(s.id));
+                filteredStores = filteredStores.filter(s => user.storeIds.includes(s.id));
             }
             
             setStores(filteredStores);
@@ -109,6 +113,41 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
             setStep(3);
         } catch (err) { showToast("Empleado no encontrado", "error"); }
         finally { setLoading(false); }
+    };
+    
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            setIsUploading(true);
+            setUploadProgress(10);
+            
+            const formDataUpload = new FormData();
+            formDataUpload.append('file', file);
+            
+            // Simulating progress since fetch doesn't easily support it without XHR
+            const progressInterval = setInterval(() => {
+                setUploadProgress(prev => prev < 90 ? prev + 10 : prev);
+            }, 300);
+
+            const res = await api.post('/Files/upload', formDataUpload, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            clearInterval(progressInterval);
+            setUploadProgress(100);
+            setFormData(prev => ({ ...prev, adjuntoUrl: res.data.url }));
+            setUploadedFile(file.name);
+            showToast("Archivo cargado correctamente");
+        } catch (err) {
+            console.error(err);
+            const msg = err.response?.data?.message || "Error al subir archivo";
+            showToast(msg, "error");
+        } finally {
+            setIsUploading(false);
+            setTimeout(() => setUploadProgress(0), 1000);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -292,23 +331,23 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
                                     </div>
                                 </div>
                             ) : selectedType.categoria === 1 ? (
-                                <select 
-                                    style={{ width: '100%', padding: '18px', borderRadius: '18px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontWeight: '800', fontSize: '1rem' }}
+                                <SearchableSelect
+                                    label="Selecciona la Tienda *"
+                                    options={stores}
                                     value={formData.storeId}
-                                    onChange={(e) => setFormData({...formData, storeId: e.target.value})}
-                                >
-                                    <option value="">Selecciona la Tienda...</option>
-                                    {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                                </select>
+                                    onChange={(val) => setFormData({...formData, storeId: val})}
+                                    placeholder="Buscar tienda..."
+                                    icon={Store}
+                                />
                             ) : (
-                                <select 
-                                    style={{ width: '100%', padding: '18px', borderRadius: '18px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontWeight: '800', fontSize: '1rem' }}
+                                <SearchableSelect
+                                    label="Selecciona la Marca *"
+                                    options={brands}
                                     value={formData.brandId}
-                                    onChange={(e) => setFormData({...formData, brandId: e.target.value})}
-                                >
-                                    <option value="">Selecciona la Marca...</option>
-                                    {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                                </select>
+                                    onChange={(val) => setFormData({...formData, brandId: val})}
+                                    placeholder="Buscar marca..."
+                                    icon={Building2}
+                                />
                             )}
                         </div>
 
@@ -346,14 +385,19 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
                                 <div style={{ borderTop: `1px solid ${activeColors.border}`, paddingTop: '30px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
                                     {dynamicFields.map((f, i) => (
                                         <div key={i}>
-                                            <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '10px' }}>{f.name} *</label>
                                             {f.type === 'select' || f.type === 'radio' ? (
-                                                <select value={formData.datosDinamicos[f.name]} onChange={(e) => setFormData({...formData, datosDinamicos: {...formData.datosDinamicos, [f.name]: e.target.value}})} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontWeight: '800' }}>
-                                                    <option value="">Selecciona...</option>
-                                                    {f.options.split(',').map(o => <option key={o} value={o.trim()}>{o.trim()}</option>)}
-                                                </select>
+                                                <SearchableSelect
+                                                    label={`${f.name} *`}
+                                                    options={f.options.split(',').map(o => ({ id: o.trim(), name: o.trim() }))}
+                                                    value={formData.datosDinamicos[f.name]}
+                                                    onChange={(val) => setFormData({...formData, datosDinamicos: {...formData.datosDinamicos, [f.name]: val}})}
+                                                    placeholder="Seleccionar..."
+                                                />
                                             ) : (
-                                                <input type={f.type} value={formData.datosDinamicos[f.name]} onChange={(e) => setFormData({...formData, datosDinamicos: {...formData.datosDinamicos, [f.name]: e.target.value}})} placeholder="..." style={{ width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontWeight: '800' }} />
+                                                <>
+                                                    <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '10px' }}>{f.name} *</label>
+                                                    <input type={f.type} value={formData.datosDinamicos[f.name]} onChange={(e) => setFormData({...formData, datosDinamicos: {...formData.datosDinamicos, [f.name]: e.target.value}})} placeholder="..." style={{ width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontWeight: '800' }} />
+                                                </>
                                             )}
                                         </div>
                                     ))}
@@ -389,19 +433,45 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
                         </div>
 
                         {selectedType?.requiereAdjunto && (
-                            <div style={{ background: isDarkMode ? '#1e293b50' : '#f8fafc', padding: '30px', borderRadius: '32px', border: `2px dashed ${activeColors.border}`, textAlign: 'center' }}>
-                                <div style={{ width: '60px', height: '60px', background: activeColors.accent, color: 'white', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                                    <Paperclip size={28} />
+                            <div style={{ background: isDarkMode ? '#1e293b50' : '#f8fafc', padding: '40px', borderRadius: '32px', border: `2px dashed ${activeColors.border}`, textAlign: 'center', transition: 'all 0.3s' }} className="hover:border-indigo-400">
+                                <div style={{ width: '60px', height: '60px', background: activeColors.accent, color: 'white', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 10px 20px rgba(79, 70, 229, 0.2)' }}>
+                                    {isUploading ? <RefreshCw className="animate-spin" size={28} /> : <Paperclip size={28} />}
                                 </div>
-                                <h4 style={{ fontSize: '11px', fontWeight: '950', color: activeColors.textMain, textTransform: 'uppercase', margin: 0 }}>Carga de Evidencia</h4>
-                                <p style={{ fontSize: '10px', color: activeColors.textMuted, fontWeight: '700', margin: '8px 0 20px' }}>Ingrese la URL del documento soporte (PDF/JPG)</p>
-                                <input 
-                                    type="text" 
-                                    value={formData.adjuntoUrl} 
-                                    onChange={(e) => setFormData({...formData, adjuntoUrl: e.target.value})} 
-                                    placeholder="https://servidor.com/archivo.pdf" 
-                                    style={{ width: '100%', padding: '14px', borderRadius: '14px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontWeight: '800', textAlign: 'center' }}
-                                />
+                                <h4 style={{ fontSize: '11px', fontWeight: '950', color: activeColors.textMain, textTransform: 'uppercase', margin: 0 }}>Documentación de Soporte</h4>
+                                <p style={{ fontSize: '10px', color: activeColors.textMuted, fontWeight: '700', margin: '8px 0 25px' }}>Adjunte evidencia en formato PDF o Imagen (Máx 10MB)</p>
+                                
+                                {uploadedFile ? (
+                                    <div style={{ background: isDarkMode ? '#0f172a' : '#fff', padding: '15px 25px', borderRadius: '16px', border: `1px solid #10b981`, display: 'inline-flex', alignItems: 'center', gap: '15px' }}>
+                                        <div style={{ width: '30px', height: '30px', background: '#10b98120', color: '#10b981', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <File size={16} />
+                                        </div>
+                                        <div style={{ textAlign: 'left' }}>
+                                            <p style={{ fontSize: '11px', fontWeight: '900', color: activeColors.textMain, margin: 0 }}>{uploadedFile}</p>
+                                            <p style={{ fontSize: '9px', fontWeight: '800', color: '#10b981', margin: 0 }}>ARCHIVO LISTO</p>
+                                        </div>
+                                        <button type="button" onClick={() => { setUploadedFile(null); setFormData(p => ({...p, adjuntoUrl: ''})); }} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '5px' }}>
+                                            <X size={16} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                                        <input 
+                                            type="file" 
+                                            onChange={handleFileUpload}
+                                            disabled={isUploading}
+                                            style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }}
+                                        />
+                                        <div style={{ padding: '12px 30px', background: activeColors.card, border: `1px solid ${activeColors.border}`, borderRadius: '14px', color: activeColors.textMain, fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <Upload size={16} /> {isUploading ? 'Subiendo...' : 'Seleccionar Archivo'}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {uploadProgress > 0 && uploadProgress < 100 && (
+                                    <div style={{ width: '200px', height: '6px', background: '#e2e8f0', borderRadius: '3px', margin: '20px auto 0', overflow: 'hidden' }}>
+                                        <div style={{ width: `${uploadProgress}%`, height: '100%', background: activeColors.accent, transition: 'width 0.3s ease' }}></div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
