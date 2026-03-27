@@ -8,10 +8,13 @@ import {
     Clock,
     ChevronLeft,
     ChevronRight,
+    Search,
     Save,
     Download,
     Trash2,
     Plus,
+    Printer,
+    Sparkles,
     CheckCircle,
     AlertCircle,
     User,
@@ -628,7 +631,14 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                         {/* RIGHT: Stats & Help (Equitable 1/3) */}
                         <div className="flex-1 flex items-center justify-end gap-6">
                             <div className="flex items-center justify-end gap-4 h-[64px]">
-                                <div className="flex items-center gap-3">
+                                {/* [NEW] Predictive Smart Sync Placeholder */}
+                                <button className="flex items-center gap-2 px-5 h-[48px] bg-indigo-500 hover:bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-200/50 dark:shadow-none transition-all active:scale-95 group"
+                                        data-v12-tooltip="Cargar Turnos Proyectados (Basado en Histórico)">
+                                    <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
+                                    <span className="text-[11px] font-[1000] uppercase tracking-wider">Carga Inteligente</span>
+                                </button>
+
+                                <div className="flex items-center gap-3 ml-2">
                                     <UsersIcon size={18} className="text-indigo-500" />
                                     <span className="text-[11px] font-[1000] uppercase tracking-[0.2em] text-slate-600 dark:text-white whitespace-nowrap">
                                         {employees.length} Colaboradores Activos
