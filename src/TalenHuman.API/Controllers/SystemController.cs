@@ -88,56 +88,6 @@ public class SystemController : ControllerBase
         await _context.SaveChangesAsync();
         return NoContent();
     }
-
-    [HttpGet("external-configs")]
-    public async Task<IActionResult> GetExternalConfigs()
-    {
-        var configs = await _context.ExternalApiConfigs
-            .IgnoreQueryFilters()
-            .Include(c => c.Company)
-            .Select(c => new {
-                c.Id,
-                c.Provider,
-                c.BaseUrl,
-                c.Username,
-                c.EnterpriseId,
-                c.ServerNumber,
-                c.EnableAutoSync,
-                c.SyncIntervalMinutes,
-                c.LastSyncAt,
-                c.CompanyId,
-                CompanyName = c.Company != null ? c.Company.Name : "N/A"
-            })
-            .ToListAsync();
-        return Ok(configs);
-    }
-
-    [HttpPost("external-configs")]
-    public async Task<IActionResult> SaveExternalConfig([FromBody] ExternalApiConfig config)
-    {
-        var existing = await _context.ExternalApiConfigs
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(c => c.Id == config.Id || (c.CompanyId == config.CompanyId && c.Provider == config.Provider));
-
-        if (existing == null)
-        {
-            _context.ExternalApiConfigs.Add(config);
-        }
-        else
-        {
-            existing.BaseUrl = config.BaseUrl;
-            existing.Username = config.Username;
-            if (!string.IsNullOrEmpty(config.Password)) existing.Password = config.Password;
-            existing.EnterpriseId = config.EnterpriseId;
-            existing.ServerNumber = config.ServerNumber;
-            existing.EnableAutoSync = config.EnableAutoSync;
-            existing.SyncIntervalMinutes = config.SyncIntervalMinutes;
-            _context.Entry(existing).State = EntityState.Modified;
-        }
-
-        await _context.SaveChangesAsync();
-        return Ok();
-    }
 }
 
 public class ApiKeyDto

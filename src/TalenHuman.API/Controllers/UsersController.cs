@@ -37,6 +37,7 @@ public class UsersController : ControllerBase
 
             var query = _context.Users
                 .Include(u => u.Company)
+                .Include(u => u.District)
                 .IgnoreQueryFilters();
 
             // Filter logic:
@@ -100,6 +101,8 @@ public class UsersController : ControllerBase
                     user.IsActive,
                     user.MustChangePassword,
                     user.EmployeeId,
+                    user.DistrictId,
+                    DistrictName = user.District != null ? user.District.Name : null,
                     Roles = roles,
                     StoreIds = storeIds,
                     StoreNames = storeNames
@@ -144,6 +147,7 @@ public class UsersController : ControllerBase
                 Email = dto.Email,
                 FullName = dto.FullName,
                 CompanyId = dto.CompanyId,
+                DistrictId = dto.DistrictId,
                 IsActive = true,
                 MustChangePassword = dto.MustChangePassword,
                 EmailConfirmed = true
@@ -209,6 +213,7 @@ public class UsersController : ControllerBase
             user.IsActive = dto.IsActive;
             user.MustChangePassword = dto.MustChangePassword;
             user.CompanyId = dto.CompanyId;
+            user.DistrictId = dto.DistrictId;
 
             var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
@@ -358,6 +363,7 @@ public class UserCreateDto
     public bool MustChangePassword { get; set; } = true;
     public List<string> Roles { get; set; } = new();
     public List<Guid> StoreIds { get; set; } = new();
+    public Guid? DistrictId { get; set; }
 }
 
 public class UserUpdateDto
@@ -369,6 +375,7 @@ public class UserUpdateDto
     public List<string> Roles { get; set; } = new();
     public string? NewPassword { get; set; }
     public List<Guid> StoreIds { get; set; } = new();
+    public Guid? DistrictId { get; set; }
 }
 
 public class PasswordChangeDto

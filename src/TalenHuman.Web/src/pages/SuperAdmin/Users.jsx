@@ -24,6 +24,7 @@ const Users = () => {
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [stores, setStores] = useState([]);
+  const [districts, setDistricts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -41,7 +42,8 @@ const Users = () => {
     roles: ['Admin'],
     isActive: true,
     mustChangePassword: true,
-    storeIds: []
+    storeIds: [],
+    districtId: ''
   });
 
   const availableRoles = ["Admin", "Gerente", "Supervisor", "RH", "SuperAdmin"];
@@ -78,14 +80,16 @@ const Users = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [usersRes, compRes, storesRes] = await Promise.all([
+      const [usersRes, compRes, storesRes, districtsRes] = await Promise.all([
         api.get('/users'),
         api.get('/companies'),
-        api.get('/stores')
+        api.get('/stores'),
+        api.get('/districts')
       ]);
       setUsers(usersRes.data);
       setCompanies(compRes.data);
       setStores(storesRes.data);
+      setDistricts(districtsRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -112,6 +116,7 @@ const Users = () => {
             mustChangePassword: payload.mustChangePassword,
             roles: payload.roles,
             storeIds: payload.storeIds,
+            districtId: payload.districtId || null,
             newPassword: payload.password || null
         };
         await api.put(`/users/${currentUser.id}`, updateData);
@@ -277,6 +282,12 @@ const Users = () => {
                                 {u.storeNames.join(', ')}
                             </div>
                         )}
+                        {u.districtName && (
+                            <div className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] uppercase tracking-widest bg-indigo-50/50 dark:bg-indigo-500/10 px-2.5 py-1 rounded-full w-fit border border-indigo-100/50 dark:border-indigo-500/20">
+                                <Building2 size={10} className="opacity-70" />
+                                Distrito: {u.districtName}
+                            </div>
+                        )}
                     </div>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
@@ -319,6 +330,7 @@ const Users = () => {
                           roles: u.roles || [], 
                           companyId: u.companyId || '',
                           storeIds: u.storeIds || [],
+                          districtId: u.districtId || '',
                           isActive: u.isActive,
                           mustChangePassword: u.mustChangePassword
                         }); 
@@ -454,6 +466,19 @@ const Users = () => {
                             required
                         />
                       )}
+                    </div>
+                  )}
+
+                  {formData.roles.includes('Supervisor') && (
+                    <div className="col-span-2">
+                        <SearchableSelect
+                            label="Distrito Asignado"
+                            options={districts.map(d => ({ value: d.id, label: d.name }))}
+                            value={formData.districtId}
+                            onChange={(val) => setFormData({ ...formData, districtId: val })}
+                            icon={Building2}
+                            placeholder="Seleccionar distrito..."
+                        />
                     </div>
                   )}
                 </div>

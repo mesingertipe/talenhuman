@@ -102,7 +102,8 @@ public class ImportService : IImportService
             ws.Cell(2, 2).Value = "CH-001";
             ws.Cell(2, 3).Value = "Bogotá";
             ws.Cell(2, 4).Value = "Calle 53 # 20-12";
-            ws.Cell(2, 5).Value = "Marca Ejemplo";
+            ws.Cell(2, 5).Value = "BIO-100";
+            ws.Cell(2, 6).Value = "Marca Ejemplo";
 
             ws.Column(1).Width = 30;
             ws.Column(2).Width = 20;
@@ -119,10 +120,10 @@ public class ImportService : IImportService
             for (int i = 0; i < brands.Count; i++) wsBrands.Cell(i + 2, 1).Value = brands[i].Name;
             wsBrands.Column(1).Width = 35;
 
-            // Dropdown for Marca Comercial (col E) using formula string
+            // Dropdown for Marca Comercial (col F) using formula string
             if (brands.Count > 0)
             {
-                var brandValidation = ws.Range("E2:E500").CreateDataValidation();
+                var brandValidation = ws.Range("F2:F500").CreateDataValidation();
                 brandValidation.List($"Marcas_Referencia!$A$2:$A${brands.Count + 1}", true);
             }
 
@@ -176,9 +177,10 @@ public class ImportService : IImportService
             ws.Cell(2, 1).Value = "Juan";
             ws.Cell(2, 2).Value = "Pérez Gómez";
             ws.Cell(2, 3).Value = "1016914200";
+            ws.Cell(2, 8).Value = "50000.00";
+            ws.Cell(2, 9).Value = "SI";
             ws.Cell(2, 6).Value = "1990-05-15";
             ws.Cell(2, 7).Value = DateTime.Today.ToString("yyyy-MM-dd");
-            ws.Cell(2, 8).Value = "SI";
 
             // Format date columns
             ws.Column(6).Style.NumberFormat.Format = "yyyy-MM-dd";
@@ -215,8 +217,8 @@ public class ImportService : IImportService
                 profileValidation.List($"Cargos_Referencia!$A$2:$A${profiles.Count + 1}", true);
             }
 
-            // Active dropdown (inline list — no sheet needed)
-            var activeValidation = ws.Range("H2:H500").CreateDataValidation();
+            // Active dropdown (inline list — col I)
+            var activeValidation = ws.Range("I2:I500").CreateDataValidation();
             activeValidation.List($"\"SI,NO\"", true);
 
             var wsHelp = workbook.Worksheets.Add("Instrucciones");

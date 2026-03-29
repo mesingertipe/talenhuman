@@ -56,6 +56,7 @@ public class StoresController : ControllerBase
         existing.CityId = store.CityId;
         existing.ExternalId = store.ExternalId;
         existing.BiometricId = store.BiometricId;
+        existing.DistrictId = store.DistrictId;
         existing.IsActive = store.IsActive;
         
         await _context.SaveChangesAsync();

@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { 
-    Key, Globe, Plus, Trash2, Save, 
-    RefreshCw, CheckCircle, AlertCircle, ExternalLink,
-    Building, Lock, Settings
+    Key, Plus, Trash2, 
+    RefreshCw, CheckCircle, AlertCircle,
+    Building, Lock
 } from 'lucide-react';
 import api from '../../services/api';
 
 const IntegrationsManager = ({ showToast }) => {
     const [apiKeys, setApiKeys] = useState([]);
-    const [externalConfigs, setExternalConfigs] = useState([]);
     const [companies, setCompanies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -24,13 +23,11 @@ const IntegrationsManager = ({ showToast }) => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [keysRes, configsRes, cosRes] = await Promise.all([
+            const [keysRes, cosRes] = await Promise.all([
                 api.get('/System/api-keys'),
-                api.get('/System/external-configs'),
                 api.get('/Companies')
             ]);
             setApiKeys(keysRes.data);
-            setExternalConfigs(configsRes.data);
             setCompanies(cosRes.data);
         } catch (err) {
             showToast("Error loading integration data", "error");
@@ -66,19 +63,6 @@ const IntegrationsManager = ({ showToast }) => {
             fetchData();
         } catch (err) {
             showToast("Error deleting API Key", "error");
-        }
-    };
-
-    const handleUpdateConfig = async (config) => {
-        try {
-            setSaving(true);
-            await api.post('/System/external-configs', config);
-            showToast("Integration config updated");
-            fetchData();
-        } catch (err) {
-            showToast("Error updating config", "error");
-        } finally {
-            setSaving(false);
         }
     };
 
@@ -187,134 +171,6 @@ const IntegrationsManager = ({ showToast }) => {
                             ))}
                         </tbody>
                     </table>
-                </div>
-            </div>
-
-            {/* External Sync Section */}
-            <div className="card" style={{ padding: '2rem' }}>
-                <div className="flex items-center gap-4 mb-8">
-                    <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shadow-sm">
-                        <Globe size={24} />
-                    </div>
-                    <div>
-                        <h3 className="font-black text-slate-800 uppercase tracking-tight">External Adapters (Pull)</h3>
-                        <p className="text-xs text-slate-400 font-bold">Automated synchronization from 3rd party APIs</p>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-6">
-                    {companies.map(cos => {
-                        const config = externalConfigs.find(c => c.companyId === cos.id) || {
-                            companyId: cos.id,
-                            provider: 0, // FalconCloud
-                            baseUrl: '',
-                            username: '',
-                            password: '',
-                            enterpriseId: '',
-                            serverNumber: '',
-                            enableAutoSync: false,
-                            syncIntervalMinutes: 60
-                        };
-
-                        return (
-                            <div key={cos.id} className="p-6 border border-slate-100 rounded-2xl bg-white hover:border-blue-200 transition-all shadow-sm hover:shadow-md">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center font-black text-xs text-slate-500">
-                                            {cos.name.substring(0, 2).toUpperCase()}
-                                        </div>
-                                        <h4 className="font-black text-slate-700">{cos.name}</h4>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        {config.lastSyncAt && (
-                                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
-                                                Last Sync: {new Date(config.lastSyncAt).toLocaleString()}
-                                            </span>
-                                        )}
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${config.enableAutoSync ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
-                                            {config.enableAutoSync ? 'Automatic' : 'Manual'}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Adapter Provider</label>
-                                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-sm font-bold text-slate-600 flex items-center gap-2">
-                                            <img src="/falcon-logo.png" className="w-4 h-4 grayscale opacity-50" alt="" />
-                                            Falcon Cloud (v5.2)
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2 md:col-span-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Base API URL</label>
-                                        <input 
-                                            type="text"
-                                            className="w-full p-3 rounded-xl border-slate-200 text-sm font-mono"
-                                            placeholder="https://falconcloud.co/site_SRV6_ph/site/api/service.php"
-                                            defaultValue={config.baseUrl}
-                                            onBlur={(e) => handleUpdateConfig({...config, baseUrl: e.target.value})}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Enterprise ID</label>
-                                        <input 
-                                            type="text"
-                                            className="w-full p-3 rounded-xl border-slate-200 text-sm"
-                                            defaultValue={config.enterpriseId}
-                                            onBlur={(e) => handleUpdateConfig({...config, enterpriseId: e.target.value})}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Auth Username</label>
-                                        <input 
-                                            type="text"
-                                            className="w-full p-3 rounded-xl border-slate-200 text-sm"
-                                            defaultValue={config.username}
-                                            onBlur={(e) => handleUpdateConfig({...config, username: e.target.value})}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Auth Password</label>
-                                        <input 
-                                            type="password"
-                                            className="w-full p-3 rounded-xl border-slate-200 text-sm"
-                                            placeholder="••••••••"
-                                            onBlur={(e) => handleUpdateConfig({...config, password: e.target.value})}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="mt-6 pt-6 border-t border-slate-50 flex items-center justify-between">
-                                    <div className="flex items-center gap-6">
-                                        <label className="flex items-center gap-2 cursor-pointer">
-                                            <input 
-                                                type="checkbox" 
-                                                className="w-4 h-4 rounded text-indigo-600"
-                                                defaultChecked={config.enableAutoSync}
-                                                onChange={(e) => handleUpdateConfig({...config, enableAutoSync: e.target.checked})}
-                                            />
-                                            <span className="text-xs font-bold text-slate-500">Enable Automated Polling</span>
-                                        </label>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs font-bold text-slate-400 whitespace-nowrap">Frequency (min):</span>
-                                            <input 
-                                                type="number"
-                                                className="w-16 p-1 text-xs rounded-lg border-slate-200 font-bold"
-                                                defaultValue={config.syncIntervalMinutes}
-                                                onBlur={(e) => handleUpdateConfig({...config, syncIntervalMinutes: parseInt(e.target.value)})}
-                                            />
-                                        </div>
-                                    </div>
-                                    <button 
-                                        className="text-indigo-600 hover:text-indigo-700 font-black text-[10px] uppercase tracking-widest flex items-center gap-2"
-                                        onClick={() => showToast("Manual sync triggered...")}
-                                    >
-                                        <RefreshCw size={12} /> Sync Now
-                                    </button>
-                                </div>
-                            </div>
-                        );
-                    })}
                 </div>
             </div>
         </div>

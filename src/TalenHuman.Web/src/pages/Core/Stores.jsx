@@ -23,12 +23,13 @@ const Stores = () => {
   const [stores, setStores] = useState([]);
   const [brands, setBrands] = useState([]);
   const [cities, setCities] = useState([]);
+  const [districts, setDistricts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [currentStore, setCurrentStore] = useState(null);
-  const [formData, setFormData] = useState({ name: '', address: '', brandId: '', cityId: '', externalId: '', biometricId: '', isActive: true });
+  const [formData, setFormData] = useState({ name: '', address: '', brandId: '', cityId: '', districtId: '', externalId: '', biometricId: '', isActive: true });
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -57,14 +58,16 @@ const Stores = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [storesRes, brandsRes, citiesRes] = await Promise.all([
+      const [storesRes, brandsRes, citiesRes, districtsRes] = await Promise.all([
         api.get('/stores'),
         api.get('/brands'),
-        api.get('/cities')
+        api.get('/cities'),
+        api.get('/districts')
       ]);
       setStores(storesRes.data);
       setBrands(brandsRes.data);
       setCities(citiesRes.data);
+      setDistricts(districtsRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -136,7 +139,7 @@ const Stores = () => {
               <FileSpreadsheet size={18} /> Importar
             </button>
             <button 
-              onClick={() => { setCurrentStore(null); setFormData({ name: '', address: '', brandId: '', cityId: '', externalId: '', isActive: true }); setShowModal(true); }}
+              onClick={() => { setCurrentStore(null); setFormData({ name: '', address: '', brandId: '', cityId: '', districtId: '', externalId: '', biometricId: '', isActive: true }); setShowModal(true); }}
               className="btn-premium btn-premium-primary"
               style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
             >
@@ -182,6 +185,11 @@ const Stores = () => {
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <MapPin size={12} /> {cities.find(c => c.id === store.cityId)?.name || 'Sin ciudad'}
                       </span>
+                      {store.districtId && (
+                        <span style={{ fontSize: '0.75rem', color: '#4f46e5', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px', textTransform: 'uppercase' }}>
+                          <Building size={12} /> {districts.find(d => d.id === store.districtId)?.name || 'Distrito'}
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
@@ -217,6 +225,7 @@ const Stores = () => {
                           cityId: store.cityId || '',
                           externalId: store.externalId || '',
                           biometricId: store.biometricId || '',
+                          districtId: store.districtId || '',
                           isActive: store.isActive !== false 
                         }); 
                         setShowModal(true); 
@@ -279,46 +288,21 @@ const Stores = () => {
             
             <form onSubmit={handleSave}>
               <div className="modal-body space-y-6">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre de la Tienda *</label>
-                  <div className="relative">
-                    <Store size={18} className="absolute left-3 top-4 text-slate-400" />
-                    <input 
-                      required 
-                      value={formData.name} 
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-                      className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
-                      placeholder="Ej. Sede Central Norte"
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre de la Tienda *</label>
+                    <div className="relative">
+                      <Store size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input 
+                        required 
+                        value={formData.name} 
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                        className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
+                        placeholder="Ej. Sede Central Norte"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ID Tienda / Código *</label>
-                    <div className="relative">
-                      <Tag size={18} className="absolute left-3 top-4 text-slate-400" />
-                      <input 
-                        required
-                        value={formData.externalId} 
-                        onChange={(e) => setFormData({ ...formData, externalId: e.target.value })} 
-                        className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
-                        placeholder="Ej. T-100"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ID Biométrico</label>
-                    <div className="relative">
-                      <Tag size={18} className="absolute left-3 top-4 text-slate-400" />
-                      <input 
-                        value={formData.biometricId} 
-                        onChange={(e) => setFormData({ ...formData, biometricId: e.target.value })} 
-                        className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
-                        placeholder="Ej. BIO-789"
-                      />
-                    </div>
-                  </div>
                   <div>
                     <SearchableSelect
                       label="Ciudad"
@@ -330,43 +314,81 @@ const Stores = () => {
                       required
                     />
                   </div>
-                </div>
 
-                <div>
-                  <SearchableSelect
-                    label="Marca Asociada"
-                    options={brands.map(b => ({ value: b.id, label: b.name }))}
-                    value={formData.brandId}
-                    onChange={(val) => setFormData({ ...formData, brandId: val })}
-                    placeholder="Seleccionar marca..."
-                    icon={Tag}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Dirección / Ubicación *</label>
-                  <div className="relative">
-                    <MapPin size={18} className="absolute left-3 top-4 text-slate-400" />
-                    <input 
-                      required
-                      value={formData.address} 
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })} 
-                      className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
-                      placeholder="Ej. Av. Principal #123"
+                  <div>
+                    <SearchableSelect
+                      label="Distrito"
+                      options={districts.map(d => ({ value: d.id, label: d.name }))}
+                      value={formData.districtId}
+                      onChange={(val) => setFormData({ ...formData, districtId: val })}
+                      placeholder="Seleccionar..."
+                      icon={Building}
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ID Tienda / Código *</label>
+                    <div className="relative">
+                      <Tag size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input 
+                        required
+                        value={formData.externalId} 
+                        onChange={(e) => setFormData({ ...formData, externalId: e.target.value })} 
+                        className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
+                        placeholder="Ej. T-100"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ID Biométrico</label>
+                    <div className="relative">
+                      <Tag size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input 
+                        value={formData.biometricId} 
+                        onChange={(e) => setFormData({ ...formData, biometricId: e.target.value })} 
+                        className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
+                        placeholder="Ej. BIO-78"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <SearchableSelect
+                      label="Marca Asociada"
+                      options={brands.map(b => ({ value: b.id, label: b.name }))}
+                      value={formData.brandId}
+                      onChange={(val) => setFormData({ ...formData, brandId: val })}
+                      placeholder="Seleccionar marca..."
+                      icon={Tag}
+                      required
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 mb-2">
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Dirección / Ubicación *</label>
+                    <div className="relative">
+                      <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input 
+                        required
+                        value={formData.address} 
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })} 
+                        className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
+                        placeholder="Ej. Av. Principal #123"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
+                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-xl ${formData.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${formData.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
                       {formData.isActive ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
                     </div>
                     <div>
-                      <div className="font-bold text-sm dark:text-white">Estado de la Tienda</div>
-                      <div className="text-[10px] text-slate-500 uppercase font-black tracking-widest">
-                        {formData.isActive ? 'Tienda Activa' : 'Tienda Inactiva'}
+                      <div className="font-bold text-sm dark:text-white leading-tight">Estado de la Tienda</div>
+                      <div className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-0.5">
+                        {formData.isActive ? 'TIENDA ACTIVA' : 'TIENDA INACTIVA'}
                       </div>
                     </div>
                   </div>

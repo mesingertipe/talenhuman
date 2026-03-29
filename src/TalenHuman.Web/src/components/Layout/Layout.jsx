@@ -27,6 +27,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
         { icon: <MapPin size={20} />, label: 'Ciudades', roles: ['SuperAdmin', 'Admin'] },
         { icon: <Briefcase size={20} />, label: 'Cargos', roles: ['SuperAdmin', 'Admin'] },
         { icon: <Calendar size={20} />, label: 'Jornadas', roles: ['SuperAdmin', 'Admin'] },
+        { icon: <Building size={20} />, label: 'Distritos', roles: ['SuperAdmin', 'Admin'] },
         { icon: <Store size={20} />, label: 'Tiendas', roles: ['SuperAdmin', 'Admin'] },
         { icon: <Users size={20} />, label: 'Empleados' },
       ]
@@ -170,6 +171,7 @@ const getPageInfo = (page) => {
     case 'Marcas': return { title: 'Marcas', subtitle: 'Catálogo corporativo de marcas y franquicias' };
     case 'Ciudades': return { title: 'Ciudades', subtitle: 'Configuración geográfica de sedes' };
     case 'Cargos': return { title: 'Cargos', subtitle: 'Definición de perfiles y funciones laborales' };
+    case 'Distritos': return { title: 'Distritos', subtitle: 'Agrupación regional de sedes para supervisión' };
     case 'Tiendas': return { title: 'Tiendas', subtitle: 'Administración de sedes y sucursales' };
     case 'Jornadas': return { title: 'Jornadas', subtitle: 'Estándares de tiempo y programación' };
     case 'Empleados': return { title: 'Empleados', subtitle: 'Administración de nómina y ficha de colaboradores' };

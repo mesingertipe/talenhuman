@@ -337,7 +337,7 @@ const Employees = ({ user }) => {
                   <div>
                     <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Nombre Completo*</label>
                     <div className="relative">
-                      <UserIcon size={18} className="absolute left-3 top-3.5 text-slate-400" />
+                      <UserIcon size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                       <input 
                         required 
                         value={formData.firstName} 
@@ -363,7 +363,7 @@ const Employees = ({ user }) => {
                   <div>
                     <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Identificación*</label>
                     <div className="relative">
-                      <Hash size={18} className="absolute left-3 top-3.5 text-slate-400" />
+                      <Hash size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                       <input 
                         required 
                         value={formData.identificationNumber} 
@@ -376,7 +376,7 @@ const Employees = ({ user }) => {
                   <div>
                     <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Fecha Nacimiento*</label>
                     <div className="relative">
-                      <Calendar size={18} className="absolute left-3 top-3.5 text-slate-400" />
+                      <Calendar size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                       <input 
                         required 
                         type="date" 
@@ -389,7 +389,7 @@ const Employees = ({ user }) => {
                   <div>
                     <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Fecha Ingreso*</label>
                     <div className="relative">
-                      <Calendar size={18} className="absolute left-3 top-3.5 text-slate-400" />
+                      <Calendar size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                       <input 
                         required 
                         type="date" 
@@ -435,7 +435,7 @@ const Employees = ({ user }) => {
                   <div>
                     <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Salario Diario*</label>
                     <div className="relative">
-                      <div className="absolute left-3 top-3.5 text-slate-400 font-bold text-sm">$</div>
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">$</div>
                       <input 
                         type="number"
                         required 

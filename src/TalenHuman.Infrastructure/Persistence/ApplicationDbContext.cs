@@ -40,6 +40,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<ExternalApiConfig> ExternalApiConfigs => Set<ExternalApiConfig>();
     public DbSet<SalesData> SalesData => Set<SalesData>();
     public DbSet<BiometricRecord> BiometricRecords => Set<BiometricRecord>();
+    public DbSet<District> Districts => Set<District>();
 
     public Guid TenantId => _tenantProvider.GetTenantId();
 
@@ -66,6 +67,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<ExternalApiConfig>().HasQueryFilter(e => e.CompanyId == TenantId);
         builder.Entity<SalesData>().HasQueryFilter(s => s.CompanyId == TenantId);
         builder.Entity<BiometricRecord>().HasQueryFilter(b => b.CompanyId == TenantId);
+        builder.Entity<District>().HasQueryFilter(d => d.CompanyId == TenantId);
 
         // Many-to-Many: Supervisor -> Stores
         builder.Entity<SupervisorStore>()
@@ -98,6 +100,24 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
             .HasOne(s => s.City)
             .WithMany(c => c.Stores)
             .HasForeignKey(s => s.CityId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<Store>()
+            .HasOne(s => s.District)
+            .WithMany(d => d.Stores)
+            .HasForeignKey(s => s.DistrictId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<District>()
+            .HasOne(d => d.Supervisor)
+            .WithMany()
+            .HasForeignKey(d => d.SupervisorId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<User>()
+            .HasOne(u => u.District)
+            .WithMany()
+            .HasForeignKey(u => u.DistrictId)
             .OnDelete(DeleteBehavior.SetNull);
 
         builder.Entity<Employee>()

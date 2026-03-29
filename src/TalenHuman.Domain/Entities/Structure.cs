@@ -46,9 +46,26 @@ public class Store : BaseEntity, IMultitenant
     public Guid CompanyId { get; set; }
     public Company? Company { get; set; }
 
+    public Guid? DistrictId { get; set; }
+    public District? District { get; set; }
+    
     // Relationships
     public ICollection<Employee> Employees { get; set; } = new List<Employee>();
     public ICollection<SupervisorStore> SupervisorStores { get; set; } = new List<SupervisorStore>();
+}
+
+public class District : BaseEntity, IMultitenant
+{
+    public string Name { get; set; } = string.Empty;
+    
+    public Guid CompanyId { get; set; }
+    public Company? Company { get; set; }
+    
+    public Guid? SupervisorId { get; set; }
+    public User? Supervisor { get; set; }
+    
+    // Relationships
+    public ICollection<Store> Stores { get; set; } = new List<Store>();
 }
 
 public class SupervisorStore : IMultitenant

@@ -11,6 +11,8 @@ public class User : IdentityUser<Guid>, IMultitenant
     
     public Guid? EmployeeId { get; set; }
     public Employee? Employee { get; set; }
+    public Guid? DistrictId { get; set; }
+    public District? District { get; set; }
     public bool MustChangePassword { get; set; } = true;
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -18,6 +18,7 @@ import NewsDesigner from './pages/Admin/NewsDesigner';
 import ShiftScheduler from './pages/Scheduling/ShiftScheduler';
 import Marcaciones from './pages/Core/Marcaciones';
 import Cities from './pages/Core/Cities';
+import Districts from './pages/Core/Districts';
 import SystemSettings from './pages/SuperAdmin/SystemSettings';
 
 function App() {
@@ -99,6 +100,9 @@ function App() {
         return <Dashboard />;
       case 'Ciudades': 
         if (isSuperAdmin || isAdmin) return <Cities user={user} />;
+        return <Dashboard />;
+      case 'Distritos': 
+        if (isSuperAdmin || isAdmin) return <Districts />;
         return <Dashboard />;
       case 'Cargos': 
         if (isSuperAdmin || isAdmin) return <Profiles user={user} />;
