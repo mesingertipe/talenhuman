@@ -479,40 +479,30 @@ const Users = () => {
                     </div>
                   )}
 
-                  {(formData.roles.includes('Gerente') || formData.roles.includes('Supervisor')) && (
+                  {/* Store assignment logic: Only for Manager (Gerente). Supervisors are assigned via Districts. */}
+                  {formData.roles.includes('Gerente') && (
                     <div className="col-span-2 animate-in slide-in-from-top-2 duration-300">
-                      {formData.roles.includes('Supervisor') ? (
-                        <MultiSearchableSelect
-                            label="Tiendas bajo Supervisión"
-                            options={stores.filter(s => s.companyId === formData.companyId)}
-                            value={formData.storeIds}
-                            onChange={(val) => setFormData({ ...formData, storeIds: val })}
-                            placeholder="Seleccionar tiendas..."
-                            required
-                        />
-                      ) : (
-                        <SearchableSelect
-                            label="Tienda Asignada"
-                            options={stores.filter(s => s.companyId === formData.companyId)}
-                            value={formData.storeIds[0] || ""}
-                            onChange={(val) => setFormData({ ...formData, storeIds: [val] })}
-                            icon={MapPin}
-                            placeholder="Seleccionar tienda..."
-                            required
-                        />
-                      )}
+                      <SearchableSelect
+                          label="Sede Asignada (Gerencia) *"
+                          options={stores.filter(s => s.companyId === formData.companyId)}
+                          value={formData.storeIds[0] || ""}
+                          onChange={(val) => setFormData({ ...formData, storeIds: [val] })}
+                          icon={MapPin}
+                          placeholder="Seleccionar sede..."
+                          required
+                      />
                     </div>
                   )}
 
                   {formData.roles.includes('Supervisor') && (
-                    <div className="col-span-2">
+                    <div className="col-span-2 animate-in slide-in-from-top-2 duration-300">
                         <SearchableSelect
-                            label="Distrito Asignado"
+                            label="Distrital a cargo de (Distrito)"
                             options={districts.map(d => ({ value: d.id, label: d.name }))}
                             value={formData.districtId}
                             onChange={(val) => setFormData({ ...formData, districtId: val })}
-                            icon={Building2}
-                            placeholder="Seleccionar distrito..."
+                            icon={MapPin}
+                            placeholder="Seleccionar distrito administrativo..."
                         />
                     </div>
                   )}

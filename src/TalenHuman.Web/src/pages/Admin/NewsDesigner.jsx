@@ -365,8 +365,9 @@ const NewsDesigner = () => {
                                                             { id: 'text', name: 'Texto Libre' },
                                                             { id: 'number', name: 'Número' },
                                                             { id: 'date', name: 'Fecha' },
-                                                            { id: 'select', name: 'Lista Desplegable' },
-                                                            { id: 'radio', name: 'Selección Única' }
+                                                            { id: 'check', name: 'Check (Si/No)' },
+                                                            { id: 'list', name: 'Lista Desplegable' },
+                                                            { id: 'radio', name: 'Selección Única (Radio)' }
                                                         ]}
                                                         value={f.type}
                                                         onChange={(val) => { const n = [...fields]; n[idx].type = val; setFields(n); }}
@@ -382,13 +383,13 @@ const NewsDesigner = () => {
                                                     <Trash2 size={22} />
                                                 </button>
                                                 
-                                                {(f.type === 'select' || f.type === 'radio') && (
+                                                {(f.type === 'list' || f.type === 'radio' || f.type === 'select') && (
                                                     <div style={{ gridColumn: '1 / -1', padding: '25px', background: activeColors.accentSoft, borderRadius: '20px', border: `1px dashed ${activeColors.accent}` }}>
-                                                        <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: activeColors.accent, textTransform: 'uppercase', marginBottom: '10px' }}>Opciones Disponibles (Separar por comas) *</label>
+                                                        <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: activeColors.accent, textTransform: 'uppercase', marginBottom: '10px' }}>Opciones Disponibles (Separar por punto y coma ";") *</label>
                                                         <input 
                                                             value={f.options || ''} 
                                                             onChange={(e) => { const n = [...fields]; n[idx].options = e.target.value; setFields(n); }}
-                                                            placeholder="Opción 1, Opción 2, Opción 3..."
+                                                            placeholder="Opción 1; Opción 2; Opción 3..."
                                                             style={{ width: '100%', padding: '14px 20px', borderRadius: '12px', border: 'none', background: activeColors.card, color: activeColors.textMain, fontWeight: '700', boxSizing: 'border-box', outline: 'none' }}
                                                         />
                                                     </div>

@@ -63,6 +63,7 @@ const Employees = ({ user }) => {
     totalPages, 
     totalItems, 
     itemsPerPage, 
+    setItemsPerPage 
   } = useTableData(employees, ['firstName', 'lastName', 'identificationNumber', 'storeName', 'profileName', 'jornadaNombre', 'email']);
 
   const isAdmin = user?.roles?.includes('Admin') || user?.roles?.includes('SuperAdmin');

@@ -30,6 +30,29 @@ public class ExternalApiConfig : BaseEntity, IMultitenant
     public Company? Company { get; set; }
 }
 
+public class SyncLog : BaseEntity, IMultitenant
+{
+    public DateTime StartTime { get; set; } = DateTime.UtcNow;
+    public DateTime? EndTime { get; set; }
+    public string Status { get; set; } = "Iniciado"; // Iniciado, Exitoso, Error
+    public string? ErrorMessage { get; set; }
+    public int RecordsProcessed { get; set; } = 0;
+    public ExecutionType ExecutionType { get; set; } = ExecutionType.Manual;
+    
+    public double DurationSeconds => EndTime.HasValue 
+        ? (EndTime.Value - StartTime).TotalSeconds 
+        : (DateTime.UtcNow - StartTime).TotalSeconds;
+
+    public Guid CompanyId { get; set; }
+    public Company? Company { get; set; }
+}
+
+public enum ExecutionType
+{
+    Manual,
+    Scheduled
+}
+
 public enum IntegrationProvider
 {
     FalconCloud,

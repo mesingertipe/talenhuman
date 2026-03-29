@@ -17,8 +17,21 @@ public class AttendanceService
     public async Task ConsolidateDailyAttendanceAsync(DateTime date, Guid companyId)
     {
         var day = date.Date;
-        
-        // 1. Get all Stores for this company to check settings
+        var log = new SyncLog 
+        { 
+            StartTime = DateTime.UtcNow, 
+            ExecutionType = ExecutionType.Manual,
+            CompanyId = companyId,
+            Status = "Iniciado"
+        };
+        _context.SyncLogs.Add(log);
+        await _context.SaveChangesAsync(CancellationToken.None);
+
+        int totalRawRecords = 0;
+
+        try 
+        {
+            // 1. Get all Stores for this company to check settings
         var stores = await _context.Stores
             .Where(s => s.CompanyId == companyId && s.IsActive)
             .ToListAsync();
@@ -52,6 +65,8 @@ public class AttendanceService
                     .OrderBy(r => r.RecordDate)
                     .ToListAsync();
 
+                totalRawRecords += rawRecords.Count;
+
                 // Apply Rebound Filter (Ignore marks within 5 minutes)
                 var filteredRecords = FilterReboundRecords(rawRecords, 5);
 
@@ -78,7 +93,21 @@ public class AttendanceService
         }
 
         await _context.SaveChangesAsync(CancellationToken.None);
+
+        log.EndTime = DateTime.UtcNow;
+        log.Status = "Exitoso";
+        log.RecordsProcessed = totalRawRecords;
+        await _context.SaveChangesAsync(CancellationToken.None);
     }
+    catch (Exception ex)
+    {
+        log.EndTime = DateTime.UtcNow;
+        log.Status = "Error";
+        log.ErrorMessage = ex.Message;
+        await _context.SaveChangesAsync(CancellationToken.None);
+        throw;
+    }
+}
 
     private List<BiometricRecord> FilterReboundRecords(List<BiometricRecord> records, int minutesThreshold)
     {

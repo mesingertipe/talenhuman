@@ -13,6 +13,7 @@ const AttendanceMonitoring = () => {
     const [saving, setSaving] = useState(false);
     const [executing, setExecuting] = useState(false);
     const [cleaning, setCleaning] = useState(false);
+    const [syncLogs, setSyncLogs] = useState([]);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
     // Premium Color System (V12 Elite)
@@ -30,6 +31,7 @@ const AttendanceMonitoring = () => {
 
     useEffect(() => {
         fetchSettings();
+        fetchSyncHistory();
     }, []);
 
     const showToast = (message, type = 'success') => {
@@ -64,6 +66,15 @@ const AttendanceMonitoring = () => {
         }
     };
 
+    const fetchSyncHistory = async () => {
+        try {
+            const res = await api.get('/attendance/sync-history');
+            setSyncLogs(res.data);
+        } catch (err) {
+            console.error("Error fetching sync logs:", err);
+        }
+    };
+
     const handleSave = async () => {
         try {
             setSaving(true);
@@ -81,6 +92,7 @@ const AttendanceMonitoring = () => {
             setExecuting(true);
             await api.post('/attendance/consolidate', {});
             showToast("Proceso de consolidación iniciado");
+            fetchSyncHistory();
         } catch (err) {
             showToast("Error al iniciar consolidación", "error");
         } finally {
@@ -205,24 +217,35 @@ const AttendanceMonitoring = () => {
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        {[
-                            { date: 'Hoy, 06:05 AM', status: 'Exitoso', records: 128, type: 'Automático' },
-                            { date: 'Ayer, 06:10 AM', status: 'Exitoso', records: 115, type: 'Automático' },
-                            { date: '25 Mar, 10:45 PM', status: 'Exitoso', records: 12, type: 'Manual' },
-                            { date: '25 Mar, 06:02 AM', status: 'Error', records: 0, type: 'Automático', error: 'Error de conexión con AWS' },
-                        ].map((log, i) => (
-                            <div key={i} style={{ padding: '1.5rem', background: activeColors.bg, borderRadius: '24px', border: `1px solid ${activeColors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        {syncLogs.length === 0 ? (
+                            <p style={{ textAlign: 'center', color: activeColors.textMuted, fontSize: '0.8rem', padding: '2rem' }}>No hay historial disponible.</p>
+                        ) : syncLogs.map((log, i) => (
+                            <div key={log.id || i} style={{ padding: '1.5rem', background: activeColors.bg, borderRadius: '24px', border: `1px solid ${activeColors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div>
-                                    <div style={{ fontSize: '0.9rem', fontWeight: '800', color: activeColors.textMain }}>{log.date}</div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', mt: '4px' }}>
-                                        <span style={{ fontSize: '0.65rem', fontWeight: '900', textTransform: 'uppercase', color: activeColors.textMuted }}>{log.type}</span>
-                                        <span style={{ height: '4px', width: '4px', borderRadius: '2px', background: activeColors.border }}></span>
-                                        <span style={{ fontSize: '0.65rem', fontWeight: '900', textTransform: 'uppercase', color: log.status === 'Exitoso' ? activeColors.success : activeColors.danger }}>{log.status}</span>
+                                    <div style={{ fontSize: '0.9rem', fontWeight: '800', color: activeColors.textMain }}>
+                                        {new Date(log.startTime).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                     </div>
-                                    {log.error && <p style={{ fontSize: '0.7rem', color: activeColors.danger, fontWeight: '700', marginTop: '6px' }}><AlertCircle size={10} style={{ display: 'inline', marginRight: '4px' }} /> {log.error}</p>}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                                        <span style={{ fontSize: '0.65rem', fontWeight: '900', textTransform: 'uppercase', color: activeColors.textMuted }}>
+                                            {log.executionType === 0 ? 'Manual' : 'Programado'}
+                                        </span>
+                                        <span style={{ height: '4px', width: '4px', borderRadius: '2px', background: activeColors.border }}></span>
+                                        <span style={{ fontSize: '0.65rem', fontWeight: '900', textTransform: 'uppercase', color: log.status === 'Exitoso' ? activeColors.success : activeColors.danger }}>
+                                            {log.status}
+                                        </span>
+                                        <span style={{ height: '4px', width: '4px', borderRadius: '2px', background: activeColors.border }}></span>
+                                        <span style={{ fontSize: '0.65rem', fontWeight: '900', textTransform: 'uppercase', color: activeColors.textMuted }}>
+                                            {log.durationSeconds?.toFixed(1)}s
+                                        </span>
+                                    </div>
+                                    {log.errorMessage && (
+                                        <p style={{ fontSize: '0.7rem', color: activeColors.danger, fontWeight: '700', marginTop: '6px' }}>
+                                            <AlertCircle size={10} style={{ display: 'inline', marginRight: '4px' }} /> {log.errorMessage}
+                                        </p>
+                                    )}
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
-                                    <div style={{ fontSize: '1.25rem', fontWeight: '950', color: activeColors.textMain }}>{log.records}</div>
+                                    <div style={{ fontSize: '1.25rem', fontWeight: '950', color: activeColors.textMain }}>{log.recordsProcessed}</div>
                                     <div style={{ fontSize: '0.6rem', fontWeight: '900', textTransform: 'uppercase', color: activeColors.textMuted }}>Marcaciones</div>
                                 </div>
                             </div>

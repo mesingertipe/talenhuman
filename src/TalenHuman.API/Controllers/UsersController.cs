@@ -165,8 +165,8 @@ public class UsersController : ControllerBase
                 await _userManager.AddToRolesAsync(user, dto.Roles);
             }
 
-            // Sync Stores
-            await SyncSupervisorStores(user.Id, dto.CompanyId, dto.StoreIds);
+            // Sync Stores (District stores take precedence for Supervisors)
+            await SyncSupervisorStores(user.Id, dto.CompanyId, dto.StoreIds, dto.DistrictId);
 
             return Ok(new { user.Id, user.Email, user.FullName });
         }
@@ -230,8 +230,8 @@ public class UsersController : ControllerBase
                 await _userManager.AddToRolesAsync(user, dto.Roles);
             }
 
-            // Sync Stores
-            await SyncSupervisorStores(user.Id, dto.CompanyId, dto.StoreIds);
+            // Sync Stores (District stores take precedence for Supervisors)
+            await SyncSupervisorStores(user.Id, dto.CompanyId, dto.StoreIds, dto.DistrictId);
 
             // Optional: Password reset
             if (!string.IsNullOrEmpty(dto.NewPassword))
@@ -326,7 +326,7 @@ public class UsersController : ControllerBase
         }
     }
 
-    private async Task SyncSupervisorStores(Guid userId, Guid companyId, List<Guid> storeIds)
+    private async Task SyncSupervisorStores(Guid userId, Guid companyId, List<Guid> storeIds, Guid? districtId = null)
     {
         // 1. Remove existing assignments
         var current = await _context.Set<SupervisorStore>()
@@ -336,10 +336,38 @@ public class UsersController : ControllerBase
         
         _context.Set<SupervisorStore>().RemoveRange(current);
 
-        // 2. Add new ones
-        if (storeIds != null && storeIds.Any())
+        // 2. Determine final list of stores
+        HashSet<Guid> finalStoreIds = new HashSet<Guid>(storeIds ?? new List<Guid>());
+
+        // If district is assigned, include all stores from that district
+        if (districtId.HasValue)
         {
-            foreach (var storeId in storeIds)
+            var districtStores = await _context.Stores
+                .IgnoreQueryFilters()
+                .Where(s => s.DistrictId == districtId.Value)
+                .Select(s => s.Id)
+                .ToListAsync();
+            
+            foreach (var id in districtStores)
+            {
+                finalStoreIds.Add(id);
+            }
+
+            // Sync the District's SupervisorId as well
+            var district = await _context.Set<District>().IgnoreQueryFilters()
+                .FirstOrDefaultAsync(d => d.Id == districtId.Value);
+            
+            if (district != null)
+            {
+                district.SupervisorId = userId;
+                _context.Update(district);
+            }
+        }
+
+        // 3. Add new ones
+        if (finalStoreIds.Any())
+        {
+            foreach (var storeId in finalStoreIds)
             {
                 _context.Set<SupervisorStore>().Add(new SupervisorStore
                 {

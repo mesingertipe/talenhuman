@@ -199,6 +199,19 @@ public class AttendanceController : ControllerBase
         return Ok(new { Message = $"Proceso de consolidación completado para {date:yyyy-MM-dd}" });
     }
 
+    [HttpGet("sync-history")]
+    public async Task<IActionResult> GetSyncHistory()
+    {
+        var companyId = Guid.Parse(User.FindFirst("CompanyId")?.Value ?? Guid.Empty.ToString());
+        var logs = await _context.Set<SyncLog>()
+            .Where(l => l.CompanyId == companyId)
+            .OrderByDescending(l => l.StartTime)
+            .Take(10)
+            .ToListAsync();
+        
+        return Ok(logs);
+    }
+
     [HttpPost("cleanup")]
     public async Task<IActionResult> Cleanup()
     {

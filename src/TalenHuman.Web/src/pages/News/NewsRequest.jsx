@@ -387,19 +387,59 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
                             {dynamicFields.length > 0 && (
                                 <div style={{ borderTop: `1px solid ${activeColors.border}`, paddingTop: '30px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
                                     {dynamicFields.map((f, i) => (
-                                        <div key={i}>
-                                            {f.type === 'select' || f.type === 'radio' ? (
+                                        <div key={i} style={{ gridColumn: f.type === 'check' ? 'span 2' : 'span 1' }}>
+                                            {f.type === 'list' || f.type === 'select' ? (
                                                 <SearchableSelect
-                                                    label={`${f.name} *`}
-                                                    options={f.options.split(',').map(o => ({ id: o.trim(), name: o.trim() }))}
-                                                    value={formData.datosDinamicos[f.name]}
+                                                    label={`${f.name}${f.required ? ' *' : ''}`}
+                                                    options={(f.options || '').split(';').map(o => ({ id: o.trim(), name: o.trim() }))}
+                                                    value={formData.datosDinamicos[f.name] || ''}
                                                     onChange={(val) => setFormData({...formData, datosDinamicos: {...formData.datosDinamicos, [f.name]: val}})}
                                                     placeholder="Seleccionar..."
                                                 />
+                                            ) : f.type === 'radio' ? (
+                                                <div>
+                                                    <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '15px' }}>{f.name}{f.required ? ' *' : ''}</label>
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
+                                                        {(f.options || '').split(';').map((opt, idx) => {
+                                                            const o = opt.trim();
+                                                            const isSelected = formData.datosDinamicos[f.name] === o;
+                                                            return (
+                                                                <button 
+                                                                    key={idx}
+                                                                    type="button"
+                                                                    onClick={() => setFormData({...formData, datosDinamicos: {...formData.datosDinamicos, [f.name]: o}})}
+                                                                    style={{ padding: '10px 20px', borderRadius: '12px', border: `2px solid ${isSelected ? activeColors.accent : activeColors.border}`, background: isSelected ? activeColors.accent + '10' : activeColors.card, color: isSelected ? activeColors.accent : activeColors.textMain, fontWeight: '800', fontSize: '0.8rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                                                                >
+                                                                    {o}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            ) : f.type === 'check' ? (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px 25px', background: isDarkMode ? 'rgba(255,255,255,0.02)' : '#f8fafc', borderRadius: '18px', border: `1px solid ${activeColors.border}` }}>
+                                                     <input 
+                                                        type="checkbox" 
+                                                        checked={formData.datosDinamicos[f.name] === 'true' || formData.datosDinamicos[f.name] === true}
+                                                        onChange={(e) => setFormData({...formData, datosDinamicos: {...formData.datosDinamicos, [f.name]: e.target.checked}})}
+                                                        style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                                                    />
+                                                    <div>
+                                                        <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: '800', color: activeColors.textMain }}>{f.name}</p>
+                                                        <p style={{ margin: 0, fontSize: '0.7rem', color: activeColors.textMuted, fontWeight: '600' }}>Confirmación requerida</p>
+                                                    </div>
+                                                </div>
                                             ) : (
                                                 <>
-                                                    <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '10px' }}>{f.name} *</label>
-                                                    <input type={f.type} value={formData.datosDinamicos[f.name]} onChange={(e) => setFormData({...formData, datosDinamicos: {...formData.datosDinamicos, [f.name]: e.target.value}})} placeholder="..." style={{ width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontWeight: '800' }} />
+                                                    <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '10px' }}>{f.name}{f.required ? ' *' : ''}</label>
+                                                    <input 
+                                                        type={f.type} 
+                                                        required={f.required}
+                                                        value={formData.datosDinamicos[f.name] || ''} 
+                                                        onChange={(e) => setFormData({...formData, datosDinamicos: {...formData.datosDinamicos, [f.name]: e.target.value}})} 
+                                                        placeholder="..." 
+                                                        style={{ width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontWeight: '800' }} 
+                                                    />
                                                 </>
                                             )}
                                         </div>

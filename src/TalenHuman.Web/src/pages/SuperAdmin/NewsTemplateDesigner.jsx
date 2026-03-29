@@ -284,7 +284,7 @@ const NewsTemplateDesigner = () => {
                                         <h3 style={{ fontSize: '1rem', fontWeight: '950', color: activeColors.textMain, textTransform: 'uppercase', margin: 0 }}>Campos de la Plantilla</h3>
                                         <button 
                                             type="button" 
-                                            onClick={() => setFields([...fields, { name: '', type: 'text', required: true }])}
+                                            onClick={() => setFields([...fields, { name: '', type: 'text', required: true, options: '' }])}
                                             style={{ padding: '10px 20px', background: activeColors.accent, color: 'white', border: 'none', borderRadius: '14px', fontWeight: '900', fontSize: '9px', textTransform: 'uppercase', cursor: 'pointer' }}
                                         >
                                             + Agregar Campo
@@ -307,10 +307,25 @@ const NewsTemplateDesigner = () => {
                                                     <option value="text">Texto</option>
                                                     <option value="number">Número</option>
                                                     <option value="date">Fecha</option>
+                                                    <option value="check">Check (Si/No)</option>
+                                                    <option value="list">Lista Desplegable</option>
+                                                    <option value="radio">Radio Buttons</option>
                                                 </select>
-                                                <button type="button" onClick={() => setFields(fields.filter((_, i) => i !== idx))} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>
+                                                <button type="button" onClick={() => setFields(fields.filter((_, i) => i !== idx))} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', height: '50px' }}>
                                                     <Trash2 size={20} />
                                                 </button>
+                                                
+                                                {(f.type === 'list' || f.type === 'radio') && (
+                                                    <div style={{ gridColumn: 'span 3', marginTop: '10px' }}>
+                                                        <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '8px' }}>Opciones (Separadas por punto y coma ";")</label>
+                                                        <input 
+                                                            value={f.options || ''} 
+                                                            onChange={(e) => { const n = [...fields]; n[idx].options = e.target.value; setFields(n); }}
+                                                            placeholder="Opción 1; Opción 2; Opción 3"
+                                                            style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: activeColors.bg, color: activeColors.textMain, fontWeight: '700' }}
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
                                         ))}
                                     </div>

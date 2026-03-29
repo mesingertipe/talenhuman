@@ -348,9 +348,11 @@ const NewsInbox = ({ user }) => {
                             {selectedNews.datosDinamicos && (
                                 <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px' }}>
                                     {Object.entries(JSON.parse(selectedNews.datosDinamicos)).map(([key, val]) => (
-                                        <div key={key} style={{ padding: '15px 20px', background: activeColors.card, border: `1px solid ${activeColors.border}`, borderRadius: '16px' }}>
-                                            <p style={{ fontSize: '9px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '4px' }}>{key}</p>
-                                            <p style={{ fontSize: '0.85rem', fontWeight: '900', color: activeColors.textMain }}>{val}</p>
+                                        <div key={key} style={{ padding: '15px 20px', background: isDarkMode ? '#1e293b50' : '#f8fafc', border: `1px solid ${activeColors.border}`, borderRadius: '16px' }}>
+                                            <p style={{ fontSize: '9px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.05em' }}>{key}</p>
+                                            <p style={{ fontSize: '0.9rem', fontWeight: '900', color: activeColors.textMain, margin: 0 }}>
+                                                {typeof val === 'boolean' ? (val ? 'SÍ' : 'NO') : (val === 'true' ? 'SÍ' : val === 'false' ? 'NO' : val)}
+                                            </p>
                                         </div>
                                     ))}
                                 </div>

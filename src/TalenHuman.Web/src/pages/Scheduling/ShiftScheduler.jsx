@@ -37,6 +37,19 @@ import SearchableSelect from '../../components/Shared/SearchableSelect';
 
 const ShiftScheduler = ({ user, tenantSettings }) => {
     const { isDarkMode } = useTheme();
+    
+    // Premium Design Tokens (Elite V12)
+    const activeColors = {
+        bg: isDarkMode ? '#060914' : '#f8fafc',
+        card: isDarkMode ? '#0f172a' : '#ffffff',
+        border: isDarkMode ? '#1e293b' : '#f1f5f9',
+        textMain: isDarkMode ? '#f1f5f9' : '#1e293b',
+        textMuted: isDarkMode ? '#94a3b8' : '#64748b',
+        accent: '#4f46e5',
+        accentSoft: isDarkMode ? 'rgba(79, 70, 229, 0.1)' : '#f5f7ff',
+        danger: '#ef4444'
+    };
+
     const [employees, setEmployees] = useState([]);
     const [shifts, setShifts] = useState([]);
     const [attendances, setAttendances] = useState([]);
@@ -678,13 +691,14 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
 
                 {/* 2. UI Principal (V12 Elite Command Center) */}
                 <div className="no-print space-y-32 mb-32">
-                    {/* Fila 1: Selectores y Navegación Elite V12 (Clean & Minimalist) */}
-                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-12 p-8 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-indigo-500/20 shadow-2xl shadow-indigo-100/20 dark:shadow-none transition-all duration-300"
-                         style={{ borderRadius: '48px' }}>
+                    {/* 2. UI Principal: COMANDO CENTRAL V12 (Floating Glassmorphism Dock) */}
+                    <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-8 sticky top-4 z-[50] transition-all duration-500">
                         
-                        {/* LEFT: Sede & Profile Selector (Equitable 1/3) */}
-                        <div className="flex-1 flex flex-col md:flex-row justify-start gap-4">
-                            <div className="flex items-center h-[64px] w-full max-w-[300px]" data-v12-tooltip="Filtrar por Sede">
+                        {/* 2.1 Dock de Filtros (Glassmorphism) */}
+                        <div className="flex-1 flex flex-col md:flex-row items-center gap-3 p-4 bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl border border-white/20 dark:border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.1)]"
+                             style={{ borderRadius: '32px' }}>
+                            
+                            <div className="w-full md:w-[260px]" data-v12-tooltip="Filtrar por Sede Operativa">
                                 <SearchableSelect
                                     options={stores}
                                     value={selectedStore}
@@ -694,11 +708,14 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                     variant="minimal"
                                 />
                             </div>
-                            <div className="flex items-center h-[64px] w-full max-w-[250px]" data-v12-tooltip="Filtrar por Puesto/Cargo">
+
+                            <div className="hidden md:block w-[1px] h-8 bg-slate-200/50 dark:bg-slate-700/50"></div>
+
+                            <div className="w-full md:w-[240px]" data-v12-tooltip="Filtrar por Puesto (Hacer clic sobre el seleccionado para desmarcar)">
                                 <SearchableSelect
                                     options={profiles.map(p => ({ id: p.id, name: p.name }))}
                                     value={selectedProfile}
-                                    onChange={(val) => setSelectedProfile(val)}
+                                    onChange={(val) => setSelectedProfile(prev => prev === val ? '' : val)}
                                     placeholder="TODOS LOS PUESTOS..."
                                     icon={ShieldCheck}
                                     variant="minimal"
@@ -706,46 +723,61 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                             </div>
                         </div>
 
-                        {/* CENTER: Week Navigation (Equitable 1/3) */}
-                        <div className="flex-1 flex justify-center">
-                            <div className="flex items-center justify-center h-[64px] gap-4">
-                                <button onClick={() => setWeekOffset(prev => prev - 1)} 
-                                        className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-xl transition-all active:scale-90" 
-                                        data-v12-tooltip="Semana Anterior"><ChevronLeft size={24} strokeWidth={3} /></button>
-                                <span className="text-[14px] font-[1000] uppercase tracking-[0.25em] text-slate-700 dark:text-white text-center whitespace-nowrap px-4 border-x border-slate-100 dark:border-slate-800">
+                        {/* 2.2 Navegación de Período (Smart Center) */}
+                        <div className="flex items-center justify-center p-3 bg-white dark:bg-slate-900 shadow-xl border border-slate-100 dark:border-slate-800" 
+                             style={{ borderRadius: '32px' }}>
+                            <button onClick={() => setWeekOffset(prev => prev - 1)} 
+                                    className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-2xl transition-all active:scale-90" 
+                                    data-v12-tooltip="Semana Anterior"><ChevronLeft size={20} strokeWidth={3} /></button>
+                            
+                            <div className="flex flex-col items-center px-6 min-w-[200px]">
+                                <span className="text-[10px] font-black uppercase text-indigo-500 tracking-[0.3em] mb-1 leading-none">Período Vigente</span>
+                                <span className="text-[14px] font-[1000] uppercase tracking-tight text-slate-800 dark:text-white text-center whitespace-nowrap">
                                     {currentWeekStart.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} — {new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
                                 </span>
-                                <button onClick={() => setWeekOffset(prev => prev + 1)} 
-                                        className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-xl transition-all active:scale-90" 
-                                        data-v12-tooltip="Semana Siguiente"><ChevronRight size={24} strokeWidth={3} /></button>
                             </div>
+
+                            <button onClick={() => setWeekOffset(prev => prev + 1)} 
+                                    className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-2xl transition-all active:scale-90" 
+                                    data-v12-tooltip="Semana Siguiente"><ChevronRight size={20} strokeWidth={3} /></button>
                         </div>
 
-                        {/* RIGHT: Stats & Help (Equitable 1/3) */}
-                        <div className="flex-1 flex items-center justify-end gap-6">
-                            <div className="flex items-center justify-end gap-4 h-[64px]">
-                                <button onClick={() => setShowBulkModal(true)}
-                                        disabled={selectedEmployees.length === 0}
-                                        className={`flex items-center gap-2 px-5 h-[48px] bg-indigo-500 hover:bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-200/50 dark:shadow-none transition-all active:scale-95 group ${selectedEmployees.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        data-v12-tooltip="Programar turno masivo para seleccionados">
-                                    <Clock size={18} className="group-hover:rotate-12 transition-transform" />
-                                    <span className="text-[11px] font-[1000] uppercase tracking-wider">Acciones Masivas ({selectedEmployees.length})</span>
-                                </button>
-
-                                <button className="flex items-center gap-2 px-5 h-[48px] bg-indigo-500 hover:bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-200/50 dark:shadow-none transition-all active:scale-95 group"
-                                        data-v12-tooltip="Cargar Turnos Proyectados (Basado en Histórico)">
-                                    <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
-                                    <span className="text-[11px] font-[1000] uppercase tracking-wider">Carga Inteligente</span>
-                                </button>
-
-                                <div className="flex items-center gap-3 ml-2">
-                                    <UsersIcon size={18} className="text-indigo-500" />
-                                    <span className="text-[11px] font-[1000] uppercase tracking-[0.2em] text-slate-600 dark:text-white whitespace-nowrap">
-                                        {employees.length} Colaboradores Activos
-                                    </span>
+                        {/* 2.3 Acciones de Inteligencia y Selección Masiva */}
+                        <div className="flex items-center gap-3 p-3 bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-white/20 dark:border-white/5" style={{ borderRadius: '32px' }}>
+                            <button onClick={() => setShowBulkModal(true)}
+                                    disabled={selectedEmployees.length === 0}
+                                    className={`flex items-center gap-3 px-6 h-[56px] rounded-2xl transition-all active:scale-95 group relative overflow-hidden ${selectedEmployees.length === 0 ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 opacity-60' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-200/50 dark:shadow-none hover:bg-indigo-700'}`}
+                                    data-v12-tooltip="Programar turno masivo para seleccionados">
+                                <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                                <div className="relative flex items-center gap-3">
+                                    <Clock size={18} strokeWidth={2.5} />
+                                    <div className="flex flex-col items-start leading-none">
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Acciones Masivas</span>
+                                        <span className="text-[9px] font-bold opacity-80 uppercase">{selectedEmployees.length} Seleccionados</span>
+                                    </div>
                                 </div>
-                                <HelpIcon text="Utilice los selectores para navegar por sedes y semanas. Arrastre los eventos al grid y guarde para oficializar la programación." />
+                            </button>
+
+                            <button className="flex items-center gap-3 px-6 h-[56px] bg-white dark:bg-slate-800 border-2 border-indigo-100 dark:border-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl transition-all active:scale-95 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 group"
+                                    data-v12-tooltip="Carga Inteligente de Turnos Proyectados">
+                                <Sparkles size={18} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform" />
+                                <span className="text-[10px] font-black uppercase tracking-widest">Carga Inteligente</span>
+                            </button>
+
+                            <div className="relative group/help">
+                                <HelpIcon text="Comando Central V12: Configure filtros, navegue por semanas y use acciones masivas para optimizar tiempos operativos." />
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Fila Opcional: Contador Flotante Minimalista */}
+                    <div className="flex justify-end pr-8 -mt-4 mb-4">
+                        <div className="flex items-center gap-2 px-4 py-2 bg-slate-100/50 dark:bg-slate-800/30 backdrop-blur-md rounded-full border border-slate-200/50 dark:border-slate-700/50">
+                            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                            <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">
+                                {employees.length} Colaboradores Activos en esta Sede
+                            </span>
+                        </div>
                         </div>
                     </div>
 
@@ -1013,7 +1045,6 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                         </div>
                     )}
                 </div>
-            </div>
 
                 {/* Justificación de la semana (Print) */}
                 {(saveComment || lastSaveComment) && (

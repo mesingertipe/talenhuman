@@ -3,7 +3,7 @@ import { Mail, ArrowLeft, ArrowRight, ShieldCheck, Users } from 'lucide-react';
 import api from '../services/api';
 import './Login.css';
 
-const ForgotPassword = ({ onBack, onTokenRequested }) => {
+const ForgotPassword = ({ onBack, onNext }) => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -19,7 +19,7 @@ const ForgotPassword = ({ onBack, onTokenRequested }) => {
       setMessage(res.data.message);
       // Wait a bit then move to next step
       setTimeout(() => {
-        onTokenRequested(email);
+        onNext(email);
       }, 2000);
     } catch (err) {
       setError('Error al procesar la solicitud. Verifica el correo e intenta de nuevo.');
