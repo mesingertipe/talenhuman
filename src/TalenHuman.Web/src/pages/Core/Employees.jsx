@@ -244,12 +244,11 @@ const Employees = ({ user }) => {
               <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
                 <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Colaborador</th>
                 <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Género</th>
-                <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Sede</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Número</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Sede / Cargo / Jornada</th>
-                {isAdmin && <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Salario</th>}
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Estado</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em', textAlign: 'right' }}>Gestión</th>
+                <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Identificación</th>
+                <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Ubicación y Cargo</th>
+                {isAdmin && <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Salario</th>}
+                <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Estado</th>
+                <th style={{ padding: '20px 24px', textAlign: 'right', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Gestión</th>
               </tr>
             </thead>
             <tbody>
@@ -278,10 +277,9 @@ const Employees = ({ user }) => {
                       {emp.gender === 'F' ? 'Femenino' : (emp.gender === 'M' ? 'Masculino' : 'N/A')}
                     </span>
                   </td>
-                  <td style={{ padding: '24px' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: '600', color: activeColors.textMuted, marginTop: '2px' }}>{emp.identificationNumber}</div>
+                  <td style={{ padding: '20px 24px' }}>
+                    <div className="font-bold text-slate-800 dark:text-slate-100">{emp.identificationNumber}</div>
                   </td>
-                  <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontWeight: '700', fontSize: '0.85rem' }}>{emp.identificationNumber}</td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
                     <div className="font-bold text-slate-700 dark:text-slate-200 text-sm leading-none mb-1.5">{emp.storeName || 'Sede no asignada'}</div>
                     <div className="flex flex-col gap-1.5 mt-1">

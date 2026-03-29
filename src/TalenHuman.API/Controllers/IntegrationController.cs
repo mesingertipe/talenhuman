@@ -82,9 +82,16 @@ public class IntegrationController : ControllerBase
             }
 
             var profile = await _context.Profiles.FirstOrDefaultAsync(p => p.Name == dto.ProfileName);
+            if (profile == null && !string.IsNullOrEmpty(dto.ProfileName))
+            {
+                profile = new Profile { Name = dto.ProfileName, CompanyId = tenantId };
+                _context.Profiles.Add(profile);
+                await _context.SaveChangesAsync();
+            }
+
             if (profile == null)
             {
-                results.Failed.Add(new { dto.IdentificationNumber, Error = "Profile not found" });
+                results.Failed.Add(new { dto.IdentificationNumber, Error = "Profile not found or could not be created" });
                 continue;
             }
 
