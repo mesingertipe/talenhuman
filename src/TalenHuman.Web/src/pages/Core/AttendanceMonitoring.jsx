@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
     Cpu, Clock, Save, Play, Search, AlertCircle, 
-    CheckCircle, ListTodo, Activity, History, Settings
+    CheckCircle, ListTodo, Activity, History, Settings, X
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';

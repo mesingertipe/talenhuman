@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
     Plus, X, User as UserIcon, Search, Calendar, FileText, 
     Paperclip, AlertCircle, CheckCircle, Info, ChevronRight, Layers, ArrowLeft,
-    Building2, Store, Briefcase, Smile, Send, Upload, File
+    Building2, Store, Briefcase, Smile, Send, Upload, File, RefreshCw, Lock, Terminal, Server, Bell, Activity, UserCircle2
 } from 'lucide-react';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';

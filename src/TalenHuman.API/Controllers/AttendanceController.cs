@@ -22,15 +22,39 @@ public class AttendanceController : ControllerBase
     }
 
     [HttpGet("stats")]
-    public async Task<IActionResult> GetStats(DateTime? date)
+    public async Task<IActionResult> GetStats(DateTime? start, DateTime? end, Guid? storeId, Guid? brandId, Guid? profileId)
     {
-        var targetDate = date?.Date ?? DateTime.Today.Date;
+        var companyId = Guid.Parse(User.FindFirst("CompanyId")?.Value ?? Guid.Empty.ToString());
         var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
         var roles = User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(r => r.Value).ToList();
-        var companyId = Guid.Parse(User.FindFirst("CompanyId")?.Value ?? Guid.Empty.ToString());
+
+        var startDate = start?.Date ?? DateTime.Today.Date;
+        var endDate = end?.Date ?? DateTime.Today.Date;
 
         var employeesQuery = _context.Employees.Where(e => e.CompanyId == companyId && e.IsActive);
-        var attendanceQuery = _context.Attendances.Where(a => a.CompanyId == companyId && a.ClockIn.Date == targetDate);
+        var attendanceQuery = _context.Attendances.Where(a => a.CompanyId == companyId && a.ClockIn.Date >= startDate && a.ClockIn.Date <= endDate);
+        var storesQuery = _context.Stores.Where(s => s.CompanyId == companyId && s.IsActive);
+        var brandsQuery = _context.Brands.Where(b => b.CompanyId == companyId && b.IsActive);
+
+        // Entity Filters
+        if (storeId.HasValue)
+        {
+            employeesQuery = employeesQuery.Where(e => e.StoreId == storeId.Value);
+            attendanceQuery = attendanceQuery.Where(a => a.StoreId == storeId.Value);
+        }
+
+        if (brandId.HasValue)
+        {
+            employeesQuery = employeesQuery.Where(e => e.Store.BrandId == brandId.Value);
+            attendanceQuery = attendanceQuery.Where(a => a.Store.BrandId == brandId.Value);
+            storesQuery = storesQuery.Where(s => s.BrandId == brandId.Value);
+        }
+
+        if (profileId.HasValue)
+        {
+            employeesQuery = employeesQuery.Where(e => e.ProfileId == profileId.Value);
+            attendanceQuery = attendanceQuery.Where(a => a.Employee.ProfileId == profileId.Value);
+        }
 
         // RBAC: Filter by Managed Stores for Managers and Supervisors
         if (!roles.Contains("SuperAdmin") && !roles.Contains("Admin") && !roles.Contains("RH"))
@@ -44,6 +68,7 @@ public class AttendanceController : ControllerBase
                 
                 employeesQuery = employeesQuery.Where(e => managedStores.Contains(e.StoreId));
                 attendanceQuery = attendanceQuery.Where(a => managedStores.Contains(a.StoreId));
+                storesQuery = storesQuery.Where(s => managedStores.Contains(s.Id));
             }
             else if (roles.Contains("Distrital"))
             {
@@ -52,15 +77,20 @@ public class AttendanceController : ControllerBase
                 {
                     attendanceQuery = attendanceQuery.Where(a => a.Store.DistrictId == user.DistrictId);
                     employeesQuery = employeesQuery.Where(e => e.Store.DistrictId == user.DistrictId);
+                    storesQuery = storesQuery.Where(s => s.DistrictId == user.DistrictId);
                 }
             }
         }
 
         var totalEmployees = await employeesQuery.CountAsync();
+        var totalStores = await storesQuery.CountAsync();
+        var totalBrands = await brandsQuery.CountAsync();
         var attendances = await attendanceQuery.ToListAsync();
 
         return Ok(new {
             TotalEmployees = totalEmployees,
+            TotalStores = totalStores,
+            TotalBrands = totalBrands,
             Correct = attendances.Count(a => a.Status == AttendanceStatus.Correcto),
             Errada = attendances.Count(a => a.Status == AttendanceStatus.MarcacionErrada),
             Desfasado = attendances.Count(a => a.Status == AttendanceStatus.Desfasado),

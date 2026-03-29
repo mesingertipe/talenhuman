@@ -23,6 +23,7 @@ public class Brand : BaseEntity, IMultitenant
     public string Name { get; set; } = string.Empty;
     public Guid CompanyId { get; set; }
     public Company? Company { get; set; }
+    public bool IsActive { get; set; } = true;
 
     // Relationships
     public ICollection<Store> Stores { get; set; } = new List<Store>();
@@ -90,6 +91,7 @@ public class Profile : BaseEntity, IMultitenant
 {
     public string Name { get; set; } = string.Empty; // e.g., Chef, Mesero, Bartender
     public string? Description { get; set; }
+    public bool IsActive { get; set; } = true;
     
     public Guid CompanyId { get; set; }
     public Company? Company { get; set; }

@@ -15,6 +15,8 @@ public class User : IdentityUser<Guid>, IMultitenant
     public District? District { get; set; }
     public bool MustChangePassword { get; set; } = true;
     public bool IsActive { get; set; } = true;
+    public string? ResetCode { get; set; }
+    public DateTime? ResetCodeExpiry { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 

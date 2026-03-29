@@ -144,11 +144,14 @@ public class AuthController : ControllerBase
         var user = await _userManager.FindByEmailAsync(request.Email);
         if (user == null) 
         {
-            // Don't reveal that the user does not exist for security
-            return Ok(new { message = "Si el correo está registrado, recibirás un enlace/token de recuperación." });
+            return Ok(new { message = "Si el correo está registrado, recibirás un código de recuperación." });
         }
 
-        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        // Generate 6-digit OTP
+        var resetCode = Random.Shared.Next(100000, 1000000).ToString();
+        user.ResetCode = resetCode;
+        user.ResetCodeExpiry = DateTime.UtcNow.AddMinutes(15);
+        await _userManager.UpdateAsync(user);
         
         // Construct elite/corporate email
         var emailBody = $@"
@@ -159,18 +162,19 @@ public class AuthController : ControllerBase
             </div>
             <h1 style='font-size: 24px; font-weight: 950; letter-spacing: -0.02em;'>Recupera tu acceso</h1>
             <p style='line-height: 1.6;'>Hola {user.FullName}, hemos recibido una solicitud para restablecer tu contraseña. Ingresa el siguiente código de seguridad en la aplicación para continuar:</p>
-            <div style='background: #f8fafc; border: 2px dashed #4f46e5; padding: 20px; text-align: center; border-radius: 16px; margin: 30px 0;'>
-                <span style='font-size: 32px; font-weight: 900; color: #4f46e5; letter-spacing: 0.1em;'>{token}</span>
+            <div style='background: #f8fafc; border: 2px dashed #4f46e5; padding: 25px; text-align: center; border-radius: 20px; margin: 30px 0;'>
+                <span style='font-size: 48px; font-weight: 900; color: #4f46e5; letter-spacing: 0.2em;'>{resetCode}</span>
             </div>
-            <p style='font-size: 13px; color: #94a3b8;'>Si no solicitaste este cambio, puedes ignorar este correo con seguridad. El código expirará pronto por razones de seguridad.</p>
+            <p style='font-size: 13px; color: #94a3b8; text-align: center;'>Este código vencerá en 15 minutos.</p>
+            <p style='font-size: 13px; color: #94a3b8;'>Si no solicitaste este cambio, puedes ignorar este correo con seguridad.</p>
             <hr style='border: none; border-top: 1px solid #f1f5f9; margin: 30px 0;' />
             <p style='font-size: 12px; font-weight: 700; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.05em;'>© 2026 TalenHuman Platform - Gestión Elite de Talento Humano</p>
         </div>";
 
-        await _emailService.SendEmailAsync(user.Email!, "Restablecer contraseña - TalenHuman", emailBody);
+        await _emailService.SendEmailAsync(user.Email!, "Código de Recuperación - TalenHuman", emailBody);
         
         return Ok(new { 
-            message = "Token enviado a tu correo exitosamente."
+            message = "Código enviado a tu correo exitosamente."
         });
     }
 
@@ -178,15 +182,32 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> ResetPasswordWithToken([FromBody] ResetPasswordRequest request)
     {
         var user = await _userManager.FindByEmailAsync(request.Email);
-        if (user == null) return BadRequest("Email no encontrado.");
+        if (user == null) return BadRequest(new { message = "Email no encontrado." });
 
-        var result = await _userManager.ResetPasswordAsync(user, request.Token, request.NewPassword);
-        if (!result.Succeeded)
+        if (user.ResetCode != request.Token || user.ResetCodeExpiry < DateTime.UtcNow)
         {
-            return BadRequest(new { message = "No se pudo restablecer la contraseña.", errors = result.Errors });
+            return BadRequest(new { message = "El código es incorrecto o ha expirado." });
         }
 
-        return Ok(new { message = "Contraseña restablecida exitosamente." });
+        // Use custom reset flow since we bypass standard Identity tokens
+        var removeResult = await _userManager.RemovePasswordAsync(user);
+        if (!removeResult.Succeeded && (await _userManager.HasPasswordAsync(user)))
+        {
+             return BadRequest(new { message = "Error al procesar el cambio de clave.", errors = removeResult.Errors });
+        }
+
+        var result = await _userManager.AddPasswordAsync(user, request.NewPassword);
+        
+        if (result.Succeeded)
+        {
+            // Clear code after successful reset
+            user.ResetCode = null;
+            user.ResetCodeExpiry = null;
+            await _userManager.UpdateAsync(user);
+            return Ok(new { message = "Contraseña restablecida exitosamente." });
+        }
+
+        return BadRequest(new { message = "La nueva contraseña no cumple con los requisitos de seguridad.", errors = result.Errors });
     }
 
     [HttpPost("sync-employee-users")]

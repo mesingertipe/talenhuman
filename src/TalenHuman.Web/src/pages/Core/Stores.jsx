@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit, X, MapPin, FileSpreadsheet, Store, Tag, CheckCircle, AlertCircle, Building, Download, Search, Clock, Settings, Hash } from 'lucide-react';
+import { Plus, Trash2, Edit, X, MapPin, FileSpreadsheet, Store, Tag, CheckCircle, AlertCircle, Building, Download, Search, Clock, Settings, Hash, Layout, Globe, Activity } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import api from '../../services/api';
 import BulkImportModal from '../../components/Shared/BulkImportModal';
@@ -29,6 +29,8 @@ const Stores = () => {
   const [showImport, setShowImport] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [currentStore, setCurrentStore] = useState(null);
+  const [formTab, setFormTab] = useState('general'); // 'general', 'location', 'operation'
+  
   const [formData, setFormData] = useState({ 
     name: '', 
     address: '', 
@@ -38,7 +40,7 @@ const Stores = () => {
     externalId: '', 
     biometricId: '', 
     isActive: true,
-    useSequentialPairing: true, // Default to "Modo Marcaciones"
+    useSequentialPairing: true,
     operationalDayStart: '05:00',
     defaultStartTime: '08:00',
     defaultEndTime: '17:00'
@@ -47,7 +49,6 @@ const Stores = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Elite V12: Enrich data for global filtering (District Name, City Name, Brand Name)
   const processedStores = stores.map(s => ({
     ...s,
     cityName: cities.find(c => c.id === s.cityId)?.name || '',
@@ -203,6 +204,7 @@ const Stores = () => {
                   defaultStartTime: '08:00',
                   defaultEndTime: '17:00'
                 }); 
+                setFormTab('general');
                 setShowModal(true); 
               }}
               className="btn-premium btn-premium-primary"
@@ -297,6 +299,7 @@ const Stores = () => {
                           defaultStartTime: store.defaultStartTime || '08:00',
                           defaultEndTime: store.defaultEndTime || '17:00'
                         }); 
+                        setFormTab('general');
                         setShowModal(true); 
                       }}
                       style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', padding: '0.5rem' }}
@@ -341,17 +344,17 @@ const Stores = () => {
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-content animate-in zoom-in duration-300 shadow-2xl" style={{ maxWidth: '620px', borderRadius: '32px' }}>
-            <div className="modal-header" style={{ padding: '2.5rem 2.5rem 1rem', border: 'none' }}>
+          <div className="modal-content animate-in zoom-in duration-300 shadow-2xl" style={{ maxWidth: '680px', borderRadius: '40px', padding: 0, overflow: 'hidden' }}>
+            <div className="modal-header" style={{ padding: '2.5rem 3rem 1.5rem', border: 'none', background: isDarkMode ? '#1e293b' : '#ffffff' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                <div style={{ width: '52px', height: '52px', background: activeColors.accentSoft, color: activeColors.accent, borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', shadow: '0 4px 12px rgba(79, 70, 229, 0.1)' }}>
-                  {currentStore ? <Edit size={24} /> : <Plus size={24} />}
+                <div style={{ width: '56px', height: '56px', background: activeColors.accentSoft, color: activeColors.accent, borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {currentStore ? <Edit size={26} /> : <Plus size={26} />}
                 </div>
                 <div>
                   <h2 className="text-2xl font-black dark:text-white" style={{ margin: 0, letterSpacing: '-0.03em' }}>
-                    {currentStore ? 'Editar Tienda' : 'Nueva Tienda'}
+                    {currentStore ? 'Editar Sede' : 'Nueva Sede'}
                   </h2>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configuración técnica de sede</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configuración técnica operativa</p>
                 </div>
               </div>
               <button 
@@ -361,242 +364,238 @@ const Stores = () => {
                 <X size={20} />
               </button>
             </div>
+
+            {/* Tab Navigation */}
+            <div className="flex border-b border-slate-100 dark:border-slate-800 px-12 bg-white dark:bg-slate-900">
+                {[
+                    { id: 'general', label: 'General', icon: <Hash size={16} /> },
+                    { id: 'location', label: 'Ubicación', icon: <MapPin size={16} /> },
+                    { id: 'operation', label: 'Operación', icon: <Activity size={16} /> }
+                ].map(tab => (
+                    <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setFormTab(tab.id)}
+                        className={`flex items-center gap-2 py-4 px-6 text-[11px] font-black uppercase tracking-widest transition-all border-b-4 ${
+                            formTab === tab.id 
+                            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400 opacity-100' 
+                            : 'border-transparent text-slate-400 dark:text-slate-500 opacity-60 hover:opacity-100'
+                        }`}
+                    >
+                        {tab.icon} {tab.label}
+                    </button>
+                ))}
+            </div>
             
             <form onSubmit={handleSave}>
-              <div className="modal-body overflow-y-auto max-h-[70vh] custom-scrollbar" style={{ padding: '0 2.5rem 2.5rem' }}>
-                {/* --- Section 1: General Info --- */}
-                <div className="mb-10">
-                  <div className="flex items-center gap-3 mb-8">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center font-bold text-xs">01</div>
-                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Identificación de Sede</h3>
-                    <div className="h-[1px] flex-1 bg-slate-100 dark:bg-slate-800 ml-2"></div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
-                    <div className="md:col-span-2">
-                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Nombre Comercial *</label>
-                      <div className="relative group">
-                        <Store size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                        <input 
-                          required 
-                          value={formData.name} 
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm" 
-                          placeholder="Ej. Sede Central Norte"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">ID Externo (ERP) *</label>
-                      <div className="relative group">
-                        <Tag size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                        <input 
-                          required
-                          value={formData.externalId} 
-                          onChange={(e) => setFormData({ ...formData, externalId: e.target.value })} 
-                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
-                          placeholder="ERP Code..."
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">ID Biométrico</label>
-                      <div className="relative group">
-                        <Hash size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                        <input 
-                          value={formData.biometricId} 
-                          onChange={(e) => setFormData({ ...formData, biometricId: e.target.value })} 
-                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
-                          placeholder="Bio ID..."
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* --- Section 2: Branding & Location --- */}
-                <div className="mb-10">
-                  <div className="flex items-center gap-3 mb-8">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center font-bold text-xs">02</div>
-                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Ubicación y Marca</h3>
-                    <div className="h-[1px] flex-1 bg-slate-100 dark:bg-slate-800 ml-2"></div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
-                    <div>
-                      <SearchableSelect
-                        label="Ciudad Regional"
-                        options={cities.map(c => ({ value: c.id, label: c.name }))}
-                        value={formData.cityId}
-                        onChange={(val) => setFormData({ ...formData, cityId: val })}
-                        icon={MapPin}
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <SearchableSelect
-                        label="Distrito / Zona"
-                        options={districts.map(d => ({ value: d.id, label: d.name }))}
-                        value={formData.districtId}
-                        onChange={(val) => setFormData({ ...formData, districtId: val })}
-                        icon={Building}
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <SearchableSelect
-                        label="Marca / Grupo"
-                        options={brands.map(b => ({ value: b.id, label: b.name }))}
-                        value={formData.brandId}
-                        onChange={(val) => setFormData({ ...formData, brandId: val })}
-                        icon={Tag}
-                        required
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Dirección Física *</label>
-                      <div className="relative group">
-                        <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                        <input 
-                          required
-                          value={formData.address} 
-                          onChange={(e) => setFormData({ ...formData, address: e.target.value })} 
-                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
-                          placeholder="Dirección completa..."
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* --- Section 3: Operational Configuration (Attendance Mode) --- */}
-                <div className="mb-10">
-                  <div className="flex items-center gap-3 mb-8">
-                    <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center font-bold text-xs">03</div>
-                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Lógica de Asistencia</h3>
-                    <div className="h-[1px] flex-1 bg-slate-100 dark:bg-slate-800 ml-2"></div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="p-6 rounded-[28px] bg-slate-50/50 dark:bg-slate-800/30 border-2 border-slate-100 dark:border-slate-800/50">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${formData.useSequentialPairing ? 'bg-indigo-500 text-white shadow-lg' : 'bg-emerald-500 text-white shadow-lg'}`}>
-                            {formData.useSequentialPairing ? <Settings size={20} /> : <Clock size={20} />}
-                          </div>
-                          <div>
-                            <div className="font-bold text-sm dark:text-white">
-                                {formData.useSequentialPairing ? 'Modo Marcaciones' : 'Modo Turno'}
+              <div className="modal-body custom-scrollbar" style={{ padding: '2.5rem 3rem', background: activeColors.bg, minHeight: '380px' }}>
+                
+                {formTab === 'general' && (
+                    <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-300">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="md:col-span-2">
+                                <label className="block text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 px-1">Nombre Comercial *</label>
+                                <div className="relative group">
+                                    <Store size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                    <input 
+                                        required 
+                                        value={formData.name} 
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                                        className="w-full p-4 pl-12 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm" 
+                                        placeholder="Ej. Sede Central Norte"
+                                    />
+                                </div>
                             </div>
-                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                {formData.useSequentialPairing ? 'Cruce Secuencial (Biométrico manda)' : 'Basado en Turnos (Calendario manda)'}
+
+                            <div>
+                                <label className="block text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 px-1">ID Externo (ERP) *</label>
+                                <div className="relative group">
+                                    <Tag size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                    <input 
+                                        required
+                                        value={formData.externalId} 
+                                        onChange={(e) => setFormData({ ...formData, externalId: e.target.value })} 
+                                        className="w-full p-4 pl-12 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
+                                        placeholder="ERP Code..."
+                                    />
+                                </div>
                             </div>
-                          </div>
+
+                            <div>
+                                <label className="block text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 px-1">ID Biométrico</label>
+                                <div className="relative group">
+                                    <Hash size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                    <input 
+                                        value={formData.biometricId} 
+                                        onChange={(e) => setFormData({ ...formData, biometricId: e.target.value })} 
+                                        className="w-full p-4 pl-12 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
+                                        placeholder="Bio ID..."
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${formData.isActive ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                                            {formData.isActive ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+                                        </div>
+                                        <div>
+                                            <div className="font-black text-[12px] dark:text-white uppercase tracking-tight">Estado Operativo</div>
+                                            <div className="text-[9px] text-slate-400 font-bold uppercase">{formData.isActive ? 'Tienda Activa' : 'Tienda Inactiva'}</div>
+                                        </div>
+                                    </div>
+                                    <label className="premium-switch">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={formData.isActive}
+                                            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                                        />
+                                        <span className="premium-switch-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
-                        <label className="premium-switch">
-                          <input 
-                            type="checkbox" 
-                            checked={formData.useSequentialPairing}
-                            onChange={(e) => setFormData({ ...formData, useSequentialPairing: e.target.checked })}
-                          />
-                          <span className="premium-switch-slider"></span>
-                        </label>
-                      </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                        {formData.useSequentialPairing 
-                           ? 'Prioriza el orden de las marcaciones para armar pares, ideal para puntos con mucha rotación horaria.' 
-                           : 'Valida que el empleado cumpla exactamente el horario programado en su calendario.'}
-                      </p>
                     </div>
+                )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3 px-1">Inicio Día Operativo</label>
-                            <div className="relative group">
-                                <Clock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                                <input 
-                                    type="time"
-                                    value={formData.operationalDayStart} 
-                                    onChange={(e) => setFormData({ ...formData, operationalDayStart: e.target.value })} 
-                                    className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-black text-sm"
+                {formTab === 'location' && (
+                    <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <SearchableSelect
+                                    label="Ciudad Regional"
+                                    options={cities.map(c => ({ value: c.id, label: c.name }))}
+                                    value={formData.cityId}
+                                    onChange={(val) => setFormData({ ...formData, cityId: val })}
+                                    icon={Globe}
+                                    required
                                 />
                             </div>
-                        </div>
 
-                        <div>
-                            <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3 px-1 text-right">Corte de 24 Horas</label>
-                            <div className="text-[10px] text-slate-400 text-right font-medium italic">
-                                Define cuándo se agrupan las marcaciones en un solo reporte diario.
+                            <div>
+                                <SearchableSelect
+                                    label="Distrito / Zona"
+                                    options={districts.map(d => ({ value: d.id, label: d.name }))}
+                                    value={formData.districtId}
+                                    onChange={(val) => setFormData({ ...formData, districtId: val })}
+                                    icon={Building}
+                                />
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <SearchableSelect
+                                    label="Marca Asociada"
+                                    options={brands.map(b => ({ value: b.id, label: b.name }))}
+                                    value={formData.brandId}
+                                    onChange={(val) => setFormData({ ...formData, brandId: val })}
+                                    icon={Tag}
+                                    required
+                                />
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <label className="block text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 px-1">Dirección Física *</label>
+                                <div className="relative group">
+                                    <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                    <input 
+                                        required
+                                        value={formData.address} 
+                                        onChange={(e) => setFormData({ ...formData, address: e.target.value })} 
+                                        className="w-full p-4 pl-12 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
+                                        placeholder="Dirección completa..."
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
+                )}
 
-                    {!formData.useSequentialPairing && (
-                       <div className="p-6 rounded-[28px] bg-emerald-50/30 dark:bg-emerald-900/10 border-2 border-emerald-100 dark:border-emerald-800 group animate-in slide-in-from-top-4 duration-500">
-                           <div className="flex items-center gap-3 mb-5">
-                                <Building size={16} className="text-emerald-500" />
-                                <h4 className="text-[11px] font-black text-emerald-600 uppercase tracking-widest">Horario Estándar del Centro</h4>
-                           </div>
-                           <div className="grid grid-cols-2 gap-6">
+                {formTab === 'operation' && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        <div className="p-6 rounded-[28px] bg-slate-50/50 dark:bg-slate-800/30 border-2 border-slate-100 dark:border-slate-800/50">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${formData.useSequentialPairing ? 'bg-indigo-500 text-white shadow-lg' : 'bg-emerald-500 text-white shadow-lg'}`}>
+                                        {formData.useSequentialPairing ? <Settings size={20} /> : <Clock size={20} />}
+                                    </div>
+                                    <div>
+                                        <div className="font-black text-[12px] uppercase dark:text-white leading-tight">
+                                            {formData.useSequentialPairing ? 'Modo Marcaciones' : 'Modo Turno'}
+                                        </div>
+                                        <div className="text-[8px] text-slate-400 font-black uppercase tracking-widest mt-1">
+                                            {formData.useSequentialPairing ? 'Cruce Secuencial (Biométrico)' : 'Basado en Turnos (Calendario)'}
+                                        </div>
+                                    </div>
+                                </div>
+                                <label className="premium-switch">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={formData.useSequentialPairing}
+                                        onChange={(e) => setFormData({ ...formData, useSequentialPairing: e.target.checked })}
+                                    />
+                                    <span className="premium-switch-slider"></span>
+                                </label>
+                            </div>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tight">
+                                {formData.useSequentialPairing 
+                                ? 'Prioriza el orden de marcaciones para armar pares.' 
+                                : 'Valida el cumplimiento exacto del turno programado.'}
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-8">
+                            <div>
+                                <label className="block text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 px-1">Inicio Día Operativo</label>
+                                <div className="relative group">
+                                    <Clock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                    <input 
+                                        type="time"
+                                        value={formData.operationalDayStart} 
+                                        onChange={(e) => setFormData({ ...formData, operationalDayStart: e.target.value })} 
+                                        className="w-full p-4 pl-12 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-black text-sm"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex items-center">
+                                <p className="text-[9px] text-slate-400 font-bold uppercase italic leading-relaxed">
+                                    Define el punto de quiebre para agrupar marcaciones nocturnas.
+                                </p>
+                            </div>
+                        </div>
+
+                        {!formData.useSequentialPairing && (
+                            <div className="grid grid-cols-2 gap-8 p-6 rounded-3xl bg-indigo-50/20 dark:bg-indigo-900/10 border border-dash border-indigo-200 dark:border-indigo-800">
                                 <div>
-                                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2 px-1">Entrada Sede</label>
+                                    <label className="block text-[10px] font-black text-indigo-500 uppercase mb-3 px-1">Entrada Sede</label>
                                     <input 
                                         type="time"
                                         value={formData.defaultStartTime} 
                                         onChange={(e) => setFormData({ ...formData, defaultStartTime: e.target.value })} 
-                                        className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-sm"
+                                        className="w-full p-3 rounded-xl border border-indigo-100 dark:border-indigo-900 bg-white dark:bg-slate-900 font-black text-sm"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2 px-1">Salida Sede</label>
+                                    <label className="block text-[10px] font-black text-indigo-500 uppercase mb-3 px-1">Salida Sede</label>
                                     <input 
                                         type="time"
                                         value={formData.defaultEndTime} 
                                         onChange={(e) => setFormData({ ...formData, defaultEndTime: e.target.value })} 
-                                        className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-sm"
+                                        className="w-full p-3 rounded-xl border border-indigo-100 dark:border-indigo-900 bg-white dark:bg-slate-900 font-black text-sm"
                                     />
                                 </div>
-                           </div>
-                           <p className="text-[9px] text-emerald-600/70 mt-4 font-bold uppercase text-center tracking-tighter">Este horario servirá de respaldo si el empleado no tiene un turno asignado.</p>
-                       </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* --- Section 4: Operational Status --- */}
-                <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-50 dark:border-slate-800 flex items-center justify-between shadow-sm mt-6">
-                  <div className="flex items-center gap-5">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${formData.isActive ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-100' : 'bg-slate-100 text-slate-400'}`}>
-                      {formData.isActive ? <CheckCircle size={26} /> : <AlertCircle size={26} />}
+                            </div>
+                        )}
                     </div>
-                    <div>
-                      <div className="font-black text-md dark:text-white leading-tight">Estado Operativo</div>
-                      <div className="text-[10px] text-emerald-600 uppercase font-black tracking-widest mt-1.5 flex items-center gap-1.5">
-                        {formData.isActive ? <><div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div> TIENDA EN OPERACIÓN</> : 'TIENDA INACTIVA / CERRADA'}
-                      </div>
-                    </div>
-                  </div>
-                  <label className="premium-switch">
-                    <input 
-                      type="checkbox" 
-                      checked={formData.isActive}
-                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                    />
-                    <span className="premium-switch-slider"></span>
-                  </label>
-                </div>
+                )}
               </div>
 
-              <div className="modal-footer" style={{ padding: '1rem 2.5rem 2.5rem', border: 'none' }}>
+              <div className="modal-footer" style={{ padding: '2rem 3rem 3rem', border: 'none', background: isDarkMode ? '#1e293b' : '#ffffff' }}>
                 <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary" style={{ height: '56px', borderRadius: '20px', flex: 1 }} disabled={isSubmitting}>
-                  Cerrar
+                  Cancelar
                 </button>
                 <button type="submit" className="btn-premium btn-premium-primary" style={{ height: '56px', borderRadius: '20px', flex: 2 }} disabled={isSubmitting}>
-                  {isSubmitting ? <div className="loader"></div> : (currentStore ? 'Guardar Cambios' : 'Confirmar Sede')}
+                  {isSubmitting ? <div className="loader"></div> : (currentStore ? 'Actualizar Tienda' : 'Crear Punto de Venta')}
                 </button>
               </div>
             </form>

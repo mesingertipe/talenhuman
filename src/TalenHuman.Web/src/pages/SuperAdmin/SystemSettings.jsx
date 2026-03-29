@@ -3,7 +3,7 @@ import {
     Settings, Save, Shield, HardDrive, Mail, 
     RefreshCw, CheckCircle, AlertCircle, Info,
     Key, Globe, Database, Cpu, Layout, ChevronRight,
-    Lock, Terminal, Server, Bell, Activity
+    Lock, Terminal, Server, Bell, Activity, UserCircle2
 } from 'lucide-react';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';

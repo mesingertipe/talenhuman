@@ -38,7 +38,6 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
       children: [
         { icon: <Calendar size={20} />, label: 'Turnos' },
         { icon: <Clock size={20} />, label: 'Marcaciones' },
-        { icon: <Activity size={20} />, label: 'Monitoreo Asistencia', roles: ['SuperAdmin', 'Admin'] },
         { icon: <FileText size={20} />, label: 'Novedades' },
       ]
     },
@@ -46,6 +45,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
       label: 'Administración', 
       isHeader: true,
       children: [
+        { icon: <Activity size={20} />, label: 'Monitoreo Asistencia', roles: ['SuperAdmin', 'Admin'] },
         { icon: <Settings size={20} />, label: 'Usuarios', roles: ['SuperAdmin', 'Admin'] },
         { icon: <FileText size={20} />, label: 'Configuración novedades', roles: ['SuperAdmin', 'Admin'] },
         { icon: <Globe size={20} />, label: 'Diseñador de Plantillas', roles: ['SuperAdmin'] },
