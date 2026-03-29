@@ -111,6 +111,7 @@ public class IntegrationController : ControllerBase
                     ProfileId = profile.Id,
                     JornadaId = jornada?.Id,
                     DateOfEntry = dto.DateOfEntry ?? DateTime.UtcNow,
+                    BirthDate = dto.BirthDate,
                     DailySalary = dto.DailySalary,
                     IsActive = dto.IsActive,
                     DateOfTermination = dto.DateOfTermination,
@@ -124,6 +125,7 @@ public class IntegrationController : ControllerBase
                 employee.FirstName = dto.FirstName;
                 employee.LastName = dto.LastName;
                 employee.Email = dto.Email;
+                employee.BirthDate = dto.BirthDate;
                 employee.StoreId = store.Id;
                 employee.ProfileId = profile.Id;
                 employee.DailySalary = dto.DailySalary;
@@ -242,6 +244,7 @@ public class EmployeeSyncDto
     public decimal DailySalary { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime? DateOfTermination { get; set; }
+    public DateTime? BirthDate { get; set; }
     public string? JornadaNombre { get; set; }
 }
 

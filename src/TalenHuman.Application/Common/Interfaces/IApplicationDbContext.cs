@@ -15,6 +15,7 @@ public interface IApplicationDbContext
     DbSet<Attendance> Attendances { get; }
     DbSet<Absence> Absences { get; }
     DbSet<Jornada> Jornadas { get; }
+    DbSet<BiometricRecord> BiometricRecords { get; }
     DbSet<SupervisorStore> SupervisorStores { get; }
     DbSet<NovedadTipo> NovedadTipos { get; }
     DbSet<Novedad> Novedades { get; }

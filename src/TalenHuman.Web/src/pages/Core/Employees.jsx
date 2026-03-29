@@ -62,8 +62,9 @@ const Employees = ({ user }) => {
     totalPages, 
     totalItems, 
     itemsPerPage, 
-    setItemsPerPage 
   } = useTableData(employees, ['firstName', 'lastName', 'identificationNumber', 'storeName', 'profileName', 'jornadaNombre', 'email']);
+
+  const isAdmin = user?.roles?.includes('Admin') || user?.roles?.includes('SuperAdmin');
 
   useEffect(() => {
     fetchInitialData();
@@ -151,7 +152,7 @@ const Employees = ({ user }) => {
     const dataToExport = employees.map(emp => ({
       Nombre: emp.firstName,
       Apellidos: emp.lastName,
-      Identificación: emp.identificationNumber,
+      Número: emp.identificationNumber,
       Sede: emp.storeName,
       Cargo: emp.profileName,
       Jornada: emp.jornadaNombre,
@@ -240,8 +241,9 @@ const Employees = ({ user }) => {
             <thead>
               <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Colaborador</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Identificación</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Número</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Sede / Cargo / Jornada</th>
+                {isAdmin && <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Salario</th>}
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Estado</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em', textAlign: 'right' }}>Gestión</th>
               </tr>
@@ -274,6 +276,14 @@ const Employees = ({ user }) => {
                         </div>
                     </div>
                   </td>
+                  {isAdmin && (
+                    <td style={{ padding: '1.25rem 1.5rem' }}>
+                      <div className="font-black text-indigo-600 dark:text-indigo-400 text-sm">
+                        ${emp.dailySalary?.toLocaleString('es-CO')}
+                      </div>
+                      <div className="text-[10px] uppercase font-black opacity-40">Salario Diario</div>
+                    </td>
+                  )}
                   <td style={{ padding: '1.25rem 1.5rem' }}>
                     <span style={{ 
                       padding: '0.35rem 0.75rem', 
@@ -408,26 +418,28 @@ const Employees = ({ user }) => {
                       </div>
                     </div>
                     <div className="group">
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Documento Identidad *</label>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Número *</label>
                       <div style={{ position: 'relative' }}>
                         <Hash size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                         <input 
                           required value={formData.identificationNumber}
                           onChange={(e) => setFormData({...formData, identificationNumber: e.target.value})}
-                          placeholder="Número de Cédula..." 
+                          placeholder="Número de identificación..." 
                           style={{ width: '100%', padding: '22px 24px 22px 60px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', fontSize: '0.95rem', outline: 'none', transition: 'all 0.3s' }}
                           className="focus:border-indigo-500 focus:shadow-xl"
                         />
                       </div>
                     </div>
                     <div className="group">
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Fecha de Nacimiento *</label>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Cumpleaños</label>
                       <div style={{ position: 'relative' }}>
                         <Calendar size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                         <input 
-                          type="date" value={formData.birthDate?.split('T')[0] || ''}
+                          type="date"
+                          value={formData.birthDate ? formData.birthDate.split('T')[0] : ''}
                           onChange={(e) => setFormData({...formData, birthDate: e.target.value})}
-                          style={{ width: '100%', padding: '22px 24px 22px 60px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', fontSize: '0.95rem', outline: 'none' }}
+                          style={{ width: '100%', padding: '22px 24px 22px 60px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', fontSize: '0.95rem', outline: 'none', transition: 'all 0.3s' }}
+                          className="focus:border-indigo-500 focus:shadow-xl"
                         />
                       </div>
                     </div>
@@ -438,10 +450,25 @@ const Employees = ({ user }) => {
                 <div style={{ position: 'relative' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '36px' }}>
                     <span style={{ fontSize: '12px', fontWeight: '950', color: activeColors.accent, background: activeColors.accentSoft, padding: '4px 12px', borderRadius: '8px' }}>02</span>
-                    <h3 style={{ fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMain, textTransform: 'uppercase', letterSpacing: '0.15em', margin: 0 }}>Perfil Laboral y Nómina</h3>
+                    <h3 style={{ fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMain, textTransform: 'uppercase', letterSpacing: '0.15em', margin: 0 }}>Cargos, Sedes y Nómina</h3>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px 36px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px 36px' }}>
+                    {isAdmin && (
+                      <div className="group">
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Salario Diario</label>
+                        <div style={{ position: 'relative' }}>
+                          <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                          <input 
+                            type="number"
+                            value={formData.dailySalary}
+                            onChange={(e) => setFormData({...formData, dailySalary: parseFloat(e.target.value)})}
+                            style={{ width: '100%', padding: '22px 24px 22px 60px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', fontSize: '0.95rem', outline: 'none', transition: 'all 0.3s' }}
+                            className="focus:border-indigo-500 focus:shadow-xl"
+                          />
+                        </div>
+                      </div>
+                    )}
                     <div className="group">
                       <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Fecha de Ingreso *</label>
                       <div style={{ position: 'relative' }}>
@@ -450,6 +477,7 @@ const Employees = ({ user }) => {
                           type="date" value={formData.dateOfEntry?.split('T')[0] || ''}
                           onChange={(e) => setFormData({...formData, dateOfEntry: e.target.value})}
                           style={{ width: '100%', padding: '22px 24px 22px 60px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700' }}
+                          className="focus:border-indigo-500"
                         />
                       </div>
                     </div>
@@ -480,18 +508,6 @@ const Employees = ({ user }) => {
                       placeholder="Tipo de horario..."
                       icon={Clock}
                     />
-                  </div>
-
-                  <div style={{ marginTop: '40px' }}>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Salario Diario (Moneda Local) *</label>
-                    <div style={{ position: 'relative' }}>
-                      <span className="absolute left-6 top-1/2 -translate-y-1/2 text-xl font-black text-indigo-500">$</span>
-                      <input 
-                        type="number" step="0.01" value={formData.dailySalary}
-                        onChange={(e) => setFormData({...formData, dailySalary: parseFloat(e.target.value)})}
-                        style={{ width: '100%', padding: '22px 24px 22px 50px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '900', fontSize: '1.4rem' }}
-                      />
-                    </div>
                   </div>
                 </div>
 

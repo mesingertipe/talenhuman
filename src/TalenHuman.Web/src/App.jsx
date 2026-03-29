@@ -17,6 +17,7 @@ import NewsInbox from './pages/News/NewsInbox';
 import NewsDesigner from './pages/Admin/NewsDesigner';
 import ShiftScheduler from './pages/Scheduling/ShiftScheduler';
 import Marcaciones from './pages/Core/Marcaciones';
+import AttendanceMonitoring from './pages/Core/AttendanceMonitoring';
 import Cities from './pages/Core/Cities';
 import Districts from './pages/Core/Districts';
 import SystemSettings from './pages/SuperAdmin/SystemSettings';
@@ -117,7 +118,9 @@ function App() {
         return <Dashboard />;
       case 'Turnos': return <ShiftScheduler user={user} />;
       case 'Marcaciones': // Added case for Marcaciones
-        if (isSuperAdmin || isAdmin) return <Marcaciones />;
+        return <Marcaciones user={user} />;
+      case 'Monitoreo Asistencia':
+        if (isSuperAdmin || isAdmin) return <AttendanceMonitoring />;
         return <Dashboard />;
       case 'Novedades': return <NewsInbox user={user} />;
       case 'Configuración novedades':

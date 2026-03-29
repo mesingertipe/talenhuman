@@ -25,7 +25,11 @@ import {
     FileSpreadsheet,
     Copy as CopyIcon,
     ArrowRight,
-    FileText
+    ArrowRight,
+    FileText,
+    ShieldCheck,
+    CheckSquare,
+    Square
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import HelpIcon from '../../components/Shared/HelpIcon';
@@ -36,6 +40,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
     const { isDarkMode } = useTheme();
     const [employees, setEmployees] = useState([]);
     const [shifts, setShifts] = useState([]);
+    const [attendances, setAttendances] = useState([]);
     const [news, setNews] = useState([]);
     const [stores, setStores] = useState([]);
     const [selectedStore, setSelectedStore] = useState('');
@@ -57,6 +62,15 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [saveComment, setSaveComment] = useState('');
     const [lastSaveComment, setLastSaveComment] = useState('');
+    const [profiles, setProfiles] = useState([]);
+    const [selectedProfile, setSelectedProfile] = useState('');
+    const [selectedEmployees, setSelectedEmployees] = useState([]);
+    const [showBulkModal, setShowBulkModal] = useState(false);
+    const [bulkData, setBulkData] = useState({
+        startTime: '08:00',
+        endTime: '17:00',
+        days: [true, true, true, true, true, true, false] // Mon-Sun
+    });
 
     const getMonday = (offset = 0) => {
         const now = new Date();
@@ -92,6 +106,8 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                 if (filteredStores.length > 0) setSelectedStore(filteredStores[0].id);
             }
         });
+
+        api.get('/profiles').then(res => setProfiles(res.data));
 
         const loadScript = (src) => {
             if (document.querySelector(`script[src="${src}"]`)) return;
@@ -136,11 +152,12 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
             endDate.setDate(endDate.getDate() + 7);
             const endDateStr = toLocalISO(endDate);
 
-            const [empRes, shiftRes, newsRes, jornadaRes] = await Promise.all([
+            const [empRes, shiftRes, newsRes, jornadaRes, attRes] = await Promise.all([
                 api.get(`/employees?storeId=${selectedStore}`),
                 api.get(`/shifts?storeId=${selectedStore}&startDate=${startDateStr}&endDate=${endDateStr}`),
                 api.get(`/novedades?storeId=${selectedStore}&startDate=${startDateStr}&endDate=${endDateStr}&status=1`),
-                api.get('/jornadas')
+                api.get('/jornadas'),
+                api.get(`/attendance?start=${startDateStr}&end=${endDateStr}`)
             ]);
 
             setJornadas(jornadaRes.data);
@@ -163,6 +180,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
             }));
 
             setShifts(normalizedShifts);
+            setAttendances(attRes.data);
             setNews(newsRes.data);
 
             // Extract the common observation/comment for this week
@@ -184,6 +202,65 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
         }
         return d;
     }, [currentWeekStart]);
+
+    const filteredEmployees = useMemo(() => {
+        if (!selectedProfile) return employees;
+        return employees.filter(e => e.profileId === selectedProfile);
+    }, [employees, selectedProfile]);
+
+    const handleSelectEmployee = (id) => {
+        setSelectedEmployees(prev => 
+            prev.includes(id) ? prev.filter(eid => eid !== id) : [...prev, id]
+        );
+    };
+
+    const handleSelectAll = () => {
+        if (selectedEmployees.length === filteredEmployees.length && filteredEmployees.length > 0) setSelectedEmployees([]);
+        else setSelectedEmployees(filteredEmployees.map(e => e.id));
+    };
+
+    const handleBulkApply = () => {
+        const newShifts = [...shifts];
+        const { startTime: bStart, endTime: bEnd, days: activeDays } = bulkData;
+
+        selectedEmployees.forEach(empId => {
+            days.forEach((day, index) => {
+                if (activeDays[index]) {
+                    const start = new Date(day);
+                    const [sh, sm] = bStart.split(':');
+                    start.setHours(parseInt(sh), parseInt(sm), 0);
+
+                    const end = new Date(day);
+                    const [eh, em] = bEnd.split(':');
+                    end.setHours(parseInt(eh), parseInt(em), 0);
+                    if (end < start) end.setDate(end.getDate() + 1);
+
+                    const newShift = {
+                        employeeId: empId,
+                        startTime: start.toISOString(),
+                        endTime: end.toISOString(),
+                        status: 0,
+                        isDescanso: false,
+                        isFuera: false
+                    };
+
+                    // Check for overlap to avoid exact duplicates
+                    const isOverlap = newShifts.some(s => 
+                        s.employeeId === empId && 
+                        s.startTime === newShift.startTime && 
+                        s.endTime === newShift.endTime
+                    );
+                    
+                    if (!isOverlap) newShifts.push(newShift);
+                }
+            });
+        });
+
+        setShifts(newShifts);
+        setShowBulkModal(false);
+        setSelectedEmployees([]);
+        showToast("Turnos pre-cargados correctamente");
+    };
 
     const handleDragStart = (e, source, data) => {
         e.dataTransfer.setData("source", source);
@@ -234,9 +311,13 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                 };
 
                 const newShifts = [...shifts];
-                const existingIdx = newShifts.findIndex(s => s.employeeId === targetEmployeeId && new Date(s.startTime).toDateString() === targetDate.toDateString());
+                // Check if there is already a shift of the SAME TYPE or if we should just add it
+                // For Descanso/Fuera, usually one per day. 
+                const existingIdx = newShifts.findIndex(s => s.employeeId === targetEmployeeId && new Date(s.startTime).toDateString() === targetDate.toDateString() && (s.isDescanso || s.isFuera));
+                
                 if (existingIdx >= 0) newShifts[existingIdx] = newShift;
                 else newShifts.push(newShift);
+                
                 setShifts(newShifts);
                 showToast(`${payload.type} asignado`);
             } else {
@@ -265,11 +346,14 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
             };
 
             const newShifts = [...shifts];
-            const existingIdx = newShifts.findIndex(s => s.employeeId === targetEmployeeId && new Date(s.startTime).toDateString() === targetDate.toDateString());
-            if (existingIdx >= 0) newShifts[existingIdx] = newShift;
-            else newShifts.push(newShift);
-            setShifts(newShifts);
-            showToast("Turno copiado");
+            // Add as a new shift instead of replacing, unless it exactly overlaps
+            const isOverlap = newShifts.some(s => s.employeeId === targetEmployeeId && s.startTime === newShift.startTime && s.endTime === newShift.endTime);
+            
+            if (!isOverlap) {
+                newShifts.push(newShift);
+                setShifts(newShifts);
+                showToast("Turno copiado");
+            }
         }
     };
 
@@ -599,15 +683,25 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                     <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-12 p-8 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-indigo-500/20 shadow-2xl shadow-indigo-100/20 dark:shadow-none transition-all duration-300"
                          style={{ borderRadius: '48px' }}>
                         
-                        {/* LEFT: Sede Selector (Equitable 1/3) */}
-                        <div className="flex-1 flex justify-start">
-                            <div className="flex items-center h-[64px] w-full max-w-[450px]" data-v12-tooltip="Cambiar Sede de Operación">
+                        {/* LEFT: Sede & Profile Selector (Equitable 1/3) */}
+                        <div className="flex-1 flex flex-col md:flex-row justify-start gap-4">
+                            <div className="flex items-center h-[64px] w-full max-w-[300px]" data-v12-tooltip="Filtrar por Sede">
                                 <SearchableSelect
                                     options={stores}
                                     value={selectedStore}
                                     onChange={(val) => setSelectedStore(val)}
                                     placeholder="SELECCIONAR SEDE..."
                                     icon={Store}
+                                    variant="minimal"
+                                />
+                            </div>
+                            <div className="flex items-center h-[64px] w-full max-w-[250px]" data-v12-tooltip="Filtrar por Puesto/Cargo">
+                                <SearchableSelect
+                                    options={profiles.map(p => ({ id: p.id, name: p.name }))}
+                                    value={selectedProfile}
+                                    onChange={(val) => setSelectedProfile(val)}
+                                    placeholder="TODOS LOS PUESTOS..."
+                                    icon={ShieldCheck}
                                     variant="minimal"
                                 />
                             </div>
@@ -631,7 +725,14 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                         {/* RIGHT: Stats & Help (Equitable 1/3) */}
                         <div className="flex-1 flex items-center justify-end gap-6">
                             <div className="flex items-center justify-end gap-4 h-[64px]">
-                                {/* [NEW] Predictive Smart Sync Placeholder */}
+                                <button onClick={() => setShowBulkModal(true)}
+                                        disabled={selectedEmployees.length === 0}
+                                        className={`flex items-center gap-2 px-5 h-[48px] bg-indigo-500 hover:bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-200/50 dark:shadow-none transition-all active:scale-95 group ${selectedEmployees.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        data-v12-tooltip="Programar turno masivo para seleccionados">
+                                    <Clock size={18} className="group-hover:rotate-12 transition-transform" />
+                                    <span className="text-[11px] font-[1000] uppercase tracking-wider">Acciones Masivas ({selectedEmployees.length})</span>
+                                </button>
+
                                 <button className="flex items-center gap-2 px-5 h-[48px] bg-indigo-500 hover:bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-200/50 dark:shadow-none transition-all active:scale-95 group"
                                         data-v12-tooltip="Cargar Turnos Proyectados (Basado en Histórico)">
                                     <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
@@ -745,10 +846,22 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                     <tr className="bg-slate-50 dark:bg-slate-800 border-b-2 dark:border-indigo-500/20">
                                         <th className="p-8 text-left sticky left-0 z-10 border-r dark:border-slate-800" 
                                             style={{ backgroundColor: isDarkMode ? '#060914' : '#f8fafc', width: '320px' }}>
-                                            <span className="text-[11px] font-[1000] uppercase tracking-[0.2em]"
-                                                  style={{ color: isDarkMode ? '#cbd5e1' : '#64748b' }}>
-                                                Colaborador (Cédula) / Jornada
-                                            </span>
+                                            <div className="flex items-center gap-4">
+                                                <button 
+                                                    onClick={handleSelectAll}
+                                                    className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors"
+                                                >
+                                                    {selectedEmployees.length === filteredEmployees.length && filteredEmployees.length > 0 ? (
+                                                        <CheckSquare size={18} className="text-indigo-500" />
+                                                    ) : (
+                                                        <Square size={18} className="text-slate-400" />
+                                                    )}
+                                                </button>
+                                                <span className="text-[11px] font-[1000] uppercase tracking-[0.2em]"
+                                                      style={{ color: isDarkMode ? '#cbd5e1' : '#64748b' }}>
+                                                    Colaborador / Jornada
+                                                </span>
+                                            </div>
                                         </th>
                                         {days.map((day, i) => (
                                             <th key={i} className="p-4 text-center border-r dark:border-slate-700 min-w-[140px]">
@@ -760,7 +873,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {employees.map((emp) => {
+                                    {filteredEmployees.map((emp) => {
                                         const total = shifts.filter(s => s.employeeId === emp.id).reduce((acc, s) => {
                                             if (s.isDescanso) return acc;
                                             const start = new Date(s.startTime);
@@ -769,12 +882,23 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                             if (diff < 0) diff += 24; // Corrección cruce medianoche
                                             return acc + diff;
                                         }, 0);
+                                        const isSelected = selectedEmployees.includes(emp.id);
                                         return (
                                             <tr key={emp.id} className="border-b dark:border-slate-800 transition-colors group">
                                                 <td className="sticky left-0 z-10 p-6 pl-10 border-r dark:border-slate-800 shadow-[10px_0_20px_rgba(0,0,0,0.03)]"
                                                     style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff' }}>
                                                     <div className="flex items-center gap-4">
-                                                        <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center font-black text-white text-sm shadow-lg shadow-indigo-100 dark:shadow-none translate-y-[-2px]">
+                                                        <button 
+                                                            onClick={() => handleSelectEmployee(emp.id)}
+                                                            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors"
+                                                        >
+                                                            {isSelected ? (
+                                                                <CheckSquare size={18} className="text-indigo-500" />
+                                                            ) : (
+                                                                <Square size={18} className="text-slate-400" />
+                                                            )}
+                                                        </button>
+                                                        <div className={`w-12 h-12 ${isSelected ? 'bg-indigo-600' : 'bg-slate-400'} rounded-2xl flex items-center justify-center font-black text-white text-sm shadow-lg shadow-indigo-100 dark:shadow-none translate-y-[-2px] transition-colors`}>
                                                             {emp.firstName[0]}{emp.lastName[0]}
                                                         </div>
                                                         <div className="flex flex-col">
@@ -791,67 +915,89 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                     </div>
                                                 </td>
                                                 {days.map((day, di) => {
-                                                    const shift = shifts.find(s => s.employeeId === emp.id && new Date(s.startTime).toDateString() === day.toDateString());
+                                                    const dayShifts = shifts.filter(s => s.employeeId === emp.id && new Date(s.startTime).toDateString() === day.toDateString());
                                                     const nov = getNovedad(emp.id, day);
                                                     return (
                                                         <td
                                                             key={di}
                                                             onDragOver={e => e.preventDefault()}
                                                             onDrop={e => handleDropOnGrid(e, emp.id, day)}
-                                                            onClick={() => {
-                                                                if (!nov) {
-                                                                    if (shift) {
-                                                                        setPendingEvent({ employeeId: emp.id, date: day, type: shift.isDescanso ? 'Descanso' : shift.isFuera ? 'Turno Fuera' : 'Turno' });
-                                                                        if (!shift.isDescanso && !shift.isFuera) {
-                                                                            const sd = new Date(shift.startTime);
-                                                                            const ed = new Date(shift.endTime);
-                                                                            setStartTime(`${String(sd.getHours()).padStart(2, '0')}:${String(sd.getMinutes()).padStart(2, '0')}`);
-                                                                            setEndTime(`${String(ed.getHours()).padStart(2, '0')}:${String(ed.getMinutes()).padStart(2, '0')}`);
-                                                                            setShowTimeModal(true);
-                                                                        }
-                                                                    } else {
-                                                                        setPendingEvent({ employeeId: emp.id, date: day, type: 'Turno' });
-                                                                        setStartTime('08:00');
-                                                                        setEndTime('17:00');
-                                                                        setShowTimeModal(true);
-                                                                    }
-                                                                } else {
-                                                                    setSelectedNov({ ...nov, empName: `${emp.firstName} ${emp.lastName}` });
-                                                                    setShowNovModal(true);
-                                                                }
-                                                            }}
                                                             className="p-1 border-r dark:border-slate-800"
                                                         >
-                                                            {nov ? (
-                                                                <div className="rounded-2xl h-24 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition-all group relative border-2 border-blue-200 bg-blue-50 dark:bg-blue-900/10 dark:border-blue-800">
-                                                                    <span className="text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-1 leading-none">NOVEDAD</span>
-                                                                    <div className="h-6 w-6 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center text-blue-500">
-                                                                        <Info size={14} strokeWidth={3} />
+                                                            <div className="flex flex-col gap-1 min-h-[96px] justify-center">
+                                                                {nov && (
+                                                                    <div onClick={() => { setSelectedNov({ ...nov, empName: `${emp.firstName} ${emp.lastName}` }); setShowNovModal(true); }}
+                                                                         className="rounded-2xl h-12 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition-all border-2 border-blue-200 bg-blue-50 dark:bg-blue-900/10 dark:border-blue-800 shrink-0">
+                                                                        <span className="text-[8px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-1 leading-none">NOVEDAD</span>
+                                                                        <div className="h-4 w-4 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center text-blue-500">
+                                                                            <Info size={10} strokeWidth={3} />
+                                                                        </div>
                                                                     </div>
-                                                                </div>
-                                                            ) : shift ? (
-                                                                <div
-                                                                    draggable
-                                                                    onDragStart={e => handleDragStart(e, 'GRID', { employeeId: emp.id, date: day })}
-                                                                    className={`rounded-2xl p-2 h-24 flex flex-col items-center justify-center text-white shadow-lg shadow-black/10 transition-all cursor-grab active:cursor-grabbing hover:scale-[1.02] ${shift.isDescanso ? 'grid-event-descanso' :
+                                                                )}
+                                                                {dayShifts.map((shift, si) => (
+                                                                    <div key={si} 
+                                                                         draggable 
+                                                                         onDragStart={e => handleDragStart(e, 'GRID', { employeeId: emp.id, date: day, shiftId: shift.id })}
+                                                                         onClick={() => {
+                                                                            setPendingEvent({ employeeId: emp.id, date: day, type: shift.isDescanso ? 'Descanso' : shift.isFuera ? 'Turno Fuera' : 'Turno', existingShift: shift });
+                                                                            if (!shift.isDescanso && !shift.isFuera) {
+                                                                                const sd = new Date(shift.startTime);
+                                                                                const ed = new Date(shift.endTime);
+                                                                                setStartTime(`${String(sd.getHours()).padStart(2, '0')}:${String(sd.getMinutes()).padStart(2, '0')}`);
+                                                                                setEndTime(`${String(ed.getHours()).padStart(2, '0')}:${String(ed.getMinutes()).padStart(2, '0')}`);
+                                                                                setShowTimeModal(true);
+                                                                            }
+                                                                         }}
+                                                                         className={`rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-lg transition-all cursor-grab active:cursor-grabbing hover:scale-[1.05] relative ${
+                                                                            shift.isDescanso ? 'grid-event-descanso' :
                                                                             shift.isFuera ? 'grid-event-fuera' :
-                                                                                'grid-event-turno'
-                                                                        }`}
-                                                                >
-                                                                    <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-80 mb-1">
-                                                                        {shift.isDescanso ? 'DESC' : shift.isFuera ? 'FUERA' : 'TURNO'}
-                                                                    </span>
-                                                                    <span className="text-[10px] font-black tracking-tighter whitespace-nowrap">
-                                                                        {shift.isDescanso ? '00:00 - 00:00' : `${new Date(shift.startTime).getHours().toString().padStart(2, '0')}:${new Date(shift.startTime).getMinutes().toString().padStart(2, '0')} - ${new Date(shift.endTime).getHours().toString().padStart(2, '0')}:${new Date(shift.endTime).getMinutes().toString().padStart(2, '0')}`}
-                                                                    </span>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="h-24 w-full group/cell flex items-center justify-center border-2 border-slate-100 dark:border-slate-800/50 rounded-2xl transition-all hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                                                                    <div className="opacity-0 group-hover/cell:opacity-100 h-8 w-8 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-400 transition-all">
-                                                                        <Plus size={16} />
+                                                                            'grid-event-turno'
+                                                                         }`}
+                                                                    >
+                                                                        <span className="text-[7px] font-black uppercase tracking-[0.1em] opacity-80 leading-none">
+                                                                            {shift.isDescanso ? 'DESC' : shift.isFuera ? 'FUERA' : 'TURNO'}
+                                                                        </span>
+                                                                        <span className="text-[8px] font-[1000] tracking-tighter whitespace-nowrap mt-0.5">
+                                                                            {shift.isDescanso ? 'REST' : `${new Date(shift.startTime).getHours().toString().padStart(2, '0')}:${new Date(shift.startTime).getMinutes().toString().padStart(2, '0')}-${new Date(shift.endTime).getHours().toString().padStart(2, '0')}:${new Date(shift.endTime).getMinutes().toString().padStart(2, '0')}`}
+                                                                        </span>
+                                                                        
+                                                                        {(() => {
+                                                                            // Match attendance by employee identification and shift date/time
+                                                                            const att = attendances.find(a => 
+                                                                                a.employeeId === emp.documento && 
+                                                                                new Date(a.clockIn).toDateString() === day.toDateString() &&
+                                                                                (!shift.id || a.shiftId === shift.id || (Math.abs(new Date(a.clockIn) - new Date(shift.startTime)) < 4 * 60 * 60 * 1000))
+                                                                            );
+                                                                            if (!att) return null;
+                                                                            const colors = att.status === 0 ? 'bg-emerald-400' : att.status === 1 ? 'bg-amber-400' : 'bg-rose-400';
+                                                                            return (
+                                                                                <div className={`absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full border border-white dark:border-slate-800 ${colors} flex items-center justify-center shadow-md`} 
+                                                                                     title={`${att.statusText}: ${att.statusObservation || ''}`}>
+                                                                                    {att.status === 0 ? <CheckCircle size={7} /> : <AlertCircle size={7} />}
+                                                                                </div>
+                                                                            );
+                                                                        })()}
                                                                     </div>
-                                                                </div>
-                                                            )}
+                                                                ))}
+                                                                {!nov && dayShifts.length === 0 && (
+                                                                    <div onClick={() => { 
+                                                                            setPendingEvent({ employeeId: emp.id, date: day, type: 'Turno' }); 
+                                                                            setStartTime('08:00'); setEndTime('17:00'); setShowTimeModal(true); 
+                                                                         }}
+                                                                         className="h-20 w-full group/cell flex items-center justify-center border-2 border-slate-100 dark:border-slate-800/50 rounded-2xl transition-all hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                                                                        <Plus size={16} className="opacity-0 group-hover/cell:opacity-100 text-slate-400 transition-opacity" />
+                                                                    </div>
+                                                                )}
+                                                                {!nov && dayShifts.length > 0 && dayShifts.length < 3 && (
+                                                                    <div onClick={() => { 
+                                                                            setPendingEvent({ employeeId: emp.id, date: day, type: 'Turno' }); 
+                                                                            setStartTime('14:00'); setEndTime('22:00'); setShowTimeModal(true); 
+                                                                         }}
+                                                                         className="h-6 w-full flex items-center justify-center border border-dashed border-slate-200 dark:border-slate-700 rounded-lg hover:border-indigo-400 transition-colors group/add cursor-pointer">
+                                                                        <Plus size={10} className="text-slate-300 group-hover/add:text-indigo-400" />
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </td>
                                                     );
                                                 })}
@@ -970,6 +1116,65 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                         <button onClick={confirmTimeModal} style={{ width: '100%', padding: '20px', borderRadius: '20px', border: 'none', background: '#4f46e5', color: 'white', fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 12px 24px rgba(79, 70, 229, 0.3)' }}>Asignar Turno</button>
                                         <button onClick={() => setShowTimeModal(false)} style={{ width: '100%', padding: '15px', borderRadius: '15px', border: 'none', background: 'transparent', color: '#94a3b8', fontWeight: '800', fontSize: '9px', textTransform: 'uppercase', cursor: 'pointer' }}>Cerrar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Acciones Masivas Elite Modal */}
+                    {showBulkModal && (
+                        <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 15, 0.9)', backdropFilter: 'blur(30px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                            <div style={{ background: isDarkMode ? '#1e293b' : '#ffffff', width: '100%', maxWidth: '500px', borderRadius: '48px', overflow: 'hidden', border: isDarkMode ? '1px solid #334155' : 'none', boxShadow: '0 50px 100px rgba(0,0,0,0.5)', animation: 'modalSlideUp 0.3s' }}>
+                                <div style={{ padding: '40px', textAlign: 'center' }}>
+                                    <div style={{ width: '64px', height: '64px', background: 'rgba(79, 70, 229, 0.1)', color: '#4f46e5', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 25px' }}>
+                                        <UsersIcon size={32} />
+                                    </div>
+                                    <h2 style={{ fontSize: '1.4rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', letterSpacing: '-0.02em', margin: 0 }}>Acciones masivas</h2>
+                                    <p style={{ color: '#94a3b8', fontSize: '10px', fontWeight: '950', textTransform: 'uppercase', mt: '8px', letterSpacing: '0.1em' }}>Programar {selectedEmployees.length} colaboradores</p>
+                                </div>
+                                
+                                <div style={{ padding: '0 40px 40px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '25px' }}>
+                                        <div style={{ background: isDarkMode ? '#0f172a' : '#f8fafc', padding: '15px', borderRadius: '20px', border: `1px solid ${activeColors.border}` }}>
+                                            <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>E</label>
+                                            <input type="time" value={bulkData.startTime} onChange={e => setBulkData({...bulkData, startTime: e.target.value})} style={{ width: '100%', background: 'transparent', border: 'none', textAlign: 'center', fontSize: '1.4rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', outline: 'none' }} />
+                                        </div>
+                                        <div style={{ background: isDarkMode ? '#0f172a' : '#f8fafc', padding: '15px', borderRadius: '20px', border: `1px solid ${activeColors.border}` }}>
+                                            <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>S</label>
+                                            <input type="time" value={bulkData.endTime} onChange={e => setBulkData({...bulkData, endTime: e.target.value})} style={{ width: '100%', background: 'transparent', border: 'none', textAlign: 'center', fontSize: '1.4rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', outline: 'none' }} />
+                                        </div>
+                                    </div>
+
+                                    <div style={{ marginBottom: '30px' }}>
+                                        <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '15px', letterSpacing: '0.1em', textAlign: 'center' }}>Aplicar a los días:</label>
+                                        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                                            {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
+                                                <button
+                                                    key={i}
+                                                    onClick={() => {
+                                                        const newDays = [...bulkData.days];
+                                                        newDays[i] = !newDays[i];
+                                                        setBulkData({...bulkData, days: newDays});
+                                                    }}
+                                                    style={{ width: '36px', height: '36px', borderRadius: '12px', border: 'none', background: bulkData.days[i] ? '#4f46e5' : (isDarkMode ? '#334155' : '#f1f5f9'), color: bulkData.days[i] ? 'white' : '#94a3b8', fontWeight: '950', fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s' }}
+                                                >
+                                                    {d}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        <button onClick={handleBulkApply} style={{ width: '100%', padding: '20px', borderRadius: '20px', border: 'none', background: '#4f46e5', color: 'white', fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 12px 24px rgba(79, 70, 229, 0.3)' }}>Pre-cargar Turnos</button>
+                                        <button onClick={() => {
+                                            const newShifts = [...shifts].filter(s => !selectedEmployees.includes(s.employeeId));
+                                            setShifts(newShifts);
+                                            setShowBulkModal(false);
+                                            setSelectedEmployees([]);
+                                            showToast("Turnos limpiados para seleccionados");
+                                        }} style={{ width: '100%', padding: '15px', borderRadius: '20px', border: `1px solid ${activeColors.danger}`, background: 'transparent', color: activeColors.danger, fontWeight: '800', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer' }}>Limpiar Semana</button>
+                                        <button onClick={() => setShowBulkModal(false)} style={{ width: '100%', padding: '15px', borderRadius: '15px', border: 'none', background: 'transparent', color: '#94a3b8', fontWeight: '800', fontSize: '9px', textTransform: 'uppercase', cursor: 'pointer' }}>Cerrar</button>
                                     </div>
                                 </div>
                             </div>

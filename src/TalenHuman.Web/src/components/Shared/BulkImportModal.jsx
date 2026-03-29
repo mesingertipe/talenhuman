@@ -93,6 +93,7 @@ const BulkImportModal = ({ isOpen, onClose, type, onComplete }) => {
       case 'stores': return 'Importar Tiendas';
       case 'profiles': return 'Importar Cargos';
       case 'employees': return 'Importar Empleados';
+      case 'users': return 'Importar Usuarios';
       default: return 'Carga Masiva';
     }
   };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit, X, Shield, User as UserIcon, Mail, Lock, Building2, CheckCircle, AlertCircle, ToggleLeft, ToggleRight, MapPin, Download } from 'lucide-react';
+import { Plus, Trash2, Edit, X, Shield, User as UserIcon, Mail, Lock, Building2, CheckCircle, AlertCircle, ToggleLeft, ToggleRight, MapPin, Download, Upload } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import api from '../../services/api';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
@@ -9,6 +9,7 @@ import Pagination from '../../components/Shared/Pagination';
 import { Search } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import HelpIcon from '../../components/Shared/HelpIcon';
+import BulkImportModal from '../../components/Shared/BulkImportModal';
 
 const Users = () => {
   const { isDarkMode } = useTheme();
@@ -34,6 +35,7 @@ const Users = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [syncLoading, setSyncLoading] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -239,6 +241,14 @@ const Users = () => {
                 {syncLoading ? <div className="loader loader-indigo"></div> : <CheckCircle size={18} />} Sincronizar
               </button>
             )}
+            <button 
+              onClick={() => setShowImport(true)}
+              className="btn-premium btn-premium-secondary"
+              style={{ borderRadius: '20px', height: '56px', padding: '0 20px', border: '1px solid #e2e8f0', background: 'white', color: '#64748b' }}
+              title="Importar Usuarios"
+            >
+              <Upload size={18} />
+            </button>
             <button 
               onClick={() => {
                 setCurrentUser(null);
@@ -606,6 +616,13 @@ const Users = () => {
           </div>
         </div>
       )}
+
+      <BulkImportModal 
+        isOpen={showImport} 
+        onClose={() => setShowImport(false)} 
+        type="users" 
+        onComplete={fetchData} 
+      />
     </div>
   );
 };

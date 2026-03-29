@@ -38,6 +38,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
       children: [
         { icon: <Calendar size={20} />, label: 'Turnos' },
         { icon: <Clock size={20} />, label: 'Marcaciones' },
+        { icon: <Activity size={20} />, label: 'Monitoreo Asistencia', roles: ['SuperAdmin', 'Admin'] },
         { icon: <FileText size={20} />, label: 'Novedades' },
       ]
     },
@@ -180,7 +181,8 @@ const getPageInfo = (page) => {
     case 'Novedades': return { title: 'Bandeja de Novedades', subtitle: 'Trazabilidad y auditoría de solicitudes' };
     case 'Configuración novedades': return { title: 'Configuración novedades', subtitle: 'Configuración dinámica de tipos de novedad' };
     case 'Turnos': return { title: 'Turnos', subtitle: 'Programación inteligente y cobertura' };
-    case 'Marcaciones': return { title: 'Marcaciones', subtitle: 'Trazabilidad de ingresos y salidas' };
+    case 'Marcaciones': return { title: 'Asistencia', subtitle: 'Trazabilidad de ingresos y salidas' };
+    case 'Monitoreo Asistencia': return { title: 'Monitoreo Asistencia', subtitle: 'Gestión de procesos y consolidación de datos' };
     case 'Empresas': return { title: 'Empresas', subtitle: 'Configuración de inquilinos corporativos' };
     case 'Configuración Sistema': return { title: 'Parámetros del Sistema', subtitle: 'Configuración de infraestructura y servicios core' };
     case 'Diseñador de Plantillas': return { title: 'Catálogo de Plantillas', subtitle: 'Diseño de novedades globales para el ecosistema' };

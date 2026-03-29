@@ -66,6 +66,14 @@ public enum ShiftStatus
     Missed
 }
 
+public enum AttendanceStatus
+{
+    Correcto,        // Within 15m tolerance
+    Desfasado,       // Completed but outside tolerance
+    MarcacionErrada, // Missing one of the pair (In/Out)
+    SinMarcacion     // No records found for shift
+}
+
 public class Attendance : BaseEntity, IMultitenant
 {
     public DateTime ClockIn { get; set; }
@@ -82,6 +90,12 @@ public class Attendance : BaseEntity, IMultitenant
     
     public Guid CompanyId { get; set; }
     public Company Company { get; set; } = null!;
+
+    public Guid? ShiftId { get; set; }
+    public Shift? Shift { get; set; }
+
+    public AttendanceStatus Status { get; set; }
+    public string? StatusObservation { get; set; }
 }
 
 public class Absence : BaseEntity, IMultitenant

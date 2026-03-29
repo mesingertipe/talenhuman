@@ -18,17 +18,20 @@ public class ImportService : IImportService
     private readonly ITenantProvider _tenantProvider;
     private readonly ITenantTimeProvider _timeProvider;
     private readonly IMediator _mediator;
+    private readonly IIdentityService _identityService;
 
     public ImportService(
         IApplicationDbContext context, 
         ITenantProvider tenantProvider,
         ITenantTimeProvider timeProvider,
-        IMediator mediator)
+        IMediator mediator,
+        IIdentityService identityService)
     {
         _context = context;
         _tenantProvider = tenantProvider;
         _timeProvider = timeProvider;
         _mediator = mediator;
+        _identityService = identityService;
     }
     public async Task<byte[]> GenerateTemplateAsync(string type)
     {
@@ -159,7 +162,7 @@ public class ImportService : IImportService
             // Headers
             ws.Cell(1, 1).Value = "Nombre";
             ws.Cell(1, 2).Value = "Apellidos";
-            ws.Cell(1, 3).Value = "Cédula";
+            ws.Cell(1, 3).Value = "Número";
             ws.Cell(1, 4).Value = "Sede Asignada";
             ws.Cell(1, 5).Value = "Perfil de Cargo";
             ws.Cell(1, 6).Value = "Fecha de Nacimiento";
@@ -191,7 +194,7 @@ public class ImportService : IImportService
 
             ws.Columns().AdjustToContents();
 
-            // --- Reference sheets (visible so Excel can resolve cross-sheet validation) ---
+            // --- Reference sheets ---
             var wsStores = workbook.Worksheets.Add("Tiendas_Referencia");
             wsStores.Cell(1, 1).Value = "Nombre de la Tienda";
             wsStores.Cell(1, 1).Style.Font.Bold = true;
@@ -206,7 +209,6 @@ public class ImportService : IImportService
             for (int i = 0; i < profiles.Count; i++) wsProfiles.Cell(i + 2, 1).Value = profiles[i].Name;
             wsProfiles.Column(1).Width = 35;
 
-            // --- Excel data-validation dropdowns using formula strings (cross-sheet compatible) ---
             if (stores.Count > 0)
             {
                 var storeValidation = ws.Range("D2:D500").CreateDataValidation();
@@ -219,20 +221,50 @@ public class ImportService : IImportService
                 profileValidation.List($"Cargos_Referencia!$A$2:$A${profiles.Count + 1}", true);
             }
 
-            // Active dropdown (inline list — col I)
             var activeValidation = ws.Range("I2:I500").CreateDataValidation();
             activeValidation.List($"\"SI,NO\"", true);
 
             var wsHelp = workbook.Worksheets.Add("Instrucciones");
             wsHelp.Cell(1, 1).Value = "Instrucciones de diligenciamiento";
             wsHelp.Cell(1, 1).Style.Font.Bold = true;
-            wsHelp.Cell(2, 1).Value = "- Cédula: número único de identificación. Será el usuario y la contraseña inicial.";
-            wsHelp.Cell(3, 1).Value = "- Sede Asignada: seleccione del listón desplegable (solo opciones válidas).";
-            ws.Cell(4, 1).Value = "- Perfil de Cargo: seleccione del listón desplegable.";
-            ws.Cell(5, 1).Value = "- Fecha de Nacimiento: formato YYYY-MM-DD (Requerido para recuperación de clave).";
-            ws.Cell(6, 1).Value = "- Fecha de Ingreso: formato YYYY-MM-DD (Ej: 2026-03-23).";
-            ws.Cell(7, 1).Value = "- Activo: SI o NO.";
-            ws.Cell(8, 1).Value = "- Fecha de Baja: formato YYYY-MM-DD (Opcional, solo si el estado es NO).";
+            wsHelp.Cell(2, 1).Value = "- Número: número único de identificación (Cédula).";
+            wsHelp.Cell(3, 1).Value = "- Sede Asignada: seleccione del listón desplegable.";
+            wsHelp.Cell(4, 1).Value = "- Perfil de Cargo: seleccione del listón desplegable.";
+            wsHelp.Cell(5, 1).Value = "- Fecha de Nacimiento: formato YYYY-MM-DD.";
+            wsHelp.Cell(6, 1).Value = "- Fecha de Ingreso: formato YYYY-MM-DD.";
+            wsHelp.Cell(7, 1).Value = "- Activo: SI o NO.";
+            wsHelp.Columns().AdjustToContents();
+        }
+        else if (type.ToLower() == "users")
+        {
+            var ws = workbook.Worksheets.Add("Usuarios");
+            ws.Cell(1, 1).Value = "Nombre Completo";
+            ws.Cell(1, 2).Value = "Email";
+            ws.Cell(1, 3).Value = "Número (Cédula)";
+            ws.Cell(1, 4).Value = "Rol";
+            ws.Cell(1, 5).Value = "Sede Principal";
+
+            var headerRange = ws.Range("A1:E1");
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#4f46e5");
+            headerRange.Style.Font.FontColor = XLColor.White;
+
+            ws.Cell(2, 1).Value = "Administrador Ejemplo";
+            ws.Cell(2, 2).Value = "admin@ejemplo.com";
+            ws.Cell(2, 3).Value = "12345678";
+            ws.Cell(2, 4).Value = "Admin";
+
+            // Roles dropdown
+            var roleValidation = ws.Range("D2:D500").CreateDataValidation();
+            roleValidation.List($"\"Admin,Gerente,Distrital,Supervisor\"", true);
+
+            ws.Columns().AdjustToContents();
+
+            var wsHelp = workbook.Worksheets.Add("Instrucciones");
+            wsHelp.Cell(1, 1).Value = "Instrucciones";
+            wsHelp.Cell(1, 1).Style.Font.Bold = true;
+            wsHelp.Cell(2, 1).Value = "- Rol: Admin, Gerente, Distrital o Supervisor.";
+            wsHelp.Cell(3, 1).Value = "- Número: Se usará como contraseña inicial.";
             wsHelp.Columns().AdjustToContents();
         }
 
@@ -295,9 +327,9 @@ public class ImportService : IImportService
             }
             else if (type.ToLower() == "employees")
             {
-                var cedula = importRow.Data.GetValueOrDefault("Cédula");
+                var cedula = importRow.Data.GetValueOrDefault("Número");
                 if (string.IsNullOrEmpty(cedula))
-                    importRow.Errors.Add(new ImportFieldError { Field = "Cédula", Message = "La cédula es requerida" });
+                    importRow.Errors.Add(new ImportFieldError { Field = "Número", Message = "El número (cédula) es requerido" });
 
                 var nombre = importRow.Data.GetValueOrDefault("Nombre");
                 if (string.IsNullOrEmpty(nombre))
@@ -316,6 +348,20 @@ public class ImportService : IImportService
                 var profile = await _context.Profiles.AnyAsync(p => p.Name == cargoNombre);
                 if (!profile)
                     importRow.Errors.Add(new ImportFieldError { Field = "Perfil de Cargo", Message = $"El cargo '{cargoNombre}' no existe" });
+            }
+            else if (type.ToLower() == "users")
+            {
+                var nombre = importRow.Data.GetValueOrDefault("Nombre Completo");
+                if (string.IsNullOrEmpty(nombre))
+                    importRow.Errors.Add(new ImportFieldError { Field = "Nombre Completo", Message = "Nombre requerido" });
+
+                var email = importRow.Data.GetValueOrDefault("Email");
+                if (string.IsNullOrEmpty(email))
+                    importRow.Errors.Add(new ImportFieldError { Field = "Email", Message = "Email requerido" });
+
+                var numero = importRow.Data.GetValueOrDefault("Número (Cédula)");
+                if (string.IsNullOrEmpty(numero))
+                    importRow.Errors.Add(new ImportFieldError { Field = "Número", Message = "Número requerido" });
             }
 
             preview.Rows.Add(importRow);
@@ -436,7 +482,7 @@ public class ImportService : IImportService
 
                     DateTime? birthDate = DateTime.TryParse(birthDateStr, out var parsedBirth) ? parsedBirth : null;
                     DateTime dateOfEntry = DateTime.TryParse(dateStr, out var parsedDate) ? parsedDate : _timeProvider.Now;
-                    string identificationNumber = row.Data["Cédula"];
+                    string identificationNumber = row.Data["Número"];
                     bool isActive = !activeStr.Equals("NO", StringComparison.OrdinalIgnoreCase);
                     DateTime? dateOfTermination = DateTime.TryParse(row.Data.GetValueOrDefault("Fecha de Baja"), out var parsedTerm) ? parsedTerm : null;
 
@@ -464,7 +510,6 @@ public class ImportService : IImportService
                     }
                     else 
                     {
-                        // Update existing employee (Upsert logic)
                         employee.FirstName = row.Data["Nombre"];
                         employee.LastName = row.Data["Apellidos"];
                         employee.BirthDate = birthDate;
@@ -492,6 +537,67 @@ public class ImportService : IImportService
                     result.Messages.Add($"Fila {row.RowNumber}: {ex.Message}");
                 }
             }
+        }
+        else if (type.ToLower() == "users")
+        {
+            foreach (var row in rows)
+            {
+                try
+                {
+                    var email = row.Data["Email"];
+                    var nombre = row.Data["Nombre Completo"];
+                    var numero = row.Data["Número (Cédula)"];
+                    var rol = row.Data.GetValueOrDefault("Rol", "Gerente");
+                    var sedeNombre = row.Data.GetValueOrDefault("Sede Principal");
+
+                    if (!await _context.Users.AnyAsync(u => u.Email == email))
+                    {
+                        var (succeeded, userId) = await _identityService.CreateUserAsync(
+                            email, 
+                            email, 
+                            numero, // Initial password is the Identification Number
+                            nombre, 
+                            companyId, 
+                            rol);
+
+                        if (succeeded)
+                        {
+                            // Assignment logic (District/Store)
+                            if (rol == "Distrital")
+                            {
+                                // If Distrital and no specific district in excel, we might need a district column.
+                                // For now, we'll try to find a district by name if we add the column, 
+                                // or the user can do it manually in the UI.
+                            }
+                            else if (!string.IsNullOrEmpty(sedeNombre))
+                            {
+                                var store = await _context.Stores.FirstOrDefaultAsync(s => s.Name == sedeNombre);
+                                if (store != null)
+                                {
+                                    _context.SupervisorStores.Add(new SupervisorStore
+                                    {
+                                        UserId = userId,
+                                        StoreId = store.Id,
+                                        CompanyId = companyId
+                                    });
+                                }
+                            }
+                            result.SuccessCount++;
+                        }
+                        else
+                        {
+                            result.ErrorCount++;
+                            result.Messages.Add($"Fila {row.RowNumber}: Error al crear usuario Identity");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    result.ErrorCount++;
+                    result.Messages.Add($"Fila {row.RowNumber}: {ex.Message}");
+                }
+            }
+            await _context.SaveChangesAsync(CancellationToken.None);
         }
         
         return result;
@@ -627,7 +733,7 @@ public class ImportService : IImportService
         {
             try
             {
-                var cedula = row["Cédula"]?.ToString()?.Trim() ?? "";
+                var cedula = row["Número"]?.ToString()?.Trim() ?? "";
                 var sedeNombre = row["Sede Asignada"]?.ToString()?.Trim();
                 var cargoNombre = row["Perfil de Cargo"]?.ToString()?.Trim();
                 var jornadaNombre = row["Jornada"]?.ToString()?.Trim();
@@ -646,7 +752,7 @@ public class ImportService : IImportService
 
                 if (store == null || profile == null)
                 {
-                    errors.Add($"Sede '{sedeNombre}' o Cargo '{cargoNombre}' no encontrados para cédula {cedula}");
+                    errors.Add($"Sede '{sedeNombre}' o Cargo '{cargoNombre}' no encontrados para número {cedula}");
                     continue;
                 }
 
