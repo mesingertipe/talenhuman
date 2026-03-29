@@ -19,6 +19,7 @@ public interface IApplicationDbContext
     DbSet<NovedadTipo> NovedadTipos { get; }
     DbSet<Novedad> Novedades { get; }
     DbSet<NovedadLog> NovedadLogs { get; }
+    DbSet<NovedadAdjunto> NovedadAdjuntos { get; }
     DbSet<SystemSetting> SystemSettings { get; }
     DbSet<ApiKey> ApiKeys { get; }
     DbSet<ExternalApiConfig> ExternalApiConfigs { get; }

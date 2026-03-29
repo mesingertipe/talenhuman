@@ -3,15 +3,19 @@ using Amazon.S3.Transfer;
 using Microsoft.AspNetCore.Http;
 using TalenHuman.Application.Common.Interfaces;
 
+using Amazon.S3.Model;
+
 namespace TalenHuman.Infrastructure.Services;
 
 public class DigitalOceanSpacesService : IFileStorageService
 {
     private readonly ISystemSettingsService _settingsService;
+    private readonly ITenantProvider _tenantProvider;
 
-    public DigitalOceanSpacesService(ISystemSettingsService settingsService)
+    public DigitalOceanSpacesService(ISystemSettingsService settingsService, ITenantProvider tenantProvider)
     {
         _settingsService = settingsService;
+        _tenantProvider = tenantProvider;
     }
 
     private async Task<AmazonS3Client> GetClientAsync()
@@ -39,7 +43,10 @@ public class DigitalOceanSpacesService : IFileStorageService
 
         var fileExtension = Path.GetExtension(file.FileName);
         var fileName = $"{Guid.NewGuid()}{fileExtension}";
-        var key = $"{folder}/{fileName}";
+        
+        // Elite V12 Security: Per-tenant and per-module folder structure
+        var tenantId = _tenantProvider.GetTenantId();
+        var key = $"{tenantId}/{folder}/{fileName}";
 
         using var stream = file.OpenReadStream();
         
@@ -48,15 +55,35 @@ public class DigitalOceanSpacesService : IFileStorageService
             InputStream = stream,
             Key = key,
             BucketName = bucketName,
-            CannedACL = S3CannedACL.PublicRead
+            CannedACL = S3CannedACL.Private // Files are private by default
         };
+
+        // Add metadata for easier identification
+        uploadRequest.Metadata.Add("x-amz-meta-original-name", file.FileName);
+        uploadRequest.Metadata.Add("x-amz-meta-tenant-id", tenantId.ToString());
 
         await fileTransferUtility.UploadAsync(uploadRequest);
 
-        // Construct public URL
-        var endpoint = await _settingsService.GetSettingAsync("DO_ENDPOINT");
-        var cleanEndpoint = endpoint?.Replace("https://", "");
-        return $"https://{bucketName}.{cleanEndpoint}/{key}";
+        // We return the Key (path) instead of the full URL for security
+        return key;
+    }
+
+    public async Task<(Stream Stream, string ContentType, string FileName)> GetFileStreamAsync(string fileKey)
+    {
+        var bucketName = await _settingsService.GetSettingAsync("DO_BUCKET_NAME");
+        using var client = await GetClientAsync();
+
+        var request = new GetObjectRequest
+        {
+            BucketName = bucketName,
+            Key = fileKey
+        };
+
+        var response = await client.GetObjectAsync(request);
+        
+        var fileName = response.Metadata["x-amz-meta-original-name"] ?? Path.GetFileName(fileKey);
+        
+        return (response.ResponseStream, response.Headers.ContentType, fileName);
     }
 
     public async Task DeleteFileAsync(string fileUrl)

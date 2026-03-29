@@ -36,6 +36,7 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploadedFile, setUploadedFile] = useState(null);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+    const [attachments, setAttachments] = useState([]); // List of { url, fileName }
     const { isDarkMode } = useTheme();
 
     // Unified Premium Colors
@@ -131,15 +132,16 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
                 setUploadProgress(prev => prev < 90 ? prev + 10 : prev);
             }, 300);
 
-            const res = await api.post('/Files/upload', formDataUpload, {
+            const res = await api.post('/Files/upload?folder=novedades', formDataUpload, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
             clearInterval(progressInterval);
             setUploadProgress(100);
-            setFormData(prev => ({ ...prev, adjuntoUrl: res.data.url }));
-            setUploadedFile(file.name);
-            showToast("Archivo cargado correctamente");
+            
+            const newAttachment = { url: res.data.url, fileName: file.name };
+            setAttachments(prev => [...prev, newAttachment]);
+            showToast("Archivo añadido correctamente");
         } catch (err) {
             console.error(err);
             const msg = err.response?.data?.message || "Error al subir archivo";
@@ -160,6 +162,7 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
                 empleadoId: formData.empleadoId || null,
                 storeId: formData.storeId || null,
                 brandId: formData.brandId || null,
+                adjuntos: attachments,
                 datosDinamicos: JSON.stringify(formData.datosDinamicos)
             };
             await api.post('/novedades', payload);
@@ -440,44 +443,53 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
                                 <h4 style={{ fontSize: '11px', fontWeight: '950', color: activeColors.textMain, textTransform: 'uppercase', margin: 0 }}>Documentación de Soporte</h4>
                                 <p style={{ fontSize: '10px', color: activeColors.textMuted, fontWeight: '700', margin: '8px 0 25px' }}>Adjunte evidencia en formato PDF o Imagen (Máx 10MB)</p>
                                 
-                                {uploadedFile ? (
-                                    <div style={{ background: isDarkMode ? '#0f172a' : '#fff', padding: '15px 25px', borderRadius: '16px', border: `1px solid #10b981`, display: 'inline-flex', alignItems: 'center', gap: '15px' }}>
-                                        <div style={{ width: '30px', height: '30px', background: '#10b98120', color: '#10b981', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            <File size={16} />
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+                                    {attachments.map((file, idx) => (
+                                        <div key={idx} style={{ background: isDarkMode ? '#0f172a' : '#fff', padding: '12px 20px', borderRadius: '16px', border: `1px solid ${activeColors.border}`, display: 'flex', alignItems: 'center', justifyBetween: 'space-between', gap: '15px', animation: 'fadeIn 0.3s' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                                                <div style={{ width: '24px', height: '24px', background: '#10b98120', color: '#10b981', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <File size={14} />
+                                                </div>
+                                                <p style={{ fontSize: '11px', fontWeight: '900', color: activeColors.textMain, margin: 0 }}>{file.fileName}</p>
+                                            </div>
+                                            <button type="button" onClick={() => setAttachments(prev => prev.filter((_, i) => i !== idx))} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '5px' }}>
+                                                <X size={16} />
+                                            </button>
                                         </div>
-                                        <div style={{ textAlign: 'left' }}>
-                                            <p style={{ fontSize: '11px', fontWeight: '900', color: activeColors.textMain, margin: 0 }}>{uploadedFile}</p>
-                                            <p style={{ fontSize: '9px', fontWeight: '800', color: '#10b981', margin: 0 }}>ARCHIVO LISTO</p>
-                                        </div>
-                                        <button type="button" onClick={() => { setUploadedFile(null); setFormData(p => ({...p, adjuntoUrl: ''})); }} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '5px' }}>
-                                            <X size={16} />
-                                        </button>
+                                    ))}
+                                </div>
+
+                                <div style={{ position: 'relative', display: 'inline-block' }}>
+                                    <input 
+                                        type="file" 
+                                        onChange={handleFileUpload}
+                                        disabled={isUploading}
+                                        style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }}
+                                    />
+                                    <div style={{ padding: '12px 30px', background: activeColors.card, border: `1px solid ${activeColors.border}`, borderRadius: '14px', color: activeColors.textMain, fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <Upload size={16} /> {isUploading ? 'Subiendo...' : 'Añadir Archivo'}
                                     </div>
-                                ) : (
-                                    <div style={{ position: 'relative', display: 'inline-block' }}>
-                                        <input 
-                                            type="file" 
-                                            onChange={handleFileUpload}
-                                            disabled={isUploading}
-                                            style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }}
-                                        />
-                                        <div style={{ padding: '12px 30px', background: activeColors.card, border: `1px solid ${activeColors.border}`, borderRadius: '14px', color: activeColors.textMain, fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <Upload size={16} /> {isUploading ? 'Subiendo...' : 'Seleccionar Archivo'}
-                                        </div>
-                                    </div>
-                                )}
+                                </div>
 
                                 {uploadProgress > 0 && uploadProgress < 100 && (
                                     <div style={{ width: '200px', height: '6px', background: '#e2e8f0', borderRadius: '3px', margin: '20px auto 0', overflow: 'hidden' }}>
                                         <div style={{ width: `${uploadProgress}%`, height: '100%', background: activeColors.accent, transition: 'width 0.3s ease' }}></div>
                                     </div>
                                 )}
+                                
+                                {selectedType?.requiereAdjunto && attachments.length === 0 && (
+                                    <p style={{ color: '#ef4444', fontSize: '10px', fontWeight: '900', marginTop: '15px' }}>* ES OBLIGATORIO CARGAR AL MENOS UN ARCHIVO PARA ESTA NOVEDAD</p>
+                                )}
                             </div>
                         )}
 
                         <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
                             <button type="button" onClick={() => setStep(3)} style={{ padding: '16px 30px', borderRadius: '16px', background: 'transparent', border: `1px solid ${activeColors.border}`, color: activeColors.textMuted, fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}>Atrás</button>
-                            <button type="submit" disabled={isSubmitting || !formData.observaciones} style={{ flex: 1, padding: '16px', borderRadius: '20px', background: activeColors.accent, color: 'white', border: 'none', fontWeight: '950', fontSize: '12px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 20px 40px rgba(79, 70, 229, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
+                            <button 
+                                type="submit" 
+                                disabled={isSubmitting || !formData.observaciones || (selectedType?.requiereAdjunto && attachments.length === 0)} 
+                                style={{ flex: 1, padding: '16px', borderRadius: '20px', background: activeColors.accent, color: 'white', border: 'none', fontWeight: '950', fontSize: '12px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 20px 40px rgba(79, 70, 229, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}
+                            >
                                 {isSubmitting ? 'Procesando...' : <><Send size={20} /> Confirmar Solicitud</>}
                             </button>
                         </div>

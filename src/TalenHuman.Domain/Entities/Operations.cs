@@ -163,7 +163,7 @@ public class Novedad : BaseEntity, IMultitenant
     public DateTime FechaFin { get; set; }
     
     public NovedadStatus Status { get; set; } = NovedadStatus.Pendiente;
-    public string? AdjuntoUrl { get; set; }
+    public string? AdjuntoUrl { get; set; } // Deprecated: use Adjuntos
     public string? DatosDinamicos { get; set; } // JSON string for field values
     public string? Observaciones { get; set; }
     
@@ -173,6 +173,19 @@ public class Novedad : BaseEntity, IMultitenant
     public Company Company { get; set; } = null!;
     
     public ICollection<NovedadLog> Logs { get; set; } = new List<NovedadLog>();
+    public ICollection<NovedadAdjunto> Adjuntos { get; set; } = new List<NovedadAdjunto>();
+}
+
+public class NovedadAdjunto : BaseEntity, IMultitenant
+{
+    public string Url { get; set; } = string.Empty;
+    public string FileName { get; set; } = string.Empty;
+    
+    public Guid NovedadId { get; set; }
+    public Novedad Novedad { get; set; } = null!;
+    
+    public Guid CompanyId { get; set; }
+    public Company Company { get; set; } = null!;
 }
 
 public enum NovedadStatus

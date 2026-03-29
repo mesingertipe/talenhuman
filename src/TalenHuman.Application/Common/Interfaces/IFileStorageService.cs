@@ -6,4 +6,5 @@ public interface IFileStorageService
 {
     Task<string> UploadFileAsync(IFormFile file, string folder = "attachments");
     Task DeleteFileAsync(string fileUrl);
+    Task<(Stream Stream, string ContentType, string FileName)> GetFileStreamAsync(string fileUrl);
 }

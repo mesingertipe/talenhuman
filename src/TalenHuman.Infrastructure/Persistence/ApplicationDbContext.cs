@@ -35,6 +35,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<NovedadTipo> NovedadTipos => Set<NovedadTipo>();
     public DbSet<Novedad> Novedades => Set<Novedad>();
     public DbSet<NovedadLog> NovedadLogs => Set<NovedadLog>();
+    public DbSet<NovedadAdjunto> NovedadAdjuntos => Set<NovedadAdjunto>();
     public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
     public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
     public DbSet<ExternalApiConfig> ExternalApiConfigs => Set<ExternalApiConfig>();
@@ -68,6 +69,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<SalesData>().HasQueryFilter(s => s.CompanyId == TenantId);
         builder.Entity<BiometricRecord>().HasQueryFilter(b => b.CompanyId == TenantId);
         builder.Entity<District>().HasQueryFilter(d => d.CompanyId == TenantId);
+        builder.Entity<NovedadAdjunto>().HasQueryFilter(n => n.CompanyId == TenantId);
 
         // Many-to-Many: Supervisor -> Stores
         builder.Entity<SupervisorStore>()
@@ -135,6 +137,12 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<Novedad>()
             .Property(n => n.IdSolicitud)
             .ValueGeneratedOnAdd();
+
+        builder.Entity<Novedad>()
+            .HasMany(n => n.Adjuntos)
+            .WithOne(a => a.Novedad)
+            .HasForeignKey(a => a.NovedadId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Additional configuration can be added here
     }

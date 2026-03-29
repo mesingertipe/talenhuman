@@ -106,6 +106,7 @@ public class NovedadesController : ControllerBase
                 FechaFin = n.FechaFin,
                 Status = n.Status,
                 AdjuntoUrl = n.AdjuntoUrl,
+                HasAttachments = n.Adjuntos.Any(),
                 DatosDinamicos = n.DatosDinamicos,
                 Observaciones = n.Observaciones,
                 CreatedBy = n.Logs.Where(l => l.Accion == "Creó").Select(l => l.Usuario.FullName).FirstOrDefault() ?? "Sistema"
@@ -144,6 +145,12 @@ public class NovedadesController : ControllerBase
             AdjuntoUrl = n.AdjuntoUrl,
             DatosDinamicos = n.DatosDinamicos,
             Observaciones = n.Observaciones,
+            Adjuntos = n.Adjuntos.Select(a => new AttachmentDto
+            {
+                Id = a.Id,
+                Url = a.Url,
+                FileName = a.FileName
+            }).ToList(),
             Logs = n.Logs.Select(l => new NovedadLogDto
             {
                 Usuario = l.Usuario.FullName ?? "Sistema",
@@ -159,6 +166,15 @@ public class NovedadesController : ControllerBase
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? Guid.Empty.ToString());
         
+        var tipo = await _context.NovedadTipos.FindAsync(dto.NovedadTipoId);
+        if (tipo == null) return BadRequest("Tipo de novedad no válido.");
+
+        // Elite V12 Security Validation: Check for required attachments
+        if (tipo.RequiereAdjunto && (dto.Adjuntos == null || !dto.Adjuntos.Any()))
+        {
+            return BadRequest("Este tipo de novedad requiere al menos un archivo adjunto.");
+        }
+
         var n = new Novedad
         {
             EmpleadoId = dto.EmpleadoId,
@@ -168,10 +184,21 @@ public class NovedadesController : ControllerBase
             FechaInicio = dto.FechaInicio,
             FechaFin = dto.FechaFin,
             Status = NovedadStatus.Pendiente,
-            AdjuntoUrl = dto.AdjuntoUrl,
             DatosDinamicos = dto.DatosDinamicos,
             Observaciones = dto.Observaciones
         };
+
+        if (dto.Adjuntos != null)
+        {
+            foreach (var adj in dto.Adjuntos)
+            {
+                n.Adjuntos.Add(new NovedadAdjunto
+                {
+                    Url = adj.Url,
+                    FileName = adj.FileName
+                });
+            }
+        }
 
         n.Logs.Add(new NovedadLog
         {
@@ -249,13 +276,22 @@ public class NovedadDto
     public DateTime FechaFin { get; set; }
     public NovedadStatus Status { get; set; }
     public string? AdjuntoUrl { get; set; }
+    public bool HasAttachments { get; set; }
     public string? DatosDinamicos { get; set; }
     public string? Observaciones { get; set; }
     public string CreatedBy { get; set; } = string.Empty;
 }
 
+public class AttachmentDto
+{
+    public Guid Id { get; set; }
+    public string Url { get; set; } = string.Empty;
+    public string FileName { get; set; } = string.Empty;
+}
+
 public class NovedadDetailDto : NovedadDto
 {
+    public List<AttachmentDto> Adjuntos { get; set; } = new List<AttachmentDto>();
     public List<NovedadLogDto> Logs { get; set; } = new List<NovedadLogDto>();
 }
 
@@ -275,7 +311,7 @@ public class CreateNovedadDto
     public Guid NovedadTipoId { get; set; }
     public DateTime FechaInicio { get; set; }
     public DateTime FechaFin { get; set; }
-    public string? AdjuntoUrl { get; set; }
+    public List<AttachmentDto>? Adjuntos { get; set; }
     public string? DatosDinamicos { get; set; }
     public string? Observaciones { get; set; }
 }
