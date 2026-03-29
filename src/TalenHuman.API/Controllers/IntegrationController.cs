@@ -91,9 +91,16 @@ public class IntegrationController : ControllerBase
             var employee = await _context.Employees
                 .IgnoreQueryFilters()
                 .FirstOrDefaultAsync(e => e.CompanyId == tenantId && e.IdentificationNumber == dto.IdentificationNumber);
-
             if (employee == null)
             {
+                // Jornada lookup
+                var jornada = await _context.Jornadas.FirstOrDefaultAsync(j => j.Nombre == dto.JornadaNombre);
+                if (jornada == null)
+                {
+                    // Fallback to default or first available if not found
+                    jornada = await _context.Jornadas.FirstOrDefaultAsync();
+                }
+
                 employee = new Employee
                 {
                     IdentificationNumber = dto.IdentificationNumber,
@@ -102,6 +109,7 @@ public class IntegrationController : ControllerBase
                     Email = dto.Email,
                     StoreId = store.Id,
                     ProfileId = profile.Id,
+                    JornadaId = jornada?.Id,
                     DateOfEntry = dto.DateOfEntry ?? DateTime.UtcNow,
                     DailySalary = dto.DailySalary,
                     IsActive = dto.IsActive,
@@ -121,6 +129,13 @@ public class IntegrationController : ControllerBase
                 employee.DailySalary = dto.DailySalary;
                 employee.IsActive = dto.IsActive;
                 employee.DateOfTermination = dto.DateOfTermination;
+
+                // Jornada update
+                var jornada = await _context.Jornadas.FirstOrDefaultAsync(j => j.Nombre == dto.JornadaNombre);
+                if (jornada != null)
+                {
+                    employee.JornadaId = jornada.Id;
+                }
                 
                 // If becomes inactive, deactivate user access
                 if (!employee.IsActive && employee.UserId.HasValue)
@@ -227,6 +242,7 @@ public class EmployeeSyncDto
     public decimal DailySalary { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime? DateOfTermination { get; set; }
+    public string? JornadaNombre { get; set; }
 }
 
 public class AttendanceSyncDto

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Plus, Trash2, Edit, X, User as UserIcon, Mail, Tag, Store, 
   FileSpreadsheet, AlertCircle, Hash, Shield, CheckCircle,
-  Search, Calendar, ToggleRight, ToggleLeft, Briefcase, Clock, UserPlus, Download, MapPin
+  Search, Calendar, ToggleRight, ToggleLeft, Briefcase, Clock, UserPlus, Download, MapPin, Globe
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import api from '../../services/api';
@@ -343,241 +343,240 @@ const Employees = ({ user }) => {
       </div>
 
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content shadow-2xl animate-in zoom-in duration-300" style={{ maxWidth: '820px', borderRadius: '32px' }}>
-            <div className="modal-header" style={{ padding: '2.5rem 2.5rem 1rem', border: 'none' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                <div style={{ width: '52px', height: '52px', background: activeColors.accentSoft, color: activeColors.accent, borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', shadow: '0 4px 12px rgba(79, 70, 229, 0.1)' }}>
-                  {currentEmployee ? <Edit size={24} /> : <UserPlus size={24} />}
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.85)', backdropFilter: 'blur(30px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <div style={{ background: activeColors.card, width: '100%', maxWidth: '850px', maxHeight: '92vh', borderRadius: '48px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 50px 100px rgba(0,0,0,0.4)', animation: 'modalFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+            
+            {/* Header Elite v3 */}
+            <div style={{ padding: '40px 60px', borderBottom: `1px solid ${activeColors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: isDarkMode ? '#1e293b' : '#ffffff' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+                <div style={{ width: '64px', height: '64px', background: activeColors.accentSoft, borderRadius: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.accent }}>
+                    <UserPlus size={28} strokeWidth={2.5} />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-black dark:text-white" style={{ margin: 0, letterSpacing: '-0.03em' }}>
-                    {currentEmployee ? 'Ficha de Colaborador' : 'Vincular Colaborador'}
+                  <h2 style={{ fontSize: '1.8rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.03em' }}>
+                    {currentEmployee ? 'Actualizar Colaborador' : 'Vincular Colaborador'}
                   </h2>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Gestión de talento y nómina administrativa</p>
+                  <p style={{ fontSize: '0.85rem', color: activeColors.textMuted, fontWeight: '700', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Gestión de Talento y Nómina Administrativa
+                  </p>
                 </div>
               </div>
               <button 
                 onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-all bg-slate-50 dark:bg-slate-800 border-none cursor-pointer p-2.5 rounded-full hover:rotate-90"
+                style={{ background: activeColors.accentSoft, border: 'none', width: '52px', height: '52px', borderRadius: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.accent, transition: 'all 0.2s' }}
+                className="hover:rotate-90"
               >
-                <X size={20} />
+                <X size={28} strokeWidth={3} />
               </button>
             </div>
-            
-            <form onSubmit={handleSave}>
-              <div className="modal-body overflow-y-auto max-h-[70vh] custom-scrollbar" style={{ padding: '0 2.5rem 2.5rem' }}>
-                {/* --- Section 1: Personal Data --- */}
-                <div className="mb-12">
-                  <div className="flex items-center gap-3 mb-8">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center font-bold text-xs">01</div>
-                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Identificación y Datos Personales</h3>
-                    <div className="h-[1px] flex-1 bg-slate-100 dark:bg-slate-800 ml-2"></div>
+
+            <div style={{ padding: '50px 60px', flex: 1, overflowY: 'auto', background: isDarkMode ? '#0f172a' : '#fcfdfe' }}>
+              <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '56px' }}>
+                
+                {/* Sección 01 */}
+                <div style={{ position: 'relative' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '36px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: '950', color: activeColors.accent, background: activeColors.accentSoft, padding: '4px 12px', borderRadius: '8px' }}>01</span>
+                    <h3 style={{ fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMain, textTransform: 'uppercase', letterSpacing: '0.15em', margin: 0 }}>Identificación y Datos Personales</h3>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Nombres *</label>
-                      <div className="relative group">
-                        <UserIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px 36px' }}>
+                    <div className="group">
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Nombres *</label>
+                      <div style={{ position: 'relative' }}>
+                        <UserIcon size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                         <input 
-                          required 
-                          value={formData.firstName} 
-                          onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} 
-                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
-                          placeholder="Nombres..."
+                          required value={formData.firstName}
+                          onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                          placeholder="Nombres completo..." 
+                          style={{ width: '100%', padding: '22px 24px 22px 60px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', fontSize: '0.95rem', outline: 'none', transition: 'all 0.3s' }}
+                          className="focus:border-indigo-500 focus:shadow-xl"
                         />
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Apellidos *</label>
-                      <div className="relative group">
-                        <UserIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                    <div className="group">
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Apellidos *</label>
+                      <div style={{ position: 'relative' }}>
+                        <UserIcon size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                         <input 
-                          required 
-                          value={formData.lastName} 
-                          onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} 
-                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
-                          placeholder="Apellidos..."
+                          required value={formData.lastName}
+                          onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                          placeholder="Apellidos completo..." 
+                          style={{ width: '100%', padding: '22px 24px 22px 60px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', fontSize: '0.95rem', outline: 'none', transition: 'all 0.3s' }}
+                          className="focus:border-indigo-500 focus:shadow-xl"
                         />
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Documento Identidad *</label>
-                      <div className="relative group">
-                        <Hash size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                    <div className="group">
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Documento Identidad *</label>
+                      <div style={{ position: 'relative' }}>
+                        <Hash size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                         <input 
-                          required 
-                          value={formData.identificationNumber} 
-                          onChange={(e) => setFormData({ ...formData, identificationNumber: e.target.value })} 
-                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
-                          placeholder="ID..."
+                          required value={formData.identificationNumber}
+                          onChange={(e) => setFormData({...formData, identificationNumber: e.target.value})}
+                          placeholder="Número de Cédula..." 
+                          style={{ width: '100%', padding: '22px 24px 22px 60px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', fontSize: '0.95rem', outline: 'none', transition: 'all 0.3s' }}
+                          className="focus:border-indigo-500 focus:shadow-xl"
                         />
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Fecha de Nacimiento *</label>
-                      <div className="relative group">
-                        <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                    <div className="group">
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Fecha de Nacimiento *</label>
+                      <div style={{ position: 'relative' }}>
+                        <Calendar size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                         <input 
-                          required 
-                          type="date" 
-                          value={formData.birthDate?.split('T')[0] || ''} 
-                          onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })} 
-                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* --- Section 2: Pro Data --- */}
-                <div className="mb-12">
-                  <div className="flex items-center gap-3 mb-8">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center font-bold text-xs">02</div>
-                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Perfil Laboral y Nómina</h3>
-                    <div className="h-[1px] flex-1 bg-slate-100 dark:bg-slate-800 ml-2"></div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Fecha de Ingreso *</label>
-                      <div className="relative group">
-                        <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                        <input 
-                          required 
-                          type="date" 
-                          value={formData.dateOfEntry?.split('T')[0] || ''} 
-                          onChange={(e) => setFormData({ ...formData, dateOfEntry: e.target.value })} 
-                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <SearchableSelect
-                        label="Sede / C. Costos"
-                        options={stores.map(s => ({ value: s.id, label: s.name }))}
-                        value={formData.storeId}
-                        onChange={(val) => setFormData({ ...formData, storeId: val })}
-                        icon={Store}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <SearchableSelect
-                        label="Cargo"
-                        options={profiles.map(p => ({ value: p.id, label: p.name }))}
-                        value={formData.profileId}
-                        onChange={(val) => setFormData({ ...formData, profileId: val })}
-                        icon={Shield}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <SearchableSelect
-                        label="Jornada"
-                        options={jornadas.map(j => ({ value: j.id, label: j.nombre }))}
-                        value={formData.jornadaId}
-                        onChange={(val) => setFormData({ ...formData, jornadaId: val })}
-                        icon={Clock}
-                        required
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Salario Diario (Moneda Local) *</label>
-                      <div className="relative group">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600 font-black text-lg">$</div>
-                        <input 
-                          type="number"
-                          required 
-                          value={formData.dailySalary} 
-                          onChange={(e) => setFormData({ ...formData, dailySalary: e.target.value })} 
-                          placeholder="0.00"
-                          className="w-full p-4 pl-10 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-black text-sm"
-                          step="0.01"
+                          type="date" value={formData.birthDate?.split('T')[0] || ''}
+                          onChange={(e) => setFormData({...formData, birthDate: e.target.value})}
+                          style={{ width: '100%', padding: '22px 24px 22px 60px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', fontSize: '0.95rem', outline: 'none' }}
                         />
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* --- Section 3: Configuration --- */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-50 dark:border-slate-800 flex items-center justify-between shadow-sm">
-                    <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${formData.isActive ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-100' : 'bg-slate-100 text-slate-400'}`}>
-                           {formData.isActive ? <CheckCircle size={22} /> : <AlertCircle size={22} />}
+                {/* Sección 02 */}
+                <div style={{ position: 'relative' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '36px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: '950', color: activeColors.accent, background: activeColors.accentSoft, padding: '4px 12px', borderRadius: '8px' }}>02</span>
+                    <h3 style={{ fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMain, textTransform: 'uppercase', letterSpacing: '0.15em', margin: 0 }}>Perfil Laboral y Nómina</h3>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px 36px' }}>
+                    <div className="group">
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Fecha de Ingreso *</label>
+                      <div style={{ position: 'relative' }}>
+                        <Calendar size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input 
+                          type="date" value={formData.dateOfEntry?.split('T')[0] || ''}
+                          onChange={(e) => setFormData({...formData, dateOfEntry: e.target.value})}
+                          style={{ width: '100%', padding: '22px 24px 22px 60px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700' }}
+                        />
+                      </div>
+                    </div>
+                    
+                    <SearchableSelect
+                      label="Sede / C. Costos *"
+                      options={stores.map(s => ({ value: s.id, label: s.name }))}
+                      value={formData.storeId}
+                      onChange={(val) => setFormData({...formData, storeId: val})}
+                      placeholder="Seleccionar sede..."
+                      icon={Store}
+                    />
+
+                    <SearchableSelect
+                      label="Cargo *"
+                      options={profiles.map(p => ({ value: p.id, label: p.name }))}
+                      value={formData.profileId}
+                      onChange={(val) => setFormData({...formData, profileId: val})}
+                      placeholder="Asignar función..."
+                      icon={Shield}
+                    />
+
+                    <SearchableSelect
+                      label="Jornada *"
+                      options={jornadas.map(j => ({ value: j.id, label: j.nombre }))}
+                      value={formData.jornadaId}
+                      onChange={(val) => setFormData({...formData, jornadaId: val})}
+                      placeholder="Tipo de horario..."
+                      icon={Clock}
+                    />
+                  </div>
+
+                  <div style={{ marginTop: '40px' }}>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Salario Diario (Moneda Local) *</label>
+                    <div style={{ position: 'relative' }}>
+                      <span className="absolute left-6 top-1/2 -translate-y-1/2 text-xl font-black text-indigo-500">$</span>
+                      <input 
+                        type="number" step="0.01" value={formData.dailySalary}
+                        onChange={(e) => setFormData({...formData, dailySalary: parseFloat(e.target.value)})}
+                        style={{ width: '100%', padding: '22px 24px 22px 50px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '900', fontSize: '1.4rem' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Actions Elite */}
+                <div style={{ background: isDarkMode ? 'rgba(79, 70, 229, 0.05)' : '#f8faff', padding: '36px', borderRadius: '32px', border: `1px solid ${activeColors.border}`, display: 'flex', flexWrap: 'wrap', gap: '30px', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', gap: '40px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                      <div 
+                        onClick={() => setFormData({...formData, isActive: !formData.isActive})}
+                        style={{ width: '56px', height: '28px', background: formData.isActive ? '#10b981' : '#cbd5e1', borderRadius: '20px', position: 'relative', cursor: 'pointer', transition: 'all 0.3s' }}
+                      >
+                        <div style={{ width: '22px', height: '22px', background: 'white', borderRadius: '50%', position: 'absolute', top: '3px', left: formData.isActive ? '31px' : '3px', transition: 'all 0.3s', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}></div>
+                      </div>
+                      <div>
+                        <span style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase' }}>Estado Activo</span>
+                        <span style={{ fontSize: '0.8rem', fontWeight: '950', color: formData.isActive ? '#10b981' : activeColors.textMuted }}>{formData.isActive ? 'VIGENCIA EN NÓMINA' : 'RETIRADO / INACTIVO'}</span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div 
+                          onClick={() => setFormData({...formData, mustChangePassword: !formData.mustChangePassword})}
+                          style={{ width: '56px', height: '28px', background: formData.mustChangePassword ? '#4f46e5' : '#cbd5e1', borderRadius: '20px', position: 'relative', cursor: 'pointer', transition: 'all 0.3s' }}
+                        >
+                          <div style={{ width: '22px', height: '22px', background: 'white', borderRadius: '50%', position: 'absolute', top: '3px', left: formData.mustChangePassword ? '31px' : '3px', transition: 'all 0.3s', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}></div>
                         </div>
                         <div>
-                          <p className="font-black text-slate-800 dark:text-white text-sm">Estado Activo</p>
-                          <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-tight">Vigencia en nómina</p>
+                          <span style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase' }}>Reset de Clave</span>
+                          <span style={{ fontSize: '0.8rem', fontWeight: '950', color: formData.mustChangePassword ? '#4f46e5' : activeColors.textMuted }}>{formData.mustChangePassword ? 'SOLICITAR AL INGRESAR' : 'MANTENER ACTUAL'}</span>
                         </div>
                     </div>
-                    <label className="premium-switch">
-                        <input 
-                            type="checkbox" 
-                            checked={formData.isActive}
-                            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                        />
-                        <span className="premium-switch-slider"></span>
-                    </label>
-                  </div>
+                    </div>
 
-                  <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-50 dark:border-slate-800 flex items-center justify-between shadow-sm">
-                    <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${formData.mustChangePassword ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-100' : 'bg-slate-100 text-slate-400'}`}>
-                           <Clock size={22} />
-                        </div>
-                        <div>
-                          <p className="font-black text-slate-800 dark:text-white text-sm">Reset de Clave</p>
-                          <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-tight">Solicitar al ingresar</p>
-                        </div>
-                    </div>
-                    <label className="premium-switch">
-                        <input 
-                            type="checkbox" 
-                            checked={formData.mustChangePassword}
-                            onChange={(e) => setFormData({ ...formData, mustChangePassword: e.target.checked })}
-                        />
-                        <span className="premium-switch-slider"></span>
-                    </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px', color: activeColors.textMuted }}>
+                     <Shield size={20} />
+                     <p style={{ fontSize: '0.75rem', fontWeight: '700', maxWidth: '300px', margin: 0 }}>
+                       <span style={{ fontWeight: '950', color: activeColors.textMain }}>SEGURIDAD:</span> Al vincular al colaborador, se le asignará acceso automático basado en su identificación.
+                     </p>
                   </div>
-
-                  {!formData.isActive && (
-                    <div className="md:col-span-2 p-6 rounded-3xl bg-red-50/50 dark:bg-red-500/5 border-2 border-red-50 dark:border-red-900/20 animate-in slide-in-from-top-4 duration-500">
-                      <label className="block text-[11px] font-semibold text-red-500 uppercase tracking-wide mb-3 px-1">Fecha de Baja / Desvinculación *</label>
-                      <div className="relative group">
-                        <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-red-400 group-focus-within:text-red-500 transition-colors" />
-                        <input 
-                          required={!formData.isActive}
-                          type="date" 
-                          value={formData.dateOfTermination?.split('T')[0] || ''} 
-                          onChange={(e) => setFormData({ ...formData, dateOfTermination: e.target.value })} 
-                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-red-100/50 bg-white focus:ring-4 focus:ring-red-500/5 focus:border-red-400 transition-all font-bold text-sm text-red-600"
-                        />
-                      </div>
-                    </div>
-                  )}
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-start gap-4 mt-10">
-                  <Shield size={20} className="text-indigo-400 shrink-0 mt-1" />
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold leading-relaxed uppercase tracking-wider">
-                    <strong className="text-slate-800 dark:text-slate-200">SEGURIDAD:</strong> Al vincular al colaborador, se le asignará acceso automático basado en su identificación.
-                  </p>
-                </div>
-              </div>
+                {/* Baja Date picker if inactive */}
+                {!formData.isActive && (
+                  <div style={{ padding: '30px', background: isDarkMode ? '#451a1a' : '#fef2f2', borderRadius: '24px', border: '1px solid #fee2e2', animation: 'fadeIn 0.4s' }}>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: '#ef4444', textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Fecha de Baja / Desvinculación *</label>
+                    <div style={{ position: 'relative' }}>
+                      <Calendar size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-red-400" />
+                      <input 
+                        required={!formData.isActive}
+                        type="date" value={formData.dateOfTermination?.split('T')[0] || ''}
+                        onChange={(e) => setFormData({...formData, dateOfTermination: e.target.value})}
+                        style={{ width: '100%', padding: '20px 24px 20px 60px', borderRadius: '20px', border: '2px solid #fecaca', background: 'white', color: '#b91c1c', fontWeight: '700' }}
+                      />
+                    </div>
+                  </div>
+                )}
 
-              <div className="modal-footer" style={{ padding: '1rem 2.5rem 2.5rem', border: 'none' }}>
-                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary" style={{ height: '56px', borderRadius: '20px', flex: 1 }} disabled={isSubmitting}>
-                  Cerrar
-                </button>
-                <button type="submit" className="btn-premium btn-premium-primary" style={{ height: '56px', borderRadius: '20px', flex: 2 }} disabled={isSubmitting}>
-                  {isSubmitting ? <div className="loader"></div> : (currentEmployee ? 'Guardar Cambios' : 'Confirmar Vinculación')}
-                </button>
-              </div>
-            </form>
+                <div style={{ display: 'flex', gap: '24px', paddingTop: '20px' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowModal(false)}
+                    style={{ flex: 1, padding: '24px', borderRadius: '28px', border: `2px solid ${activeColors.border}`, background: 'white', color: activeColors.textMuted, fontWeight: '900', fontSize: '1rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                    className="hover:bg-slate-50"
+                  >
+                    Cerrar
+                  </button>
+                  <button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    style={{ flex: 2, padding: '24px', borderRadius: '28px', border: 'none', background: activeColors.accent, color: 'white', fontWeight: '950', fontSize: '1rem', cursor: 'pointer', boxShadow: '0 15px 35px rgba(79, 70, 229, 0.4)', transition: 'all 0.3s' }}
+                    className="hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    {isSubmitting ? 'Procesando...' : currentEmployee ? 'Guardar Cambios' : 'Confirmar Vinculación'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
+          <style>{`
+            @keyframes modalFadeIn {
+              from { opacity: 0; transform: scale(0.95) translateY(20px); }
+              to { opacity: 1; transform: scale(1) translateY(0); }
+            }
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+          `}</style>
         </div>
       )}
 
