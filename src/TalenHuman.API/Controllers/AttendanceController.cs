@@ -203,7 +203,7 @@ public class AttendanceController : ControllerBase
     public async Task<IActionResult> GetSyncHistory()
     {
         var companyId = Guid.Parse(User.FindFirst("CompanyId")?.Value ?? Guid.Empty.ToString());
-        var logs = await _context.Set<SyncLog>()
+        var logs = await _context.SyncLogs
             .Where(l => l.CompanyId == companyId)
             .OrderByDescending(l => l.StartTime)
             .Take(10)

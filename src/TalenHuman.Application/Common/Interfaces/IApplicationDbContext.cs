@@ -26,6 +26,7 @@ public interface IApplicationDbContext
     DbSet<ExternalApiConfig> ExternalApiConfigs { get; }
     DbSet<User> Users { get; }
     DbSet<SalesData> SalesData { get; }
+    DbSet<SyncLog> SyncLogs { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }
