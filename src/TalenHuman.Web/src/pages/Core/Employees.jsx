@@ -49,7 +49,8 @@ const Employees = ({ user }) => {
     dateOfEntry: new Date().toISOString().split('T')[0],
     dailySalary: 0,
     isActive: true,
-    mustChangePassword: false
+    mustChangePassword: false,
+    dateOfTermination: ''
   });
 
   const { 
@@ -365,132 +366,151 @@ const Employees = ({ user }) => {
             </div>
             
             <form onSubmit={handleSave}>
-              <div className="modal-body" style={{ padding: '1.5rem 2.5rem 2.5rem' }}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-10">
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">Nombres del Colaborador *</label>
-                    <div className="relative group">
-                      <UserIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                      <input 
-                        required 
-                        value={formData.firstName} 
-                        onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} 
-                        className="w-full p-4 pl-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm shadow-sm"
-                        placeholder="Nombres..."
-                      />
+              <div className="modal-body overflow-y-auto max-h-[70vh] custom-scrollbar" style={{ padding: '0 2.5rem 2.5rem' }}>
+                {/* --- Section 1: Personal Data --- */}
+                <div className="mb-12">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center font-bold text-xs">01</div>
+                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Identificación y Datos Personales</h3>
+                    <div className="h-[1px] flex-1 bg-slate-100 dark:bg-slate-800 ml-2"></div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Nombres *</label>
+                      <div className="relative group">
+                        <UserIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                        <input 
+                          required 
+                          value={formData.firstName} 
+                          onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} 
+                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
+                          placeholder="Nombres..."
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">Apellidos Completos *</label>
-                    <div className="relative group">
-                      <UserIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                      <input 
-                        required 
-                        value={formData.lastName} 
-                        onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} 
-                        className="w-full p-4 pl-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm shadow-sm"
-                        placeholder="Apellidos..."
-                      />
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Apellidos *</label>
+                      <div className="relative group">
+                        <UserIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                        <input 
+                          required 
+                          value={formData.lastName} 
+                          onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} 
+                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
+                          placeholder="Apellidos..."
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">Documento Identidad *</label>
-                    <div className="relative group">
-                      <Hash size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                      <input 
-                        required 
-                        value={formData.identificationNumber} 
-                        onChange={(e) => setFormData({ ...formData, identificationNumber: e.target.value })} 
-                        className="w-full p-4 pl-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm shadow-sm"
-                        placeholder="Cédula o ID..."
-                      />
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Documento Identidad *</label>
+                      <div className="relative group">
+                        <Hash size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                        <input 
+                          required 
+                          value={formData.identificationNumber} 
+                          onChange={(e) => setFormData({ ...formData, identificationNumber: e.target.value })} 
+                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
+                          placeholder="ID..."
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">Fecha de Nacimiento *</label>
-                    <div className="relative group">
-                      <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                      <input 
-                        required 
-                        type="date" 
-                        value={formData.birthDate?.split('T')[0] || ''} 
-                        onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })} 
-                        className="w-full p-4 pl-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm shadow-sm"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">Fecha de Ingreso *</label>
-                    <div className="relative group">
-                      <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                      <input 
-                        required 
-                        type="date" 
-                        value={formData.dateOfEntry?.split('T')[0] || ''} 
-                        onChange={(e) => setFormData({ ...formData, dateOfEntry: e.target.value })} 
-                        className="w-full p-4 pl-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm shadow-sm"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <SearchableSelect
-                      label="Sede Principal / Centro de Costos"
-                      options={stores.map(s => ({ value: s.id, label: s.name }))}
-                      value={formData.storeId}
-                      onChange={(val) => setFormData({ ...formData, storeId: val })}
-                      placeholder="Seleccionar sede..."
-                      icon={Store}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <SearchableSelect
-                      label="Cargo u Ocupación"
-                      options={profiles.map(p => ({ value: p.id, label: p.name }))}
-                      value={formData.profileId}
-                      onChange={(val) => setFormData({ ...formData, profileId: val })}
-                      placeholder="Seleccionar perfil..."
-                      icon={Shield}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <SearchableSelect
-                      label="Esquema de Jornada"
-                      options={jornadas.map(j => ({ value: j.id, label: j.nombre }))}
-                      value={formData.jornadaId}
-                      onChange={(val) => setFormData({ ...formData, jornadaId: val })}
-                      placeholder="Seleccionar jornada..."
-                      icon={Clock}
-                      required
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">Salario Diario (Moneda Local) *</label>
-                    <div className="relative group">
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600 font-black text-lg">$</div>
-                      <input 
-                        type="number"
-                        required 
-                        value={formData.dailySalary} 
-                        onChange={(e) => setFormData({ ...formData, dailySalary: e.target.value })} 
-                        placeholder="0.00"
-                        className="w-full p-4 pl-10 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-black text-sm shadow-sm"
-                        step="0.01"
-                      />
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Fecha de Nacimiento *</label>
+                      <div className="relative group">
+                        <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                        <input 
+                          required 
+                          type="date" 
+                          value={formData.birthDate?.split('T')[0] || ''} 
+                          onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })} 
+                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
-                  <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-inner">
+                {/* --- Section 2: Pro Data --- */}
+                <div className="mb-12">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center font-bold text-xs">02</div>
+                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Perfil Laboral y Nómina</h3>
+                    <div className="h-[1px] flex-1 bg-slate-100 dark:bg-slate-800 ml-2"></div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Fecha de Ingreso *</label>
+                      <div className="relative group">
+                        <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                        <input 
+                          required 
+                          type="date" 
+                          value={formData.dateOfEntry?.split('T')[0] || ''} 
+                          onChange={(e) => setFormData({ ...formData, dateOfEntry: e.target.value })} 
+                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <SearchableSelect
+                        label="Sede / C. Costos"
+                        options={stores.map(s => ({ value: s.id, label: s.name }))}
+                        value={formData.storeId}
+                        onChange={(val) => setFormData({ ...formData, storeId: val })}
+                        icon={Store}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <SearchableSelect
+                        label="Cargo"
+                        options={profiles.map(p => ({ value: p.id, label: p.name }))}
+                        value={formData.profileId}
+                        onChange={(val) => setFormData({ ...formData, profileId: val })}
+                        icon={Shield}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <SearchableSelect
+                        label="Jornada"
+                        options={jornadas.map(j => ({ value: j.id, label: j.nombre }))}
+                        value={formData.jornadaId}
+                        onChange={(val) => setFormData({ ...formData, jornadaId: val })}
+                        icon={Clock}
+                        required
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Salario Diario (Moneda Local) *</label>
+                      <div className="relative group">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600 font-black text-lg">$</div>
+                        <input 
+                          type="number"
+                          required 
+                          value={formData.dailySalary} 
+                          onChange={(e) => setFormData({ ...formData, dailySalary: e.target.value })} 
+                          placeholder="0.00"
+                          className="w-full p-4 pl-10 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-black text-sm"
+                          step="0.01"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* --- Section 3: Configuration --- */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-50 dark:border-slate-800 flex items-center justify-between shadow-sm">
                     <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${formData.isActive ? 'bg-emerald-500 text-white' : 'bg-slate-200'}`}>
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${formData.isActive ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-100' : 'bg-slate-100 text-slate-400'}`}>
                            {formData.isActive ? <CheckCircle size={22} /> : <AlertCircle size={22} />}
                         </div>
                         <div>
                           <p className="font-black text-slate-800 dark:text-white text-sm">Estado Activo</p>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tighter">Vigencia en nómina</p>
+                          <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-tight">Vigencia en nómina</p>
                         </div>
                     </div>
                     <label className="premium-switch">
@@ -503,14 +523,14 @@ const Employees = ({ user }) => {
                     </label>
                   </div>
 
-                  <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-inner">
+                  <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-50 dark:border-slate-800 flex items-center justify-between shadow-sm">
                     <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${formData.mustChangePassword ? 'bg-indigo-500 text-white' : 'bg-slate-200'}`}>
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${formData.mustChangePassword ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-100' : 'bg-slate-100 text-slate-400'}`}>
                            <Clock size={22} />
                         </div>
                         <div>
                           <p className="font-black text-slate-800 dark:text-white text-sm">Reset de Clave</p>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tighter">Obligar al ingresar</p>
+                          <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-tight">Solicitar al ingresar</p>
                         </div>
                     </div>
                     <label className="premium-switch">
@@ -522,12 +542,28 @@ const Employees = ({ user }) => {
                         <span className="premium-switch-slider"></span>
                     </label>
                   </div>
+
+                  {!formData.isActive && (
+                    <div className="md:col-span-2 p-6 rounded-3xl bg-red-50/50 dark:bg-red-500/5 border-2 border-red-50 dark:border-red-900/20 animate-in slide-in-from-top-4 duration-500">
+                      <label className="block text-[11px] font-semibold text-red-500 uppercase tracking-wide mb-3 px-1">Fecha de Baja / Desvinculación *</label>
+                      <div className="relative group">
+                        <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-red-400 group-focus-within:text-red-500 transition-colors" />
+                        <input 
+                          required={!formData.isActive}
+                          type="date" 
+                          value={formData.dateOfTermination?.split('T')[0] || ''} 
+                          onChange={(e) => setFormData({ ...formData, dateOfTermination: e.target.value })} 
+                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-red-100/50 bg-white focus:ring-4 focus:ring-red-500/5 focus:border-red-400 transition-all font-bold text-sm text-red-600"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="p-5 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-start gap-4 mt-8">
-                  <Shield size={22} className="text-indigo-500 shrink-0 mt-0.5" />
-                  <p className="text-[11px] text-indigo-700 dark:text-indigo-400 font-bold leading-relaxed uppercase tracking-wider">
-                    <strong>SEGURIDAD:</strong> Al vincular al colaborador, se le asignará acceso automático al portal de autoservicio basado en su número de identificación como usuario inicial.
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-start gap-4 mt-10">
+                  <Shield size={20} className="text-indigo-400 shrink-0 mt-1" />
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold leading-relaxed uppercase tracking-wider">
+                    <strong className="text-slate-800 dark:text-slate-200">SEGURIDAD:</strong> Al vincular al colaborador, se le asignará acceso automático basado en su identificación.
                   </p>
                 </div>
               </div>

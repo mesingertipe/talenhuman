@@ -60,7 +60,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<Attendance>().HasQueryFilter(a => a.CompanyId == TenantId);
         builder.Entity<Absence>().HasQueryFilter(a => a.CompanyId == TenantId);
         builder.Entity<Jornada>().HasQueryFilter(j => j.CompanyId == TenantId);
-        builder.Entity<NovedadTipo>().HasQueryFilter(n => n.CompanyId == TenantId);
+        builder.Entity<NovedadTipo>().HasQueryFilter(n => n.CompanyId == TenantId || n.EsPlantilla);
         builder.Entity<Novedad>().HasQueryFilter(n => n.CompanyId == TenantId);
         builder.Entity<NovedadLog>().HasQueryFilter(n => n.CompanyId == TenantId);
         builder.Entity<SupervisorStore>().HasQueryFilter(s => s.CompanyId == TenantId);
@@ -156,7 +156,17 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         {
             if (entry.State == EntityState.Added && entry.Entity.CompanyId == Guid.Empty)
             {
-                entry.Entity.CompanyId = tenantId;
+                // Skip automatic CompanyId assignment if it's a global template being created by a SuperAdmin
+                if (entry.Entity is NovedadTipo nt && nt.EsPlantilla)
+                {
+                    // Optionally set a System Tenant ID or keep it at Guid.Empty 
+                    // (But usually it's better to assign it to the current tenant for auditing)
+                    entry.Entity.CompanyId = tenantId; 
+                }
+                else
+                {
+                    entry.Entity.CompanyId = tenantId;
+                }
             }
         }
 

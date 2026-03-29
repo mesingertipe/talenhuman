@@ -166,9 +166,10 @@ public class ImportService : IImportService
             ws.Cell(1, 7).Value = "Fecha de Ingreso";
             ws.Cell(1, 8).Value = "Salario Diario";
             ws.Cell(1, 9).Value = "Activo (SI/NO)";
+            ws.Cell(1, 10).Value = "Fecha de Baja";
 
             // Style headers
-            var headerRange = ws.Range("A1:I1");
+            var headerRange = ws.Range("A1:J1");
             headerRange.Style.Font.Bold = true;
             headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#4f46e5");
             headerRange.Style.Font.FontColor = XLColor.White;
@@ -186,6 +187,7 @@ public class ImportService : IImportService
             ws.Column(6).Style.NumberFormat.Format = "yyyy-MM-dd";
             ws.Column(7).Style.NumberFormat.Format = "yyyy-MM-dd";
             ws.Column(8).Style.NumberFormat.Format = "#,##0.00";
+            ws.Column(10).Style.NumberFormat.Format = "yyyy-MM-dd";
 
             ws.Columns().AdjustToContents();
 
@@ -230,6 +232,7 @@ public class ImportService : IImportService
             ws.Cell(5, 1).Value = "- Fecha de Nacimiento: formato YYYY-MM-DD (Requerido para recuperación de clave).";
             ws.Cell(6, 1).Value = "- Fecha de Ingreso: formato YYYY-MM-DD (Ej: 2026-03-23).";
             ws.Cell(7, 1).Value = "- Activo: SI o NO.";
+            ws.Cell(8, 1).Value = "- Fecha de Baja: formato YYYY-MM-DD (Opcional, solo si el estado es NO).";
             wsHelp.Columns().AdjustToContents();
         }
 
@@ -433,23 +436,54 @@ public class ImportService : IImportService
 
                     DateTime? birthDate = DateTime.TryParse(birthDateStr, out var parsedBirth) ? parsedBirth : null;
                     DateTime dateOfEntry = DateTime.TryParse(dateStr, out var parsedDate) ? parsedDate : _timeProvider.Now;
+                    string identificationNumber = row.Data["Cédula"];
+                    bool isActive = !activeStr.Equals("NO", StringComparison.OrdinalIgnoreCase);
+                    DateTime? dateOfTermination = DateTime.TryParse(row.Data.GetValueOrDefault("Fecha de Baja"), out var parsedTerm) ? parsedTerm : null;
 
-                    var command = new CreateEmployeeCommand
+                    var employee = await _context.Employees
+                        .IgnoreQueryFilters()
+                        .FirstOrDefaultAsync(e => e.IdentificationNumber == identificationNumber && e.CompanyId == companyId);
+
+                    if (employee == null)
                     {
-                        FirstName = row.Data["Nombre"],
-                        LastName = row.Data["Apellidos"],
-                        IdentificationNumber = row.Data["Cédula"],
-                        BirthDate = birthDate,
-                        Role = "Empleado",
-                        StoreId = store.Id,
-                        ProfileId = profile.Id,
-                        JornadaId = jornada?.Id,
-                        DateOfEntry = dateOfEntry,
-                        DailySalary = decimal.TryParse(salaryStr, out var parsedSalary) ? parsedSalary : 0,
-                        IsActive = !activeStr.Equals("NO", StringComparison.OrdinalIgnoreCase)
-                    };
+                        var command = new CreateEmployeeCommand
+                        {
+                            FirstName = row.Data["Nombre"],
+                            LastName = row.Data["Apellidos"],
+                            IdentificationNumber = identificationNumber,
+                            BirthDate = birthDate,
+                            Role = "Empleado",
+                            StoreId = store.Id,
+                            ProfileId = profile.Id,
+                            JornadaId = jornada?.Id,
+                            DateOfEntry = dateOfEntry,
+                            DailySalary = decimal.TryParse(salaryStr, out var parsedSalary) ? parsedSalary : 0,
+                            IsActive = isActive
+                        };
+                        await _mediator.Send(command);
+                    }
+                    else 
+                    {
+                        // Update existing employee (Upsert logic)
+                        employee.FirstName = row.Data["Nombre"];
+                        employee.LastName = row.Data["Apellidos"];
+                        employee.BirthDate = birthDate;
+                        employee.StoreId = store.Id;
+                        employee.ProfileId = profile.Id;
+                        employee.JornadaId = jornada?.Id;
+                        employee.DailySalary = decimal.TryParse(salaryStr, out var parsedSalary) ? parsedSalary : employee.DailySalary;
+                        employee.IsActive = isActive;
+                        employee.DateOfTermination = dateOfTermination;
 
-                    await _mediator.Send(command);
+                        if (!employee.IsActive && employee.UserId.HasValue)
+                        {
+                            var user = await _context.Users.FindAsync(employee.UserId.Value);
+                            if (user != null) user.IsActive = false;
+                        }
+
+                        _context.Employees.Update(employee);
+                        await _context.SaveChangesAsync(CancellationToken.None);
+                    }
                     result.SuccessCount++;
                 }
                 catch (Exception ex)
@@ -587,6 +621,7 @@ public class ImportService : IImportService
         var data = ReadExcel(file);
         var errors = new List<string>();
         var count = 0;
+        var companyId = _tenantProvider.GetTenantId();
 
         foreach (DataRow row in data.Rows)
         {
@@ -595,10 +630,11 @@ public class ImportService : IImportService
                 var cedula = row["Cédula"]?.ToString()?.Trim() ?? "";
                 var sedeNombre = row["Sede Asignada"]?.ToString()?.Trim();
                 var cargoNombre = row["Perfil de Cargo"]?.ToString()?.Trim();
-                var jornadaNombre = row["Jornada"]?.ToString()?.Trim(); // Added this line
+                var jornadaNombre = row["Jornada"]?.ToString()?.Trim();
                 var birthDateStr = row["Fecha de Nacimiento"]?.ToString()?.Trim();
                 var activeStr = row["Activo (SI/NO)"]?.ToString()?.Trim() ?? "SI";
                 var dateStr = row["Fecha de Ingreso"]?.ToString()?.Trim();
+                var termDateStr = row["Fecha de Baja"]?.ToString()?.Trim();
 
                 if (string.IsNullOrEmpty(cedula)) continue;
 
@@ -616,22 +652,50 @@ public class ImportService : IImportService
 
                 DateTime? birthDate = DateTime.TryParse(birthDateStr, out var parsedBirth) ? parsedBirth : null;
                 DateTime dateOfEntry = DateTime.TryParse(dateStr, out var parsedDate) ? parsedDate : _timeProvider.Now;
+                DateTime? dateOfTermination = DateTime.TryParse(termDateStr, out var parsedTerm) ? parsedTerm : null;
+                bool isActive = !activeStr.Equals("NO", StringComparison.OrdinalIgnoreCase);
 
-                var command = new CreateEmployeeCommand
+                var employee = await _context.Employees
+                    .IgnoreQueryFilters()
+                    .FirstOrDefaultAsync(e => e.IdentificationNumber == cedula && e.CompanyId == companyId);
+
+                if (employee == null)
                 {
-                    FirstName = row["Nombre"]?.ToString()?.Trim() ?? "",
-                    LastName = row["Apellidos"]?.ToString()?.Trim() ?? "",
-                    IdentificationNumber = cedula,
-                    BirthDate = birthDate,
-                    Role = "Empleado",
-                    StoreId = store.Id,
-                    ProfileId = profile.Id,
-                    JornadaId = jornada?.Id, // Added this line
-                    DateOfEntry = dateOfEntry,
-                    IsActive = !activeStr.Equals("NO", StringComparison.OrdinalIgnoreCase)
-                };
+                    var command = new CreateEmployeeCommand
+                    {
+                        FirstName = row["Nombre"]?.ToString()?.Trim() ?? "",
+                        LastName = row["Apellidos"]?.ToString()?.Trim() ?? "",
+                        IdentificationNumber = cedula,
+                        BirthDate = birthDate,
+                        Role = "Empleado",
+                        StoreId = store.Id,
+                        ProfileId = profile.Id,
+                        JornadaId = jornada?.Id,
+                        DateOfEntry = dateOfEntry,
+                        IsActive = isActive
+                    };
+                    await _mediator.Send(command);
+                }
+                else 
+                {
+                    employee.FirstName = row["Nombre"]?.ToString()?.Trim() ?? employee.FirstName;
+                    employee.LastName = row["Apellidos"]?.ToString()?.Trim() ?? employee.LastName;
+                    employee.BirthDate = birthDate;
+                    employee.StoreId = store.Id;
+                    employee.ProfileId = profile.Id;
+                    employee.JornadaId = jornada?.Id;
+                    employee.IsActive = isActive;
+                    employee.DateOfTermination = dateOfTermination;
 
-                await _mediator.Send(command);
+                    if (!employee.IsActive && employee.UserId.HasValue)
+                    {
+                        var user = await _context.Users.FindAsync(employee.UserId.Value);
+                        if (user != null) user.IsActive = false;
+                    }
+
+                    _context.Employees.Update(employee);
+                    await _context.SaveChangesAsync(CancellationToken.None);
+                }
                 count++;
             }
             catch (Exception ex)

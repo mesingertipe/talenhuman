@@ -296,45 +296,65 @@ const Districts = () => {
             </div>
             
             <form onSubmit={handleSave}>
-              <div className="modal-body" style={{ padding: '1.5rem 2.5rem 2.5rem' }}>
-                <div className="grid grid-cols-1 gap-12">
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">Nombre Identificador del Distrito *</label>
-                    <div className="relative group">
-                      <Building size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                      <input 
-                        required 
-                        value={formData.name} 
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-                        className="w-full p-4 pl-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm shadow-sm" 
-                        placeholder="Ej. Distrito Norte"
+              <div className="modal-body overflow-y-auto max-h-[70vh] custom-scrollbar" style={{ padding: '0 2.5rem 2.5rem' }}>
+                <div className="grid grid-cols-1 gap-10">
+                  <div className="mb-4">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center font-bold text-xs">01</div>
+                      <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Identificación Regional</h3>
+                      <div className="h-[1px] flex-1 bg-slate-100 dark:bg-slate-800 ml-2"></div>
+                    </div>
+
+                    <div className="space-y-8">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Nombre del Distrito *</label>
+                        <div className="relative group">
+                          <Building size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                          <input 
+                            required 
+                            value={formData.name} 
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                            className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm" 
+                            placeholder="Ej. Distrito Norte"
+                          />
+                        </div>
+                      </div>
+
+                      <SearchableSelect
+                        label="Supervisor Responsable"
+                        options={supervisors.map(u => ({ value: u.id, label: u.fullName }))}
+                        value={formData.supervisorId}
+                        onChange={(val) => setFormData({ ...formData, supervisorId: val })}
+                        icon={User}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <SearchableSelect
-                      label="Supervisor Responsable de la Zona"
-                      options={supervisors.map(u => ({ value: u.id, label: u.fullName }))}
-                      value={formData.supervisorId}
-                      onChange={(val) => setFormData({ ...formData, supervisorId: val })}
-                      placeholder="Seleccionar supervisor operativo..."
-                      icon={User}
-                    />
-                  </div>
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center font-bold text-xs">02</div>
+                      <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Sucursales Asociadas</h3>
+                      <div className="h-[1px] flex-1 bg-slate-100 dark:bg-slate-800 ml-2"></div>
+                    </div>
 
-                  <div>
                     <MultiSearchableSelect
-                      label="Asignar Sucursales / Tiendas"
+                      label="Sedes del Grupo"
                       options={stores.map(s => ({ 
                         value: s.id, 
                         label: `${s.name} (${s.externalId || 'S/ID'})` 
                       }))}
                       value={formData.storeIds}
                       onChange={(val) => setFormData({ ...formData, storeIds: val })}
-                      placeholder="Buscar y agrupar sedes..."
+                      placeholder="Seleccionar tiendas..."
                     />
                   </div>
+                </div>
+
+                <div className="mt-8 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-start gap-3">
+                  <MapPin size={18} className="text-indigo-400 mt-0.5 shrink-0" />
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tight leading-normal">
+                    La agrupación por distrito permite reportes consolidados y gestión directa por supervisor de zona.
+                  </p>
                 </div>
               </div>
 

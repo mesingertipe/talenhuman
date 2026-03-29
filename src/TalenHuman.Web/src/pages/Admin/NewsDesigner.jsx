@@ -16,7 +16,9 @@ import {
     LucideSettings,
     Edit3,
     UserCircle2,
-    Layout
+    Layout,
+    Globe,
+    Download
 } from 'lucide-react';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
@@ -42,6 +44,9 @@ const NewsDesigner = () => {
     const [showConfirm, setShowConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+    const [showTemplates, setShowTemplates] = useState(false);
+    const [templates, setTemplates] = useState([]);
+    const [isImporting, setIsImporting] = useState(false);
 
     // Elite V12 Design System
     const activeColors = {
@@ -60,7 +65,9 @@ const NewsDesigner = () => {
         try {
             setLoading(true);
             const response = await api.get('/NovedadTipos');
-            setNewsTypes(response.data);
+            // Filter out templates from the local main list (they will go in the Catalog)
+            setNewsTypes(response.data.filter(t => !t.esPlantilla));
+            setTemplates(response.data.filter(t => t.esPlantilla));
         } catch (error) { 
             showToast('Error al sincronizar estructuras', 'error'); 
         } finally { 
@@ -113,6 +120,7 @@ const NewsDesigner = () => {
         }
     };
 
+
     const handleDelete = async () => {
         setIsDeleting(true);
         try {
@@ -124,6 +132,20 @@ const NewsDesigner = () => {
             showToast('Error en la eliminación', 'error');
         } finally {
             setIsDeleting(false);
+        }
+    };
+
+    const handleImportTemplate = async (templateId) => {
+        setIsImporting(true);
+        try {
+            await api.post(`/NovedadTipos/import-template/${templateId}`);
+            showToast('Estructura importada con éxito');
+            setShowTemplates(false);
+            fetchNewsTypes();
+        } catch (error) {
+            showToast('Error al importar la plantilla', 'error');
+        } finally {
+            setIsImporting(false);
         }
     };
 
@@ -156,6 +178,13 @@ const NewsDesigner = () => {
                             style={{ width: '100%', padding: '16px 20px 16px 52px', borderRadius: '20px', background: activeColors.card, border: `1px solid ${activeColors.border}`, color: activeColors.textMain, fontSize: '0.9rem', fontWeight: '600', boxSizing: 'border-box', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}
                         />
                     </div>
+                    <button 
+                        onClick={() => setShowTemplates(true)} 
+                        style={{ background: isDarkMode ? '#1e293b' : 'white', color: activeColors.accent, padding: '16px 28px', borderRadius: '20px', border: `1px solid ${activeColors.border}`, fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.12em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.3s' }}
+                        className="hover:bg-slate-50 dark:hover:bg-slate-800"
+                    >
+                        <Globe size={18} /> Catálogo
+                    </button>
                     <button 
                         onClick={() => handleOpenModal()} 
                         style={{ background: activeColors.accent, color: 'white', padding: '16px 36px', borderRadius: '20px', border: 'none', fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.15em', cursor: 'pointer', boxShadow: '0 10px 25px rgba(79, 70, 229, 0.3)', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.3s' }}
@@ -409,6 +438,48 @@ const NewsDesigner = () => {
                     {toast.type === 'success' ? <CheckCircle size={22} /> : <AlertCircle size={22} />}
                     {toast.message}
                 </div>
+            )}
+
+            {/* Template Catalog Modal */}
+            {showTemplates && createPortal(
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 15, 0.85)', backdropFilter: 'blur(30px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                    <div style={{ background: activeColors.card, width: '100%', maxWidth: '850px', maxHeight: '85vh', borderRadius: '48px', overflow: 'hidden', display: 'flex', flexDirection: 'column', border: isDarkMode ? '1px solid #334155' : 'none', boxShadow: '0 50px 100px rgba(0,0,0,0.5)' }}>
+                        <div style={{ padding: '35px 50px', borderBottom: `1px solid ${activeColors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                                <h2 style={{ color: activeColors.textMain, fontWeight: '950', fontSize: '1.4rem', margin: 0 }}>Catálogo de Plantillas</h2>
+                                <p style={{ fontSize: '0.8rem', color: activeColors.textMuted, fontWeight: '600' }}>Importe configuraciones predefinidas por el SuperAdmin</p>
+                            </div>
+                            <button onClick={() => setShowTemplates(false)} style={{ background: activeColors.accentSoft, border: 'none', width: '42px', height: '42px', borderRadius: '12px', cursor: 'pointer', color: activeColors.accent }}>
+                                <X size={20} strokeWidth={3} />
+                            </button>
+                        </div>
+                        <div style={{ padding: '40px 50px', overflowY: 'auto', flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+                            {templates.length === 0 && (
+                                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '100px 0' }}>
+                                    <Globe size={48} style={{ color: activeColors.border, margin: '0 auto 20px' }} />
+                                    <p style={{ color: activeColors.textMuted, fontWeight: '700' }}>No hay plantillas globales disponibles en este momento.</p>
+                                </div>
+                            )}
+                            {templates.map(t => (
+                                <div key={t.id} style={{ padding: '25px', borderRadius: '24px', border: `1px solid ${activeColors.border}`, background: activeColors.bg, display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                    <div>
+                                        <div style={{ fontSize: '9px', fontWeight: '950', color: activeColors.accent, textTransform: 'uppercase', marginBottom: '8px' }}>Estructura Sugerida</div>
+                                        <h4 style={{ fontSize: '1.1rem', fontWeight: '900', color: activeColors.textMain, margin: '0 0 8px 0' }}>{t.nombre}</h4>
+                                        <p style={{ fontSize: '0.75rem', color: activeColors.textMuted, fontWeight: '600', minHeight: '3em' }}>{t.descripcion || 'Sin descripción.'}</p>
+                                    </div>
+                                    <button 
+                                        disabled={isImporting}
+                                        onClick={() => handleImportTemplate(t.id)}
+                                        style={{ width: '100%', padding: '14px', borderRadius: '16px', border: 'none', background: activeColors.accent, color: 'white', fontWeight: '800', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
+                                    >
+                                        <Download size={16} /> {isImporting ? 'Importando...' : 'Importar a mi Empresa'}
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>,
+                document.getElementById('modal-root')
             )}
 
             <style>{`

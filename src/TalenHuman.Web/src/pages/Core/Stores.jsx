@@ -329,107 +329,125 @@ const Stores = () => {
             </div>
             
             <form onSubmit={handleSave}>
-              <div className="modal-body" style={{ padding: '1.5rem 2.5rem 2.5rem' }}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-10">
-                  <div className="md:col-span-2">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">Nombre Comercial de la Tienda *</label>
-                    <div className="relative group">
-                      <Store size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                      <input 
-                        required 
-                        value={formData.name} 
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-                        className="w-full p-4 pl-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm shadow-sm" 
-                        placeholder="Ej. Sede Central Norte"
-                      />
+              <div className="modal-body overflow-y-auto max-h-[70vh] custom-scrollbar" style={{ padding: '0 2.5rem 2.5rem' }}>
+                {/* --- Section 1: General Info --- */}
+                <div className="mb-10">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center font-bold text-xs">01</div>
+                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Identificación de Sede</h3>
+                    <div className="h-[1px] flex-1 bg-slate-100 dark:bg-slate-800 ml-2"></div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
+                    <div className="md:col-span-2">
+                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Nombre Comercial *</label>
+                      <div className="relative group">
+                        <Store size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                        <input 
+                          required 
+                          value={formData.name} 
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm" 
+                          placeholder="Ej. Sede Central Norte"
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <SearchableSelect
-                      label="Ciudad Regional"
-                      options={cities.map(c => ({ value: c.id, label: c.name }))}
-                      value={formData.cityId}
-                      onChange={(val) => setFormData({ ...formData, cityId: val })}
-                      placeholder="Seleccionar..."
-                      icon={MapPin}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <SearchableSelect
-                      label="Distrito / Zona"
-                      options={districts.map(d => ({ value: d.id, label: d.name }))}
-                      value={formData.districtId}
-                      onChange={(val) => setFormData({ ...formData, districtId: val })}
-                      placeholder="Seleccionar..."
-                      icon={Building}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">ID Externo (ERP) *</label>
-                    <div className="relative group">
-                      <Tag size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                      <input 
-                        required
-                        value={formData.externalId} 
-                        onChange={(e) => setFormData({ ...formData, externalId: e.target.value })} 
-                        className="w-full p-4 pl-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm shadow-sm"
-                        placeholder="Ej. T-100"
-                      />
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">ID Externo (ERP) *</label>
+                      <div className="relative group">
+                        <Tag size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                        <input 
+                          required
+                          value={formData.externalId} 
+                          onChange={(e) => setFormData({ ...formData, externalId: e.target.value })} 
+                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
+                          placeholder="ERP Code..."
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">ID Biométrico (Reloj)</label>
-                    <div className="relative group">
-                      <Tag size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                      <input 
-                        value={formData.biometricId} 
-                        onChange={(e) => setFormData({ ...formData, biometricId: e.target.value })} 
-                        className="w-full p-4 pl-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm shadow-sm"
-                        placeholder="Ej. BIO-78"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <SearchableSelect
-                      label="Marca de Franquicia / Grupo"
-                      options={brands.map(b => ({ value: b.id, label: b.name }))}
-                      value={formData.brandId}
-                      onChange={(val) => setFormData({ ...formData, brandId: val })}
-                      placeholder="Asociar marca..."
-                      icon={Tag}
-                      required
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">Dirección / Ubicación Física *</label>
-                    <div className="relative group">
-                      <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                      <input 
-                        required
-                        value={formData.address} 
-                        onChange={(e) => setFormData({ ...formData, address: e.target.value })} 
-                        className="w-full p-4 pl-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm shadow-sm"
-                        placeholder="Ej. Av. Principal #123"
-                      />
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">ID Biométrico</label>
+                      <div className="relative group">
+                        <Hash size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                        <input 
+                          value={formData.biometricId} 
+                          onChange={(e) => setFormData({ ...formData, biometricId: e.target.value })} 
+                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
+                          placeholder="Bio ID..."
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-800/50 rounded-[28px] border border-slate-100 dark:border-slate-700 shadow-inner mt-12">
+                {/* --- Section 2: Branding & Location --- */}
+                <div className="mb-10">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center font-bold text-xs">02</div>
+                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Ubicación y Marca</h3>
+                    <div className="h-[1px] flex-1 bg-slate-100 dark:bg-slate-800 ml-2"></div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
+                    <div>
+                      <SearchableSelect
+                        label="Ciudad Regional"
+                        options={cities.map(c => ({ value: c.id, label: c.name }))}
+                        value={formData.cityId}
+                        onChange={(val) => setFormData({ ...formData, cityId: val })}
+                        icon={MapPin}
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <SearchableSelect
+                        label="Distrito / Zona"
+                        options={districts.map(d => ({ value: d.id, label: d.name }))}
+                        value={formData.districtId}
+                        onChange={(val) => setFormData({ ...formData, districtId: val })}
+                        icon={Building}
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <SearchableSelect
+                        label="Marca / Grupo"
+                        options={brands.map(b => ({ value: b.id, label: b.name }))}
+                        value={formData.brandId}
+                        onChange={(val) => setFormData({ ...formData, brandId: val })}
+                        icon={Tag}
+                        required
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Dirección Física *</label>
+                      <div className="relative group">
+                        <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                        <input 
+                          required
+                          value={formData.address} 
+                          onChange={(e) => setFormData({ ...formData, address: e.target.value })} 
+                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
+                          placeholder="Dirección completa..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* --- Section 3: Operational Status --- */}
+                <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-50 dark:border-slate-800 flex items-center justify-between shadow-sm mt-6">
                   <div className="flex items-center gap-5">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${formData.isActive ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' : 'bg-slate-200 text-slate-500'}`}>
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${formData.isActive ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-100' : 'bg-slate-100 text-slate-400'}`}>
                       {formData.isActive ? <CheckCircle size={26} /> : <AlertCircle size={26} />}
                     </div>
                     <div>
                       <div className="font-black text-md dark:text-white leading-tight">Estado Operativo</div>
-                      <div className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1.5 flex items-center gap-1.5 text-emerald-600">
+                      <div className="text-[10px] text-emerald-600 uppercase font-black tracking-widest mt-1.5 flex items-center gap-1.5">
                         {formData.isActive ? <><div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div> TIENDA EN OPERACIÓN</> : 'TIENDA INACTIVA / CERRADA'}
                       </div>
                     </div>

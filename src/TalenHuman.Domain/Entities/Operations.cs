@@ -28,6 +28,7 @@ public class Employee : BaseEntity, IMultitenant
     public Company Company { get; set; } = null!;
 
     public bool IsActive { get; set; } = true;
+    public DateTime? DateOfTermination { get; set; }
 
     // Relationships
     public ICollection<Shift> Shifts { get; set; } = new List<Shift>();
@@ -138,6 +139,8 @@ public class NovedadTipo : BaseEntity, IMultitenant
     
     public NovedadCategoria Categoria { get; set; } = NovedadCategoria.Empleado;
     public string RolAprobador { get; set; } = "Admin"; // Default to Admin
+    
+    public bool EsPlantilla { get; set; } = false; // Flag for Global Templates
     
     public Guid CompanyId { get; set; }
     public Company Company { get; set; } = null!;

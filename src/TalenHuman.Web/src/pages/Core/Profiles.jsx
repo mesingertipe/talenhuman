@@ -244,50 +244,55 @@ const Profiles = () => {
             </div>
             
             <form onSubmit={handleSave}>
-              <div className="modal-body space-y-6">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre del Perfil de Cargo *</label>
-                  <div className="relative">
-                    <Briefcase size={18} className="absolute left-3 top-4 text-slate-400" />
-                    <input 
-                      autoFocus
-                      required 
-                      value={formData.name} 
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-                      className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
-                      placeholder="Ej. Administrador de Tienda"
-                    />
+              <div className="modal-body overflow-y-auto max-h-[70vh] custom-scrollbar" style={{ padding: '0 2.5rem 2.5rem' }}>
+                <div className="mb-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center font-bold text-xs">01</div>
+                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Definición de Perfil</h3>
+                    <div className="h-[1px] flex-1 bg-slate-100 dark:bg-slate-800 ml-2"></div>
                   </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Descripción de Funciones</label>
-                  <div className="relative">
-                    <FileText size={18} className="absolute left-3 top-4 text-slate-400" />
-                    <textarea 
-                      value={formData.description} 
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
-                      className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
-                      rows="3" 
-                      placeholder="Describe las responsabilidades principales de este cargo..."
-                      style={{ resize: 'none' }}
-                    />
-                  </div>
-                </div>
 
-                <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-100 text-[11px] text-slate-500 flex items-start gap-3">
-                  <AlertCircle size={16} className="text-indigo-500 mt-0.5" />
-                  <p>Los cargos permiten estructurar la jerarquía operativa y asignar permisos específicos a los colaboradores.</p>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-xl ${formData.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
-                      {formData.isActive ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Nombre del Perfil *</label>
+                      <div className="relative group">
+                        <Briefcase size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                        <input 
+                          autoFocus
+                          required 
+                          value={formData.name} 
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm" 
+                          placeholder="Ej. Administrador de Tienda"
+                        />
+                      </div>
                     </div>
                     <div>
-                      <div className="font-bold text-sm dark:text-white">Estado del Cargo</div>
-                      <div className="text-[10px] text-slate-500 uppercase font-black tracking-widest">
-                        {formData.isActive ? 'Cargo Activo' : 'Cargo Inactivo'}
+                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Descripción de Funciones</label>
+                      <div className="relative group">
+                        <FileText size={18} className="absolute left-4 top-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                        <textarea 
+                          value={formData.description} 
+                          onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
+                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm" 
+                          rows="3" 
+                          placeholder="Responsabilidades..."
+                          style={{ resize: 'none' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-50 dark:border-slate-800 flex items-center justify-between shadow-sm">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${formData.isActive ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-100' : 'bg-slate-100 text-slate-400'}`}>
+                      {formData.isActive ? <CheckCircle size={22} /> : <AlertCircle size={22} />}
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm dark:text-white leading-tight">Estado del Cargo</div>
+                      <div className="text-[10px] text-emerald-600 uppercase font-black tracking-widest mt-1">
+                        {formData.isActive ? 'Perfil Activo' : 'Perfil Inactivo'}
                       </div>
                     </div>
                   </div>
@@ -299,6 +304,11 @@ const Profiles = () => {
                     />
                     <span className="premium-switch-slider"></span>
                   </label>
+                </div>
+
+                <div className="mt-6 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 text-[10px] text-slate-500 flex items-start gap-3">
+                  <AlertCircle size={16} className="text-indigo-400 mt-0.5" />
+                  <p className="uppercase font-bold tracking-tight leading-normal">Los cargos permiten estructurar la jerarquía operativa y asignar permisos específicos.</p>
                 </div>
               </div>
 

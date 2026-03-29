@@ -33,7 +33,8 @@ public class NovedadTiposController : ControllerBase
                 RequiereAdjunto = n.RequiereAdjunto,
                 CamposConfig = n.CamposConfig,
                 Categoria = (int)n.Categoria,
-                RolAprobador = n.RolAprobador
+                RolAprobador = n.RolAprobador,
+                EsPlantilla = n.EsPlantilla
             })
             .ToListAsync();
     }
@@ -52,7 +53,8 @@ public class NovedadTiposController : ControllerBase
             RequiereAdjunto = n.RequiereAdjunto,
             CamposConfig = n.CamposConfig,
             Categoria = (int)n.Categoria,
-            RolAprobador = n.RolAprobador
+            RolAprobador = n.RolAprobador,
+            EsPlantilla = n.EsPlantilla
         };
     }
 
@@ -66,7 +68,8 @@ public class NovedadTiposController : ControllerBase
             RequiereAdjunto = dto.RequiereAdjunto,
             CamposConfig = dto.CamposConfig,
             Categoria = (NovedadCategoria)dto.Categoria,
-            RolAprobador = dto.RolAprobador
+            RolAprobador = dto.RolAprobador,
+            EsPlantilla = User.IsInRole("SuperAdmin") && dto.EsPlantilla
         };
 
         _context.NovedadTipos.Add(n);
@@ -88,6 +91,11 @@ public class NovedadTiposController : ControllerBase
         n.CamposConfig = dto.CamposConfig;
         n.Categoria = (NovedadCategoria)dto.Categoria;
         n.RolAprobador = dto.RolAprobador;
+        
+        if (User.IsInRole("SuperAdmin"))
+        {
+            n.EsPlantilla = dto.EsPlantilla;
+        }
 
         await _context.SaveChangesAsync(default);
         return NoContent();
@@ -110,6 +118,40 @@ public class NovedadTiposController : ControllerBase
         await _context.SaveChangesAsync(default);
         return NoContent();
     }
+
+    [HttpPost("import-template/{id}")]
+    public async Task<ActionResult<NovedadTipoDto>> ImportTemplate(Guid id)
+    {
+        // IgnoreQueryFilters to find the template even if it belongs to another company (though EsPlantilla bypasses filter)
+        var template = await _context.NovedadTipos.IgnoreQueryFilters().FirstOrDefaultAsync(n => n.Id == id && n.EsPlantilla);
+        if (template == null) return NotFound("Plantilla no encontrada.");
+
+        var newType = new NovedadTipo
+        {
+            Nombre = template.Nombre + " (Copia)",
+            Descripcion = template.Descripcion,
+            RequiereAdjunto = template.RequiereAdjunto,
+            CamposConfig = template.CamposConfig,
+            Categoria = template.Categoria,
+            RolAprobador = template.RolAprobador,
+            EsPlantilla = false // Imported version is NOT a template
+        };
+
+        _context.NovedadTipos.Add(newType);
+        await _context.SaveChangesAsync(default);
+
+        return Ok(new NovedadTipoDto
+        {
+            Id = newType.Id,
+            Nombre = newType.Nombre,
+            Descripcion = newType.Descripcion,
+            RequiereAdjunto = newType.RequiereAdjunto,
+            CamposConfig = newType.CamposConfig,
+            Categoria = (int)newType.Categoria,
+            RolAprobador = newType.RolAprobador,
+            EsPlantilla = false
+        });
+    }
 }
 
 public class NovedadTipoDto
@@ -121,4 +163,5 @@ public class NovedadTipoDto
     public string? CamposConfig { get; set; } // JSON
     public int Categoria { get; set; }
     public string RolAprobador { get; set; } = "Admin";
+    public bool EsPlantilla { get; set; }
 }

@@ -104,7 +104,8 @@ public class IntegrationController : ControllerBase
                     ProfileId = profile.Id,
                     DateOfEntry = dto.DateOfEntry ?? DateTime.UtcNow,
                     DailySalary = dto.DailySalary,
-                    IsActive = true,
+                    IsActive = dto.IsActive,
+                    DateOfTermination = dto.DateOfTermination,
                     CompanyId = tenantId
                 };
                 _context.Employees.Add(employee);
@@ -119,6 +120,15 @@ public class IntegrationController : ControllerBase
                 employee.ProfileId = profile.Id;
                 employee.DailySalary = dto.DailySalary;
                 employee.IsActive = dto.IsActive;
+                employee.DateOfTermination = dto.DateOfTermination;
+                
+                // If becomes inactive, deactivate user access
+                if (!employee.IsActive && employee.UserId.HasValue)
+                {
+                    var user = await _context.Users.FindAsync(employee.UserId.Value);
+                    if (user != null) user.IsActive = false;
+                }
+
                 results.Updated++;
             }
         }
@@ -216,6 +226,7 @@ public class EmployeeSyncDto
     public DateTime? DateOfEntry { get; set; }
     public decimal DailySalary { get; set; }
     public bool IsActive { get; set; } = true;
+    public DateTime? DateOfTermination { get; set; }
 }
 
 public class AttendanceSyncDto

@@ -23,6 +23,7 @@ public interface IApplicationDbContext
     DbSet<SystemSetting> SystemSettings { get; }
     DbSet<ApiKey> ApiKeys { get; }
     DbSet<ExternalApiConfig> ExternalApiConfigs { get; }
+    DbSet<User> Users { get; }
     DbSet<SalesData> SalesData { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);

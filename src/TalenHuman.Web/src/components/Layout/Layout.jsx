@@ -47,6 +47,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
       children: [
         { icon: <Settings size={20} />, label: 'Usuarios', roles: ['SuperAdmin', 'Admin'] },
         { icon: <FileText size={20} />, label: 'Configuración novedades', roles: ['SuperAdmin', 'Admin'] },
+        { icon: <Globe size={20} />, label: 'Diseñador de Plantillas', roles: ['SuperAdmin'] },
         { icon: <Building size={20} />, label: 'Empresas', roles: ['SuperAdmin'] },
         { icon: <Cpu size={20} />, label: 'Configuración Sistema', roles: ['SuperAdmin'] },
       ]
@@ -182,6 +183,7 @@ const getPageInfo = (page) => {
     case 'Marcaciones': return { title: 'Marcaciones', subtitle: 'Trazabilidad de ingresos y salidas' };
     case 'Empresas': return { title: 'Empresas', subtitle: 'Configuración de inquilinos corporativos' };
     case 'Configuración Sistema': return { title: 'Parámetros del Sistema', subtitle: 'Configuración de infraestructura y servicios core' };
+    case 'Diseñador de Plantillas': return { title: 'Catálogo de Plantillas', subtitle: 'Diseño de novedades globales para el ecosistema' };
     default: return { title: page, subtitle: '' };
   }
 };

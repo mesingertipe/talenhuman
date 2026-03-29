@@ -20,6 +20,7 @@ import Marcaciones from './pages/Core/Marcaciones';
 import Cities from './pages/Core/Cities';
 import Districts from './pages/Core/Districts';
 import SystemSettings from './pages/SuperAdmin/SystemSettings';
+import NewsTemplateDesigner from './pages/SuperAdmin/NewsTemplateDesigner';
 
 function App() {
   const [user, setUser] = React.useState(null);
@@ -127,6 +128,9 @@ function App() {
         return <Dashboard />;
       case 'Configuración Sistema':
         if (isSuperAdmin) return <SystemSettings />;
+        return <Dashboard />;
+      case 'Diseñador de Plantillas':
+        if (isSuperAdmin) return <NewsTemplateDesigner />;
         return <Dashboard />;
       default: return <Dashboard />;
     }
