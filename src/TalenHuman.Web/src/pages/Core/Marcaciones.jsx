@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
     Clock, Search, Filter, Calendar, User as UserIcon, 
     CheckCircle, AlertCircle, ArrowUpRight, ArrowDownLeft,
-    Download, RefreshCw, LayoutGrid, ListTodo, X, MapPin
+    Download, RefreshCw, LayoutGrid, ListTodo, X, MapPin, FileText, Send
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
@@ -116,6 +116,40 @@ const Marcaciones = ({ user }) => {
         XLSX.writeFile(wb, `Marcaciones_${dateRange.start}_al_${dateRange.end}.xlsx`);
     };
 
+    const handleExportStats = () => {
+        // Aggregate by Day and Status
+        const days = [...new Set(marcaciones.map(m => m.clockIn ? m.clockIn.split('T')[0] : 'N/A'))].sort();
+        const stats = days.map(day => {
+            const dayRecords = marcaciones.filter(m => m.clockIn && m.clockIn.startsWith(day));
+            return {
+                Fecha: day,
+                Total: dayRecords.length,
+                Correctos: dayRecords.filter(m => m.status === 0).length,
+                Desfasados: dayRecords.filter(m => m.status === 1).length,
+                Errados: dayRecords.filter(m => m.status === 2).length,
+                Ausentes: dayRecords.filter(m => m.status === 3).length
+            };
+        });
+
+        const ws = XLSX.utils.json_to_sheet(stats);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Estadísticas Diarias");
+        XLSX.writeFile(wb, `Estadisticas_Asistencia_${dateRange.start}.xlsx`);
+    };
+
+    const [isSendingReport, setIsSendingReport] = useState(false);
+    const handleSendReport = async () => {
+        try {
+            setIsSendingReport(true);
+            await api.post('/attendance/send-report', { date: dateRange.start });
+            showToast("Solicitud de reporte PDF enviada correctamente");
+        } catch (err) {
+            showToast("Error al solicitar el reporte", "error");
+        } finally {
+            setIsSendingReport(false);
+        }
+    };
+
     const getStatusStyle = (status) => {
         switch(status) {
             case 0: return { bg: '#ecfdf5', text: '#059669', border: '#d1fae5', label: 'Correcto' }; // Correcto
@@ -138,20 +172,38 @@ const Marcaciones = ({ user }) => {
                     <button 
                         onClick={handleExport}
                         style={{ background: activeColors.card, color: activeColors.textMain, padding: '14px 24px', borderRadius: '20px', border: `1px solid ${activeColors.border}`, fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.2s' }}
-                        className="hover:bg-slate-50 active:scale-95"
+                        className="hover:scale-[1.02] active:scale-95"
                     >
-                        <Download size={18} /> <span className="hidden md:inline">Exportar Excel</span>
+                        <Download size={18} /> <span className="hidden lg:inline">Detalle Excel</span>
+                    </button>
+                    <button 
+                        onClick={handleExportStats}
+                        style={{ background: activeColors.card, color: activeColors.textMain, padding: '14px 24px', borderRadius: '20px', border: `1px solid ${activeColors.border}`, fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.2s' }}
+                        className="hover:scale-[1.02] active:scale-95 border-indigo-100"
+                    >
+                        <FileText size={18} className="text-indigo-500" /> <span className="hidden lg:inline">Resumen Estadístico</span>
                     </button>
                     {(user?.roles?.includes('Admin') || user?.roles?.includes('SuperAdmin')) && (
-                        <button 
-                            onClick={handleSync}
-                            disabled={isSyncing}
-                            style={{ background: activeColors.accent, color: 'white', padding: '14px 28px', borderRadius: '20px', border: 'none', fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 8px 15px rgba(79, 70, 229, 0.2)', transition: 'all 0.2s' }}
-                            className="hover:scale-[1.02] active:scale-95 disabled:opacity-50"
-                        >
-                            <RefreshCw size={18} className={isSyncing ? 'animate-spin' : ''} /> 
-                            {isSyncing ? 'Consolidando...' : 'Consolidar Ahora'}
-                        </button>
+                        <>
+                            <button 
+                                onClick={handleSendReport}
+                                disabled={isSendingReport}
+                                style={{ background: isDarkMode ? '#1e293b' : '#f8fafc', color: activeColors.accent, padding: '14px 24px', borderRadius: '20px', border: `2px solid ${activeColors.accent}22`, fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.2s' }}
+                                className="hover:bg-indigo-50 active:scale-95 disabled:opacity-50"
+                            >
+                                <Send size={18} className={isSendingReport ? 'animate-bounce' : ''} /> 
+                                {isSendingReport ? 'Enviando...' : 'Email PDF'}
+                            </button>
+                            <button 
+                                onClick={handleSync}
+                                disabled={isSyncing}
+                                style={{ background: activeColors.accent, color: 'white', padding: '14px 28px', borderRadius: '20px', border: 'none', fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 8px 15px rgba(79, 70, 229, 0.2)', transition: 'all 0.2s' }}
+                                className="hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                            >
+                                <RefreshCw size={18} className={isSyncing ? 'animate-spin' : ''} /> 
+                                {isSyncing ? 'Consolidar' : 'Procesar Día'}
+                            </button>
+                        </>
                     )}
                 </div>
             </div>

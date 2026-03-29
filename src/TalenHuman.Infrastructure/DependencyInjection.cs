@@ -33,10 +33,11 @@ public static class DependencyInjection
 
         services.AddScoped<ITenantProvider, TenantProvider>();
         services.AddScoped<ITenantTimeProvider, TenantTimeProvider>();
-        services.AddScoped<ISystemSettingsService, SystemSettingsService>();
+        services.AddScoped<ISystemSettingsService, Services.SystemSettingsService>();
         services.AddScoped<IFileStorageService, DigitalOceanSpacesService>();
-        services.AddScoped<IEmailService, ResendEmailService>();
+        services.AddScoped<IEmailService, Services.ResendEmailService>();
         services.AddScoped<IIdentityService, Identity.IdentityService>();
+        services.AddHostedService<Services.AttendanceSchedulerService>();
         services.AddHttpClient();
         services.AddHttpContextAccessor();
 

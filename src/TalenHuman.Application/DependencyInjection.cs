@@ -11,6 +11,8 @@ public static class DependencyInjection
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
         services.AddScoped<IImportService, Services.ImportService>();
         services.AddScoped<Services.AttendanceService>();
+        services.AddScoped<Services.NotificationService>();
+        services.AddScoped<Services.AttendanceReportService>();
         // Add Automapper or FluentValidation if needed
         return services;
     }

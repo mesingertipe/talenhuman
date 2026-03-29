@@ -37,6 +37,12 @@ public class Store : BaseEntity, IMultitenant
     public string? BiometricId { get; set; }
     public bool IsActive { get; set; } = true;
     
+    // Attendance Operational Settings
+    public bool UseSequentialPairing { get; set; } = true; // "Modo Marcaciones" (Default)
+    public string OperationalDayStart { get; set; } = "05:00"; // Default 5 AM
+    public string DefaultStartTime { get; set; } = "08:00"; // Store standard start
+    public string DefaultEndTime { get; set; } = "17:00"; // Store standard end
+    
     public Guid? CityId { get; set; }
     public City? City { get; set; }
     

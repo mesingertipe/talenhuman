@@ -14,24 +14,28 @@ public class ResendEmailService : IEmailService
         _httpClient = httpClient;
     }
 
-    public async Task SendEmailAsync(string to, string subject, string body)
+    public async Task SendEmailAsync(string to, string subject, string body, List<AttachmentDto>? attachments = null)
     {
         var apiKey = await _settingsService.GetSettingAsync("RESEND_API_KEY");
         var from = await _settingsService.GetSettingAsync("EMAIL_FROM") ?? "no-reply@resend.dev";
 
         if (string.IsNullOrEmpty(apiKey)) return; // Or log error
 
-        var request = new
+        var requestBody = new
         {
             from,
             to = new[] { to },
             subject,
-            html = body
+            html = body,
+            attachments = attachments?.Select(a => new {
+                filename = a.Filename,
+                content = Convert.ToBase64String(a.Content)
+            }).ToList()
         };
 
         var httpRequest = new HttpRequestMessage(HttpMethod.Post, "https://api.resend.com/emails")
         {
-            Content = JsonContent.Create(request)
+            Content = JsonContent.Create(requestBody)
         };
         httpRequest.Headers.Add("Authorization", $"Bearer {apiKey}");
 

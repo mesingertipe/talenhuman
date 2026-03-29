@@ -22,19 +22,22 @@ public class AuthController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly IConfiguration _configuration;
     private readonly IIdentityService _identityService;
+    private readonly IEmailService _emailService;
 
     public AuthController(
         UserManager<User> userManager,
         SignInManager<User> signInManager,
         ApplicationDbContext context,
         IConfiguration configuration,
-        IIdentityService identityService)
+        IIdentityService identityService,
+        IEmailService emailService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _context = context;
         _configuration = configuration;
         _identityService = identityService;
+        _emailService = emailService;
     }
 
     [HttpPost("login")]
@@ -147,12 +150,27 @@ public class AuthController : ControllerBase
 
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
         
-        // TODO: Send email with token. For now, we log it to console/response to allow testing.
-        Console.WriteLine($"Password Reset Token for {user.Email}: {token}");
+        // Construct elite/corporate email
+        var emailBody = $@"
+        <div style='font-family: sans-serif; color: #1e293b; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 24px; padding: 40px;'>
+            <div style='margin-bottom: 30px;'>
+                <h2 style='color: #4f46e5; margin: 0;'>TalenHuman</h2>
+                <p style='color: #64748b; font-size: 14px; font-weight: 600;'>ELITE V12 - SEGURIDAD</p>
+            </div>
+            <h1 style='font-size: 24px; font-weight: 950; letter-spacing: -0.02em;'>Recupera tu acceso</h1>
+            <p style='line-height: 1.6;'>Hola {user.FullName}, hemos recibido una solicitud para restablecer tu contraseña. Ingresa el siguiente código de seguridad en la aplicación para continuar:</p>
+            <div style='background: #f8fafc; border: 2px dashed #4f46e5; padding: 20px; text-align: center; border-radius: 16px; margin: 30px 0;'>
+                <span style='font-size: 32px; font-weight: 900; color: #4f46e5; letter-spacing: 0.1em;'>{token}</span>
+            </div>
+            <p style='font-size: 13px; color: #94a3b8;'>Si no solicitaste este cambio, puedes ignorar este correo con seguridad. El código expirará pronto por razones de seguridad.</p>
+            <hr style='border: none; border-top: 1px solid #f1f5f9; margin: 30px 0;' />
+            <p style='font-size: 12px; font-weight: 700; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.05em;'>© 2026 TalenHuman Platform - Gestión Elite de Talento Humano</p>
+        </div>";
+
+        await _emailService.SendEmailAsync(user.Email!, "Restablecer contraseña - TalenHuman", emailBody);
         
         return Ok(new { 
-            message = "Token generado exitosamente.", 
-            debugToken = token // REMOVE THIS in production
+            message = "Token enviado a tu correo exitosamente."
         });
     }
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit, X, MapPin, FileSpreadsheet, Store, Tag, CheckCircle, AlertCircle, Building, Download, Search } from 'lucide-react';
+import { Plus, Trash2, Edit, X, MapPin, FileSpreadsheet, Store, Tag, CheckCircle, AlertCircle, Building, Download, Search, Clock, Settings, Hash } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import api from '../../services/api';
 import BulkImportModal from '../../components/Shared/BulkImportModal';
@@ -29,7 +29,20 @@ const Stores = () => {
   const [showImport, setShowImport] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [currentStore, setCurrentStore] = useState(null);
-  const [formData, setFormData] = useState({ name: '', address: '', brandId: '', cityId: '', districtId: '', externalId: '', biometricId: '', isActive: true });
+  const [formData, setFormData] = useState({ 
+    name: '', 
+    address: '', 
+    brandId: '', 
+    cityId: '', 
+    districtId: '', 
+    externalId: '', 
+    biometricId: '', 
+    isActive: true,
+    useSequentialPairing: true, // Default to "Modo Marcaciones"
+    operationalDayStart: '05:00',
+    defaultStartTime: '08:00',
+    defaultEndTime: '17:00'
+  });
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -174,7 +187,24 @@ const Stores = () => {
               <FileSpreadsheet size={18} /> Importar
             </button>
             <button 
-              onClick={() => { setCurrentStore(null); setFormData({ name: '', address: '', brandId: '', cityId: '', districtId: '', externalId: '', biometricId: '', isActive: true }); setShowModal(true); }}
+              onClick={() => { 
+                setCurrentStore(null); 
+                setFormData({ 
+                  name: '', 
+                  address: '', 
+                  brandId: '', 
+                  cityId: '', 
+                  districtId: '', 
+                  externalId: '', 
+                  biometricId: '', 
+                  isActive: true,
+                  useSequentialPairing: true,
+                  operationalDayStart: '05:00',
+                  defaultStartTime: '08:00',
+                  defaultEndTime: '17:00'
+                }); 
+                setShowModal(true); 
+              }}
               className="btn-premium btn-premium-primary"
               style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
             >
@@ -261,7 +291,11 @@ const Stores = () => {
                           externalId: store.externalId || '',
                           biometricId: store.biometricId || '',
                           districtId: store.districtId || '',
-                          isActive: store.isActive !== false 
+                          isActive: store.isActive !== false,
+                          useSequentialPairing: !!store.useSequentialPairing,
+                          operationalDayStart: store.operationalDayStart || '05:00',
+                          defaultStartTime: store.defaultStartTime || '08:00',
+                          defaultEndTime: store.defaultEndTime || '17:00'
                         }); 
                         setShowModal(true); 
                       }}
@@ -439,7 +473,101 @@ const Stores = () => {
                   </div>
                 </div>
 
-                {/* --- Section 3: Operational Status --- */}
+                {/* --- Section 3: Operational Configuration (Attendance Mode) --- */}
+                <div className="mb-10">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center font-bold text-xs">03</div>
+                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Lógica de Asistencia</h3>
+                    <div className="h-[1px] flex-1 bg-slate-100 dark:bg-slate-800 ml-2"></div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="p-6 rounded-[28px] bg-slate-50/50 dark:bg-slate-800/30 border-2 border-slate-100 dark:border-slate-800/50">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${formData.useSequentialPairing ? 'bg-indigo-500 text-white shadow-lg' : 'bg-emerald-500 text-white shadow-lg'}`}>
+                            {formData.useSequentialPairing ? <Settings size={20} /> : <Clock size={20} />}
+                          </div>
+                          <div>
+                            <div className="font-bold text-sm dark:text-white">
+                                {formData.useSequentialPairing ? 'Modo Marcaciones' : 'Modo Turno'}
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                {formData.useSequentialPairing ? 'Cruce Secuencial (Biométrico manda)' : 'Basado en Turnos (Calendario manda)'}
+                            </div>
+                          </div>
+                        </div>
+                        <label className="premium-switch">
+                          <input 
+                            type="checkbox" 
+                            checked={formData.useSequentialPairing}
+                            onChange={(e) => setFormData({ ...formData, useSequentialPairing: e.target.checked })}
+                          />
+                          <span className="premium-switch-slider"></span>
+                        </label>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                        {formData.useSequentialPairing 
+                           ? 'Prioriza el orden de las marcaciones para armar pares, ideal para puntos con mucha rotación horaria.' 
+                           : 'Valida que el empleado cumpla exactamente el horario programado en su calendario.'}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3 px-1">Inicio Día Operativo</label>
+                            <div className="relative group">
+                                <Clock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                <input 
+                                    type="time"
+                                    value={formData.operationalDayStart} 
+                                    onChange={(e) => setFormData({ ...formData, operationalDayStart: e.target.value })} 
+                                    className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-black text-sm"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3 px-1 text-right">Corte de 24 Horas</label>
+                            <div className="text-[10px] text-slate-400 text-right font-medium italic">
+                                Define cuándo se agrupan las marcaciones en un solo reporte diario.
+                            </div>
+                        </div>
+                    </div>
+
+                    {!formData.useSequentialPairing && (
+                       <div className="p-6 rounded-[28px] bg-emerald-50/30 dark:bg-emerald-900/10 border-2 border-emerald-100 dark:border-emerald-800 group animate-in slide-in-from-top-4 duration-500">
+                           <div className="flex items-center gap-3 mb-5">
+                                <Building size={16} className="text-emerald-500" />
+                                <h4 className="text-[11px] font-black text-emerald-600 uppercase tracking-widest">Horario Estándar del Centro</h4>
+                           </div>
+                           <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2 px-1">Entrada Sede</label>
+                                    <input 
+                                        type="time"
+                                        value={formData.defaultStartTime} 
+                                        onChange={(e) => setFormData({ ...formData, defaultStartTime: e.target.value })} 
+                                        className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2 px-1">Salida Sede</label>
+                                    <input 
+                                        type="time"
+                                        value={formData.defaultEndTime} 
+                                        onChange={(e) => setFormData({ ...formData, defaultEndTime: e.target.value })} 
+                                        className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-sm"
+                                    />
+                                </div>
+                           </div>
+                           <p className="text-[9px] text-emerald-600/70 mt-4 font-bold uppercase text-center tracking-tighter">Este horario servirá de respaldo si el empleado no tiene un turno asignado.</p>
+                       </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* --- Section 4: Operational Status --- */}
                 <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border-2 border-slate-50 dark:border-slate-800 flex items-center justify-between shadow-sm mt-6">
                   <div className="flex items-center gap-5">
                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${formData.isActive ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-100' : 'bg-slate-100 text-slate-400'}`}>
