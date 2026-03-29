@@ -42,6 +42,7 @@ const Employees = ({ user }) => {
     firstName: '',
     lastName: '',
     identificationNumber: '',
+    gender: '',
     birthDate: '',
     storeId: '',
     profileId: '',
@@ -157,6 +158,7 @@ const Employees = ({ user }) => {
       Cargo: emp.profileName,
       Jornada: emp.jornadaNombre,
       'F. Ingreso': emp.dateOfEntry?.split('T')[0],
+      Género: emp.gender || 'N/A',
       Estado: emp.isActive ? 'Activo' : 'Inactivo',
       Email: emp.email || 'N/A'
     }));
@@ -240,7 +242,9 @@ const Employees = ({ user }) => {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Colaborador</th>
+                <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Colaborador</th>
+                <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Género</th>
+                <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Sede</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Número</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Sede / Cargo / Jornada</th>
                 {isAdmin && <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Salario</th>}
@@ -261,6 +265,21 @@ const Employees = ({ user }) => {
                         <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">{emp.email || 'Sin correo registrado'}</div>
                       </div>
                     </div>
+                  </td>
+                  <td style={{ padding: '24px' }}>
+                    <span style={{ 
+                        padding: '4px 10px', 
+                        borderRadius: '8px', 
+                        fontSize: '0.75rem', 
+                        fontWeight: '700',
+                        background: emp.gender === 'F' ? '#fdf2f8' : (emp.gender === 'M' ? '#f0f9ff' : activeColors.border),
+                        color: emp.gender === 'F' ? '#db2777' : (emp.gender === 'M' ? '#0284c7' : activeColors.textMuted)
+                    }}>
+                      {emp.gender === 'F' ? 'Femenino' : (emp.gender === 'M' ? 'Masculino' : 'N/A')}
+                    </span>
+                  </td>
+                  <td style={{ padding: '24px' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: '600', color: activeColors.textMuted, marginTop: '2px' }}>{emp.identificationNumber}</div>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontWeight: '700', fontSize: '0.85rem' }}>{emp.identificationNumber}</td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
@@ -428,6 +447,22 @@ const Employees = ({ user }) => {
                           style={{ width: '100%', padding: '22px 24px 22px 60px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', fontSize: '0.95rem', outline: 'none', transition: 'all 0.3s' }}
                           className="focus:border-indigo-500 focus:shadow-xl"
                         />
+                      </div>
+                    </div>
+                    <div className="group">
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Género *</label>
+                      <div style={{ position: 'relative' }}>
+                        <UserIcon size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                        <select 
+                          required value={formData.gender || ''}
+                          onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                          style={{ width: '100%', padding: '22px 24px 22px 60px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', fontSize: '0.95rem', outline: 'none', transition: 'all 0.3s', appearance: 'none' }}
+                          className="focus:border-indigo-500 focus:shadow-xl"
+                        >
+                          <option value="">Seleccione Género...</option>
+                          <option value="M">Masculino</option>
+                          <option value="F">Femenino</option>
+                        </select>
                       </div>
                     </div>
                     <div className="group">

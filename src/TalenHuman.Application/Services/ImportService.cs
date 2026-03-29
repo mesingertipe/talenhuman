@@ -170,9 +170,10 @@ public class ImportService : IImportService
             ws.Cell(1, 8).Value = "Salario Diario";
             ws.Cell(1, 9).Value = "Activo (SI/NO)";
             ws.Cell(1, 10).Value = "Fecha de Baja";
+            ws.Cell(1, 11).Value = "Género (M/F)";
 
             // Style headers
-            var headerRange = ws.Range("A1:J1");
+            var headerRange = ws.Range("A1:K1");
             headerRange.Style.Font.Bold = true;
             headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#4f46e5");
             headerRange.Style.Font.FontColor = XLColor.White;
@@ -193,6 +194,10 @@ public class ImportService : IImportService
             ws.Column(10).Style.NumberFormat.Format = "yyyy-MM-dd";
 
             ws.Columns().AdjustToContents();
+
+            // Gender dropdown
+            var genderValidation = ws.Range("K2:K500").CreateDataValidation();
+            genderValidation.List("\"M,F\"", true);
 
             // --- Reference sheets ---
             var wsStores = workbook.Worksheets.Add("Tiendas_Referencia");
@@ -348,6 +353,10 @@ public class ImportService : IImportService
                 var profile = await _context.Profiles.AnyAsync(p => p.Name == cargoNombre);
                 if (!profile)
                     importRow.Errors.Add(new ImportFieldError { Field = "Perfil de Cargo", Message = $"El cargo '{cargoNombre}' no existe" });
+
+                var genero = importRow.Data.GetValueOrDefault("Género (M/F)");
+                if (!string.IsNullOrEmpty(genero) && genero != "M" && genero != "F")
+                    importRow.Errors.Add(new ImportFieldError { Field = "Género (M/F)", Message = "El género debe ser M o F" });
             }
             else if (type.ToLower() == "users")
             {
@@ -473,6 +482,7 @@ public class ImportService : IImportService
                     var activeStr = row.Data.GetValueOrDefault("Activo (SI/NO)", "SI");
                     var salaryStr = row.Data.GetValueOrDefault("Salario Diario", "0");
                     var dateStr = row.Data.GetValueOrDefault("Fecha de Ingreso");
+                    var gender = row.Data.GetValueOrDefault("Género (M/F)");
 
                     var store = await _context.Stores.FirstAsync(s => s.Name == sedeNombre);
                     var profile = await _context.Profiles.FirstAsync(p => p.Name == cargoNombre);
@@ -504,7 +514,8 @@ public class ImportService : IImportService
                             JornadaId = jornada?.Id,
                             DateOfEntry = dateOfEntry,
                             DailySalary = decimal.TryParse(salaryStr, out var parsedSalary) ? parsedSalary : 0,
-                            IsActive = isActive
+                            IsActive = isActive,
+                            Gender = gender
                         };
                         await _mediator.Send(command);
                     }
@@ -519,6 +530,7 @@ public class ImportService : IImportService
                         employee.DailySalary = decimal.TryParse(salaryStr, out var parsedSalary) ? parsedSalary : employee.DailySalary;
                         employee.IsActive = isActive;
                         employee.DateOfTermination = dateOfTermination;
+                        employee.Gender = gender;
 
                         if (!employee.IsActive && employee.UserId.HasValue)
                         {
@@ -741,6 +753,7 @@ public class ImportService : IImportService
                 var activeStr = row["Activo (SI/NO)"]?.ToString()?.Trim() ?? "SI";
                 var dateStr = row["Fecha de Ingreso"]?.ToString()?.Trim();
                 var termDateStr = row["Fecha de Baja"]?.ToString()?.Trim();
+                var gender = row["Género (M/F)"]?.ToString()?.Trim();
 
                 if (string.IsNullOrEmpty(cedula)) continue;
 
@@ -778,7 +791,8 @@ public class ImportService : IImportService
                         ProfileId = profile.Id,
                         JornadaId = jornada?.Id,
                         DateOfEntry = dateOfEntry,
-                        IsActive = isActive
+                        IsActive = isActive,
+                        Gender = gender
                     };
                     await _mediator.Send(command);
                 }
@@ -792,6 +806,7 @@ public class ImportService : IImportService
                     employee.JornadaId = jornada?.Id;
                     employee.IsActive = isActive;
                     employee.DateOfTermination = dateOfTermination;
+                    employee.Gender = gender;
 
                     if (!employee.IsActive && employee.UserId.HasValue)
                     {

@@ -77,6 +77,7 @@ public class EmployeesController : ControllerBase
                 emp.LastName,
                 emp.Email,
                 emp.IdentificationNumber,
+                emp.Gender,
                 emp.BirthDate,
                 emp.StoreId,
                 emp.ProfileId,
@@ -120,6 +121,7 @@ public class EmployeesController : ControllerBase
         employee.FirstName = dto.FirstName;
         employee.LastName = dto.LastName;
         employee.IdentificationNumber = dto.IdentificationNumber;
+        employee.Gender = dto.Gender;
         employee.BirthDate = dto.BirthDate;
         employee.StoreId = dto.StoreId;
         employee.ProfileId = dto.ProfileId;
@@ -208,6 +210,7 @@ public class UpdateEmployeeDto
     public Guid StoreId { get; set; }
     public Guid ProfileId { get; set; }
     public Guid? JornadaId { get; set; } // Added JornadaId
+    public string? Gender { get; set; }
     public DateTime? BirthDate { get; set; }
     public DateTime DateOfEntry { get; set; }
     public decimal DailySalary { get; set; }

@@ -14,6 +14,7 @@ public record CreateEmployeeCommand : IRequest<Guid>
     public Guid ProfileId { get; set; }
     public Guid? JornadaId { get; set; }
     public DateTime? BirthDate { get; set; }
+    public string? Gender { get; init; }
     public DateTime DateOfEntry { get; init; }
     public decimal DailySalary { get; init; }
     public bool IsActive { get; init; } = true;
@@ -58,6 +59,7 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
             LastName = request.LastName,
             Email = generatedEmail,
             IdentificationNumber = request.IdentificationNumber,
+            Gender = request.Gender,
             BirthDate = request.BirthDate,
             StoreId = request.StoreId,
             ProfileId = request.ProfileId,

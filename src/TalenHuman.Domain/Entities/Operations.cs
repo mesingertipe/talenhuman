@@ -8,6 +8,7 @@ public class Employee : BaseEntity, IMultitenant
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string IdentificationNumber { get; set; } = string.Empty; // Cédula
+    public string? Gender { get; set; } // M / F
     public DateTime? BirthDate { get; set; }
     public DateTime DateOfEntry { get; set; } = ColombiaTime.Now;
     public decimal DailySalary { get; set; }
