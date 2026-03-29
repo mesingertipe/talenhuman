@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit, X, Shield, User as UserIcon, Mail, Lock, Building2, CheckCircle, AlertCircle, ToggleLeft, ToggleRight, MapPin } from 'lucide-react';
+import { Plus, Trash2, Edit, X, Shield, User as UserIcon, Mail, Lock, Building2, CheckCircle, AlertCircle, ToggleLeft, ToggleRight, MapPin, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import api from '../../services/api';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
 import MultiSearchableSelect from '../../components/Shared/MultiSearchableSelect';
@@ -48,7 +49,6 @@ const Users = () => {
 
   const availableRoles = ["Admin", "Gerente", "Supervisor", "RH", "SuperAdmin"];
   
-  // Get current user info to restrict role assignment
   const currentUserRole = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).roles : [];
   const isSuperAdminUser = currentUserRole.includes('SuperAdmin');
   
@@ -66,7 +66,7 @@ const Users = () => {
     totalItems, 
     itemsPerPage, 
     setItemsPerPage 
-  } = useTableData(users, ['fullName', 'email', 'companyName', 'storeNames']);
+  } = useTableData(users, ['fullName', 'email', 'companyName', 'storeNames', 'districtName']);
 
   useEffect(() => {
     fetchData();
@@ -102,7 +102,6 @@ const Users = () => {
     setIsSubmitting(true);
     const payload = { ...formData };
     
-    // SuperAdmin always maps to the primary tenant if no company selected
     if (payload.roles.includes('SuperAdmin') && !payload.companyId) {
         payload.companyId = companies[0]?.id;
     }
@@ -183,6 +182,24 @@ const Users = () => {
     }
   };
 
+  const handleExportExcel = () => {
+    const dataToExport = users.map(u => ({
+      Nombre: u.fullName,
+      Email: u.email,
+      Empresa: u.companyName,
+      Sedes: u.storeNames?.join(', ') || 'Global',
+      Distrito: u.districtName || 'N/A',
+      Roles: u.roles?.join(', '),
+      Estado: u.isActive ? 'Activo' : 'Inactivo'
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Usuarios");
+    XLSX.writeFile(wb, `Reporte_Usuarios_${new Date().toISOString().split('T')[0]}.xlsx`);
+    showToast("Reporte de usuarios generado");
+  };
+
   return (    <div className="page-container animate-in fade-in duration-500" style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Elite Header & Toolbar */}
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4rem', gap: '2rem' }}>
@@ -191,12 +208,12 @@ const Users = () => {
           <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginTop: '6px' }}>Administración de accesos y roles del sistema</p>
         </div>
 
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', width: '100%', maxWidth: '800px' }}>
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', width: '100%', maxWidth: '850px' }}>
           <div style={{ position: 'relative', flex: 1 }}>
             <Search size={18} className="absolute left-4 top-4 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Filtrar usuarios..." 
+              placeholder="Filtrar por nombre, correo, empresa o sede..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-premium pl-12"
@@ -204,6 +221,14 @@ const Users = () => {
             />
           </div>
           <div className="flex gap-3">
+            <button 
+                onClick={handleExportExcel}
+                className="btn-premium btn-premium-secondary"
+                style={{ borderRadius: '20px', height: '56px', padding: '0 20px', border: '1px solid #e2e8f0', background: 'white', color: '#64748b' }}
+                title="Descargar Excel"
+            >
+                <Download size={18} />
+            </button>
             {isSuperAdminUser && (
               <button 
                 onClick={handleSyncEmployees}
@@ -229,7 +254,7 @@ const Users = () => {
                 });
                 setShowModal(true);
               }}
-              className="btn-premium btn-premium-primary"
+              className="btn-premium btn-premium-primary whitespace-nowrap"
               style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
             >
               <Plus size={20} /> Nuevo Usuario

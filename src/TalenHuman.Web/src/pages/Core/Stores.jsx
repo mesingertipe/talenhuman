@@ -307,29 +307,34 @@ const Stores = () => {
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-content animate-in zoom-in duration-300" style={{ maxWidth: '580px', borderRadius: '40px' }}>
-            <div className="modal-header" style={{ padding: '2.5rem 2.5rem 1.5rem', border: 'none' }}>
-              <h2 className="text-2xl font-black flex items-center gap-3 dark:text-white" style={{ margin: 0, letterSpacing: '-0.02em' }}>
-                <div style={{ width: '44px', height: '44px', background: activeColors.accentSoft, color: activeColors.accent, borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {currentStore ? <Edit size={22} /> : <Plus size={22} />}
+          <div className="modal-content animate-in zoom-in duration-300 shadow-2xl" style={{ maxWidth: '620px', borderRadius: '32px' }}>
+            <div className="modal-header" style={{ padding: '2.5rem 2.5rem 1rem', border: 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                <div style={{ width: '52px', height: '52px', background: activeColors.accentSoft, color: activeColors.accent, borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', shadow: '0 4px 12px rgba(79, 70, 229, 0.1)' }}>
+                  {currentStore ? <Edit size={24} /> : <Plus size={24} />}
                 </div>
-                {currentStore ? 'Editar tienda' : 'Nueva tienda'}
-              </h2>
+                <div>
+                  <h2 className="text-2xl font-black dark:text-white" style={{ margin: 0, letterSpacing: '-0.03em' }}>
+                    {currentStore ? 'Editar Tienda' : 'Nueva Tienda'}
+                  </h2>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configuración técnica de sede</p>
+                </div>
+              </div>
               <button 
                 onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors bg-slate-100 dark:bg-slate-800 border-none cursor-pointer p-2.5 rounded-full"
+                className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-all bg-slate-50 dark:bg-slate-800 border-none cursor-pointer p-2.5 rounded-full hover:rotate-90"
               >
                 <X size={20} />
               </button>
             </div>
             
             <form onSubmit={handleSave}>
-              <div className="modal-body" style={{ padding: '0 2.5rem 2.5rem', spaceY: '2rem' }}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+              <div className="modal-body" style={{ padding: '1.5rem 2.5rem 2.5rem' }}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-10">
                   <div className="md:col-span-2">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Nombre de la Tienda *</label>
-                    <div className="relative">
-                      <Store size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">Nombre Comercial de la Tienda *</label>
+                    <div className="relative group">
+                      <Store size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                       <input 
                         required 
                         value={formData.name} 
@@ -342,7 +347,7 @@ const Stores = () => {
 
                   <div>
                     <SearchableSelect
-                      label="Ciudad"
+                      label="Ciudad Regional"
                       options={cities.map(c => ({ value: c.id, label: c.name }))}
                       value={formData.cityId}
                       onChange={(val) => setFormData({ ...formData, cityId: val })}
@@ -354,7 +359,7 @@ const Stores = () => {
 
                   <div>
                     <SearchableSelect
-                      label="Distrito"
+                      label="Distrito / Zona"
                       options={districts.map(d => ({ value: d.id, label: d.name }))}
                       value={formData.districtId}
                       onChange={(val) => setFormData({ ...formData, districtId: val })}
@@ -364,9 +369,9 @@ const Stores = () => {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">ID Tienda / Código *</label>
-                    <div className="relative">
-                      <Tag size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">ID Externo (ERP) *</label>
+                    <div className="relative group">
+                      <Tag size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                       <input 
                         required
                         value={formData.externalId} 
@@ -378,9 +383,9 @@ const Stores = () => {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">ID Biométrico</label>
-                    <div className="relative">
-                      <Tag size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">ID Biométrico (Reloj)</label>
+                    <div className="relative group">
+                      <Tag size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                       <input 
                         value={formData.biometricId} 
                         onChange={(e) => setFormData({ ...formData, biometricId: e.target.value })} 
@@ -392,20 +397,20 @@ const Stores = () => {
 
                   <div className="md:col-span-2">
                     <SearchableSelect
-                      label="Marca Asociada"
+                      label="Marca de Franquicia / Grupo"
                       options={brands.map(b => ({ value: b.id, label: b.name }))}
                       value={formData.brandId}
                       onChange={(val) => setFormData({ ...formData, brandId: val })}
-                      placeholder="Seleccionar marca..."
+                      placeholder="Asociar marca..."
                       icon={Tag}
                       required
                     />
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Dirección / Ubicación *</label>
-                    <div className="relative">
-                      <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">Dirección / Ubicación Física *</label>
+                    <div className="relative group">
+                      <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                       <input 
                         required
                         value={formData.address} 
@@ -418,14 +423,14 @@ const Stores = () => {
                 </div>
 
                 <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-800/50 rounded-[28px] border border-slate-100 dark:border-slate-700 shadow-inner mt-12">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${formData.isActive ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' : 'bg-slate-200 text-slate-500'}`}>
-                      {formData.isActive ? <CheckCircle size={22} /> : <AlertCircle size={22} />}
+                  <div className="flex items-center gap-5">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${formData.isActive ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' : 'bg-slate-200 text-slate-500'}`}>
+                      {formData.isActive ? <CheckCircle size={26} /> : <AlertCircle size={26} />}
                     </div>
                     <div>
-                      <div className="font-black text-sm dark:text-white leading-tight">Estado de la Tienda</div>
-                      <div className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1">
-                        {formData.isActive ? 'OPERACIÓN ACTIVA' : 'Sede fuera de servicio'}
+                      <div className="font-black text-md dark:text-white leading-tight">Estado Operativo</div>
+                      <div className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1.5 flex items-center gap-1.5 text-emerald-600">
+                        {formData.isActive ? <><div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div> TIENDA EN OPERACIÓN</> : 'TIENDA INACTIVA / CERRADA'}
                       </div>
                     </div>
                   </div>
@@ -440,12 +445,12 @@ const Stores = () => {
                 </div>
               </div>
 
-              <div className="modal-footer" style={{ padding: '2rem 2.5rem', border: 'none' }}>
-                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary" style={{ height: '52px', borderRadius: '18px', flex: 1 }} disabled={isSubmitting}>
+              <div className="modal-footer" style={{ padding: '1rem 2.5rem 2.5rem', border: 'none' }}>
+                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary" style={{ height: '56px', borderRadius: '20px', flex: 1 }} disabled={isSubmitting}>
                   Cerrar
                 </button>
-                <button type="submit" className="btn-premium btn-premium-primary" style={{ height: '52px', borderRadius: '18px', flex: 2 }} disabled={isSubmitting}>
-                  {isSubmitting ? <div className="loader"></div> : (currentStore ? 'Guardar Cambios' : 'Confirmar Registro')}
+                <button type="submit" className="btn-premium btn-premium-primary" style={{ height: '56px', borderRadius: '20px', flex: 2 }} disabled={isSubmitting}>
+                  {isSubmitting ? <div className="loader"></div> : (currentStore ? 'Guardar Cambios' : 'Confirmar Sede')}
                 </button>
               </div>
             </form>

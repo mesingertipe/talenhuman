@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { 
   Plus, Trash2, Edit, X, User as UserIcon, Mail, Tag, Store, 
   FileSpreadsheet, AlertCircle, Hash, Shield, CheckCircle,
-  Search, Calendar, ToggleRight, ToggleLeft, Briefcase, Clock, UserPlus
+  Search, Calendar, ToggleRight, ToggleLeft, Briefcase, Clock, UserPlus, Download, MapPin
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import api from '../../services/api';
 import BulkImportModal from '../../components/Shared/BulkImportModal';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
@@ -61,7 +62,7 @@ const Employees = ({ user }) => {
     totalItems, 
     itemsPerPage, 
     setItemsPerPage 
-  } = useTableData(employees, ['firstName', 'lastName', 'identificationNumber', 'storeName', 'profileName']);
+  } = useTableData(employees, ['firstName', 'lastName', 'identificationNumber', 'storeName', 'profileName', 'jornadaNombre', 'email']);
 
   useEffect(() => {
     fetchInitialData();
@@ -145,6 +146,26 @@ const Employees = ({ user }) => {
     }
   };
 
+  const handleExportExcel = () => {
+    const dataToExport = employees.map(emp => ({
+      Nombre: emp.firstName,
+      Apellidos: emp.lastName,
+      Identificación: emp.identificationNumber,
+      Sede: emp.storeName,
+      Cargo: emp.profileName,
+      Jornada: emp.jornadaNombre,
+      'F. Ingreso': emp.dateOfEntry?.split('T')[0],
+      Estado: emp.isActive ? 'Activo' : 'Inactivo',
+      Email: emp.email || 'N/A'
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Colaboradores");
+    XLSX.writeFile(wb, `Reporte_Empleados_${new Date().toISOString().split('T')[0]}.xlsx`);
+    showToast("Reporte de nómina generado");
+  };
+
   return (
     <div className="page-container animate-in fade-in duration-500" style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Elite Header & Toolbar */}
@@ -154,12 +175,12 @@ const Employees = ({ user }) => {
           <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginTop: '6px' }}>Administración de nómina y ficha de colaboradores</p>
         </div>
 
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', width: '100%', maxWidth: '750px' }}>
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', width: '100%', maxWidth: '850px' }}>
           <div style={{ position: 'relative', flex: 1 }}>
             <Search size={18} className="absolute left-4 top-4 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Filtrar colaboradores..." 
+              placeholder="Buscar por nombre, ID, sede, cargo o correo..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-premium pl-12"
@@ -168,12 +189,20 @@ const Employees = ({ user }) => {
           </div>
           <div className="flex gap-3">
             <button 
+                onClick={handleExportExcel}
+                className="btn-premium btn-premium-secondary"
+                style={{ borderRadius: '20px', height: '56px', padding: '0 20px', border: '1px solid #e2e8f0', background: 'white', color: '#64748b' }}
+                title="Descargar Reporte"
+            >
+                <Download size={18} />
+            </button>
+            <button 
               onClick={() => setShowImport(true)}
               className="btn-premium btn-premium-secondary"
-              style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
-              data-v12-tooltip="Carga masiva desde archivo Excel .xlsx"
+              style={{ borderRadius: '20px', height: '56px', padding: '0 20px' }}
+              title="Carga masiva"
             >
-              <FileSpreadsheet size={18} /> Importar
+              <FileSpreadsheet size={18} />
             </button>
             <button 
               onClick={() => { 
@@ -190,9 +219,8 @@ const Employees = ({ user }) => {
               }}
               className="btn-premium btn-premium-primary whitespace-nowrap"
               style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
-              data-v12-tooltip="Registrar un nuevo colaborador manualmente"
             >
-              <UserPlus size={18} /> Nuevo Colaborador
+              <UserPlus size={18} /> <span className="hidden md:inline">Nuevo Colaborador</span>
             </button>
           </div>
         </div>
@@ -275,7 +303,6 @@ const Employees = ({ user }) => {
                       }}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '1rem', color: '#6366f1' }}
                       className="hover:scale-110 transition-transform dark:text-indigo-400"
-                      data-v12-tooltip="Editar información del colaborador"
                     >
                       <Edit size={18} />
                     </button>
@@ -283,7 +310,6 @@ const Employees = ({ user }) => {
                       onClick={() => { setCurrentEmployee(emp); setShowConfirm(true); }}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
                       className="hover:scale-110 transition-transform dark:text-red-400 font-bold"
-                      data-v12-tooltip="Retirar colaborador del sistema"
                     >
                       <Trash2 size={18} />
                     </button>
@@ -317,91 +343,98 @@ const Employees = ({ user }) => {
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-content shadow-2xl" style={{ maxWidth: '800px' }}>
-            <div className="modal-header">
-              <h2 className="text-lg font-bold flex items-center gap-2 dark:text-white" style={{ margin: 0 }}>
-                {currentEmployee ? <Edit size={22} className="text-indigo-500" /> : <Plus size={22} className="text-indigo-500" />}
-                {currentEmployee ? 'Ficha del colaborador' : 'Nuevo colaborador'}
-              </h2>
+          <div className="modal-content shadow-2xl animate-in zoom-in duration-300" style={{ maxWidth: '820px', borderRadius: '32px' }}>
+            <div className="modal-header" style={{ padding: '2.5rem 2.5rem 1rem', border: 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                <div style={{ width: '52px', height: '52px', background: activeColors.accentSoft, color: activeColors.accent, borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', shadow: '0 4px 12px rgba(79, 70, 229, 0.1)' }}>
+                  {currentEmployee ? <Edit size={24} /> : <UserPlus size={24} />}
+                </div>
+                <div>
+                  <h2 className="text-2xl font-black dark:text-white" style={{ margin: 0, letterSpacing: '-0.03em' }}>
+                    {currentEmployee ? 'Ficha de Colaborador' : 'Vincular Colaborador'}
+                  </h2>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Gestión de talento y nómina administrativa</p>
+                </div>
+              </div>
               <button 
                 onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors bg-transparent border-none cursor-pointer p-2 rounded-full"
+                className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-all bg-slate-50 dark:bg-slate-800 border-none cursor-pointer p-2.5 rounded-full hover:rotate-90"
               >
-                <X size={22} />
+                <X size={20} />
               </button>
             </div>
             
             <form onSubmit={handleSave}>
-              <div className="modal-body space-y-6 p-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="modal-body" style={{ padding: '1.5rem 2.5rem 2.5rem' }}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-10">
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Nombre Completo*</label>
-                    <div className="relative">
-                      <UserIcon size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">Nombres del Colaborador *</label>
+                    <div className="relative group">
+                      <UserIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                       <input 
                         required 
                         value={formData.firstName} 
                         onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} 
+                        className="w-full p-4 pl-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm shadow-sm"
                         placeholder="Nombres..."
-                        className="input-premium pl-10"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Apellidos*</label>
-                    <div className="relative">
-                      <UserIcon size={18} className="absolute left-3 top-3.5 text-slate-400" />
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">Apellidos Completos *</label>
+                    <div className="relative group">
+                      <UserIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                       <input 
                         required 
                         value={formData.lastName} 
                         onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} 
+                        className="w-full p-4 pl-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm shadow-sm"
                         placeholder="Apellidos..."
-                        className="input-premium pl-10"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Identificación*</label>
-                    <div className="relative">
-                      <Hash size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">Documento Identidad *</label>
+                    <div className="relative group">
+                      <Hash size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                       <input 
                         required 
                         value={formData.identificationNumber} 
                         onChange={(e) => setFormData({ ...formData, identificationNumber: e.target.value })} 
+                        className="w-full p-4 pl-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm shadow-sm"
                         placeholder="Cédula o ID..."
-                        className="input-premium pl-10"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Fecha Nacimiento*</label>
-                    <div className="relative">
-                      <Calendar size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">Fecha de Nacimiento *</label>
+                    <div className="relative group">
+                      <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                       <input 
                         required 
                         type="date" 
                         value={formData.birthDate?.split('T')[0] || ''} 
                         onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })} 
-                        className="input-premium pl-10"
+                        className="w-full p-4 pl-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm shadow-sm"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Fecha Ingreso*</label>
-                    <div className="relative">
-                      <Calendar size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">Fecha de Ingreso *</label>
+                    <div className="relative group">
+                      <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                       <input 
                         required 
                         type="date" 
                         value={formData.dateOfEntry?.split('T')[0] || ''} 
                         onChange={(e) => setFormData({ ...formData, dateOfEntry: e.target.value })} 
-                        className="input-premium pl-10"
+                        className="w-full p-4 pl-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm shadow-sm"
                       />
                     </div>
                   </div>
                   <div>
                     <SearchableSelect
-                      label="Sede / Centro de Costos"
+                      label="Sede Principal / Centro de Costos"
                       options={stores.map(s => ({ value: s.id, label: s.name }))}
                       value={formData.storeId}
                       onChange={(val) => setFormData({ ...formData, storeId: val })}
@@ -412,7 +445,7 @@ const Employees = ({ user }) => {
                   </div>
                   <div>
                     <SearchableSelect
-                      label="Perfil Laboral"
+                      label="Cargo u Ocupación"
                       options={profiles.map(p => ({ value: p.id, label: p.name }))}
                       value={formData.profileId}
                       onChange={(val) => setFormData({ ...formData, profileId: val })}
@@ -423,7 +456,7 @@ const Employees = ({ user }) => {
                   </div>
                   <div>
                     <SearchableSelect
-                      label="Jornada Semanal"
+                      label="Esquema de Jornada"
                       options={jornadas.map(j => ({ value: j.id, label: j.nombre }))}
                       value={formData.jornadaId}
                       onChange={(val) => setFormData({ ...formData, jornadaId: val })}
@@ -432,67 +465,79 @@ const Employees = ({ user }) => {
                       required
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Salario Diario*</label>
-                    <div className="relative">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">$</div>
+                  <div className="md:col-span-2">
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3.5 px-1">Salario Diario (Moneda Local) *</label>
+                    <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-600 font-black text-lg">$</div>
                       <input 
                         type="number"
                         required 
                         value={formData.dailySalary} 
                         onChange={(e) => setFormData({ ...formData, dailySalary: e.target.value })} 
                         placeholder="0.00"
-                        className="input-premium pl-10"
+                        className="w-full p-4 pl-10 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-black text-sm shadow-sm"
                         step="0.01"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-sm">
-                  <div>
-                      <p className="font-bold text-slate-800 dark:text-white text-sm mb-1">Vinculación Activa</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Determina si el colaborador está vigente en la nómina</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
+                  <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-inner">
+                    <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${formData.isActive ? 'bg-emerald-500 text-white' : 'bg-slate-200'}`}>
+                           {formData.isActive ? <CheckCircle size={22} /> : <AlertCircle size={22} />}
+                        </div>
+                        <div>
+                          <p className="font-black text-slate-800 dark:text-white text-sm">Estado Activo</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tighter">Vigencia en nómina</p>
+                        </div>
+                    </div>
+                    <label className="premium-switch">
+                        <input 
+                            type="checkbox" 
+                            checked={formData.isActive}
+                            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                        />
+                        <span className="premium-switch-slider"></span>
+                    </label>
                   </div>
-                  <label className="premium-switch">
-                      <input 
-                          type="checkbox" 
-                          checked={formData.isActive}
-                          onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                      />
-                      <span className="premium-switch-slider"></span>
-                  </label>
+
+                  <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-inner">
+                    <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${formData.mustChangePassword ? 'bg-indigo-500 text-white' : 'bg-slate-200'}`}>
+                           <Clock size={22} />
+                        </div>
+                        <div>
+                          <p className="font-black text-slate-800 dark:text-white text-sm">Reset de Clave</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tighter">Obligar al ingresar</p>
+                        </div>
+                    </div>
+                    <label className="premium-switch">
+                        <input 
+                            type="checkbox" 
+                            checked={formData.mustChangePassword}
+                            onChange={(e) => setFormData({ ...formData, mustChangePassword: e.target.checked })}
+                        />
+                        <span className="premium-switch-slider"></span>
+                    </label>
+                  </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-sm">
-                  <div>
-                      <p className="font-bold text-slate-800 dark:text-white text-sm mb-1">Cambio Obligatorio de Clave</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Forzar al colaborador a cambiar contraseña al ingresar</p>
-                  </div>
-                  <label className="premium-switch">
-                      <input 
-                          type="checkbox" 
-                          checked={formData.mustChangePassword}
-                          onChange={(e) => setFormData({ ...formData, mustChangePassword: e.target.checked })}
-                      />
-                      <span className="premium-switch-slider"></span>
-                  </label>
-                </div>
-
-                <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 flex items-start gap-3">
-                  <AlertCircle size={18} className="text-amber-500 shrink-0 mt-0.5" />
-                  <p className="text-[11px] text-amber-800 dark:text-amber-400 font-medium leading-relaxed">
-                    <strong>Gestión de Credenciales:</strong> Al guardar, el sistema generará automáticamente las credenciales de acceso basadas en la identificación del colaborador.
+                <div className="p-5 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-start gap-4 mt-8">
+                  <Shield size={22} className="text-indigo-500 shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-indigo-700 dark:text-indigo-400 font-bold leading-relaxed uppercase tracking-wider">
+                    <strong>SEGURIDAD:</strong> Al vincular al colaborador, se le asignará acceso automático al portal de autoservicio basado en su número de identificación como usuario inicial.
                   </p>
                 </div>
               </div>
 
-              <div className="modal-footer">
-                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary" disabled={isSubmitting}>
-                  Cancelar
+              <div className="modal-footer" style={{ padding: '1rem 2.5rem 2.5rem', border: 'none' }}>
+                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary" style={{ height: '56px', borderRadius: '20px', flex: 1 }} disabled={isSubmitting}>
+                  Cerrar
                 </button>
-                <button type="submit" className="btn-premium btn-premium-primary" disabled={isSubmitting}>
-                  {isSubmitting ? <div className="loader"></div> : (currentEmployee ? 'Actualizar Ficha' : 'Vincular Colaborador')}
+                <button type="submit" className="btn-premium btn-premium-primary" style={{ height: '56px', borderRadius: '20px', flex: 2 }} disabled={isSubmitting}>
+                  {isSubmitting ? <div className="loader"></div> : (currentEmployee ? 'Guardar Cambios' : 'Confirmar Vinculación')}
                 </button>
               </div>
             </form>
@@ -502,20 +547,20 @@ const Employees = ({ user }) => {
 
       {showConfirm && (
         <div className="modal-overlay">
-          <div className="modal-content shadow-2xl" style={{ maxWidth: '440px', borderRadius: '24px' }}>
-            <div className="modal-body p-8" style={{ textAlign: 'center' }}>
-              <div className="mb-6" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
-                <Trash2 size={40} />
+          <div className="modal-content shadow-2xl" style={{ maxWidth: '440px', borderRadius: '32px' }}>
+            <div className="modal-body p-10 text-center">
+              <div className="mb-8 bg-red-50 dark:bg-red-500/20 text-red-500 w-24 h-24 rounded-full flex items-center justify-center mx-auto shadow-lg">
+                <Trash2 size={48} />
               </div>
-              <h2 className="text-xl font-bold mb-3 dark:text-white">¿Desvincular colaborador?</h2>
-              <p className="text-slate-500 dark:text-slate-400 text-sm mb-8" style={{ lineHeight: '1.6' }}>
-                Estás a punto de inactivar a <strong>{currentEmployee?.firstName} {currentEmployee?.lastName}</strong>. Se conservará su histórico laboral.
+              <h2 className="text-2xl font-black mb-3 dark:text-white">¿Desvincular colaborador?</h2>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mb-10 font-medium leading-relaxed">
+                Estás a punto de inactivar a <strong>{currentEmployee?.firstName} {currentEmployee?.lastName}</strong>. Se conservará su histórico laboral para fines legales y auditoría.
               </p>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button onClick={() => setShowConfirm(false)} className="btn-premium btn-premium-secondary" style={{ flex: 1 }} disabled={isDeleting}>
+              <div className="flex gap-4">
+                <button onClick={() => setShowConfirm(false)} className="btn-premium btn-premium-secondary flex-1" style={{ borderRadius: '16px' }} disabled={isDeleting}>
                   Cancelar
                 </button>
-                <button onClick={handleDelete} className="btn-premium btn-premium-danger" style={{ flex: 1 }} disabled={isDeleting}>
+                <button onClick={handleDelete} className="btn-premium btn-premium-danger flex-1" style={{ borderRadius: '16px' }} disabled={isDeleting}>
                   {isDeleting ? <div className="loader"></div> : 'Confirmar Baja'}
                 </button>
               </div>
