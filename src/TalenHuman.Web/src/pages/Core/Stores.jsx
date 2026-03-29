@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit, X, MapPin, FileSpreadsheet, Store, Tag, CheckCircle, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, Edit, X, MapPin, FileSpreadsheet, Store, Tag, CheckCircle, AlertCircle, Building } from 'lucide-react';
 import api from '../../services/api';
 import BulkImportModal from '../../components/Shared/BulkImportModal';
 import SearchableSelect from '../../components/Shared/SearchableSelect';

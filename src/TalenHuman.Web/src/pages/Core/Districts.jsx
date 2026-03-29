@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit, X, User, Building, Store, CheckCircle, AlertCircle, Search, ChevronRight } from 'lucide-react';
 import api from '../../services/api';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
+import MultiSearchableSelect from '../../components/Shared/MultiSearchableSelect';
 import { useTableData } from '../../hooks/useTableData';
 import Pagination from '../../components/Shared/Pagination';
 import { useTheme } from '../../context/ThemeContext';
@@ -111,16 +112,6 @@ const Districts = () => {
     }
   };
 
-  const toggleStore = (storeId) => {
-    setFormData(prev => {
-      const isSelected = prev.storeIds.includes(storeId);
-      if (isSelected) {
-        return { ...prev, storeIds: prev.storeIds.filter(id => id !== storeId) };
-      } else {
-        return { ...prev, storeIds: [...prev.storeIds, storeId] };
-      }
-    });
-  };
 
   return (
     <div className="page-container animate-in fade-in duration-500" style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto' }}>
@@ -274,24 +265,16 @@ const Districts = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Asignar Tiendas</label>
-                  <div className="grid grid-cols-2 gap-3 max-h-[250px] overflow-y-auto p-2 border border-slate-200 rounded-xl bg-slate-50">
-                    {stores.map(store => (
-                      <div 
-                        key={store.id} 
-                        onClick={() => toggleStore(store.id)}
-                        className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center gap-2 ${formData.storeIds.includes(store.id) ? 'bg-indigo-600/10 border-indigo-600' : 'bg-white border-slate-100 hover:border-indigo-200'}`}
-                      >
-                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${formData.storeIds.includes(store.id) ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'}`}>
-                          {formData.storeIds.includes(store.id) && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className={`text-xs font-bold ${formData.storeIds.includes(store.id) ? 'text-indigo-900' : 'text-slate-700'}`}>{store.name}</span>
-                          <span className="text-[10px] text-slate-400 uppercase">{store.externalId}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <MultiSearchableSelect
+                    label="Asignar Tiendas"
+                    options={stores.map(s => ({ 
+                      value: s.id, 
+                      label: `${s.name} (${s.externalId || 'S/ID'})` 
+                    }))}
+                    value={formData.storeIds}
+                    onChange={(val) => setFormData({ ...formData, storeIds: val })}
+                    placeholder="Buscar y agregar tiendas..."
+                  />
                 </div>
               </div>
 
