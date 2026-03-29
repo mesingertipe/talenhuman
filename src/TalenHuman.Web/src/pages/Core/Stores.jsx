@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit, X, MapPin, FileSpreadsheet, Store, Tag, CheckCircle, AlertCircle, Building } from 'lucide-react';
+import { Plus, Trash2, Edit, X, MapPin, FileSpreadsheet, Store, Tag, CheckCircle, AlertCircle, Building, Download, Search } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import api from '../../services/api';
 import BulkImportModal from '../../components/Shared/BulkImportModal';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
 import { useTableData } from '../../hooks/useTableData';
 import Pagination from '../../components/Shared/Pagination';
-import { Search } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 
 const Stores = () => {
@@ -34,6 +34,14 @@ const Stores = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Elite V12: Enrich data for global filtering (District Name, City Name, Brand Name)
+  const processedStores = stores.map(s => ({
+    ...s,
+    cityName: cities.find(c => c.id === s.cityId)?.name || '',
+    districtName: districts.find(d => d.id === s.districtId)?.name || '',
+    brandName: s.brandName || brands.find(b => b.id === s.brandId)?.name || ''
+  }));
+
   const { 
     data: currentStores, 
     searchTerm, 
@@ -44,7 +52,7 @@ const Stores = () => {
     totalItems, 
     itemsPerPage, 
     setItemsPerPage 
-  } = useTableData(stores, []);
+  } = useTableData(processedStores, []);
 
   useEffect(() => {
     fetchData();
@@ -109,6 +117,25 @@ const Stores = () => {
     }
   };
 
+  const handleExportExcel = () => {
+    const dataToExport = processedStores.map(s => ({
+      Tienda: s.name,
+      Direccion: s.address,
+      Ciudad: s.cityName,
+      Distrito: s.districtName,
+      Marca: s.brandName,
+      ID_Externo: s.externalId,
+      ID_Biometrico: s.biometricId,
+      Estado: s.isActive ? 'Activo' : 'Inactivo'
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Tiendas");
+    XLSX.writeFile(wb, `Reporte_Tiendas_${new Date().toISOString().split('T')[0]}.xlsx`);
+    showToast("Reporte Excel generado");
+  };
+
   return (
     <div className="page-container animate-in fade-in duration-500" style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto' }}>
       {/* Elite Header & Toolbar */}
@@ -118,12 +145,12 @@ const Stores = () => {
           <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginTop: '6px' }}>Administración de puntos de venta y sucursales</p>
         </div>
 
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', width: '100%', maxWidth: '750px' }}>
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', width: '100%', maxWidth: '850px' }}>
           <div style={{ position: 'relative', flex: 1 }}>
             <Search size={18} className="absolute left-4 top-4 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Filtrar tiendas..." 
+              placeholder="Filtrar por nombre, distrito, ciudad o marca..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-premium pl-12"
@@ -131,6 +158,14 @@ const Stores = () => {
             />
           </div>
           <div className="flex gap-3">
+            <button 
+              onClick={handleExportExcel}
+              className="btn-premium btn-premium-secondary"
+              style={{ borderRadius: '20px', height: '56px', padding: '0 20px', border: '1px solid #e2e8f0', background: 'white', color: '#64748b' }}
+              title="Descargar Excel"
+            >
+              <Download size={18} />
+            </button>
             <button 
               onClick={() => setShowImport(true)}
               className="btn-premium btn-premium-secondary"
@@ -162,7 +197,7 @@ const Stores = () => {
             <thead>
               <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Tienda / Local</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>ID / Ciudad</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>ID / Ciudad / Distrito</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Estado</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Marca Asociada</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em', textAlign: 'right' }}>Gestión</th>
@@ -183,11 +218,11 @@ const Stores = () => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: '900', color: '#4f46e5', textTransform: 'uppercase' }}>{store.externalId || '---'}</span>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <MapPin size={12} /> {cities.find(c => c.id === store.cityId)?.name || 'Sin ciudad'}
+                        <MapPin size={12} /> {store.cityName || 'Sin ciudad'}
                       </span>
                       {store.districtId && (
                         <span style={{ fontSize: '0.75rem', color: '#4f46e5', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px', textTransform: 'uppercase' }}>
-                          <Building size={12} /> {districts.find(d => d.id === store.districtId)?.name || 'Distrito'}
+                          <Building size={12} /> {store.districtName || 'Distrito'}
                         </span>
                       )}
                     </div>
@@ -211,7 +246,7 @@ const Stores = () => {
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
                     <span style={{ padding: '0.35rem 0.75rem', background: '#f1f5f9', color: '#475569', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <Tag size={12} /> {store.brandName || brands.find(b => b.id === store.brandId)?.name || 'N/A'}
+                      <Tag size={12} /> {store.brandName || 'N/A'}
                     </span>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
@@ -272,32 +307,34 @@ const Stores = () => {
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '520px' }}>
-            <div className="modal-header">
-              <h2 className="text-lg font-bold flex items-center gap-2 dark:text-white" style={{ margin: 0 }}>
-                {currentStore ? <Edit size={22} className="text-indigo-500" /> : <Plus size={22} className="text-indigo-500" />}
+          <div className="modal-content animate-in zoom-in duration-300" style={{ maxWidth: '580px', borderRadius: '40px' }}>
+            <div className="modal-header" style={{ padding: '2.5rem 2.5rem 1.5rem', border: 'none' }}>
+              <h2 className="text-2xl font-black flex items-center gap-3 dark:text-white" style={{ margin: 0, letterSpacing: '-0.02em' }}>
+                <div style={{ width: '44px', height: '44px', background: activeColors.accentSoft, color: activeColors.accent, borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {currentStore ? <Edit size={22} /> : <Plus size={22} />}
+                </div>
                 {currentStore ? 'Editar tienda' : 'Nueva tienda'}
               </h2>
               <button 
                 onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors bg-transparent border-none cursor-pointer p-2 rounded-full"
+                className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors bg-slate-100 dark:bg-slate-800 border-none cursor-pointer p-2.5 rounded-full"
               >
-                <X size={22} />
+                <X size={20} />
               </button>
             </div>
             
             <form onSubmit={handleSave}>
-              <div className="modal-body space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre de la Tienda *</label>
+              <div className="modal-body" style={{ padding: '0 2.5rem 2.5rem', spaceY: '2rem' }}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+                  <div className="md:col-span-2">
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Nombre de la Tienda *</label>
                     <div className="relative">
-                      <Store size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <Store size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                       <input 
                         required 
                         value={formData.name} 
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-                        className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
+                        className="w-full p-4 pl-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm shadow-sm" 
                         placeholder="Ej. Sede Central Norte"
                       />
                     </div>
@@ -327,27 +364,27 @@ const Stores = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ID Tienda / Código *</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">ID Tienda / Código *</label>
                     <div className="relative">
-                      <Tag size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <Tag size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                       <input 
                         required
                         value={formData.externalId} 
                         onChange={(e) => setFormData({ ...formData, externalId: e.target.value })} 
-                        className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
+                        className="w-full p-4 pl-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm shadow-sm"
                         placeholder="Ej. T-100"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ID Biométrico</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">ID Biométrico</label>
                     <div className="relative">
-                      <Tag size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <Tag size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                       <input 
                         value={formData.biometricId} 
                         onChange={(e) => setFormData({ ...formData, biometricId: e.target.value })} 
-                        className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
+                        className="w-full p-4 pl-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm shadow-sm"
                         placeholder="Ej. BIO-78"
                       />
                     </div>
@@ -365,30 +402,30 @@ const Stores = () => {
                     />
                   </div>
 
-                  <div className="md:col-span-2 mb-2">
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Dirección / Ubicación *</label>
+                  <div className="md:col-span-2">
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Dirección / Ubicación *</label>
                     <div className="relative">
-                      <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                       <input 
                         required
                         value={formData.address} 
                         onChange={(e) => setFormData({ ...formData, address: e.target.value })} 
-                        className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
+                        className="w-full p-4 pl-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold text-sm shadow-sm"
                         placeholder="Ej. Av. Principal #123"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${formData.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
-                      {formData.isActive ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+                <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-800/50 rounded-[28px] border border-slate-100 dark:border-slate-700 shadow-inner mt-12">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${formData.isActive ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' : 'bg-slate-200 text-slate-500'}`}>
+                      {formData.isActive ? <CheckCircle size={22} /> : <AlertCircle size={22} />}
                     </div>
                     <div>
-                      <div className="font-bold text-sm dark:text-white leading-tight">Estado de la Tienda</div>
-                      <div className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-0.5">
-                        {formData.isActive ? 'TIENDA ACTIVA' : 'TIENDA INACTIVA'}
+                      <div className="font-black text-sm dark:text-white leading-tight">Estado de la Tienda</div>
+                      <div className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1">
+                        {formData.isActive ? 'OPERACIÓN ACTIVA' : 'Sede fuera de servicio'}
                       </div>
                     </div>
                   </div>
@@ -403,12 +440,12 @@ const Stores = () => {
                 </div>
               </div>
 
-              <div className="modal-footer">
-                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary" disabled={isSubmitting}>
-                  Cancelar
+              <div className="modal-footer" style={{ padding: '2rem 2.5rem', border: 'none' }}>
+                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary" style={{ height: '52px', borderRadius: '18px', flex: 1 }} disabled={isSubmitting}>
+                  Cerrar
                 </button>
-                <button type="submit" className="btn-premium btn-premium-primary" disabled={isSubmitting}>
-                  {isSubmitting ? <div className="loader"></div> : (currentStore ? 'Guardar Cambios' : 'Crear Tienda')}
+                <button type="submit" className="btn-premium btn-premium-primary" style={{ height: '52px', borderRadius: '18px', flex: 2 }} disabled={isSubmitting}>
+                  {isSubmitting ? <div className="loader"></div> : (currentStore ? 'Guardar Cambios' : 'Confirmar Registro')}
                 </button>
               </div>
             </form>
@@ -418,21 +455,21 @@ const Stores = () => {
 
       {showConfirm && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '420px' }}>
-            <div className="modal-body" style={{ textAlign: 'center', paddingTop: '3rem' }}>
-              <div className="mb-6" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
-                <Trash2 size={40} />
+          <div className="modal-content" style={{ maxWidth: '420px', borderRadius: '32px' }}>
+            <div className="modal-body" style={{ textAlign: 'center', padding: '3rem 2rem' }}>
+              <div className="mb-6" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', width: '88px', height: '88px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                <Trash2 size={44} />
               </div>
-              <h2 className="text-xl font-bold mb-3">¿Eliminar tienda?</h2>
-              <p className="text-slate-500 text-sm mb-8 px-4" style={{ lineHeight: '1.6' }}>
-                Estás por eliminar permanentemente <strong>{currentStore?.name}</strong>. Esta acción impactará sobre la asignación de empleados.
+              <h2 className="text-2xl font-black mb-3">¿Eliminar tienda?</h2>
+              <p className="text-slate-500 text-sm mb-10 px-4 font-medium" style={{ lineHeight: '1.6' }}>
+                Estás por eliminar permanentemente <strong>{currentStore?.name}</strong>. Esta acción impactará sobre la asignación de empleados históricos.
               </p>
               <div style={{ display: 'flex', gap: '1rem' }}>
-                <button onClick={() => setShowConfirm(false)} className="btn-premium btn-premium-secondary" style={{ flex: 1 }} disabled={isDeleting}>
+                <button onClick={() => setShowConfirm(false)} className="btn-premium btn-premium-secondary" style={{ flex: 1, borderRadius: '16px' }} disabled={isDeleting}>
                   Cancelar
                 </button>
-                <button onClick={handleDelete} className="btn-premium btn-premium-danger" style={{ flex: 1 }} disabled={isDeleting}>
-                  {isDeleting ? <div className="loader"></div> : 'Sí, eliminar'}
+                <button onClick={handleDelete} className="btn-premium btn-premium-danger" style={{ flex: 1, borderRadius: '16px' }} disabled={isDeleting}>
+                  {isDeleting ? <div className="loader"></div> : 'Eliminar'}
                 </button>
               </div>
             </div>

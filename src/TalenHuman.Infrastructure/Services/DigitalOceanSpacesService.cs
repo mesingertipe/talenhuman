@@ -38,31 +38,45 @@ public class DigitalOceanSpacesService : IFileStorageService
         var bucketName = await _settingsService.GetSettingAsync("DO_BUCKET_NAME");
         if (string.IsNullOrEmpty(bucketName)) throw new Exception("Bucket name not configured.");
 
-        using var client = await GetClientAsync();
-        var fileTransferUtility = new TransferUtility(client);
-
         var fileExtension = Path.GetExtension(file.FileName);
-        var fileName = $"{Guid.NewGuid()}{fileExtension}";
         
-        // Elite V12 Security: Per-tenant and per-module folder structure
+        // Elite V12 Compression: Process image before upload
+        using var originalStream = file.OpenReadStream();
+        Stream uploadStream = originalStream;
+        bool isProcessed = false;
+
+        if (file.ContentType.StartsWith("image/") && !file.ContentType.Contains("gif") && !file.ContentType.Contains("svg"))
+        {
+            uploadStream = await ImageProcessor.ProcessImageAsync(originalStream, file.ContentType);
+            fileExtension = ".jpg"; // ImageProcessor always saves as JPEG
+            isProcessed = true;
+        }
+
+        var fileName = $"{Guid.NewGuid()}{fileExtension}";
         var tenantId = _tenantProvider.GetTenantId();
         var key = $"{tenantId}/{folder}/{fileName}";
 
-        using var stream = file.OpenReadStream();
-        
+        using var client = await GetClientAsync();
+        var fileTransferUtility = new TransferUtility(client);
+
         var uploadRequest = new TransferUtilityUploadRequest
         {
-            InputStream = stream,
+            InputStream = uploadStream,
             Key = key,
             BucketName = bucketName,
-            CannedACL = S3CannedACL.Private // Files are private by default
+            CannedACL = S3CannedACL.Private,
+            ContentType = isProcessed ? "image/jpeg" : file.ContentType
         };
 
         // Add metadata for easier identification
         uploadRequest.Metadata.Add("x-amz-meta-original-name", file.FileName);
         uploadRequest.Metadata.Add("x-amz-meta-tenant-id", tenantId.ToString());
+        if (isProcessed) uploadRequest.Metadata.Add("x-amz-meta-processed", "true");
 
         await fileTransferUtility.UploadAsync(uploadRequest);
+
+        // Disponer el MemoryStream si fue procesado
+        if (isProcessed) await uploadStream.DisposeAsync();
 
         // We return the Key (path) instead of the full URL for security
         return key;
