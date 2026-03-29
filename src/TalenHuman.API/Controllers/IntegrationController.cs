@@ -115,6 +115,7 @@ public class IntegrationController : ControllerBase
                     DailySalary = dto.DailySalary,
                     IsActive = dto.IsActive,
                     DateOfTermination = dto.DateOfTermination,
+                    Gender = dto.Gender,
                     CompanyId = tenantId
                 };
                 _context.Employees.Add(employee);
@@ -131,6 +132,7 @@ public class IntegrationController : ControllerBase
                 employee.DailySalary = dto.DailySalary;
                 employee.IsActive = dto.IsActive;
                 employee.DateOfTermination = dto.DateOfTermination;
+                employee.Gender = dto.Gender;
 
                 // Jornada update
                 var jornada = await _context.Jornadas.FirstOrDefaultAsync(j => j.Nombre == dto.JornadaNombre);
@@ -245,6 +247,7 @@ public class EmployeeSyncDto
     public bool IsActive { get; set; } = true;
     public DateTime? DateOfTermination { get; set; }
     public DateTime? BirthDate { get; set; }
+    public string? Gender { get; set; }
     public string? JornadaNombre { get; set; }
 }
 
