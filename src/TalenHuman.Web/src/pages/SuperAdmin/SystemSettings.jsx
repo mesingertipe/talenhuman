@@ -2,15 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { 
     Settings, Save, Shield, HardDrive, Mail, 
     RefreshCw, CheckCircle, AlertCircle, Info,
-    Key, Globe, Database, Cpu
+    Key, Globe, Database, Cpu, Layout
 } from 'lucide-react';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
+import IntegrationsManager from './IntegrationsManager';
 
 const SystemSettings = () => {
     const [settings, setSettings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [activeTab, setActiveTab] = useState('infrastructure'); // 'infrastructure' or 'integrations'
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     const { isDarkMode } = useTheme();
 
@@ -79,8 +81,6 @@ const SystemSettings = () => {
         </div>
     );
 
-    const settingGroups = [...new Set(settings.map(s => s.group))];
-
     if (loading) return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
             <RefreshCw className="animate-spin text-indigo-500" size={40} />
@@ -104,93 +104,113 @@ const SystemSettings = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* DigitalOcean Section */}
-                <div className="card scroll-reveal" style={{ padding: '2rem' }}>
-                    <div className="flex items-center justify-between mb-8">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shadow-sm">
-                                <HardDrive size={24} />
-                            </div>
-                            <div>
-                                <h3 className="font-black text-slate-800 uppercase tracking-tight">DigitalOcean Spaces</h3>
-                                <p className="text-xs text-slate-400 font-bold">Almacenamiento S3 Compatible</p>
-                            </div>
-                        </div>
-                        <button 
-                            onClick={() => handleSave('Storage')}
-                            disabled={saving}
-                            className="btn-premium btn-premium-primary"
-                            style={{ height: '40px', padding: '0 20px', borderRadius: '12px' }}
-                        >
-                            {saving ? <RefreshCw className="animate-spin" size={16} /> : <Save size={16} />}
-                        </button>
-                    </div>
-
-                    <div className="space-y-6">
-                        {settings.filter(s => s.group === 'Storage').map(renderSettingInput)}
-                        {settings.filter(s => s.group === 'Storage').length === 0 && (
-                            <button 
-                                onClick={async () => {
-                                    const defaults = [
-                                        { key: 'DO_ACCESS_KEY', value: '', group: 'Storage', description: 'Access Key ID de DigitalOcean' },
-                                        { key: 'DO_SECRET_KEY', value: '', group: 'Storage', description: 'Secret Access Key de DigitalOcean' },
-                                        { key: 'DO_BUCKET_NAME', value: '', group: 'Storage', description: 'Nombre del Space' },
-                                        { key: 'DO_ENDPOINT', value: 'https://nyc3.digitaloceanspaces.com', group: 'Storage', description: 'Endpoint regional' }
-                                    ];
-                                    await api.post('/SystemSettings/batch', defaults);
-                                    fetchSettings();
-                                }}
-                                className="w-full p-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-bold text-sm hover:border-indigo-400 hover:text-indigo-400 transition-all"
-                            >
-                                + Inicializar parámetros de Storage
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* Email Section */}
-                <div className="card scroll-reveal" style={{ padding: '2rem' }}>
-                    <div className="flex items-center justify-between mb-8">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-sm">
-                                <Mail size={24} />
-                            </div>
-                            <div>
-                                <h3 className="font-black text-slate-800 uppercase tracking-tight">Resend Email</h3>
-                                <p className="text-xs text-slate-400 font-bold">Servicio de Notificaciones</p>
-                            </div>
-                        </div>
-                        <button 
-                            onClick={() => handleSave('Email')}
-                            disabled={saving}
-                            className="btn-premium btn-premium-primary"
-                            style={{ height: '40px', padding: '0 20px', borderRadius: '12px' }}
-                        >
-                            {saving ? <RefreshCw className="animate-spin" size={16} /> : <Save size={16} />}
-                        </button>
-                    </div>
-
-                    <div className="space-y-6">
-                        {settings.filter(s => s.group === 'Email').map(renderSettingInput)}
-                        {settings.filter(s => s.group === 'Email').length === 0 && (
-                            <button 
-                                onClick={async () => {
-                                    const defaults = [
-                                        { key: 'RESEND_API_KEY', value: '', group: 'Email', description: 'API Key de Resend.com' },
-                                        { key: 'EMAIL_FROM', value: 'no-reply@talenhuman.com', group: 'Email', description: 'Remitente autorizado' }
-                                    ];
-                                    await api.post('/SystemSettings/batch', defaults);
-                                    fetchSettings();
-                                }}
-                                className="w-full p-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-bold text-sm hover:border-indigo-400 hover:text-indigo-400 transition-all"
-                            >
-                                + Inicializar parámetros de Email
-                            </button>
-                        )}
-                    </div>
-                </div>
+            {/* Tabs Navigation */}
+            <div className="flex items-center gap-2 mb-8 bg-slate-100 p-1.5 rounded-2xl w-fit">
+                <button 
+                    onClick={() => setActiveTab('infrastructure')}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${activeTab === 'infrastructure' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                    <HardDrive size={16} /> Infraestructura
+                </button>
+                <button 
+                    onClick={() => setActiveTab('integrations')}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${activeTab === 'integrations' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                    <Globe size={16} /> Integraciones
+                </button>
             </div>
+
+            {activeTab === 'infrastructure' ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in slide-in-from-left-4 duration-500">
+                    {/* DigitalOcean Section */}
+                    <div className="card scroll-reveal" style={{ padding: '2rem' }}>
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center shadow-sm">
+                                    <HardDrive size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-slate-800 uppercase tracking-tight">DigitalOcean Spaces</h3>
+                                    <p className="text-xs text-slate-400 font-bold">Almacenamiento S3 Compatible</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => handleSave('Storage')}
+                                disabled={saving}
+                                className="btn-premium btn-premium-primary"
+                                style={{ height: '40px', padding: '0 20px', borderRadius: '12px' }}
+                            >
+                                {saving ? <RefreshCw className="animate-spin" size={16} /> : <Save size={16} />}
+                            </button>
+                        </div>
+
+                        <div className="space-y-6">
+                            {settings.filter(s => s.group === 'Storage').map(renderSettingInput)}
+                            {settings.filter(s => s.group === 'Storage').length === 0 && (
+                                <button 
+                                    onClick={async () => {
+                                        const defaults = [
+                                            { key: 'DO_ACCESS_KEY', value: '', group: 'Storage', description: 'Access Key ID de DigitalOcean' },
+                                            { key: 'DO_SECRET_KEY', value: '', group: 'Storage', description: 'Secret Access Key de DigitalOcean' },
+                                            { key: 'DO_BUCKET_NAME', value: '', group: 'Storage', description: 'Nombre del Space' },
+                                            { key: 'DO_ENDPOINT', value: 'https://nyc3.digitaloceanspaces.com', group: 'Storage', description: 'Endpoint regional' }
+                                        ];
+                                        await api.post('/SystemSettings/batch', defaults);
+                                        fetchSettings();
+                                    }}
+                                    className="w-full p-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-bold text-sm hover:border-indigo-400 hover:text-indigo-400 transition-all"
+                                >
+                                    + Inicializar parámetros de Storage
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Email Section */}
+                    <div className="card scroll-reveal" style={{ padding: '2rem' }}>
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-sm">
+                                    <Mail size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-slate-800 uppercase tracking-tight">Resend Email</h3>
+                                    <p className="text-xs text-slate-400 font-bold">Servicio de Notificaciones</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => handleSave('Email')}
+                                disabled={saving}
+                                className="btn-premium btn-premium-primary"
+                                style={{ height: '40px', padding: '0 20px', borderRadius: '12px' }}
+                            >
+                                {saving ? <RefreshCw className="animate-spin" size={16} /> : <Save size={16} />}
+                            </button>
+                        </div>
+
+                        <div className="space-y-6">
+                            {settings.filter(s => s.group === 'Email').map(renderSettingInput)}
+                            {settings.filter(s => s.group === 'Email').length === 0 && (
+                                <button 
+                                    onClick={async () => {
+                                        const defaults = [
+                                            { key: 'RESEND_API_KEY', value: '', group: 'Email', description: 'API Key de Resend.com' },
+                                            { key: 'EMAIL_FROM', value: 'no-reply@talenhuman.com', group: 'Email', description: 'Remitente autorizado' }
+                                        ];
+                                        await api.post('/SystemSettings/batch', defaults);
+                                        fetchSettings();
+                                    }}
+                                    className="w-full p-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-bold text-sm hover:border-indigo-400 hover:text-indigo-400 transition-all"
+                                >
+                                    + Inicializar parámetros de Email
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <IntegrationsManager showToast={showToast} />
+            )}
 
             {toast.show && (
                 <div className="toast-container">

@@ -84,6 +84,7 @@ public class EmployeesController : ControllerBase
                 JornadaNombre = emp.Jornada != null ? emp.Jornada.Nombre : "No asignada", // Added JornadaNombre
                 emp.DateOfEntry,
                 emp.IsActive,
+                emp.DailySalary,
                 StoreName = emp.Store?.Name,
                 ProfileName = emp.Profile?.Name,
                 Role = role
@@ -124,6 +125,7 @@ public class EmployeesController : ControllerBase
         employee.ProfileId = dto.ProfileId;
         employee.JornadaId = dto.JornadaId;
         employee.DateOfEntry = dto.DateOfEntry;
+        employee.DailySalary = dto.DailySalary;
         employee.IsActive = dto.IsActive;
 
         _context.Entry(employee).State = EntityState.Modified;
@@ -208,6 +210,7 @@ public class UpdateEmployeeDto
     public Guid? JornadaId { get; set; } // Added JornadaId
     public DateTime? BirthDate { get; set; }
     public DateTime DateOfEntry { get; set; }
+    public decimal DailySalary { get; set; }
     public bool IsActive { get; set; }
     public bool MustChangePassword { get; set; }
     public string Role { get; set; } = "Empleado";

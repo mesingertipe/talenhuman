@@ -28,7 +28,7 @@ const Stores = () => {
   const [showImport, setShowImport] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [currentStore, setCurrentStore] = useState(null);
-  const [formData, setFormData] = useState({ name: '', address: '', brandId: '', cityId: '', externalId: '', isActive: true });
+  const [formData, setFormData] = useState({ name: '', address: '', brandId: '', cityId: '', externalId: '', biometricId: '', isActive: true });
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -216,6 +216,7 @@ const Stores = () => {
                           brandId: store.brandId, 
                           cityId: store.cityId || '',
                           externalId: store.externalId || '',
+                          biometricId: store.biometricId || '',
                           isActive: store.isActive !== false 
                         }); 
                         setShowModal(true); 
@@ -292,7 +293,7 @@ const Stores = () => {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ID Tienda / Código *</label>
                     <div className="relative">
@@ -303,6 +304,18 @@ const Stores = () => {
                         onChange={(e) => setFormData({ ...formData, externalId: e.target.value })} 
                         className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
                         placeholder="Ej. T-100"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">ID Biométrico</label>
+                    <div className="relative">
+                      <Tag size={18} className="absolute left-3 top-4 text-slate-400" />
+                      <input 
+                        value={formData.biometricId} 
+                        onChange={(e) => setFormData({ ...formData, biometricId: e.target.value })} 
+                        className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
+                        placeholder="Ej. BIO-789"
                       />
                     </div>
                   </div>

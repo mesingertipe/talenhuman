@@ -46,6 +46,7 @@ const Employees = ({ user }) => {
     profileId: '',
     jornadaId: '',
     dateOfEntry: new Date().toISOString().split('T')[0],
+    dailySalary: 0,
     isActive: true,
     mustChangePassword: false
   });
@@ -265,7 +266,11 @@ const Employees = ({ user }) => {
                     <button 
                       onClick={() => { 
                         setCurrentEmployee(emp); 
-                        setFormData({ ...emp, mustChangePassword: false }); 
+                        setFormData({ 
+                          ...emp, 
+                          dailySalary: emp.dailySalary || 0,
+                          mustChangePassword: false 
+                        }); 
                         setShowModal(true); 
                       }}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '1rem', color: '#6366f1' }}
@@ -426,6 +431,21 @@ const Employees = ({ user }) => {
                       icon={Clock}
                       required
                     />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Salario Diario*</label>
+                    <div className="relative">
+                      <div className="absolute left-3 top-3.5 text-slate-400 font-bold text-sm">$</div>
+                      <input 
+                        type="number"
+                        required 
+                        value={formData.dailySalary} 
+                        onChange={(e) => setFormData({ ...formData, dailySalary: e.target.value })} 
+                        placeholder="0.00"
+                        className="input-premium pl-10"
+                        step="0.01"
+                      />
+                    </div>
                   </div>
                 </div>
 

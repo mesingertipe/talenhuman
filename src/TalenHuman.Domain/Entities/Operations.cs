@@ -10,6 +10,7 @@ public class Employee : BaseEntity, IMultitenant
     public string IdentificationNumber { get; set; } = string.Empty; // Cédula
     public DateTime? BirthDate { get; set; }
     public DateTime DateOfEntry { get; set; } = ColombiaTime.Now;
+    public decimal DailySalary { get; set; }
     
     public Guid? JornadaId { get; set; }
     public Jornada? Jornada { get; set; }
@@ -193,6 +194,20 @@ public class NovedadLog : BaseEntity, IMultitenant
     public string Comentario { get; set; } = string.Empty; // Obligatorio para aprobar/rechazar
     public DateTime FechaHoraColombia { get; set; } = ColombiaTime.Now;
 
+    public Guid CompanyId { get; set; }
+    public Company Company { get; set; } = null!;
+}
+
+public class SalesData : BaseEntity, IMultitenant
+{
+    public DateTime Timestamp { get; set; }
+    public decimal Amount { get; set; }
+    public int TicketCount { get; set; }
+    public int OrderCount { get; set; }
+    
+    public Guid StoreId { get; set; }
+    public Store Store { get; set; } = null!;
+    
     public Guid CompanyId { get; set; }
     public Company Company { get; set; } = null!;
 }

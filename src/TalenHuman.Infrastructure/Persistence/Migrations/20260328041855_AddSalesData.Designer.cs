@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TalenHuman.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace TalenHuman.Infrastructure.Migrations
+namespace TalenHuman.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260328041855_AddSalesData")]
+    partial class AddSalesData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -251,55 +254,6 @@ namespace TalenHuman.Infrastructure.Migrations
                     b.ToTable("Attendances");
                 });
 
-            modelBuilder.Entity("TalenHuman.Domain.Entities.BiometricRecord", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AttendanceStatusId")
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("CompanyId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<DateTime>("CreationDate")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("DeviceId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("DeviceUser")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("RecordDate")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<DateOnly?>("RecordDay")
-                        .HasColumnType("date");
-
-                    b.Property<TimeOnly?>("RecordTime")
-                        .HasColumnType("time without time zone");
-
-                    b.Property<DateTime>("SyncDate")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("VerificationModeId")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CompanyId");
-
-                    b.ToTable("BiometricRecords");
-                });
-
             modelBuilder.Entity("TalenHuman.Domain.Entities.Brand", b =>
                 {
                     b.Property<Guid>("Id")
@@ -410,9 +364,6 @@ namespace TalenHuman.Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
-
-                    b.Property<decimal>("DailySalary")
-                        .HasColumnType("numeric");
 
                     b.Property<DateTime>("DateOfEntry")
                         .HasColumnType("timestamp without time zone");
@@ -856,9 +807,6 @@ namespace TalenHuman.Infrastructure.Migrations
                     b.Property<string>("Address")
                         .HasColumnType("text");
 
-                    b.Property<string>("BiometricId")
-                        .HasColumnType("text");
-
                     b.Property<Guid>("BrandId")
                         .HasColumnType("uuid");
 
@@ -1142,17 +1090,6 @@ namespace TalenHuman.Infrastructure.Migrations
                     b.Navigation("Employee");
 
                     b.Navigation("Store");
-                });
-
-            modelBuilder.Entity("TalenHuman.Domain.Entities.BiometricRecord", b =>
-                {
-                    b.HasOne("TalenHuman.Domain.Entities.Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Company");
                 });
 
             modelBuilder.Entity("TalenHuman.Domain.Entities.Brand", b =>

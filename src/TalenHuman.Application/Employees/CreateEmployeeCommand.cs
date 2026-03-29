@@ -15,6 +15,7 @@ public record CreateEmployeeCommand : IRequest<Guid>
     public Guid? JornadaId { get; set; }
     public DateTime? BirthDate { get; set; }
     public DateTime DateOfEntry { get; init; }
+    public decimal DailySalary { get; init; }
     public bool IsActive { get; init; } = true;
     public string Role { get; init; } = "Empleado";
 }
@@ -63,6 +64,7 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
             JornadaId = request.JornadaId,
             CompanyId = companyId,
             DateOfEntry = request.DateOfEntry,
+            DailySalary = request.DailySalary,
             IsActive = request.IsActive
         };
 

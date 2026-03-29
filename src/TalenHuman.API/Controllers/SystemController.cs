@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TalenHuman.Infrastructure.Persistence;
+using TalenHuman.Domain.Entities;
 
 namespace TalenHuman.API.Controllers;
 
@@ -40,4 +41,107 @@ public class SystemController : ControllerBase
             return StatusCode(500, new { error = ex.Message, detail = ex.InnerException?.Message });
         }
     }
+
+    [HttpGet("api-keys")]
+    public async Task<IActionResult> GetApiKeys()
+    {
+        var keys = await _context.ApiKeys
+            .IgnoreQueryFilters()
+            .Include(a => a.Company)
+            .OrderByDescending(a => a.CreatedAt)
+            .Select(a => new {
+                a.Id,
+                a.Key,
+                a.Description,
+                a.IsActive,
+                a.CreatedAt,
+                a.CompanyId,
+                CompanyName = a.Company != null ? a.Company.Name : "N/A"
+            })
+            .ToListAsync();
+        return Ok(keys);
+    }
+
+    [HttpPost("api-keys")]
+    public async Task<IActionResult> CreateApiKey([FromBody] ApiKeyDto dto)
+    {
+        var key = new ApiKey
+        {
+            Key = "th_" + Guid.NewGuid().ToString("N"),
+            Description = dto.Description,
+            CompanyId = dto.CompanyId,
+            IsActive = true
+        };
+
+        _context.ApiKeys.Add(key);
+        await _context.SaveChangesAsync();
+        return Ok(key);
+    }
+
+    [HttpDelete("api-keys/{id}")]
+    public async Task<IActionResult> DeleteApiKey(Guid id)
+    {
+        var key = await _context.ApiKeys.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Id == id);
+        if (key == null) return NotFound();
+
+        _context.ApiKeys.Remove(key);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpGet("external-configs")]
+    public async Task<IActionResult> GetExternalConfigs()
+    {
+        var configs = await _context.ExternalApiConfigs
+            .IgnoreQueryFilters()
+            .Include(c => c.Company)
+            .Select(c => new {
+                c.Id,
+                c.Provider,
+                c.BaseUrl,
+                c.Username,
+                c.EnterpriseId,
+                c.ServerNumber,
+                c.EnableAutoSync,
+                c.SyncIntervalMinutes,
+                c.LastSyncAt,
+                c.CompanyId,
+                CompanyName = c.Company != null ? c.Company.Name : "N/A"
+            })
+            .ToListAsync();
+        return Ok(configs);
+    }
+
+    [HttpPost("external-configs")]
+    public async Task<IActionResult> SaveExternalConfig([FromBody] ExternalApiConfig config)
+    {
+        var existing = await _context.ExternalApiConfigs
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(c => c.Id == config.Id || (c.CompanyId == config.CompanyId && c.Provider == config.Provider));
+
+        if (existing == null)
+        {
+            _context.ExternalApiConfigs.Add(config);
+        }
+        else
+        {
+            existing.BaseUrl = config.BaseUrl;
+            existing.Username = config.Username;
+            if (!string.IsNullOrEmpty(config.Password)) existing.Password = config.Password;
+            existing.EnterpriseId = config.EnterpriseId;
+            existing.ServerNumber = config.ServerNumber;
+            existing.EnableAutoSync = config.EnableAutoSync;
+            existing.SyncIntervalMinutes = config.SyncIntervalMinutes;
+            _context.Entry(existing).State = EntityState.Modified;
+        }
+
+        await _context.SaveChangesAsync();
+        return Ok();
+    }
+}
+
+public class ApiKeyDto
+{
+    public Guid CompanyId { get; set; }
+    public string Description { get; set; } = string.Empty;
 }

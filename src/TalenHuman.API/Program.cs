@@ -12,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddHostedService<TalenHuman.Infrastructure.Services.IntegrationWorkerService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -59,6 +60,9 @@ app.UseSwaggerUI();
 app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
+
+// Middleware for API Key authentication and Tenant resolution
+app.UseMiddleware<TalenHuman.Infrastructure.Middleware.TenantApiKeyMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

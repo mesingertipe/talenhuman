@@ -20,6 +20,9 @@ public interface IApplicationDbContext
     DbSet<Novedad> Novedades { get; }
     DbSet<NovedadLog> NovedadLogs { get; }
     DbSet<SystemSetting> SystemSettings { get; }
+    DbSet<ApiKey> ApiKeys { get; }
+    DbSet<ExternalApiConfig> ExternalApiConfigs { get; }
+    DbSet<SalesData> SalesData { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

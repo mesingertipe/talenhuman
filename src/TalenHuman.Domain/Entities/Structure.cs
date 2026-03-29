@@ -34,6 +34,7 @@ public class Store : BaseEntity, IMultitenant
     public string? Address { get; set; } = string.Empty;
     public string? ExternalId { get; set; } // Custom Store ID
     public string? Code { get; set; } // External system code
+    public string? BiometricId { get; set; }
     public bool IsActive { get; set; } = true;
     
     public Guid? CityId { get; set; }

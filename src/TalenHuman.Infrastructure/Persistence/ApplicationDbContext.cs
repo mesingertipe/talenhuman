@@ -36,6 +36,10 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<Novedad> Novedades => Set<Novedad>();
     public DbSet<NovedadLog> NovedadLogs => Set<NovedadLog>();
     public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
+    public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
+    public DbSet<ExternalApiConfig> ExternalApiConfigs => Set<ExternalApiConfig>();
+    public DbSet<SalesData> SalesData => Set<SalesData>();
+    public DbSet<BiometricRecord> BiometricRecords => Set<BiometricRecord>();
 
     public Guid TenantId => _tenantProvider.GetTenantId();
 
@@ -58,6 +62,10 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<Novedad>().HasQueryFilter(n => n.CompanyId == TenantId);
         builder.Entity<NovedadLog>().HasQueryFilter(n => n.CompanyId == TenantId);
         builder.Entity<SupervisorStore>().HasQueryFilter(s => s.CompanyId == TenantId);
+        builder.Entity<ApiKey>().HasQueryFilter(a => a.CompanyId == TenantId);
+        builder.Entity<ExternalApiConfig>().HasQueryFilter(e => e.CompanyId == TenantId);
+        builder.Entity<SalesData>().HasQueryFilter(s => s.CompanyId == TenantId);
+        builder.Entity<BiometricRecord>().HasQueryFilter(b => b.CompanyId == TenantId);
 
         // Many-to-Many: Supervisor -> Stores
         builder.Entity<SupervisorStore>()

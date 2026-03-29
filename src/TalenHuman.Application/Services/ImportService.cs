@@ -89,9 +89,10 @@ public class ImportService : IImportService
             ws.Cell(1, 2).Value = "ID Tienda (Código)";
             ws.Cell(1, 3).Value = "Ciudad";
             ws.Cell(1, 4).Value = "Dirección";
-            ws.Cell(1, 5).Value = "Marca Comercial";
+            ws.Cell(1, 5).Value = "ID Biométrico";
+            ws.Cell(1, 6).Value = "Marca Comercial";
 
-            var header = ws.Range("A1:E1");
+            var header = ws.Range("A1:F1");
             header.Style.Font.Bold = true;
             header.Style.Fill.BackgroundColor = XLColor.FromHtml("#4f46e5");
             header.Style.Font.FontColor = XLColor.White;
@@ -107,7 +108,8 @@ public class ImportService : IImportService
             ws.Column(2).Width = 20;
             ws.Column(3).Width = 25;
             ws.Column(4).Width = 40;
-            ws.Column(5).Width = 30;
+            ws.Column(5).Width = 20;
+            ws.Column(6).Width = 30;
 
             // Reference sheet (visible for cross-sheet validation compatibility)
             var wsBrands = workbook.Worksheets.Add("Marcas_Referencia");
@@ -161,10 +163,11 @@ public class ImportService : IImportService
             ws.Cell(1, 5).Value = "Perfil de Cargo";
             ws.Cell(1, 6).Value = "Fecha de Nacimiento";
             ws.Cell(1, 7).Value = "Fecha de Ingreso";
-            ws.Cell(1, 8).Value = "Activo (SI/NO)";
+            ws.Cell(1, 8).Value = "Salario Diario";
+            ws.Cell(1, 9).Value = "Activo (SI/NO)";
 
             // Style headers
-            var headerRange = ws.Range("A1:H1");
+            var headerRange = ws.Range("A1:I1");
             headerRange.Style.Font.Bold = true;
             headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#4f46e5");
             headerRange.Style.Font.FontColor = XLColor.White;
@@ -180,6 +183,7 @@ public class ImportService : IImportService
             // Format date columns
             ws.Column(6).Style.NumberFormat.Format = "yyyy-MM-dd";
             ws.Column(7).Style.NumberFormat.Format = "yyyy-MM-dd";
+            ws.Column(8).Style.NumberFormat.Format = "#,##0.00";
 
             ws.Columns().AdjustToContents();
 
@@ -373,6 +377,7 @@ public class ImportService : IImportService
                     var externalId = row.Data.GetValueOrDefault("ID Tienda (Código)");
                     var cityName = row.Data.GetValueOrDefault("Ciudad");
                     var address = row.Data.GetValueOrDefault("Dirección");
+                    var biometricId = row.Data.GetValueOrDefault("ID Biométrico");
                     var brandName = row.Data["Marca Comercial"];
                     
                     var brand = await _context.Brands.FirstOrDefaultAsync(b => b.Name == brandName);
@@ -386,7 +391,8 @@ public class ImportService : IImportService
                             Address = address ?? string.Empty, 
                             BrandId = brand.Id, 
                             CompanyId = companyId,
-                            ExternalId = externalId
+                            ExternalId = externalId,
+                            BiometricId = biometricId
                         };
                         
                         if (city != null) store.CityId = city.Id;
@@ -414,6 +420,7 @@ public class ImportService : IImportService
                     var jornadaNombre = row.Data.GetValueOrDefault("Jornada");
                     var birthDateStr = row.Data.GetValueOrDefault("Fecha de Nacimiento");
                     var activeStr = row.Data.GetValueOrDefault("Activo (SI/NO)", "SI");
+                    var salaryStr = row.Data.GetValueOrDefault("Salario Diario", "0");
                     var dateStr = row.Data.GetValueOrDefault("Fecha de Ingreso");
 
                     var store = await _context.Stores.FirstAsync(s => s.Name == sedeNombre);
@@ -436,6 +443,7 @@ public class ImportService : IImportService
                         ProfileId = profile.Id,
                         JornadaId = jornada?.Id,
                         DateOfEntry = dateOfEntry,
+                        DailySalary = decimal.TryParse(salaryStr, out var parsedSalary) ? parsedSalary : 0,
                         IsActive = !activeStr.Equals("NO", StringComparison.OrdinalIgnoreCase)
                     };
 
