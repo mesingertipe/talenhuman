@@ -25,7 +25,6 @@ import {
     FileSpreadsheet,
     Copy as CopyIcon,
     ArrowRight,
-    ArrowRight,
     FileText,
     ShieldCheck,
     CheckSquare,
