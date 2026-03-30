@@ -139,7 +139,7 @@ public class AttendanceController : ControllerBase
     [HttpPost("send-report")]
     public async Task<IActionResult> SendReport([FromBody] ConsolidateRequest request)
     {
-         var companyId = Guid.Parse(User.FindFirst("CompanyId")?.Value ?? Guid.Empty.ToString());
+         var companyId = _tenantProvider.GetTenantId();
          var date = request.Date ?? _tenantTimeProvider.Now.Date.AddDays(-1);
          
          var reportService = HttpContext.RequestServices.GetRequiredService<AttendanceReportService>();
@@ -337,7 +337,7 @@ public class AttendanceController : ControllerBase
     [HttpPost("consolidate")]
     public async Task<IActionResult> Consolidate([FromBody] ConsolidateRequest request)
     {
-        var companyId = Guid.Parse(User.FindFirst("CompanyId")?.Value ?? Guid.Empty.ToString());
+        var companyId = _tenantProvider.GetTenantId();
         if (companyId == Guid.Empty) return BadRequest("Company Context Missing");
 
         var date = request.Date ?? _tenantTimeProvider.Now.Date;
@@ -349,7 +349,7 @@ public class AttendanceController : ControllerBase
     [HttpGet("sync-history")]
     public async Task<IActionResult> GetSyncHistory()
     {
-        var companyId = Guid.Parse(User.FindFirst("CompanyId")?.Value ?? Guid.Empty.ToString());
+        var companyId = _tenantProvider.GetTenantId();
         var logs = await _context.SyncLogs
             .Where(l => l.CompanyId == companyId)
             .OrderByDescending(l => l.StartTime)
@@ -362,7 +362,7 @@ public class AttendanceController : ControllerBase
     [HttpPost("cleanup")]
     public async Task<IActionResult> Cleanup()
     {
-        var companyId = Guid.Parse(User.FindFirst("CompanyId")?.Value ?? Guid.Empty.ToString());
+        var companyId = _tenantProvider.GetTenantId();
         if (companyId == Guid.Empty) return BadRequest("Company Context Missing");
 
         await _attendanceService.CleanupBiometricRecordsAsync(companyId);

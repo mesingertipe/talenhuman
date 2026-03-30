@@ -35,16 +35,6 @@ public class AuditService : IAuditService
             Guid companyId = overrideCompanyId ?? Guid.Empty;
             if (companyId == Guid.Empty)
             {
-                var companyIdString = user?.FindFirst("CompanyId")?.Value;
-                if (!string.IsNullOrEmpty(companyIdString))
-                {
-                    Guid.TryParse(companyIdString, out companyId);
-                }
-            }
-
-            // Fallback for companyId from db context if not in claims yet (like during initial seed or specific cases)
-            if (companyId == Guid.Empty)
-            {
                 companyId = _tenantProvider.GetTenantId();
             }
 
