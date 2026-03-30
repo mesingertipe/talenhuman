@@ -22,9 +22,16 @@ public class NovedadTiposController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<NovedadTipoDto>>> GetNovedadTipos()
+    public async Task<ActionResult<IEnumerable<NovedadTipoDto>>> GetNovedadTipos([FromQuery] bool includeTemplates = true)
     {
-        return await _context.NovedadTipos
+        var query = _context.NovedadTipos.AsQueryable();
+
+        if (!includeTemplates)
+        {
+            query = query.Where(n => !n.EsPlantilla);
+        }
+
+        return await query
             .Select(n => new NovedadTipoDto
             {
                 Id = n.Id,

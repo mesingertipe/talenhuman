@@ -53,7 +53,7 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
     useEffect(() => {
         setLoading(true);
         Promise.all([
-            api.get('/novedadtipos'),
+            api.get('/novedadtipos?includeTemplates=false'),
             api.get('/stores'),
             api.get('/brands')
         ]).then(([resTypes, resStores, resBrands]) => {
@@ -76,7 +76,7 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
                 setFormData(prev => ({ ...prev, storeId: filteredStores[0].id }));
             }
         }).catch(() => {
-            api.get('/novedadtipos').then(res => setNewsTypes(res.data));
+            api.get('/novedadtipos?includeTemplates=false').then(res => setNewsTypes(res.data));
         }).finally(() => setLoading(false));
     }, []);
 

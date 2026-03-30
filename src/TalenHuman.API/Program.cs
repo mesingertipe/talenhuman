@@ -86,9 +86,11 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 
 // Configure the HTTP request pipeline.
+app.UseStaticFiles();
 app.UseSwagger();
 app.UseSwaggerUI(c => {
-    c.SwaggerEndpoint("v1/swagger.json", "TalenHuman API V1");
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "TalenHuman API V1");
+    c.RoutePrefix = "swagger";
 });
 
 app.UseHttpsRedirection();

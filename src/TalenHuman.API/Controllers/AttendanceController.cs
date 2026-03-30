@@ -136,38 +136,88 @@ public class AttendanceController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAttendances(DateTime? start, DateTime? end, string? searchTerm)
     {
+        var companyId = Guid.Parse(User.FindFirst("CompanyId")?.Value ?? Guid.Empty.ToString());
+        
         var query = _context.Attendances
             .Include(a => a.Employee)
             .Include(a => a.Store)
-            .AsQueryable();
+            .Where(a => a.CompanyId == companyId);
 
         if (start.HasValue)
-            query = query.Where(a => a.ClockIn >= start.Value);
+            query = query.Where(a => a.ClockIn >= start.Value.Date);
         
         if (end.HasValue)
-            query = query.Where(a => a.ClockIn <= end.Value);
+            query = query.Where(a => a.ClockIn <= end.Value.Date.AddDays(1).AddTicks(-1));
 
-        var results = await query.ToListAsync();
+        var consolidated = await query.ToListAsync();
+        
+        // Real-Time Logic: If today is in range, check for un-consolidated raw records
+        var today = DateTime.Today;
+        if ((!start.HasValue || start.Value.Date <= today) && (!end.HasValue || end.Value.Date >= today))
+        {
+            var rawRecords = await _context.BiometricRecords
+                .Where(r => r.CompanyId == companyId && r.RecordDate >= today)
+                .OrderBy(r => r.RecordDate)
+                .ToListAsync();
+
+            if (rawRecords.Any())
+            {
+                var groupedRaw = rawRecords.GroupBy(r => r.DeviceUser);
+                var employees = await _context.Employees
+                    .Where(e => e.CompanyId == companyId && e.IsActive)
+                    .ToListAsync();
+
+                foreach (var group in groupedRaw)
+                {
+                    // Check if this employee already has a consolidated record for today
+                    var hasConsolidated = consolidated.Any(a => a.Employee.IdentificationNumber == group.Key && a.ClockIn.Date == today);
+                    
+                    if (!hasConsolidated)
+                    {
+                        var employee = employees.FirstOrDefault(e => e.IdentificationNumber == group.Key);
+                        if (employee != null)
+                        {
+                            var firstMark = group.First();
+                            var lastMark = group.Last();
+                            
+                            consolidated.Add(new Attendance
+                            {
+                                Id = Guid.Empty, // Virtual ID
+                                Employee = employee,
+                                EmployeeId = employee.Id,
+                                CompanyId = companyId,
+                                StoreId = employee.StoreId,
+                                Store = await _context.Stores.FindAsync(employee.StoreId),
+                                ClockIn = firstMark.RecordDate,
+                                ClockOut = group.Count() > 1 ? lastMark.RecordDate : null,
+                                Status = (AttendanceStatus)(-1), // Custom "En Curso" status
+                                StatusObservation = "Marcación detectada hoy (Pendiente de procesar)"
+                            });
+                        }
+                    }
+                }
+            }
+        }
 
         if (!string.IsNullOrEmpty(searchTerm))
         {
-            results = results.Where(a => 
-                a.Employee.FirstName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                a.Employee.LastName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                a.Employee.IdentificationNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+            consolidated = consolidated.Where(a => 
+                (a.Employee?.FirstName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (a.Employee?.LastName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (a.Employee?.IdentificationNumber?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)
             ).ToList();
         }
 
-        return Ok(results.Select(a => new {
+        return Ok(consolidated.OrderByDescending(a => a.ClockIn).Select(a => new {
             a.Id,
-            EmployeeName = $"{a.Employee.FirstName} {a.Employee.LastName}",
-            EmployeeId = a.Employee.IdentificationNumber,
-            StoreName = a.Store.Name,
+            EmployeeName = a.Employee != null ? $"{a.Employee.FirstName} {a.Employee.LastName}" : "N/A",
+            EmployeeId = a.Employee?.IdentificationNumber ?? "N/A",
+            StoreName = a.Store?.Name ?? "N/A",
             a.ClockIn,
             a.ClockOut,
-            a.Status,
+            Status = (int)a.Status,
             a.StatusObservation,
-            StatusText = a.Status.ToString()
+            StatusText = a.Status == (AttendanceStatus)(-1) ? "En Curso" : a.Status.ToString()
         }));
     }
 

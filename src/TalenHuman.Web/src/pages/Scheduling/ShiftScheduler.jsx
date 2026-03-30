@@ -765,33 +765,34 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                         </div>
 
                         {/* 2.2 Comando Central Unificado (Smart Center) */}
-                        <div className="flex items-center gap-4 p-2 bg-white dark:bg-slate-900 shadow-2xl border border-slate-100 dark:border-slate-800" 
-                             style={{ borderRadius: '40px' }}>
+                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 p-2 bg-white dark:bg-slate-900 shadow-2xl border border-slate-100 dark:border-slate-800" 
+                             style={{ borderRadius: '40px', width: '100%', maxWidth: '1000px' }}>
                             
-                            {/* Botón Izquierdo: Acciones Masivas */}
-                            <button onClick={() => setShowBulkModal(true)}
-                                    disabled={selectedEmployees.length === 0}
-                                    className={`flex items-center gap-3 px-6 h-[56px] rounded-[30px] transition-all active:scale-95 group relative overflow-hidden ${selectedEmployees.length === 0 ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-400 opacity-40' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-200/50 dark:shadow-none hover:bg-indigo-700'}`}
-                                    data-v12-tooltip="Programar turno masivo para seleccionados">
-                                <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                                <div className="relative flex items-center gap-3">
-                                    <Clock size={18} strokeWidth={2.5} />
-                                    <div className="hidden xl:flex flex-col items-start leading-none">
-                                        <span className="text-[10px] font-black uppercase tracking-widest">Acciones Masivas</span>
-                                        <span className="text-[9px] font-bold opacity-80 uppercase">{selectedEmployees.length} Seleccionados</span>
+                            {/* Lado Izquierdo: Acciones Masivas */}
+                            <div className="flex justify-start">
+                                <button onClick={() => setShowBulkModal(true)}
+                                        disabled={selectedEmployees.length === 0}
+                                        className={`flex items-center gap-3 px-6 h-[56px] rounded-[30px] transition-all active:scale-95 group relative overflow-hidden ${selectedEmployees.length === 0 ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-400 opacity-40' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-200/50 dark:shadow-none hover:bg-indigo-700'}`}
+                                        data-v12-tooltip="Programar turno masivo para seleccionados">
+                                    <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                                    <div className="relative flex items-center gap-3">
+                                        <Clock size={18} strokeWidth={2.5} />
+                                        <div className="hidden xl:flex flex-col items-start leading-none">
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Acciones Masivas</span>
+                                            <span className="text-[9px] font-bold opacity-80 uppercase">{selectedEmployees.length} Seleccionados</span>
+                                        </div>
                                     </div>
-                                </div>
-                            </button>
+                                </button>
+                            </div>
 
-                            <div className="w-[1px] h-8 bg-slate-100 dark:bg-slate-800"></div>
-
-                            {/* Navegación Central */}
+                            {/* Centro: Navegación Central */}
                             <div className="flex items-center">
+                                <div className="w-[1px] h-8 bg-slate-100 dark:bg-slate-800 mr-4"></div>
                                 <button onClick={() => setWeekOffset(prev => prev - 1)} 
                                         className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-2xl transition-all active:scale-90" 
                                         data-v12-tooltip="Semana Anterior"><ChevronLeft size={22} strokeWidth={3} /></button>
                                 
-                                <div className="flex flex-col items-center px-6 min-w-[180px]">
+                                <div className="flex flex-col items-center px-6 min-w-[200px]">
                                     <span className="text-[9px] font-black uppercase text-indigo-500 tracking-[0.3em] mb-1 leading-none">Período Vigente</span>
                                     <span className="text-[14px] font-[1000] uppercase tracking-tight text-slate-800 dark:text-white text-center whitespace-nowrap">
                                         {currentWeekStart.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} — {new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
@@ -801,19 +802,20 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                 <button onClick={() => setWeekOffset(prev => prev + 1)} 
                                         className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-2xl transition-all active:scale-90" 
                                         data-v12-tooltip="Semana Siguiente"><ChevronRight size={22} strokeWidth={3} /></button>
+                                <div className="w-[1px] h-8 bg-slate-100 dark:bg-slate-800 ml-4"></div>
                             </div>
 
-                            <div className="w-[1px] h-8 bg-slate-100 dark:bg-slate-800"></div>
+                            {/* Lado Derecho: Carga Inteligente + Ayuda */}
+                            <div className="flex justify-end items-center gap-3">
+                                <button className="flex items-center gap-3 px-6 h-[56px] bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 rounded-[30px] transition-all active:scale-95 hover:bg-white dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-100 dark:hover:border-indigo-900 group"
+                                        data-v12-tooltip="Carga Inteligente de Turnos Proyectados">
+                                    <Sparkles size={18} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform" />
+                                    <span className="hidden xl:inline text-[10px] font-black uppercase tracking-widest">Carga</span>
+                                </button>
 
-                            {/* Botón Derecho: Carga Inteligente */}
-                            <button className="flex items-center gap-3 px-6 h-[56px] bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 rounded-[30px] transition-all active:scale-95 hover:bg-white dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-100 dark:hover:border-indigo-900 group"
-                                    data-v12-tooltip="Carga Inteligente de Turnos Proyectados">
-                                <Sparkles size={18} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform" />
-                                <span className="hidden xl:inline text-[10px] font-black uppercase tracking-widest">Carga Inteligente</span>
-                            </button>
-
-                            <div className="hidden xl:flex items-center pr-2">
-                                <HelpIcon text="Comando Central V12: Configure filtros, navegue por semanas y use acciones masivas para optimizar tiempos operativos." />
+                                <div className="hidden xl:flex items-center pr-2">
+                                    <HelpIcon text="Comando Central V12: Configure filtros, navegue por semanas y use acciones masivas para optimizar tiempos operativos." />
+                                </div>
                             </div>
                         </div>
 

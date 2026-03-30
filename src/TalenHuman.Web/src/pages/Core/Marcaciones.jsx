@@ -152,6 +152,7 @@ const Marcaciones = ({ user }) => {
 
     const getStatusStyle = (status) => {
         switch(status) {
+            case -1: return { bg: '#eef2ff', text: '#4f46e5', border: '#c7d2fe', label: 'En Curso' }; // En Curso / Sin Procesar
             case 0: return { bg: '#ecfdf5', text: '#059669', border: '#d1fae5', label: 'Correcto' }; // Correcto
             case 1: return { bg: '#fffbeb', text: '#d97706', border: '#fef3c7', label: 'Desfasado' }; // Desfasado
             case 2: return { bg: '#fef2f2', text: '#ef4444', border: '#fee2e2', label: 'Marcación Errada' };    // MarcacionErrada
@@ -183,28 +184,6 @@ const Marcaciones = ({ user }) => {
                     >
                         <FileText size={18} className="text-indigo-500" /> <span className="hidden lg:inline">Resumen Estadístico</span>
                     </button>
-                    {(user?.roles?.includes('Admin') || user?.roles?.includes('SuperAdmin')) && (
-                        <>
-                            <button 
-                                onClick={handleSendReport}
-                                disabled={isSendingReport}
-                                style={{ background: isDarkMode ? '#1e293b' : '#f8fafc', color: activeColors.accent, padding: '14px 24px', borderRadius: '20px', border: `2px solid ${activeColors.accent}22`, fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.2s' }}
-                                className="hover:bg-indigo-50 active:scale-95 disabled:opacity-50"
-                            >
-                                <Send size={18} className={isSendingReport ? 'animate-bounce' : ''} /> 
-                                {isSendingReport ? 'Enviando...' : 'Email PDF'}
-                            </button>
-                            <button 
-                                onClick={handleSync}
-                                disabled={isSyncing}
-                                style={{ background: activeColors.accent, color: 'white', padding: '14px 28px', borderRadius: '20px', border: 'none', fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 8px 15px rgba(79, 70, 229, 0.2)', transition: 'all 0.2s' }}
-                                className="hover:scale-[1.02] active:scale-95 disabled:opacity-50"
-                            >
-                                <RefreshCw size={18} className={isSyncing ? 'animate-spin' : ''} /> 
-                                {isSyncing ? 'Consolidar' : 'Procesar Día'}
-                            </button>
-                        </>
-                    )}
                 </div>
             </div>
 
