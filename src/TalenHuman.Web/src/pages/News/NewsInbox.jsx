@@ -70,15 +70,11 @@ const NewsInbox = ({ user }) => {
     const handleViewFile = async (adjuntoId) => {
         try {
             const res = await api.get(`/Files/view/${adjuntoId}`, { responseType: 'blob' });
-            const url = window.URL.createObjectURL(new Blob([res.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', ''); // Or just let browser handle it
-            link.target = '_blank';
-            document.body.appendChild(link);
-            link.click();
-            link.parentNode.removeChild(link);
-            window.URL.revokeObjectURL(url);
+            const blob = new Blob([res.data], { type: res.headers['content-type'] });
+            const url = window.URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            // Cleanup after a delay
+            setTimeout(() => window.URL.revokeObjectURL(url), 100);
         } catch (err) {
             showToast("Error al recuperar el archivo", "error");
         }
@@ -230,7 +226,7 @@ const NewsInbox = ({ user }) => {
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                         <div style={{ width: '28px', height: '28px', background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#f8fafc', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.accent }}><Paperclip size={14} /></div>
                                         <div>
-                                            <p style={{ fontSize: '9px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', margin: 0 }}>Tipo {n.hasAttachments ? '• Con Adjuntos' : ''}</p>
+                                            <p style={{ fontSize: '9px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', margin: 0 }}>Tipo {n.attachmentsCount > 0 ? `• ${n.attachmentsCount} Archivos` : ''}</p>
                                             <p style={{ fontSize: '0.85rem', fontWeight: '900', color: activeColors.textMain, margin: 0 }}>{n.novedadTipoNombre}</p>
                                         </div>
                                     </div>
@@ -313,24 +309,30 @@ const NewsInbox = ({ user }) => {
                                 </div>
                             </div>
 
-                            {/* Adjuntos */}
+                             {/* Adjuntos */}
                             {selectedNews.adjuntos && selectedNews.adjuntos.length > 0 && (
-                                <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    <h3 style={{ fontSize: '10px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '5px' }}>Documentación Adjunta</h3>
+                                <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px' }}>
+                                        <Paperclip size={16} style={{ color: activeColors.accent }} />
+                                        <h3 style={{ fontSize: '11px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.15em', margin: 0 }}>Documentación de Soporte ({selectedNews.adjuntos.length} archivos)</h3>
+                                    </div>
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '15px' }}>
                                         {selectedNews.adjuntos.map((adj, idx) => (
-                                            <div key={idx} style={{ background: isDarkMode ? '#1e293b' : '#f0fdf4', padding: '15px 20px', borderRadius: '20px', border: `1px solid #10b981`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '15px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, overflow: 'hidden' }}>
-                                                    <div style={{ width: '32px', height: '32px', background: '#10b98120', color: '#10b981', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                                        <Paperclip size={16} />
+                                            <div key={idx} style={{ background: activeColors.bg, padding: '18px 22px', borderRadius: '24px', border: `1px solid ${activeColors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '15px', transition: 'all 0.2s' }} className="hover:border-indigo-400">
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: 1, overflow: 'hidden' }}>
+                                                    <div style={{ width: '36px', height: '36px', background: isDarkMode ? '#1e293b' : '#ffffff', color: activeColors.accent, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: `1px solid ${activeColors.border}` }}>
+                                                        <FileText size={18} />
                                                     </div>
-                                                    <p style={{ fontSize: '11px', fontWeight: '900', color: activeColors.textMain, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{adj.fileName}</p>
+                                                    <div style={{ overflow: 'hidden' }}>
+                                                        <p style={{ fontSize: '11px', fontWeight: '900', color: activeColors.textMain, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{adj.fileName}</p>
+                                                        <p style={{ fontSize: '9px', fontWeight: '700', color: activeColors.textMuted, margin: 0 }}>Archivo Adjunto</p>
+                                                    </div>
                                                 </div>
                                                 <button 
                                                     onClick={() => handleViewFile(adj.id)}
-                                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#10b981', color: 'white', padding: '8px 15px', borderRadius: '12px', border: 'none', fontWeight: '950', fontSize: '9px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 5px 10px rgba(16, 185, 129, 0.2)' }}
+                                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', background: activeColors.accent, color: 'white', padding: '10px 18px', borderRadius: '14px', border: 'none', fontWeight: '950', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 5px 15px rgba(79, 70, 229, 0.2)' }}
                                                 >
-                                                    <Download size={14} /> Abrir
+                                                    <ExternalLink size={14} /> Visualizar
                                                 </button>
                                             </div>
                                         ))}

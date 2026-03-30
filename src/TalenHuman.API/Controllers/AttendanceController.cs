@@ -229,6 +229,9 @@ public class AttendanceController : ControllerBase
                         e.IdentificationNumber == group.Key || 
                         e.IdentificationNumber.TrimStart('0') == group.Key.TrimStart('0'));
                         
+                    if (employee == null && !roles.Contains("Admin") && !roles.Contains("SuperAdmin") && !roles.Contains("RH"))
+                        continue;
+                        
                     var store = employee != null ? await _context.Stores.FindAsync(employee.StoreId) : null;
                     
                     var allMarks = string.Join(", ", group.OrderBy(r => r.RecordDate).Select(r => r.RecordDate.ToString("HH:mm")));

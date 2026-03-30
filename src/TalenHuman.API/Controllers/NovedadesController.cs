@@ -39,6 +39,7 @@ public class NovedadesController : ControllerBase
             .Include(n => n.Store)
             .Include(n => n.Brand)
             .Include(n => n.NovedadTipo)
+            .Include(n => n.Adjuntos)
             .AsQueryable();
 
         // Optional Filters
@@ -107,6 +108,7 @@ public class NovedadesController : ControllerBase
                 Status = n.Status,
                 AdjuntoUrl = n.AdjuntoUrl,
                 HasAttachments = n.Adjuntos.Any(),
+                AttachmentsCount = n.Adjuntos.Count(),
                 DatosDinamicos = n.DatosDinamicos,
                 Observaciones = n.Observaciones,
                 CreatedBy = n.Logs.Where(l => l.Accion == "Creó").Select(l => l.Usuario.FullName).FirstOrDefault() ?? "Sistema"
@@ -123,6 +125,7 @@ public class NovedadesController : ControllerBase
             .Include(x => x.Store)
             .Include(x => x.Brand)
             .Include(x => x.NovedadTipo)
+            .Include(x => x.Adjuntos)
             .Include(x => x.Logs)
                 .ThenInclude(l => l.Usuario)
             .FirstOrDefaultAsync(x => x.Id == id);
@@ -277,6 +280,7 @@ public class NovedadDto
     public NovedadStatus Status { get; set; }
     public string? AdjuntoUrl { get; set; }
     public bool HasAttachments { get; set; }
+    public int AttachmentsCount { get; set; }
     public string? DatosDinamicos { get; set; }
     public string? Observaciones { get; set; }
     public string CreatedBy { get; set; } = string.Empty;
