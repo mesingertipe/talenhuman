@@ -765,11 +765,11 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                         </div>
 
                         {/* 2.2 Comando Central Unificado (Smart Center) */}
-                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 p-2 bg-white dark:bg-slate-900 shadow-2xl border border-slate-100 dark:border-slate-800" 
-                             style={{ borderRadius: '40px', width: '100%', maxWidth: '1000px' }}>
+                        <div className="flex items-center justify-between gap-4 p-2 bg-white dark:bg-slate-900 shadow-2xl border border-slate-100 dark:border-slate-800 w-full" 
+                             style={{ borderRadius: '40px' }}>
                             
-                            {/* Lado Izquierdo: Acciones Masivas */}
-                            <div className="flex justify-start">
+                            {/* Lado Izquierdo: Acciones Masivas (flex-1 para empujar) */}
+                            <div className="flex-1 flex justify-start pl-2">
                                 <button onClick={() => setShowBulkModal(true)}
                                         disabled={selectedEmployees.length === 0}
                                         className={`flex items-center gap-3 px-6 h-[56px] rounded-[30px] transition-all active:scale-95 group relative overflow-hidden ${selectedEmployees.length === 0 ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-400 opacity-40' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-200/50 dark:shadow-none hover:bg-indigo-700'}`}
@@ -785,8 +785,8 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                 </button>
                             </div>
 
-                            {/* Centro: Navegación Central */}
-                            <div className="flex items-center">
+                            {/* Centro: Navegación Central (Ancho Fijo para Centrado Real) */}
+                            <div className="flex-shrink-0 flex items-center">
                                 <div className="w-[1px] h-8 bg-slate-100 dark:bg-slate-800 mr-4"></div>
                                 <button onClick={() => setWeekOffset(prev => prev - 1)} 
                                         className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-2xl transition-all active:scale-90" 
@@ -805,15 +805,15 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                 <div className="w-[1px] h-8 bg-slate-100 dark:bg-slate-800 ml-4"></div>
                             </div>
 
-                            {/* Lado Derecho: Carga Inteligente + Ayuda */}
-                            <div className="flex justify-end items-center gap-3">
+                            {/* Lado Derecho: Carga Inteligente + Ayuda (flex-1 para empujar) */}
+                            <div className="flex-1 flex justify-end items-center gap-3 pr-2">
                                 <button className="flex items-center gap-3 px-6 h-[56px] bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 rounded-[30px] transition-all active:scale-95 hover:bg-white dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-100 dark:hover:border-indigo-900 group"
                                         data-v12-tooltip="Carga Inteligente de Turnos Proyectados">
                                     <Sparkles size={18} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform" />
                                     <span className="hidden xl:inline text-[10px] font-black uppercase tracking-widest">Carga</span>
                                 </button>
 
-                                <div className="hidden xl:flex items-center pr-2">
+                                <div className="hidden xl:flex items-center">
                                     <HelpIcon text="Comando Central V12: Configure filtros, navegue por semanas y use acciones masivas para optimizar tiempos operativos." />
                                 </div>
                             </div>
