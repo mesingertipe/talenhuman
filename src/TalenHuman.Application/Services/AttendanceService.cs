@@ -96,6 +96,7 @@ public class AttendanceService
                 {
                     // MODE: SHIFT-CENTRIC (Standard Style)
                     await ProcessStandardPairingAsync(employee, store, shifts, filteredRecords, companyId);
+                }
                 currentStep = $"[{store.Name}] Finalizando emparejamiento para {employee.FirstName} {employee.LastName}. Preparando guardado.";
             }
         }
