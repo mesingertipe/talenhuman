@@ -355,12 +355,6 @@ const Layout = ({ children, activePage, setPage, user, onLogout }) => {
     timeZoneId: user.timeZoneId || 'America/Bogota' 
   } : null;
 
-  // Final override if currentCompany didn't specify it but user object has it from login
-  if (tenantSettings && user?.countryCode) {
-    tenantSettings.countryCode = user.countryCode;
-    tenantSettings.timeZoneId = user.timeZoneId || tenantSettings.timeZoneId;
-  }
-
   return (
     <div className="app-container">
       <Sidebar 
