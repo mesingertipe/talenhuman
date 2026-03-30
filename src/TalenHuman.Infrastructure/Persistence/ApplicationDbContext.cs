@@ -71,8 +71,8 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<BiometricRecord>().HasQueryFilter(b => b.CompanyId == TenantId);
         builder.Entity<District>().HasQueryFilter(d => d.CompanyId == TenantId);
         builder.Entity<NovedadAdjunto>().HasQueryFilter(n => n.CompanyId == TenantId);
-        builder.Entity<SyncLog>().HasQueryFilter(s => s.CompanyId == TenantId);
-        builder.Entity<SystemSetting>().HasQueryFilter(s => s.CompanyId == TenantId);
+        builder.Entity<SyncLog>().HasQueryFilter(s => !s.CompanyId.HasValue || s.CompanyId == TenantId);
+        builder.Entity<SystemSetting>().HasQueryFilter(s => !s.CompanyId.HasValue || s.CompanyId == TenantId);
 
         // Many-to-Many: Supervisor -> Stores
         builder.Entity<SupervisorStore>()
@@ -159,17 +159,15 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         {
             if (entry.State == EntityState.Added && entry.Entity.CompanyId == Guid.Empty)
             {
-                // Skip automatic CompanyId assignment if it's a global template being created by a SuperAdmin
-                if (entry.Entity is NovedadTipo nt && nt.EsPlantilla)
-                {
-                    // Optionally set a System Tenant ID or keep it at Guid.Empty 
-                    // (But usually it's better to assign it to the current tenant for auditing)
-                    entry.Entity.CompanyId = tenantId; 
-                }
-                else
-                {
-                    entry.Entity.CompanyId = tenantId;
-                }
+                entry.Entity.CompanyId = tenantId;
+            }
+        }
+
+        foreach (var entry in ChangeTracker.Entries<IOptionalMultitenant>())
+        {
+            if (entry.State == EntityState.Added && !entry.Entity.CompanyId.HasValue)
+            {
+                entry.Entity.CompanyId = tenantId;
             }
         }
 

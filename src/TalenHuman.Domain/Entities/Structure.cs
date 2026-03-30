@@ -109,13 +109,13 @@ public class City : BaseEntity, IMultitenant
     public ICollection<Store> Stores { get; set; } = new List<Store>();
 }
 
-public class SystemSetting : BaseEntity, IMultitenant
+public class SystemSetting : BaseEntity, IOptionalMultitenant
 {
     public string Key { get; set; } = string.Empty;
     public string Value { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string Group { get; set; } = "General"; // e.g., "Storage", "Email"
     
-    public Guid CompanyId { get; set; }
+    public Guid? CompanyId { get; set; }
     public Company? Company { get; set; }
 }

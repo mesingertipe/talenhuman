@@ -11,3 +11,8 @@ public interface IMultitenant
 {
     public Guid CompanyId { get; set; }
 }
+
+public interface IOptionalMultitenant
+{
+    public Guid? CompanyId { get; set; }
+}

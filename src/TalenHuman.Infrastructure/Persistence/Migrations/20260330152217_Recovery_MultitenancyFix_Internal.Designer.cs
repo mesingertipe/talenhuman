@@ -12,8 +12,8 @@ using TalenHuman.Infrastructure.Persistence;
 namespace TalenHuman.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260330150106_AddCompanyIdToSystemSettings")]
-    partial class AddCompanyIdToSystemSettings
+    [Migration("20260330152217_Recovery_MultitenancyFix_Internal")]
+    partial class Recovery_MultitenancyFix_Internal
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1039,7 +1039,7 @@ namespace TalenHuman.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1080,7 +1080,7 @@ namespace TalenHuman.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CompanyId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1649,9 +1649,7 @@ namespace TalenHuman.Infrastructure.Persistence.Migrations
                 {
                     b.HasOne("TalenHuman.Domain.Entities.Company", "Company")
                         .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("CompanyId");
 
                     b.Navigation("Company");
                 });
@@ -1660,9 +1658,7 @@ namespace TalenHuman.Infrastructure.Persistence.Migrations
                 {
                     b.HasOne("TalenHuman.Domain.Entities.Company", "Company")
                         .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("CompanyId");
 
                     b.Navigation("Company");
                 });

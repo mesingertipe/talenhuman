@@ -30,7 +30,7 @@ public class ExternalApiConfig : BaseEntity, IMultitenant
     public Company? Company { get; set; }
 }
 
-public class SyncLog : BaseEntity, IMultitenant
+public class SyncLog : BaseEntity, IOptionalMultitenant
 {
     public DateTime StartTime { get; set; } = DateTime.UtcNow;
     public DateTime? EndTime { get; set; }
@@ -43,7 +43,7 @@ public class SyncLog : BaseEntity, IMultitenant
         ? (EndTime.Value - StartTime).TotalSeconds 
         : (DateTime.UtcNow - StartTime).TotalSeconds;
 
-    public Guid CompanyId { get; set; }
+    public Guid? CompanyId { get; set; }
     public Company? Company { get; set; }
 }
 
