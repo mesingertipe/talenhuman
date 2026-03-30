@@ -318,9 +318,64 @@ const AttendanceMonitoring = () => {
                         ))}
                     </div>
                 </div>
-            </div>
+        </div>
 
-            {/* Toast Notification */}
+        {/* Premium Loading Overlay (V12 Elite) */}
+        {executing && (
+            <div style={{
+                position: 'fixed', inset: 0, 
+                background: isDarkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                backdropFilter: 'blur(8px)', zIndex: 10000,
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>
+                <div className="animate-in zoom-in-95 duration-300" style={{
+                    background: activeColors.card,
+                    padding: '3rem', borderRadius: '40px',
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+                    border: `1px solid ${activeColors.border}`,
+                    width: '90%', maxWidth: '500px', textAlign: 'center'
+                }}>
+                    <div className="relative" style={{ margin: '0 auto 2rem auto', width: '80px', height: '80px' }}>
+                        <div className="animate-spin" style={{
+                            position: 'absolute', inset: 0,
+                            border: `4px solid ${activeColors.accent}20`,
+                            borderTop: `4px solid ${activeColors.accent}`,
+                            borderRadius: '50%'
+                        }}></div>
+                        <div style={{
+                            position: 'absolute', inset: 0,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            color: activeColors.accent
+                        }}>
+                            <Cpu size={32} className="animate-pulse" />
+                        </div>
+                    </div>
+
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: '950', color: activeColors.textMain, marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>Consolidando Datos</h3>
+                    <p style={{ fontSize: '0.9rem', color: activeColors.textMuted, fontWeight: '600', marginBottom: '2rem' }}>
+                        Por favor espera. Estamos cruzando marcaciones biométricas con los turnos programados...
+                    </p>
+
+                    <div style={{ width: '100%', height: '12px', background: activeColors.border, borderRadius: '6px', overflow: 'hidden', marginBottom: '1rem' }}>
+                        <div style={{
+                            height: '100%', background: `linear-gradient(90deg, ${activeColors.accent}, #818cf8)`,
+                            width: `${progress}%`, transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+                        }}></div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase', color: activeColors.accent, letterSpacing: '0.1em' }}>
+                            Progreso Total
+                        </span>
+                        <span style={{ fontSize: '1.1rem', fontWeight: '950', color: activeColors.textMain }}>
+                            {progress}%
+                        </span>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* Toast Notification */}
             {toast.show && (
                 <div style={{ position: 'fixed', bottom: '40px', right: '40px', padding: '18px 30px', background: toast.type === 'error' ? activeColors.danger : activeColors.success, color: 'white', borderRadius: '24px', fontWeight: '900', fontSize: '0.85rem', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', zIndex: 10000, display: 'flex', alignItems: 'center', gap: '12px', animation: 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
                     {toast.type === 'error' ? <AlertCircle size={20} /> : <CheckCircle size={20} />}

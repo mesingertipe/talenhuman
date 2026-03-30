@@ -96,7 +96,7 @@ public class AttendanceService
                 {
                     // MODE: SHIFT-CENTRIC (Standard Style)
                     await ProcessStandardPairingAsync(employee, store, shifts, filteredRecords, companyId);
-                }
+                currentStep = $"[{store.Name}] Finalizando emparejamiento para {employee.FirstName} {employee.LastName}. Preparando guardado.";
             }
         }
 
@@ -185,7 +185,11 @@ public class AttendanceService
             }
             else
             {
-                attendance.ShiftId = matchedShift.Id;
+                if (matchedShift.Id != Guid.Empty)
+                {
+                    attendance.Shift = matchedShift;
+                }
+                
                 shifts.Remove(matchedShift); // Consume shift
             }
 
@@ -231,7 +235,7 @@ public class AttendanceService
                 EmployeeId = emp.Id,
                 StoreId = store.Id,
                 CompanyId = companyId,
-                ShiftId = remainingShift.Id,
+                Shift = remainingShift,
                 ClockIn = remainingShift.StartTime,
                 Status = AttendanceStatus.SinMarcacion,
                 StatusObservation = "Sin registros biométricos."
@@ -270,7 +274,7 @@ public class AttendanceService
                 EmployeeId = emp.Id,
                 StoreId = store.Id,
                 CompanyId = companyId,
-                ShiftId = shift.Id != Guid.Empty ? shift.Id : (Guid?)null,
+                Shift = (shift.Id != Guid.Empty) ? shift : null,
                 ClockIn = shift.StartTime
             };
 
