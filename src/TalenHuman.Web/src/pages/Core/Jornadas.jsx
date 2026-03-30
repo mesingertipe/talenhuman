@@ -173,71 +173,93 @@ const Jornadas = () => {
 
             {showModal && (
                 <div className="modal-overlay">
-                    <div className="modal-content" style={{ maxWidth: '500px' }}>
-                        <div className="modal-header">
-                            <h2 className="text-lg font-bold flex items-center gap-2" style={{ margin: 0 }}>
-                                {currentJornada ? <Edit size={22} className="text-indigo-500" /> : <Plus size={22} className="text-indigo-500" />}
-                                {currentJornada ? 'Editar jornada' : 'Nueva jornada'}
-                            </h2>
-                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button>
+                    <div className="modal-content animate-in zoom-in duration-300 shadow-2xl" style={{ maxWidth: '500px', borderRadius: '32px', padding: 0, overflow: 'hidden', border: 'none' }}>
+                        <div className="modal-header" style={{ padding: '2rem 2.5rem 1.5rem', border: 'none', background: 'white' }}>
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
+                                    {currentJornada ? <Edit size={24} /> : <Plus size={24} />}
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-black text-slate-800" style={{ margin: 0, letterSpacing: '-0.02em' }}>
+                                        {currentJornada ? 'Editar Jornada' : 'Nueva Jornada'}
+                                    </h2>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Estándar de tiempos operativos</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowModal(false)} 
+                                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full transition-all border-none cursor-pointer">
+                                <X size={24} />
+                            </button>
                         </div>
+
                         <form onSubmit={handleSave}>
-                            <div className="modal-body space-y-5">
-                                <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl flex gap-3 text-indigo-700">
-                                    <Info size={20} className="flex-shrink-0" />
-                                    <p className="text-sm font-medium">
+                            <div className="modal-body space-y-8" style={{ padding: '1.5rem 2.5rem 2.5rem', background: '#fcfcfd' }}>
+                                <div className="p-5 bg-white border border-indigo-100 rounded-[24px] flex gap-4 text-slate-600 shadow-sm">
+                                    <div className="w-10 h-10 bg-indigo-500 text-white rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <Info size={20} />
+                                    </div>
+                                    <p className="text-[11px] font-bold leading-relaxed">
                                         Estos parámetros se usarán para calcular sobretiempos y alertar choques en el programador de turnos.
                                     </p>
                                 </div>
 
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre de la Jornada *</label>
-                                    <input 
-                                        required 
-                                        value={formData.nombre} 
-                                        onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} 
-                                        placeholder="Ej. Administrativa 8-5"
-                                        className="w-full"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-6">
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Horas Diarias *</label>
+                                        <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Nombre de la Jornada *</label>
                                         <input 
-                                            type="number"
-                                            step="0.5"
                                             required 
-                                            value={formData.horasDiarias} 
-                                            onChange={(e) => setFormData({ ...formData, horasDiarias: parseFloat(e.target.value) })} 
-                                            className="w-full"
+                                            value={formData.nombre} 
+                                            onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} 
+                                            placeholder="Ej. Administrativa 8-5"
+                                            className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all font-bold text-slate-700 bg-white"
                                         />
                                     </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Horas Semanales *</label>
-                                        <input 
-                                            type="number"
-                                            step="0.5"
-                                            required 
-                                            value={formData.horasSemanales} 
-                                            onChange={(e) => setFormData({ ...formData, horasSemanales: parseFloat(e.target.value) })} 
-                                            className="w-full"
-                                        />
+
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Horas Diarias *</label>
+                                            <div className="relative">
+                                                <Clock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
+                                                <input 
+                                                    type="number"
+                                                    step="0.5"
+                                                    required 
+                                                    value={formData.horasDiarias} 
+                                                    onChange={(e) => setFormData({ ...formData, horasDiarias: parseFloat(e.target.value) })} 
+                                                    className="w-full p-4 pl-12 rounded-2xl border-2 border-slate-100 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all font-black text-slate-700 bg-white"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Horas Semanales *</label>
+                                            <div className="relative">
+                                                <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
+                                                <input 
+                                                    type="number"
+                                                    step="0.5"
+                                                    required 
+                                                    value={formData.horasSemanales} 
+                                                    onChange={(e) => setFormData({ ...formData, horasSemanales: parseFloat(e.target.value) })} 
+                                                    className="w-full p-4 pl-12 rounded-2xl border-2 border-slate-100 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all font-black text-slate-700 bg-white"
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div className="modal-footer">
-                                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary" disabled={isSubmitting}>
+                            <div className="modal-footer" style={{ padding: '2rem 2.5rem 2.5rem', border: 'none', background: 'white', display: 'flex', gap: '1rem' }}>
+                                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary" style={{ flex: 1, height: '56px', borderRadius: '20px' }} disabled={isSubmitting}>
                                     Cancelar
                                 </button>
-                                <button type="submit" className="btn-premium btn-premium-primary" disabled={isSubmitting}>
-                                    {isSubmitting ? <div className="loader"></div> : (currentJornada ? 'Actualizar' : 'Guardar')}
+                                <button type="submit" className="btn-premium btn-premium-primary" style={{ flex: 2, height: '56px', borderRadius: '20px' }} disabled={isSubmitting}>
+                                    {isSubmitting ? <div className="loader loader-white"></div> : (currentJornada ? 'Actualizar' : 'Guardar Jornada')}
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
             )}
+
 
             {showConfirm && (
                 <div className="modal-overlay">

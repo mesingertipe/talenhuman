@@ -476,24 +476,64 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
         
         const style = document.createElement('style');
         style.innerHTML = `
-            #printable-area .print-only { display: block !important; visibility: visible !important; }
-            #printable-area .no-print { display: none !important; }
             #printable-area { 
                 background: white !important; 
-                padding: 40px !important; 
-                width: 1600px !important; 
+                padding: 60px !important; 
+                width: 1700px !important; 
+                color: black !important;
             }
-            #printable-area .card { overflow: visible !important; border-radius: 0 !important; border: none !important; }
-            #printable-area .grid-container { width: 100% !important; }
+            #printable-area .print-only { display: block !important; visibility: visible !important; }
+            #printable-area .no-print { display: none !important; }
+            
+            /* Elite V12 PDF Contrast Fix */
+            #printable-area * { 
+                backdrop-filter: none !important; 
+                -webkit-backdrop-filter: none !important;
+                text-shadow: none !important;
+                box-shadow: none !important;
+            }
+            
+            #printable-area h1, #printable-area h2, #printable-area h3, #printable-area h4, #printable-area p, #printable-area span {
+                color: #000000 !important;
+                opacity: 1 !important;
+            }
+
+            #printable-area .card, #printable-area .bg-white, #printable-area .bg-slate-50, #printable-area .bg-indigo-50 {
+                background: #ffffff !important;
+                border: 1px solid #e2e8f0 !important;
+                opacity: 1 !important;
+            }
+
             #printable-area .turno-bubble { 
-                padding: 4px 8px !important; 
-                font-size: 10px !important; 
-                min-width: 90px !important;
+                padding: 6px 10px !important; 
+                font-size: 11px !important; 
+                font-weight: 800 !important;
+                min-width: 100px !important;
                 white-space: nowrap !important;
+                border-radius: 8px !important;
+                color: white !important;
+                opacity: 1 !important;
+                -webkit-print-color-adjust: exact;
             }
-            #printable-area th, #printable-area td { 
-                padding: 12px 6px !important; 
+
+            #printable-area .bg-indigo-600 { background-color: #4f46e5 !important; }
+            #printable-area .bg-amber-500 { background-color: #f59e0b !important; }
+            #printable-area .bg-purple-600 { background-color: #9333ea !important; }
+
+            #printable-area th { 
+                background-color: #f8fafc !important;
+                color: #1e293b !important;
+                font-weight: 900 !important;
+                text-transform: uppercase !important;
+                border: 1px solid #e2e8f0 !important;
             }
+
+            #printable-area td { 
+                border: 1px solid #f1f5f9 !important;
+                padding: 12px 8px !important;
+            }
+
+            #printable-area .grid-container { width: 100% !important; }
         `;
         document.head.appendChild(style);
 
@@ -505,9 +545,10 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                 scale: 2, 
                 useCORS: true, 
                 logging: false,
-                width: 1600
+                width: 1700,
+                backgroundColor: '#ffffff'
             },
-            jsPDF: { unit: 'px', format: [1600, 1100], orientation: 'landscape' }
+            jsPDF: { unit: 'px', format: [1700, 1200], orientation: 'landscape' }
         };
 
         window.html2pdf().from(element).set(opt).outputPdf('blob').then((blob) => {
@@ -723,51 +764,59 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                             </div>
                         </div>
 
-                        {/* 2.2 Navegación de Período (Smart Center) */}
-                        <div className="flex items-center justify-center p-3 bg-white dark:bg-slate-900 shadow-xl border border-slate-100 dark:border-slate-800" 
-                             style={{ borderRadius: '32px' }}>
-                            <button onClick={() => setWeekOffset(prev => prev - 1)} 
-                                    className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-2xl transition-all active:scale-90" 
-                                    data-v12-tooltip="Semana Anterior"><ChevronLeft size={20} strokeWidth={3} /></button>
+                        {/* 2.2 Comando Central Unificado (Smart Center) */}
+                        <div className="flex items-center gap-4 p-2 bg-white dark:bg-slate-900 shadow-2xl border border-slate-100 dark:border-slate-800" 
+                             style={{ borderRadius: '40px' }}>
                             
-                            <div className="flex flex-col items-center px-6 min-w-[200px]">
-                                <span className="text-[10px] font-black uppercase text-indigo-500 tracking-[0.3em] mb-1 leading-none">Período Vigente</span>
-                                <span className="text-[14px] font-[1000] uppercase tracking-tight text-slate-800 dark:text-white text-center whitespace-nowrap">
-                                    {currentWeekStart.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} — {new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
-                                </span>
-                            </div>
-
-                            <button onClick={() => setWeekOffset(prev => prev + 1)} 
-                                    className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-2xl transition-all active:scale-90" 
-                                    data-v12-tooltip="Semana Siguiente"><ChevronRight size={20} strokeWidth={3} /></button>
-                        </div>
-
-                        {/* 2.3 Acciones de Inteligencia y Selección Masiva */}
-                        <div className="flex items-center gap-3 p-3 bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-white/20 dark:border-white/5" style={{ borderRadius: '32px' }}>
+                            {/* Botón Izquierdo: Acciones Masivas */}
                             <button onClick={() => setShowBulkModal(true)}
                                     disabled={selectedEmployees.length === 0}
-                                    className={`flex items-center gap-3 px-6 h-[56px] rounded-2xl transition-all active:scale-95 group relative overflow-hidden ${selectedEmployees.length === 0 ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 opacity-60' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-200/50 dark:shadow-none hover:bg-indigo-700'}`}
+                                    className={`flex items-center gap-3 px-6 h-[56px] rounded-[30px] transition-all active:scale-95 group relative overflow-hidden ${selectedEmployees.length === 0 ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-400 opacity-40' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-200/50 dark:shadow-none hover:bg-indigo-700'}`}
                                     data-v12-tooltip="Programar turno masivo para seleccionados">
                                 <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                                 <div className="relative flex items-center gap-3">
                                     <Clock size={18} strokeWidth={2.5} />
-                                    <div className="flex flex-col items-start leading-none">
+                                    <div className="hidden xl:flex flex-col items-start leading-none">
                                         <span className="text-[10px] font-black uppercase tracking-widest">Acciones Masivas</span>
                                         <span className="text-[9px] font-bold opacity-80 uppercase">{selectedEmployees.length} Seleccionados</span>
                                     </div>
                                 </div>
                             </button>
 
-                            <button className="flex items-center gap-3 px-6 h-[56px] bg-white dark:bg-slate-800 border-2 border-indigo-100 dark:border-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl transition-all active:scale-95 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 group"
+                            <div className="w-[1px] h-8 bg-slate-100 dark:bg-slate-800"></div>
+
+                            {/* Navegación Central */}
+                            <div className="flex items-center">
+                                <button onClick={() => setWeekOffset(prev => prev - 1)} 
+                                        className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-2xl transition-all active:scale-90" 
+                                        data-v12-tooltip="Semana Anterior"><ChevronLeft size={22} strokeWidth={3} /></button>
+                                
+                                <div className="flex flex-col items-center px-6 min-w-[180px]">
+                                    <span className="text-[9px] font-black uppercase text-indigo-500 tracking-[0.3em] mb-1 leading-none">Período Vigente</span>
+                                    <span className="text-[14px] font-[1000] uppercase tracking-tight text-slate-800 dark:text-white text-center whitespace-nowrap">
+                                        {currentWeekStart.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} — {new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
+                                    </span>
+                                </div>
+
+                                <button onClick={() => setWeekOffset(prev => prev + 1)} 
+                                        className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-2xl transition-all active:scale-90" 
+                                        data-v12-tooltip="Semana Siguiente"><ChevronRight size={22} strokeWidth={3} /></button>
+                            </div>
+
+                            <div className="w-[1px] h-8 bg-slate-100 dark:bg-slate-800"></div>
+
+                            {/* Botón Derecho: Carga Inteligente */}
+                            <button className="flex items-center gap-3 px-6 h-[56px] bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 rounded-[30px] transition-all active:scale-95 hover:bg-white dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-100 dark:hover:border-indigo-900 group"
                                     data-v12-tooltip="Carga Inteligente de Turnos Proyectados">
                                 <Sparkles size={18} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform" />
-                                <span className="text-[10px] font-black uppercase tracking-widest">Carga Inteligente</span>
+                                <span className="hidden xl:inline text-[10px] font-black uppercase tracking-widest">Carga Inteligente</span>
                             </button>
 
-                            <div className="relative group/help">
+                            <div className="hidden xl:flex items-center pr-2">
                                 <HelpIcon text="Comando Central V12: Configure filtros, navegue por semanas y use acciones masivas para optimizar tiempos operativos." />
                             </div>
                         </div>
+
                     </div>
 
                     {/* Fila Opcional: Contador Flotante Minimalista */}
@@ -831,7 +880,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                         </div>
 
                         {/* Derecha: Acciones Globales (Ultra-Visibility & Gap-16) */}
-                        <div className="flex flex-wrap items-center justify-center lg:justify-end p-8 bg-slate-50/50 dark:bg-slate-800/20 border-[1px] border-slate-200 dark:border-slate-700/50" 
+                        <div className="no-print flex flex-wrap items-center justify-center lg:justify-end p-8 bg-slate-50/50 dark:bg-slate-800/20 border-[1px] border-slate-200 dark:border-slate-700/50" 
                              style={{ borderRadius: '24px', gap: '2rem' }}>
                             <button 
                                 onClick={exportToExcel} 

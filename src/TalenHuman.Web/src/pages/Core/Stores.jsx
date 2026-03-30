@@ -344,42 +344,43 @@ const Stores = () => {
 
       {showModal && (
         <div className="modal-overlay">
-          <div className="modal-content animate-in zoom-in duration-300 shadow-2xl" style={{ maxWidth: '680px', borderRadius: '40px', padding: 0, overflow: 'hidden' }}>
-            <div className="modal-header" style={{ padding: '2.5rem 3rem 1.5rem', border: 'none', background: isDarkMode ? '#1e293b' : '#ffffff' }}>
+          <div className="modal-content animate-in zoom-in duration-300 shadow-2xl" style={{ maxWidth: '680px', borderRadius: '40px', padding: 0, overflow: 'hidden', border: 'none' }}>
+            <div className="modal-header" style={{ padding: '2.5rem 3rem 1.5rem', border: 'none', background: 'white' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                <div style={{ width: '56px', height: '56px', background: activeColors.accentSoft, color: activeColors.accent, borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '56px', height: '56px', background: activeColors.accentSoft, color: activeColors.accent, borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 16px rgba(79, 70, 229, 0.15)' }}>
                   {currentStore ? <Edit size={26} /> : <Plus size={26} />}
                 </div>
                 <div>
-                  <h2 className="text-2xl font-black dark:text-white" style={{ margin: 0, letterSpacing: '-0.03em' }}>
+                  <h2 className="text-2xl font-black text-slate-800 dark:text-white" style={{ margin: 0, letterSpacing: '-0.03em' }}>
                     {currentStore ? 'Editar Sede' : 'Nueva Sede'}
                   </h2>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configuración técnica operativa</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configuración técnica operativa V12</p>
                 </div>
               </div>
               <button 
                 onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-all bg-slate-50 dark:bg-slate-800 border-none cursor-pointer p-2.5 rounded-full hover:rotate-90"
+                className="text-slate-400 hover:text-slate-600 transition-all bg-slate-50 border-none cursor-pointer p-3 rounded-full hover:rotate-90"
               >
                 <X size={20} />
               </button>
             </div>
 
-            {/* Tab Navigation */}
-            <div className="flex border-b border-slate-100 dark:border-slate-800 px-12 bg-white dark:bg-slate-900">
+            {/* Tab Navigation Premium */}
+            <div className="flex bg-slate-50/50 p-2 gap-2 mx-8 rounded-[24px] border border-slate-100 mb-2">
                 {[
-                    { id: 'general', label: 'General', icon: <Hash size={16} /> },
-                    { id: 'location', label: 'Ubicación', icon: <MapPin size={16} /> },
-                    { id: 'operation', label: 'Operación', icon: <Activity size={16} /> }
+                    { id: 'general', label: 'General', icon: <Hash size={14} /> },
+                    { id: 'location', label: 'Ubicación', icon: <MapPin size={14} /> },
+                    { id: 'operation', label: 'Operación', icon: <Activity size={14} /> }
                 ].map(tab => (
                     <button
                         key={tab.id}
                         type="button"
                         onClick={() => setFormTab(tab.id)}
-                        className={`flex items-center gap-2 py-4 px-6 text-[11px] font-black uppercase tracking-widest transition-all border-b-4 ${
+                        style={{ flex: 1 }}
+                        className={`flex items-center justify-center gap-2 py-3 px-4 rounded-[18px] text-[10px] font-black uppercase tracking-widest transition-all ${
                             formTab === tab.id 
-                            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400 opacity-100' 
-                            : 'border-transparent text-slate-400 dark:text-slate-500 opacity-60 hover:opacity-100'
+                            ? 'bg-white text-indigo-600 shadow-sm border border-slate-100' 
+                            : 'text-slate-400 hover:text-slate-600'
                         }`}
                     >
                         {tab.icon} {tab.label}
@@ -388,60 +389,60 @@ const Stores = () => {
             </div>
             
             <form onSubmit={handleSave}>
-              <div className="modal-body custom-scrollbar" style={{ padding: '2.5rem 3rem', background: activeColors.bg, minHeight: '380px' }}>
+              <div className="modal-body custom-scrollbar" style={{ padding: '2rem 3rem', background: '#fcfcfd', minHeight: '400px' }}>
                 
                 {formTab === 'general' && (
                     <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-300">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="md:col-span-2">
-                                <label className="block text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 px-1">Nombre Comercial *</label>
+                                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Nombre Comercial *</label>
                                 <div className="relative group">
-                                    <Store size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                    <Store size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
                                     <input 
                                         required 
                                         value={formData.name} 
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-                                        className="w-full p-4 pl-12 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm" 
+                                        className="w-full p-4 pl-14 rounded-2xl border-2 border-slate-100 bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm text-slate-700" 
                                         placeholder="Ej. Sede Central Norte"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 px-1">ID Externo (ERP) *</label>
+                                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">ID Externo (ERP) *</label>
                                 <div className="relative group">
-                                    <Tag size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                    <Tag size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
                                     <input 
                                         required
                                         value={formData.externalId} 
                                         onChange={(e) => setFormData({ ...formData, externalId: e.target.value })} 
-                                        className="w-full p-4 pl-12 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
+                                        className="w-full p-4 pl-14 rounded-2xl border-2 border-slate-100 bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm text-slate-700"
                                         placeholder="ERP Code..."
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 px-1">ID Biométrico</label>
+                                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">ID Biométrico</label>
                                 <div className="relative group">
-                                    <Hash size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                    <Hash size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
                                     <input 
                                         value={formData.biometricId} 
                                         onChange={(e) => setFormData({ ...formData, biometricId: e.target.value })} 
-                                        className="w-full p-4 pl-12 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
+                                        className="w-full p-4 pl-14 rounded-2xl border-2 border-slate-100 bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm text-slate-700"
                                         placeholder="Bio ID..."
                                     />
                                 </div>
                             </div>
 
                             <div className="md:col-span-2">
-                                <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                                <div className="p-5 rounded-[24px] bg-white border border-slate-100 flex items-center justify-between shadow-sm">
                                     <div className="flex items-center gap-4">
-                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${formData.isActive ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${formData.isActive ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-100' : 'bg-slate-100 text-slate-400'}`}>
                                             {formData.isActive ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
                                         </div>
                                         <div>
-                                            <div className="font-black text-[12px] dark:text-white uppercase tracking-tight">Estado Operativo</div>
+                                            <div className="font-black text-[12px] text-slate-800 uppercase tracking-tight">Estado Operativo</div>
                                             <div className="text-[9px] text-slate-400 font-bold uppercase">{formData.isActive ? 'Tienda Activa' : 'Tienda Inactiva'}</div>
                                         </div>
                                     </div>
@@ -495,14 +496,14 @@ const Stores = () => {
                             </div>
 
                             <div className="md:col-span-2">
-                                <label className="block text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 px-1">Dirección Física *</label>
+                                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Dirección Física *</label>
                                 <div className="relative group">
-                                    <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                    <MapPin size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
                                     <input 
                                         required
                                         value={formData.address} 
                                         onChange={(e) => setFormData({ ...formData, address: e.target.value })} 
-                                        className="w-full p-4 pl-12 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
+                                        className="w-full p-4 pl-14 rounded-2xl border-2 border-slate-100 bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm text-slate-700"
                                         placeholder="Dirección completa..."
                                     />
                                 </div>
@@ -512,18 +513,18 @@ const Stores = () => {
                 )}
 
                 {formTab === 'operation' && (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                        <div className="p-6 rounded-[28px] bg-slate-50/50 dark:bg-slate-800/30 border-2 border-slate-100 dark:border-slate-800/50">
+                    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        <div className="p-6 rounded-[32px] bg-indigo-50/30 border border-indigo-100">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${formData.useSequentialPairing ? 'bg-indigo-500 text-white shadow-lg' : 'bg-emerald-500 text-white shadow-lg'}`}>
-                                        {formData.useSequentialPairing ? <Settings size={20} /> : <Clock size={20} />}
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${formData.useSequentialPairing ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100' : 'bg-emerald-500 text-white shadow-xl shadow-emerald-100'}`}>
+                                        {formData.useSequentialPairing ? <Settings size={22} /> : <Clock size={22} />}
                                     </div>
                                     <div>
-                                        <div className="font-black text-[12px] uppercase dark:text-white leading-tight">
+                                        <div className="font-black text-[13px] uppercase text-slate-800 leading-tight">
                                             {formData.useSequentialPairing ? 'Modo Marcaciones' : 'Modo Turno'}
                                         </div>
-                                        <div className="text-[8px] text-slate-400 font-black uppercase tracking-widest mt-1">
+                                        <div className="text-[10px] text-indigo-500 font-black uppercase tracking-widest mt-1">
                                             {formData.useSequentialPairing ? 'Cruce Secuencial (Biométrico)' : 'Basado en Turnos (Calendario)'}
                                         </div>
                                     </div>
@@ -537,52 +538,64 @@ const Stores = () => {
                                     <span className="premium-switch-slider"></span>
                                 </label>
                             </div>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tight">
+                            <p className="text-[11px] text-slate-500 font-bold leading-relaxed px-1">
                                 {formData.useSequentialPairing 
-                                ? 'Prioriza el orden de marcaciones para armar pares.' 
-                                : 'Valida el cumplimiento exacto del turno programado.'}
+                                ? 'Prioriza el orden de marcaciones individuales para armar pares de entrada/salida automáticamente.' 
+                                : 'Valida el cumplimiento del turno programado en el calendario contra las marcaciones reales.'}
                             </p>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                             <div>
-                                <label className="block text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 px-1">Inicio Día Operativo</label>
+                                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Inicio Día Operativo</label>
                                 <div className="relative group">
-                                    <Clock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                                    <Clock size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
                                     <input 
                                         type="time"
                                         value={formData.operationalDayStart} 
                                         onChange={(e) => setFormData({ ...formData, operationalDayStart: e.target.value })} 
-                                        className="w-full p-4 pl-12 rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-black text-sm"
+                                        className="w-full p-4 pl-14 rounded-2xl border-2 border-slate-100 bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-black text-sm text-slate-700"
                                     />
                                 </div>
                             </div>
-                            <div className="flex items-center">
-                                <p className="text-[9px] text-slate-400 font-bold uppercase italic leading-relaxed">
-                                    Define el punto de quiebre para agrupar marcaciones nocturnas.
-                                </p>
+                            <div className="pt-8">
+                                <div className="p-4 bg-amber-50/50 border border-amber-100 rounded-[20px] flex gap-3">
+                                    <Info size={16} className="text-amber-600 flex-shrink-0" />
+                                    <p className="text-[10px] text-amber-800 font-bold leading-relaxed">
+                                        Define el punto de quiebre (ciclo de 24h) para agrupar marcaciones nocturnas. Ejemplo: Si inicia a las 05:00 AM, el día termina a las 04:59 AM de mañana.
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
                         {!formData.useSequentialPairing && (
-                            <div className="grid grid-cols-2 gap-8 p-6 rounded-3xl bg-indigo-50/20 dark:bg-indigo-900/10 border border-dash border-indigo-200 dark:border-indigo-800">
-                                <div>
-                                    <label className="block text-[10px] font-black text-indigo-500 uppercase mb-3 px-1">Entrada Sede</label>
-                                    <input 
-                                        type="time"
-                                        value={formData.defaultStartTime} 
-                                        onChange={(e) => setFormData({ ...formData, defaultStartTime: e.target.value })} 
-                                        className="w-full p-3 rounded-xl border border-indigo-100 dark:border-indigo-900 bg-white dark:bg-slate-900 font-black text-sm"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-black text-indigo-500 uppercase mb-3 px-1">Salida Sede</label>
-                                    <input 
-                                        type="time"
-                                        value={formData.defaultEndTime} 
-                                        onChange={(e) => setFormData({ ...formData, defaultEndTime: e.target.value })} 
-                                        className="w-full p-3 rounded-xl border border-indigo-100 dark:border-indigo-900 bg-white dark:bg-slate-900 font-black text-sm"
-                                    />
+                            <div className="animate-in slide-in-from-top-4 duration-500">
+                                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 px-1">Horarios Base de la Sede</label>
+                                <div className="grid grid-cols-2 gap-8 p-6 rounded-[32px] bg-white border-2 border-indigo-50 shadow-sm">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-3 px-1">
+                                            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                            <span className="text-[10px] font-black text-slate-500 uppercase">Entrada Sede</span>
+                                        </div>
+                                        <input 
+                                            type="time"
+                                            value={formData.defaultStartTime} 
+                                            onChange={(e) => setFormData({ ...formData, defaultStartTime: e.target.value })} 
+                                            className="w-full p-4 rounded-xl border border-indigo-100 bg-white font-black text-sm text-slate-700"
+                                        />
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-3 px-1">
+                                            <div className="w-2 h-2 rounded-full bg-rose-500"></div>
+                                            <span className="text-[10px] font-black text-slate-500 uppercase">Salida Sede</span>
+                                        </div>
+                                        <input 
+                                            type="time"
+                                            value={formData.defaultEndTime} 
+                                            onChange={(e) => setFormData({ ...formData, defaultEndTime: e.target.value })} 
+                                            className="w-full p-4 rounded-xl border border-indigo-100 bg-white font-black text-sm text-slate-700"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -590,12 +603,12 @@ const Stores = () => {
                 )}
               </div>
 
-              <div className="modal-footer" style={{ padding: '2rem 3rem 3rem', border: 'none', background: isDarkMode ? '#1e293b' : '#ffffff' }}>
-                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary" style={{ height: '56px', borderRadius: '20px', flex: 1 }} disabled={isSubmitting}>
+              <div className="modal-footer" style={{ padding: '2rem 3rem 3rem', border: 'none', background: 'white', display: 'flex', gap: '1.5rem' }}>
+                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary" style={{ height: '60px', borderRadius: '20px', flex: 1 }} disabled={isSubmitting}>
                   Cancelar
                 </button>
-                <button type="submit" className="btn-premium btn-premium-primary" style={{ height: '56px', borderRadius: '20px', flex: 2 }} disabled={isSubmitting}>
-                  {isSubmitting ? <div className="loader"></div> : (currentStore ? 'Actualizar Tienda' : 'Crear Punto de Venta')}
+                <button type="submit" className="btn-premium btn-premium-primary" style={{ height: '60px', borderRadius: '20px', flex: 2 }} disabled={isSubmitting}>
+                  {isSubmitting ? <div className="loader loader-white"></div> : (currentStore ? 'Actualizar Tienda' : 'Crear Punto de Venta')}
                 </button>
               </div>
             </form>

@@ -120,6 +120,12 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
         const file = e.target.files[0];
         if (!file) return;
 
+        // Size check (10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            showToast("El archivo excede los 10MB permitidos", "error");
+            return;
+        }
+
         try {
             setIsUploading(true);
             setUploadProgress(10);
@@ -127,10 +133,10 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
             const formDataUpload = new FormData();
             formDataUpload.append('file', file);
             
-            // Simulating progress since fetch doesn't easily support it without XHR
+            // Simulating initial progress
             const progressInterval = setInterval(() => {
-                setUploadProgress(prev => prev < 90 ? prev + 10 : prev);
-            }, 300);
+                setUploadProgress(prev => prev < 85 ? prev + 5 : prev);
+            }, 200);
 
             const res = await api.post('/Files/upload?folder=novedades', formDataUpload, {
                 headers: { 'Content-Type': 'multipart/form-data' }
@@ -139,16 +145,29 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
             clearInterval(progressInterval);
             setUploadProgress(100);
             
-            const newAttachment = { url: res.data.url, fileName: file.name };
-            setAttachments(prev => [...prev, newAttachment]);
-            showToast("Archivo añadido correctamente");
+            // Fix: Handle both casings (Url / url) from backend
+            const fileUrl = res.data.url || res.data.Url;
+            const fileNameServer = res.data.fileName || res.data.FileName || file.name;
+
+            if (fileUrl) {
+                const newAttachment = { url: fileUrl, fileName: fileNameServer };
+                setAttachments(prev => [...prev, newAttachment]);
+                showToast("Archivo adjunto validado");
+                
+                // Important: Clear the input so the same file can be uploaded again if deleted
+                e.target.value = '';
+            } else {
+                throw new Error("El servidor no devolvió la URL del archivo");
+            }
         } catch (err) {
-            console.error(err);
-            const msg = err.response?.data?.message || "Error al subir archivo";
+            console.error("Upload Error:", err);
+            const msg = err.response?.data?.message || err.message || "Error al subir archivo";
             showToast(msg, "error");
+            setUploadProgress(0);
         } finally {
             setIsUploading(false);
-            setTimeout(() => setUploadProgress(0), 1000);
+            // Keep the progress bar at 100% for a second for visual feedback
+            setTimeout(() => setUploadProgress(0), 1500);
         }
     };
 
@@ -511,7 +530,7 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
                                     </div>
                                 </div>
 
-                                {uploadProgress > 0 && uploadProgress < 100 && (
+                                {uploadProgress > 0 && uploadProgress <= 100 && (
                                     <div style={{ width: '200px', height: '6px', background: '#e2e8f0', borderRadius: '3px', margin: '20px auto 0', overflow: 'hidden' }}>
                                         <div style={{ width: `${uploadProgress}%`, height: '100%', background: activeColors.accent, transition: 'width 0.3s ease' }}></div>
                                     </div>
