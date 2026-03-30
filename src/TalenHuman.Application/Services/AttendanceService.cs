@@ -14,13 +14,13 @@ public class AttendanceService
         _context = context;
     }
 
-    public async Task ConsolidateDailyAttendanceAsync(DateTime date, Guid companyId)
+    public async Task ConsolidateDailyAttendanceAsync(DateTime date, Guid companyId, ExecutionType executionType = ExecutionType.Manual)
     {
         var day = date.Date;
         var log = new SyncLog 
         { 
             StartTime = DateTime.UtcNow, 
-            ExecutionType = ExecutionType.Manual,
+            ExecutionType = executionType,
             CompanyId = companyId,
             Status = "Iniciado"
         };

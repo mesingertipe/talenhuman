@@ -181,86 +181,126 @@ public class AttendanceController : ControllerBase
 
         var consolidated = await query.ToListAsync();
         
-        // Real-Time Logic (using Tenant Time)
+            // Real-Time & Unconsolidated Logic (Extended to requested range)
         var tenantDateNow = _tenantTimeProvider.Now.Date;
-        if ((!start.HasValue || start.Value.Date <= tenantDateNow) && (!end.HasValue || end.Value.Date >= tenantDateNow))
-        {
-        IQueryable<TalenHuman.Domain.Entities.BiometricRecord> rawQuery = _context.BiometricRecords
-            .Where(r => r.CompanyId == companyId && r.RecordDate >= tenantDateNow);
+        var startFilter = start?.Date ?? tenantDateNow;
+        var endFilter = end?.Date ?? tenantDateNow;
 
-        // Broaden range for SuperAdmin to avoid token-related tenant mismatches in diagnostic mode
+        // 1. Fetch Raw Biometric Records in the requested range
+        IQueryable<TalenHuman.Domain.Entities.BiometricRecord> rawQuery = _context.BiometricRecords
+            .Where(r => r.CompanyId == companyId && r.RecordDate >= startFilter && r.RecordDate <= endFilter.AddDays(1).AddTicks(-1));
+
         if (roles.Contains("SuperAdmin"))
         {
-            rawQuery = _context.BiometricRecords.Where(r => r.RecordDate >= tenantDateNow);
+            rawQuery = _context.BiometricRecords.Where(r => r.RecordDate >= startFilter && r.RecordDate <= endFilter.AddDays(1).AddTicks(-1));
         }
 
         var rawRecords = await rawQuery.OrderBy(r => r.RecordDate).ToListAsync();
 
-        if (rawRecords.Any())
+        // 2. Fetch Scheduled Shifts in the requested range
+        var shiftsQuery = _context.Shifts
+            .Include(s => s.Store)
+            .Where(s => s.CompanyId == companyId && s.StartTime >= startFilter && s.StartTime <= endFilter.AddDays(1).AddTicks(-1) && !s.IsDescanso);
+
+        // Apply RBAC to shifts
+        if (!roles.Contains("SuperAdmin") && !roles.Contains("Admin") && !roles.Contains("RH"))
         {
-            var groupedRaw = rawRecords.GroupBy(r => r.DeviceUser);
-            var employeesQuery = _context.Employees.Where(e => e.IsActive);
-            
-            if (!roles.Contains("SuperAdmin"))
+            if (roles.Contains("Supervisor") || roles.Contains("Gerente"))
             {
-                employeesQuery = employeesQuery.Where(e => e.CompanyId == companyId);
-                
-                if (!roles.Contains("Admin") && !roles.Contains("RH"))
-                {
-                    if (roles.Contains("Supervisor") || roles.Contains("Gerente"))
-                    {
-                        var managedStores = await _context.SupervisorStores.Where(ss => ss.UserId == userId).Select(ss => ss.StoreId).ToListAsync();
-                        employeesQuery = employeesQuery.Where(e => managedStores.Contains(e.StoreId));
-                    }
-                }
+                var managedStores = await _context.SupervisorStores.Where(ss => ss.UserId == userId).Select(ss => ss.StoreId).ToListAsync();
+                shiftsQuery = shiftsQuery.Where(s => managedStores.Contains(s.StoreId));
             }
-
-            var employees = await employeesQuery.ToListAsync();
-
-            foreach (var group in groupedRaw)
+            else if (roles.Contains("Distrital"))
             {
-                var hasConsolidated = consolidated.Any(a => 
-                    (a.Employee?.IdentificationNumber == group.Key || a.EmployeeId.ToString() == group.Key) && 
-                    a.ClockIn.Date == tenantDateNow);
-                    
-                if (!hasConsolidated)
-                {
-                    var employee = employees.FirstOrDefault(e => 
-                        e.IdentificationNumber == group.Key || 
-                        e.IdentificationNumber.TrimStart('0') == group.Key.TrimStart('0'));
-                        
-                    if (employee == null && !roles.Contains("Admin") && !roles.Contains("SuperAdmin") && !roles.Contains("RH"))
-                        continue;
-                        
-                    var store = employee != null ? await _context.Stores.FindAsync(employee.StoreId) : null;
-                    
-                    var allMarks = string.Join(", ", group.OrderBy(r => r.RecordDate).Select(r => r.RecordDate.ToString("HH:mm")));
-                    consolidated.Add(new Attendance {
-                        Id = Guid.Empty, 
-                        Employee = employee, 
-                        EmployeeId = employee?.Id ?? Guid.Empty,
-                        CompanyId = employee?.CompanyId ?? companyId, 
-                        StoreId = employee?.StoreId ?? Guid.Empty, 
-                        Store = store,
-                        ClockIn = group.First().RecordDate, 
-                        ClockOut = group.Count() > 1 ? group.Last().RecordDate : null,
-                        Status = (AttendanceStatus)(-1), 
-                        StatusObservation = (employee == null 
-                            ? $"[ALERTA] ID {group.Key} no existe." 
-                            : "Real-Time (Pendiente)") + $" [Marcaciones: {allMarks}]"
-                    });
-                }
+                 var userObj = await _context.Users.FindAsync(userId);
+                 if (userObj?.DistrictId != null) shiftsQuery = shiftsQuery.Where(s => s.Store.DistrictId == userObj.DistrictId);
             }
         }
-    }
 
-    if (!string.IsNullOrEmpty(searchTerm))
+        var shifts = await shiftsQuery.ToListAsync();
+
+        // 3. Synthesize "Virtual" entries for pending data
+        var employeesQuery = _context.Employees.Where(e => e.IsActive && e.CompanyId == companyId);
+        
+        // RBAC to employees for virtual matching
+        if (!roles.Contains("SuperAdmin") && !roles.Contains("Admin") && !roles.Contains("RH"))
+        {
+            if (roles.Contains("Supervisor") || roles.Contains("Gerente"))
+            {
+                var managedStores = await _context.SupervisorStores.Where(ss => ss.UserId == userId).Select(ss => ss.StoreId).ToListAsync();
+                employeesQuery = employeesQuery.Where(e => managedStores.Contains(e.StoreId));
+            }
+        }
+
+        var employees = await employeesQuery.ToListAsync();
+
+        // Match Raw Marks first (IDs that don't match employees or entries not yet consolidated)
+        var groupedRaw = rawRecords.GroupBy(r => new { r.DeviceUser, Date = r.RecordDate.Date });
+        foreach (var group in groupedRaw)
+        {
+            var hasConsolidated = consolidated.Any(a => 
+                (a.Employee?.IdentificationNumber == group.Key.DeviceUser || a.EmployeeId.ToString() == group.Key.DeviceUser) && 
+                a.ClockIn.Date == group.Key.Date);
+                
+            if (!hasConsolidated)
+            {
+                var employee = employees.FirstOrDefault(e => 
+                    e.IdentificationNumber == group.Key.DeviceUser || 
+                    e.IdentificationNumber.TrimStart('0') == group.Key.DeviceUser.TrimStart('0'));
+                    
+                if (employee == null && !roles.Contains("Admin") && !roles.Contains("SuperAdmin") && !roles.Contains("RH"))
+                    continue;
+                    
+                var store = employee != null ? await _context.Stores.FindAsync(employee.StoreId) : null;
+                var allMarks = string.Join(", ", group.OrderBy(r => r.RecordDate).Select(r => r.RecordDate.ToString("HH:mm")));
+                
+                consolidated.Add(new Attendance {
+                    Id = Guid.Empty, 
+                    Employee = employee, 
+                    EmployeeId = employee?.Id ?? Guid.Empty,
+                    CompanyId = employee?.CompanyId ?? companyId, 
+                    StoreId = employee?.StoreId ?? Guid.Empty, 
+                    Store = store,
+                    ClockIn = group.First().RecordDate, 
+                    ClockOut = group.Count() > 1 ? group.Last().RecordDate : null,
+                    Status = (AttendanceStatus)(-1), 
+                    StatusObservation = (employee == null 
+                        ? $"[ALERTA] ID {group.Key.DeviceUser} no existe." 
+                        : (group.Key.Date < tenantDateNow ? "No Consolidado (Pendiente)" : "Tiempo Real (En curso)")) + $" [Marcaciones: {allMarks}]"
+                });
+            }
+        }
+        // Match Shifts that don't have consolidated attendance nor raw marks
+        foreach (var shift in shifts)
+        {
+            var hasConsolidated = consolidated.Any(a => 
+                a.EmployeeId == shift.EmployeeId && 
+                a.ClockIn.Date == shift.StartTime.Date);
+            
+            if (!hasConsolidated)
+            {
+                consolidated.Add(new Attendance {
+                    Id = Guid.Empty,
+                    Employee = shift.Employee,
+                    EmployeeId = shift.EmployeeId,
+                    CompanyId = shift.CompanyId,
+                    StoreId = shift.StoreId,
+                    Store = shift.Store,
+                    ClockIn = shift.StartTime,
+                    ClockOut = shift.EndTime,
+                    Status = (AttendanceStatus)(-2), // Virtual: Scheduled but no activity found yet
+                    StatusObservation = shift.StartTime.Date < tenantDateNow ? "Sin Consolidación (Falta proceso)" : "Turno Programado"
+                });
+            }
+        }
+
+        if (!string.IsNullOrEmpty(searchTerm))
         {
             consolidated = consolidated.Where(a => 
                 (a.Employee?.FirstName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 (a.Employee?.LastName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 (a.Employee?.IdentificationNumber?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                (a.StatusObservation != null && a.StatusObservation.Contains(searchTerm))
+                (a.StatusObservation != null && a.StatusObservation.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
             ).ToList();
         }
 
@@ -272,7 +312,7 @@ public class AttendanceController : ControllerBase
             StoreName = a.Store?.Name ?? "N/A",
             a.ClockIn, a.ClockOut, Status = (int)a.Status,
             a.StatusObservation,
-            StatusText = a.Status == (AttendanceStatus)(-1) ? "En Curso" : a.Status.ToString()
+            StatusText = a.Status == (AttendanceStatus)(-1) ? "En Curso" : (a.Status == (AttendanceStatus)(-2) ? (a.ClockIn.Date < tenantDateNow ? "Sin Consolidación" : "Programado") : a.Status.ToString())
         }));
     }
 
@@ -298,8 +338,8 @@ public class AttendanceController : ControllerBase
         var companyId = Guid.Parse(User.FindFirst("CompanyId")?.Value ?? Guid.Empty.ToString());
         if (companyId == Guid.Empty) return BadRequest("Company Context Missing");
 
-        var date = request.Date ?? DateTime.Today;
-        await _attendanceService.ConsolidateDailyAttendanceAsync(date, companyId);
+        var date = request.Date ?? _tenantTimeProvider.Now.Date;
+        await _attendanceService.ConsolidateDailyAttendanceAsync(date, companyId, ExecutionType.Manual);
         
         return Ok(new { Message = $"Proceso de consolidación completado para {date:yyyy-MM-dd}" });
     }
