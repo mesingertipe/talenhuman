@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { 
     Cpu, Clock, Save, Play, Search, AlertCircle, 
-    CheckCircle, ListTodo, Activity, History, Settings, X
+    CheckCircle, ListTodo, Activity, History, Settings, X, ShieldAlert, Trash2
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
+import { formatTenantDate } from '../../utils/localization';
 
 const AttendanceMonitoring = () => {
     const { isDarkMode } = useTheme();
+    const [user, setUser] = useState(null);
     const [settings, setSettings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [executing, setExecuting] = useState(false);
+    const [showCleanupModal, setShowCleanupModal] = useState(false);
     const [progress, setProgress] = useState(0);
     const [dateRange, setDateRange] = useState({
         start: new Date().toISOString().split('T')[0],
@@ -35,6 +38,8 @@ const AttendanceMonitoring = () => {
     };
 
     useEffect(() => {
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) setUser(JSON.parse(savedUser));
         fetchSettings();
         fetchSyncHistory();
     }, []);
@@ -132,7 +137,7 @@ const AttendanceMonitoring = () => {
     };
 
     const handleCleanup = async () => {
-        if (!window.confirm("¿Seguro que deseas eliminar los registros biométricos antiguos? Esta acción no se puede deshacer.")) return;
+        setShowCleanupModal(false);
         try {
             setCleaning(true);
             const res = await api.post('/attendance/cleanup');
@@ -253,12 +258,12 @@ const AttendanceMonitoring = () => {
                             </button>
 
                             <button 
-                                onClick={handleCleanup}
+                                onClick={() => setShowCleanupModal(true)}
                                 disabled={cleaning}
                                 style={{ width: '100%', padding: '14px', borderRadius: '16px', fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', border: `1px solid ${activeColors.danger}`, background: 'transparent', color: activeColors.danger, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
-                                className="hover:bg-rose-50 active:scale-95 disabled:opacity-50"
+                                className="hover:bg-rose-50 dark:hover:bg-rose-950/20 active:scale-95 disabled:opacity-50"
                             >
-                                <X size={18} className={cleaning ? 'animate-pulse' : ''} /> {cleaning ? 'Limpiando...' : 'Limpiar Registros Antiguos'}
+                                <Trash2 size={18} className={cleaning ? 'animate-pulse' : ''} /> {cleaning ? 'Limpiando...' : 'Limpiar Registros Antiguos'}
                             </button>
                         </div>
 
@@ -289,7 +294,9 @@ const AttendanceMonitoring = () => {
                             <div key={log.id || i} style={{ padding: '1.5rem', background: activeColors.bg, borderRadius: '24px', border: `1px solid ${activeColors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div>
                                     <div style={{ fontSize: '0.9rem', fontWeight: '800', color: activeColors.textMain }}>
-                                        {new Date(log.startTime).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                        {formatTenantDate(log.startTime, user?.countryCode, null, { 
+                                            day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' 
+                                        })}
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                         <span style={{ fontSize: '0.65rem', fontWeight: '900', textTransform: 'uppercase', color: activeColors.textMuted }}>
@@ -370,6 +377,55 @@ const AttendanceMonitoring = () => {
                         <span style={{ fontSize: '1.1rem', fontWeight: '950', color: activeColors.textMain }}>
                             {progress}%
                         </span>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* Premium Confirmation Modal (Cleanup) */}
+        {showCleanupModal && (
+            <div style={{
+                position: 'fixed', inset: 0, 
+                background: isDarkMode ? 'rgba(15, 23, 42, 0.8)' : 'rgba(15, 23, 42, 0.4)',
+                backdropFilter: 'blur(10px)', zIndex: 10001,
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>
+                <div className="animate-in zoom-in-95 duration-300" style={{
+                    background: activeColors.card,
+                    padding: '3rem', borderRadius: '40px',
+                    boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.4)',
+                    border: `1px solid ${activeColors.border}`,
+                    width: '90%', maxWidth: '440px', textAlign: 'center'
+                }}>
+                    <div style={{ 
+                        margin: '0 auto 1.5rem auto', width: '72px', height: '72px',
+                        background: activeColors.danger + '15', color: activeColors.danger,
+                        borderRadius: '24px', display: 'flex', alignItems: 'center', 
+                        justifyContent: 'center'
+                    }}>
+                        <ShieldAlert size={40} className="animate-bounce" style={{ animationDuration: '2s' }} />
+                    </div>
+
+                    <h3 style={{ fontSize: '1.6rem', fontWeight: '950', color: activeColors.textMain, marginBottom: '0.75rem', letterSpacing: '-0.02em' }}>¿Confirmar Limpieza?</h3>
+                    <p style={{ fontSize: '0.9rem', color: activeColors.textMuted, fontWeight: '600', marginBottom: '2.5rem', lineHeight: '1.6' }}>
+                        Esta acción eliminará permanentemente todos los registros biométricos crudos anteriores al periodo de retención. <span style={{ color: activeColors.danger, fontWeight: '800' }}>Esta acción no se puede deshacer.</span>
+                    </p>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                        <button 
+                            onClick={() => setShowCleanupModal(false)}
+                            style={{ padding: '16px', borderRadius: '18px', fontWeight: '800', fontSize: '0.8rem', textTransform: 'uppercase', border: `1px solid ${activeColors.border}`, background: 'transparent', color: activeColors.textMuted, cursor: 'pointer' }}
+                            className="hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
+                        >
+                            Cancelar
+                        </button>
+                        <button 
+                            onClick={handleCleanup}
+                            style={{ padding: '16px', borderRadius: '18px', fontWeight: '800', fontSize: '0.8rem', textTransform: 'uppercase', border: 'none', background: activeColors.danger, color: 'white', cursor: 'pointer', boxShadow: `0 10px 20px ${activeColors.danger}30` }}
+                            className="hover:scale-[1.03] active:scale-95 transition-all"
+                        >
+                            Sí, Eliminar
+                        </button>
                     </div>
                 </div>
             </div>

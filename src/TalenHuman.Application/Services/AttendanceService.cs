@@ -231,16 +231,19 @@ public class AttendanceService
         // Handle scheduled shifts with NO markings
         foreach (var remainingShift in shifts)
         {
-            _context.Attendances.Add(new Attendance
+            if (remainingShift.Id != Guid.Empty)
             {
-                EmployeeId = emp.Id,
-                StoreId = store.Id,
-                CompanyId = companyId,
-                Shift = remainingShift,
-                ClockIn = remainingShift.StartTime,
-                Status = AttendanceStatus.SinMarcacion,
-                StatusObservation = "Sin registros biométricos."
-            });
+                _context.Attendances.Add(new Attendance
+                {
+                    EmployeeId = emp.Id,
+                    StoreId = store.Id,
+                    CompanyId = companyId,
+                    Shift = remainingShift,
+                    ClockIn = remainingShift.StartTime,
+                    Status = AttendanceStatus.SinMarcacion,
+                    StatusObservation = "Sin registros biométricos."
+                });
+            }
         }
     }
 
@@ -262,9 +265,13 @@ public class AttendanceService
 
             shifts.Add(new Shift 
             { 
+                EmployeeId = emp.Id,
+                StoreId = store.Id,
+                CompanyId = companyId,
                 StartTime = DateTime.SpecifyKind(storeStart, DateTimeKind.Utc), 
                 EndTime = DateTime.SpecifyKind(storeEnd, DateTimeKind.Utc),
-                Observation = "Generado automáticamente por horario de sede."
+                Observation = "Generado automáticamente por horario de sede.",
+                Status = ShiftStatus.Scheduled
             });
         }
 
@@ -336,13 +343,15 @@ public class AttendanceService
             days = customDays;
         }
 
-        var cutoffDate = ColombiaTime.Now.Date.AddDays(-days);
-
+        // Cutoff calculation (Relative to Mexico/Bogota time)
+        var now = ColombiaTime.Now;
+        var cutoffDate = DateTime.SpecifyKind(now.Date.AddDays(-days), DateTimeKind.Utc);
+        
         var recordsToDelete = await _context.BiometricRecords
             .Where(r => r.CompanyId == companyId && r.RecordDate < cutoffDate)
             .ToListAsync();
 
-        if (recordsToDelete.Any())
+        if (recordsToDelete.Count > 0)
         {
             _context.BiometricRecords.RemoveRange(recordsToDelete);
             await _context.SaveChangesAsync(CancellationToken.None);
