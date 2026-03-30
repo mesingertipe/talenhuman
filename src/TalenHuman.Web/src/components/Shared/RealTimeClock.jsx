@@ -53,30 +53,34 @@ const RealTimeClock = ({ countryCode, timeZoneId, isCollapsed }) => {
   if (isCollapsed) {
     return (
       <div className="flex justify-center p-2 mb-1 animate-in zoom-in-95 duration-300" title={`${config.name}: ${timeString}`}>
-         <img 
-            src={flagUrl} 
-            alt={config.name}
-            className="w-6 h-6 rounded-full object-cover aspect-square shadow-sm border-none" 
-         />
+         <div className="w-6 h-6 rounded-full overflow-hidden shadow-sm border-none ring-1 ring-white/10">
+            <img 
+               src={flagUrl} 
+               alt={config.name}
+               className="w-full h-full object-cover" 
+            />
+         </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-[1.25rem] mb-3 p-0 flex items-center gap-3 animate-in fade-in transition-all">
+    <div className="mx-[1.25rem] mb-4 p-0 flex items-center gap-2.5 animate-in fade-in transition-all">
         <div className="relative shrink-0 flex items-center">
-          <img 
-              src={flagUrl} 
-              alt={config.name}
-              className="w-7 h-7 rounded-full shadow-md object-cover aspect-square border-none" 
-          />
-          <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-[1.5px] border-[#0f172a] rounded-full"></div>
+          <div className="w-7 h-7 rounded-full overflow-hidden shadow-md border-none ring-1 ring-white/10">
+            <img 
+                src={flagUrl} 
+                alt={config.name}
+                className="w-full h-full object-cover" 
+            />
+          </div>
+          <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-500 border border-[#0f172a] rounded-full"></div>
         </div>
         <div className="flex flex-col min-w-0 justify-center">
-            <span className="text-[13px] font-black text-white tracking-widest leading-none">
+            <span className="text-[11px] font-bold text-white tracking-widest leading-tight">
                 {timeString.toUpperCase()}
             </span>
-            <span className="text-[10px] font-bold text-slate-400 mt-1 uppercase leading-none truncate tracking-wide">
+            <span className="text-[8px] font-semibold text-slate-400 uppercase leading-none truncate tracking-wider">
                 {dateString}
             </span>
         </div>
