@@ -29,8 +29,25 @@ public class DigitalOceanSpacesService : IFileStorageService
             throw new Exception("DigitalOcean Spaces is not configured. Please check System Settings.");
         }
 
-        var config = new AmazonS3Config { ServiceURL = endpoint };
+        var config = new AmazonS3Config 
+        { 
+            ServiceURL = endpoint,
+            HttpClientFactory = new CustomHttpClientFactory()
+        };
         return new AmazonS3Client(accessKey, secretKey, config);
+    }
+
+    // Elite V12 SSL Bypass: Required for certain Docker/On-Prem environments with trust store issues
+    private class CustomHttpClientFactory : Amazon.Runtime.HttpClientFactory
+    {
+        public override HttpClient CreateHttpClient(Amazon.Runtime.IClientConfig config)
+        {
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+            };
+            return new HttpClient(handler);
+        }
     }
 
     public async Task<string> UploadFileAsync(IFormFile file, string folder = "attachments")

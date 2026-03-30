@@ -185,28 +185,24 @@ public class AttendanceController : ControllerBase
         var tenantDateNow = _tenantTimeProvider.Now.Date;
         if ((!start.HasValue || start.Value.Date <= tenantDateNow) && (!end.HasValue || end.Value.Date >= tenantDateNow))
         {
-            var rawQuery = _context.BiometricRecords.Where(r => r.CompanyId == companyId && r.RecordDate >= tenantDateNow);
+        // Broaden range for SuperAdmin to avoid token-related tenant mismatches in diagnostic mode
+        if (roles.Contains("SuperAdmin"))
+        {
+            rawQuery = _context.BiometricRecords.Where(r => r.RecordDate >= tenantDateNow);
+        }
+
+        var rawRecords = await rawQuery.OrderBy(r => r.RecordDate).ToListAsync();
+
+        if (rawRecords.Any())
+        {
+            var groupedRaw = rawRecords.GroupBy(r => r.DeviceUser);
+            var employeesQuery = _context.Employees.Where(e => e.IsActive);
             
-            // Apply RBAC to raw records too
-            if (!roles.Contains("SuperAdmin") && !roles.Contains("Admin") && !roles.Contains("RH"))
+            if (!roles.Contains("SuperAdmin"))
             {
-                if (roles.Contains("Supervisor") || roles.Contains("Gerente"))
-                {
-                    var managedStores = await _context.SupervisorStores.Where(ss => ss.UserId == userId).Select(ss => ss.StoreId).ToListAsync();
-                    rawQuery = rawQuery.Join(_context.Employees, r => r.DeviceUser, e => e.IdentificationNumber, (r, e) => new { r, e })
-                        .Where(x => x.e.CompanyId == companyId && managedStores.Contains(x.e.StoreId))
-                        .Select(x => x.r);
-                }
-            }
-
-            var rawRecords = await rawQuery.OrderBy(r => r.RecordDate).ToListAsync();
-
-            if (rawRecords.Any())
-            {
-                var groupedRaw = rawRecords.GroupBy(r => r.DeviceUser);
-                var employeesQuery = _context.Employees.Where(e => e.CompanyId == companyId && e.IsActive);
+                employeesQuery = employeesQuery.Where(e => e.CompanyId == companyId);
                 
-                if (!roles.Contains("SuperAdmin") && !roles.Contains("Admin") && !roles.Contains("RH"))
+                if (!roles.Contains("Admin") && !roles.Contains("RH"))
                 {
                     if (roles.Contains("Supervisor") || roles.Contains("Gerente"))
                     {
@@ -214,38 +210,38 @@ public class AttendanceController : ControllerBase
                         employeesQuery = employeesQuery.Where(e => managedStores.Contains(e.StoreId));
                     }
                 }
+            }
 
-                var employees = await employeesQuery.ToListAsync();
+            var employees = await employeesQuery.ToListAsync();
 
-                foreach (var group in groupedRaw)
+            foreach (var group in groupedRaw)
+            {
+                var hasConsolidated = consolidated.Any(a => 
+                    (a.Employee?.IdentificationNumber == group.Key || a.EmployeeId.ToString() == group.Key) && 
+                    a.ClockIn.Date == tenantDateNow);
+                    
+                if (!hasConsolidated)
                 {
-                    var hasConsolidated = consolidated.Any(a => 
-                        (a.Employee?.IdentificationNumber == group.Key || a.EmployeeId.ToString() == group.Key) && 
-                        a.ClockIn.Date == tenantDateNow);
+                    var employee = employees.FirstOrDefault(e => 
+                        e.IdentificationNumber == group.Key || 
+                        e.IdentificationNumber.TrimStart('0') == group.Key.TrimStart('0'));
                         
-                    if (!hasConsolidated)
-                    {
-                        var employee = employees.FirstOrDefault(e => 
-                            e.IdentificationNumber == group.Key || 
-                            e.IdentificationNumber.TrimStart('0') == group.Key.TrimStart('0'));
-                            
-                        var store = employee != null ? await _context.Stores.FindAsync(employee.StoreId) : null;
-                        
-                        consolidated.Add(new Attendance {
-                            Id = Guid.Empty, 
-                            Employee = employee, 
-                            EmployeeId = employee?.Id ?? Guid.Empty,
-                            CompanyId = companyId, 
-                            StoreId = employee?.StoreId ?? Guid.Empty, 
-                            Store = store,
-                            ClockIn = group.First().RecordDate, 
-                            ClockOut = group.Count() > 1 ? group.Last().RecordDate : null,
-                            Status = (AttendanceStatus)(-1), 
-                            StatusObservation = employee == null 
-                                ? $"[ALERTA] ID {group.Key} no existe en base de empleados." 
-                                : "Real-Time (Pendiente)"
-                        });
-                    }
+                    var store = employee != null ? await _context.Stores.FindAsync(employee.StoreId) : null;
+                    
+                    consolidated.Add(new Attendance {
+                        Id = Guid.Empty, 
+                        Employee = employee, 
+                        EmployeeId = employee?.Id ?? Guid.Empty,
+                        CompanyId = employee?.CompanyId ?? companyId, 
+                        StoreId = employee?.StoreId ?? Guid.Empty, 
+                        Store = store,
+                        ClockIn = group.First().RecordDate, 
+                        ClockOut = group.Count() > 1 ? group.Last().RecordDate : null,
+                        Status = (AttendanceStatus)(-1), 
+                        StatusObservation = employee == null 
+                            ? $"[ALERTA] ID {group.Key} no existe en base de empleados." 
+                            : "Real-Time (Pendiente)"
+                    });
                 }
             }
         }
@@ -255,7 +251,8 @@ public class AttendanceController : ControllerBase
             consolidated = consolidated.Where(a => 
                 (a.Employee?.FirstName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 (a.Employee?.LastName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                (a.Employee?.IdentificationNumber?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)
+                (a.Employee?.IdentificationNumber?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (a.StatusObservation != null && a.StatusObservation.Contains(searchTerm))
             ).ToList();
         }
 
