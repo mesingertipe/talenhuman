@@ -22,6 +22,7 @@ import Cities from './pages/Core/Cities';
 import Districts from './pages/Core/Districts';
 import SystemSettings from './pages/SuperAdmin/SystemSettings';
 import NewsTemplateDesigner from './pages/SuperAdmin/NewsTemplateDesigner';
+import AuditLogs from './pages/Core/AuditLogs';
 
 function App() {
   const [user, setUser] = React.useState(null);
@@ -134,6 +135,9 @@ function App() {
         return <Dashboard />;
       case 'Diseñador de Plantillas':
         if (isSuperAdmin) return <NewsTemplateDesigner />;
+        return <Dashboard />;
+      case 'Auditoría':
+        if (isSuperAdmin || isAdmin) return <AuditLogs />;
         return <Dashboard />;
       default: return <Dashboard />;
     }

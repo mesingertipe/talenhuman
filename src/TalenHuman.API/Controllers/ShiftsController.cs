@@ -17,10 +17,12 @@ namespace TalenHuman.API.Controllers;
 public class ShiftsController : ControllerBase
 {
     private readonly IApplicationDbContext _context;
+    private readonly IAuditService _auditService;
 
-    public ShiftsController(IApplicationDbContext context)
+    public ShiftsController(IApplicationDbContext context, IAuditService auditService)
     {
         _context = context;
+        _auditService = auditService;
     }
 
     [HttpGet]
@@ -110,6 +112,9 @@ public class ShiftsController : ControllerBase
         }
 
         await _context.SaveChangesAsync(default);
+
+        await _auditService.LogAsync("MASS_UPDATE", "Shifts", dto.StoreId.ToString(), $"Actualizados {dto.Shifts.Count} turnos. Motivo/Comentario: {dto.Comment}");
+
         return NoContent();
     }
 }

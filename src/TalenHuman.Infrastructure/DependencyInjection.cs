@@ -37,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<IFileStorageService, DigitalOceanSpacesService>();
         services.AddScoped<IEmailService, Services.ResendEmailService>();
         services.AddScoped<IIdentityService, Identity.IdentityService>();
+        services.AddScoped<IAuditService, AuditService>();
         services.AddHostedService<Services.AttendanceSchedulerService>();
         services.AddHttpClient();
         services.AddHttpContextAccessor();

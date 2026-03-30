@@ -14,11 +14,13 @@ public class BrandsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly ITenantProvider _tenantProvider;
+    private readonly IAuditService _auditService;
 
-    public BrandsController(ApplicationDbContext context, ITenantProvider tenantProvider)
+    public BrandsController(ApplicationDbContext context, ITenantProvider tenantProvider, IAuditService auditService)
     {
         _context = context;
         _tenantProvider = tenantProvider;
+        _auditService = auditService;
     }
 
     [HttpGet]
@@ -41,6 +43,9 @@ public class BrandsController : ControllerBase
         brand.CompanyId = _tenantProvider.GetTenantId();
         _context.Brands.Add(brand);
         await _context.SaveChangesAsync();
+
+        await _auditService.LogAsync("CREATE", "Brand", brand.Id.ToString(), $"Creada marca: {brand.Name}");
+
         return CreatedAtAction(nameof(GetBrand), new { id = brand.Id }, brand);
     }
 
@@ -53,6 +58,9 @@ public class BrandsController : ControllerBase
         existing.Name = brand.Name;
         
         await _context.SaveChangesAsync();
+
+        await _auditService.LogAsync("UPDATE", "Brand", existing.Id.ToString(), $"Actualizada marca: {brand.Name}");
+
         return NoContent();
     }
 
@@ -66,6 +74,9 @@ public class BrandsController : ControllerBase
         {
             _context.Brands.Remove(brand);
             await _context.SaveChangesAsync();
+
+            await _auditService.LogAsync("DELETE", "Brand", id.ToString(), $"Eliminada marca: {brand.Name}");
+
             return NoContent();
         }
         catch (DbUpdateException)

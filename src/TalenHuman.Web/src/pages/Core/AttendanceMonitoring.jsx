@@ -12,6 +12,11 @@ const AttendanceMonitoring = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [executing, setExecuting] = useState(false);
+    const [progress, setProgress] = useState(0);
+    const [dateRange, setDateRange] = useState({
+        start: new Date().toISOString().split('T')[0],
+        end: new Date().toISOString().split('T')[0]
+    });
     const [cleaning, setCleaning] = useState(false);
     const [syncLogs, setSyncLogs] = useState([]);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
@@ -90,13 +95,38 @@ const AttendanceMonitoring = () => {
     const handleManualExecute = async () => {
         try {
             setExecuting(true);
-            await api.post('/attendance/consolidate', {});
-            showToast("Proceso de consolidación iniciado");
+            setProgress(0);
+            
+            const startDate = new Date(dateRange.start + 'T00:00:00');
+            const endDate = new Date(dateRange.end + 'T00:00:00');
+            
+            if (startDate > endDate) {
+                showToast("La fecha de inicio no puede ser mayor que la de fin.", "error");
+                setExecuting(false);
+                return;
+            }
+
+            const datesToProcess = [];
+            let currentDate = new Date(startDate);
+            while (currentDate <= endDate) {
+                datesToProcess.push(currentDate.toISOString().split('T')[0]);
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            let completed = 0;
+            for (const date of datesToProcess) {
+                await api.post('/attendance/consolidate', { date });
+                completed++;
+                setProgress(Math.round((completed / datesToProcess.length) * 100));
+            }
+
+            showToast(`Proceso de consolidación completado para ${datesToProcess.length} día(s)`);
             fetchSyncHistory();
         } catch (err) {
             showToast("Error al iniciar consolidación", "error");
         } finally {
             setExecuting(false);
+            setTimeout(() => setProgress(0), 1500);
         }
     };
 
@@ -174,16 +204,50 @@ const AttendanceMonitoring = () => {
                         <div style={{ padding: '20px', background: isDarkMode ? '#0f172a' : '#f8fafc', borderRadius: '24px', border: '2px dashed ' + activeColors.border }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                                 <Activity size={18} className="text-emerald-500" />
-                                <span style={{ fontWeight: '800', fontSize: '0.9rem', color: activeColors.textMain }}>Ejecución Manual</span>
+                                <span style={{ fontWeight: '800', fontSize: '0.9rem', color: activeColors.textMain }}>Ejecución Manual por Rango</span>
                             </div>
-                            <p style={{ fontSize: '0.8rem', color: activeColors.textMuted, marginBottom: '20px', lineHeight: '1.5' }}>Si necesitas procesar los datos de hoy inmediatamente, puedes disparar el proceso manualmente.</p>
+                            <p style={{ fontSize: '0.8rem', color: activeColors.textMuted, marginBottom: '20px', lineHeight: '1.5' }}>Procesa o reprocesa la asistencia seleccionando un rango de fechas específico. Útil para reprocesamiento de días anteriores.</p>
+                            
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.65rem', fontWeight: '900', textTransform: 'uppercase', color: activeColors.textMuted, marginBottom: '6px' }}>Desde</label>
+                                    <input 
+                                        type="date" 
+                                        value={dateRange.start}
+                                        onChange={e => setDateRange(prev => ({...prev, start: e.target.value}))}
+                                        style={{ width: '100%', padding: '10px 14px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, outline: 'none', fontWeight: '700' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.65rem', fontWeight: '900', textTransform: 'uppercase', color: activeColors.textMuted, marginBottom: '6px' }}>Hasta</label>
+                                    <input 
+                                        type="date" 
+                                        value={dateRange.end}
+                                        onChange={e => setDateRange(prev => ({...prev, end: e.target.value}))}
+                                        style={{ width: '100%', padding: '10px 14px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, outline: 'none', fontWeight: '700' }}
+                                    />
+                                </div>
+                            </div>
+
+                            {executing && (
+                                <div style={{ marginBottom: '20px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: '800', color: activeColors.accent, marginBottom: '6px' }}>
+                                        <span>Procesando datos...</span>
+                                        <span>{progress}%</span>
+                                    </div>
+                                    <div style={{ width: '100%', height: '8px', background: activeColors.border, borderRadius: '4px', overflow: 'hidden' }}>
+                                        <div style={{ height: '100%', background: activeColors.accent, width: `${progress}%`, transition: 'width 0.3s ease' }}></div>
+                                    </div>
+                                </div>
+                            )}
+
                             <button 
                                 onClick={handleManualExecute}
                                 disabled={executing}
                                 style={{ width: '100%', padding: '14px', borderRadius: '16px', fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', border: 'none', background: activeColors.success, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 8px 15px rgba(16, 185, 129, 0.2)', marginBottom: '12px' }}
                                 className="hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                             >
-                                <Play size={18} className={executing ? 'animate-spin' : ''} /> {executing ? 'Procesando...' : 'Ejecutar Consolidación'}
+                                <Play size={18} className={executing ? 'animate-spin' : ''} /> {executing ? `Ejecutando (${progress}%)` : 'Ejecutar Consolidación'}
                             </button>
 
                             <button 

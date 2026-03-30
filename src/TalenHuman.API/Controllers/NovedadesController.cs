@@ -18,10 +18,12 @@ namespace TalenHuman.API.Controllers;
 public class NovedadesController : ControllerBase
 {
     private readonly IApplicationDbContext _context;
+    private readonly IAuditService _auditService;
 
-    public NovedadesController(IApplicationDbContext context)
+    public NovedadesController(IApplicationDbContext context, IAuditService auditService)
     {
         _context = context;
+        _auditService = auditService;
     }
 
     [HttpGet]
@@ -214,6 +216,8 @@ public class NovedadesController : ControllerBase
         _context.Novedades.Add(n);
         await _context.SaveChangesAsync(default);
 
+        await _auditService.LogAsync("CREATE", "Novedad", n.Id.ToString(), $"Novedad creada del tipo: {tipo.Nombre}");
+
         return CreatedAtAction(nameof(GetNovedad), new { id = n.Id }, new NovedadDto { Id = n.Id });
     }
 
@@ -256,6 +260,9 @@ public class NovedadesController : ControllerBase
 
         _context.NovedadLogs.Add(log);
         await _context.SaveChangesAsync(default);
+
+        string actionType = dto.Status == NovedadStatus.Aprobado ? "APPROVE" : "REJECT";
+        await _auditService.LogAsync(actionType, "Novedad", n.Id.ToString(), $"Estado de novedad cambiado a {dto.Status}");
 
         return NoContent();
     }

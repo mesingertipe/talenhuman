@@ -17,12 +17,14 @@ public class UsersController : ControllerBase
     private readonly UserManager<User> _userManager;
     private readonly ApplicationDbContext _context;
     private readonly ITenantProvider _tenantProvider;
+    private readonly IAuditService _auditService;
 
-    public UsersController(UserManager<User> userManager, ApplicationDbContext context, ITenantProvider tenantProvider)
+    public UsersController(UserManager<User> userManager, ApplicationDbContext context, ITenantProvider tenantProvider, IAuditService auditService)
     {
         _userManager = userManager;
         _context = context;
         _tenantProvider = tenantProvider;
+        _auditService = auditService;
     }
 
     [HttpGet]
@@ -168,6 +170,8 @@ public class UsersController : ControllerBase
             // Sync Stores (District stores take precedence for Supervisors)
             await SyncSupervisorStores(user.Id, dto.CompanyId, dto.StoreIds, dto.DistrictId);
 
+            await _auditService.LogAsync("CREATE", "User", user.Id.ToString(), $"Usuario creado: {user.Email}");
+
             return Ok(new { user.Id, user.Email, user.FullName });
         }
         catch (Exception ex)
@@ -246,6 +250,8 @@ public class UsersController : ControllerBase
                 await _userManager.UpdateAsync(user);
             }
 
+            await _auditService.LogAsync("UPDATE", "User", user.Id.ToString(), $"Usuario actualizado: {user.Email}");
+
             return NoContent();
         }
         catch (Exception ex)
@@ -289,6 +295,9 @@ public class UsersController : ControllerBase
             if (!result.Succeeded) return BadRequest(new { message = "No se pudo eliminar el usuario", errors = result.Errors });
 
             await _context.SaveChangesAsync();
+
+            await _auditService.LogAsync("DELETE", "User", user.Id.ToString(), $"Usuario eliminado: {user.Email}");
+
             return NoContent();
         }
         catch (Exception ex)
@@ -317,6 +326,8 @@ public class UsersController : ControllerBase
 
             user.MustChangePassword = false;
             await _userManager.UpdateAsync(user);
+
+            await _auditService.LogAsync("CHANGE_PASSWORD", "User", user.Id.ToString(), $"Cambio de contraseña exitoso");
 
             return Ok(new { message = "Contraseña actualizada con éxito" });
         }

@@ -36,6 +36,7 @@ public class AttendanceSchedulerService : BackgroundService
                     var context = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
                     var attendanceService = scope.ServiceProvider.GetRequiredService<AttendanceService>();
                     var reportService = scope.ServiceProvider.GetRequiredService<AttendanceReportService>();
+                    var auditService = scope.ServiceProvider.GetRequiredService<IAuditService>();
                     
                     // Get all active companies
                     var companies = await context.Companies.Where(c => c.IsActive).ToListAsync();
@@ -80,6 +81,15 @@ public class AttendanceSchedulerService : BackgroundService
                                     
                                     // 2. Send Reports
                                     await reportService.SendAutomaticDailyReportsAsync(company.Id, yesterday);
+                                    
+                                    // 3. Cleanup old audit logs (retention setting)
+                                    var auditRetKey = $"{company.Id}_AuditRetentionDays";
+                                    var auditRetSetting = await context.SystemSettings.FirstOrDefaultAsync(s => s.Key == auditRetKey) ?? await context.SystemSettings.FirstOrDefaultAsync(s => s.Key == "AuditRetentionDays");
+                                    int auditDaysToKeep = 60; // Default 60 days
+                                    if (auditRetSetting != null && int.TryParse(auditRetSetting.Value, out int customAuditDays)) {
+                                        auditDaysToKeep = customAuditDays;
+                                    }
+                                    await auditService.CleanupOldLogsAsync(company.Id, auditDaysToKeep);
                                     
                                     _lastRunDatesByCompany[company.Id] = companyNow;
                                     _logger.LogInformation("Scheduled cycle for {Name} completed.", company.Name);

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Users, Clock, Calendar, FileText, Settings, 
   LogOut, Store, Sun, Moon, Pin, PinOff, ChevronLeft, ChevronRight,
-  Briefcase, Boxes, Building, Link, ChevronDown, ChevronUp, User as UserIcon, MapPin, Cpu, Globe, Activity
+  Briefcase, Boxes, Building, Link, ChevronDown, ChevronUp, User as UserIcon, MapPin, Cpu, Globe, Activity, ShieldAlert
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
@@ -46,6 +46,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
       isHeader: true,
       children: [
         { icon: <Activity size={20} />, label: 'Monitoreo Asistencia', roles: ['SuperAdmin', 'Admin'] },
+        { icon: <ShieldAlert size={20} />, label: 'Auditoría', roles: ['SuperAdmin', 'Admin'] },
         { icon: <Settings size={20} />, label: 'Usuarios', roles: ['SuperAdmin', 'Admin'] },
         { icon: <FileText size={20} />, label: 'Configuración novedades', roles: ['SuperAdmin', 'Admin'] },
         { icon: <Globe size={20} />, label: 'Diseñador de Plantillas', roles: ['SuperAdmin'] },
@@ -184,6 +185,7 @@ const getPageInfo = (page) => {
     case 'Marcaciones': return { title: 'Asistencia', subtitle: 'Trazabilidad de ingresos y salidas' };
     case 'Monitoreo Asistencia': return { title: 'Monitoreo Asistencia', subtitle: 'Gestión de procesos y consolidación de datos' };
     case 'Empresas': return { title: 'Empresas', subtitle: 'Configuración de inquilinos corporativos' };
+    case 'Auditoría': return { title: 'Auditoría del Sistema', subtitle: 'Trazabilidad y control de movimientos críticos' };
     case 'Configuración Sistema': return { title: 'Parámetros del Sistema', subtitle: 'Configuración de infraestructura y servicios core' };
     case 'Diseñador de Plantillas': return { title: 'Catálogo de Plantillas', subtitle: 'Diseño de novedades globales para el ecosistema' };
     default: return { title: page, subtitle: '' };

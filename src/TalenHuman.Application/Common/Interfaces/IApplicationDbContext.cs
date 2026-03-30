@@ -27,6 +27,7 @@ public interface IApplicationDbContext
     DbSet<User> Users { get; }
     DbSet<SalesData> SalesData { get; }
     DbSet<SyncLog> SyncLogs { get; }
+    DbSet<AuditLog> AuditLogs { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

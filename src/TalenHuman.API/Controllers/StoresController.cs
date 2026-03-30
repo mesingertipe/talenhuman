@@ -14,11 +14,13 @@ public class StoresController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly ITenantProvider _tenantProvider;
+    private readonly IAuditService _auditService;
 
-    public StoresController(ApplicationDbContext context, ITenantProvider tenantProvider)
+    public StoresController(ApplicationDbContext context, ITenantProvider tenantProvider, IAuditService auditService)
     {
         _context = context;
         _tenantProvider = tenantProvider;
+        _auditService = auditService;
     }
 
     [HttpGet]
@@ -41,6 +43,9 @@ public class StoresController : ControllerBase
         store.CompanyId = _tenantProvider.GetTenantId();
         _context.Stores.Add(store);
         await _context.SaveChangesAsync();
+
+        await _auditService.LogAsync("CREATE", "Store", store.Id.ToString(), $"Creada tienda: {store.Name}");
+
         return CreatedAtAction(nameof(GetStore), new { id = store.Id }, store);
     }
 
@@ -66,6 +71,9 @@ public class StoresController : ControllerBase
         existing.DefaultEndTime = store.DefaultEndTime;
         
         await _context.SaveChangesAsync();
+
+        await _auditService.LogAsync("UPDATE", "Store", existing.Id.ToString(), $"Actualizada tienda: {store.Name}");
+
         return NoContent();
     }
 
@@ -79,6 +87,9 @@ public class StoresController : ControllerBase
         {
             _context.Stores.Remove(store);
             await _context.SaveChangesAsync();
+
+            await _auditService.LogAsync("DELETE", "Store", id.ToString(), $"Eliminada tienda: {store.Name}");
+
             return NoContent();
         }
         catch (DbUpdateException)

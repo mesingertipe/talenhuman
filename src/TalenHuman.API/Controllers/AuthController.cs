@@ -23,6 +23,7 @@ public class AuthController : ControllerBase
     private readonly IConfiguration _configuration;
     private readonly IIdentityService _identityService;
     private readonly IEmailService _emailService;
+    private readonly IAuditService _auditService;
 
     public AuthController(
         UserManager<User> userManager,
@@ -30,7 +31,8 @@ public class AuthController : ControllerBase
         ApplicationDbContext context,
         IConfiguration configuration,
         IIdentityService identityService,
-        IEmailService emailService)
+        IEmailService emailService,
+        IAuditService auditService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -38,6 +40,7 @@ public class AuthController : ControllerBase
         _configuration = configuration;
         _identityService = identityService;
         _emailService = emailService;
+        _auditService = auditService;
     }
 
     [HttpPost("login")]
@@ -50,13 +53,24 @@ public class AuthController : ControllerBase
                 u.NormalizedEmail == request.Email.ToUpper() || 
                 u.UserName == request.Email);
 
-        if (user == null) return Unauthorized("Credenciales inválidas");
+        if (user == null) 
+        {
+            await _auditService.LogAsync("LOGIN_ATTEMPT", "Auth", null, $"Intento de acceso fallido para: {request.Email}", false);
+            return Unauthorized("Credenciales inválidas");
+        }
 
         if (user.Company != null && !user.Company.IsActive)
+        {
+            await _auditService.LogAsync("LOGIN_ATTEMPT", "Auth", user.Id.ToString(), "Empresa inactiva", false, user.Id, user.CompanyId, user.Email);
             return Unauthorized("La empresa asociada a esta cuenta se encuentra inactiva. Contacte a soporte.");
+        }
 
         var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
-        if (!result.Succeeded) return Unauthorized("Credenciales inválidas");
+        if (!result.Succeeded) 
+        {
+            await _auditService.LogAsync("LOGIN_ATTEMPT", "Auth", user.Id.ToString(), "Contraseña incorrecta", false, user.Id, user.CompanyId, user.Email);
+            return Unauthorized("Credenciales inválidas");
+        }
 
         var roles = await _userManager.GetRolesAsync(user);
         
@@ -119,6 +133,9 @@ public class AuthController : ControllerBase
                 storeExternalId = primary.ExternalId;
             }
         }
+
+        // Log success
+        await _auditService.LogAsync("LOGIN", "Auth", user.Id.ToString(), "Login exitoso", true, user.Id, user.CompanyId, user.Email);
 
         return Ok(new
         {

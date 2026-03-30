@@ -43,7 +43,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<BiometricRecord> BiometricRecords => Set<BiometricRecord>();
     public DbSet<District> Districts => Set<District>();
     public DbSet<SyncLog> SyncLogs => Set<SyncLog>();
-
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public Guid TenantId => _tenantProvider.GetTenantId();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -70,6 +70,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<SalesData>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<BiometricRecord>().HasQueryFilter(b => b.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<NovedadAdjunto>().HasQueryFilter(n => n.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<AuditLog>().HasQueryFilter(a => a.CompanyId == TenantId || TenantId == Guid.Empty);
 
         // Many-to-Many: Supervisor -> Stores
         builder.Entity<SupervisorStore>()
