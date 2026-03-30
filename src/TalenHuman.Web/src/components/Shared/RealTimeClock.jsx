@@ -56,27 +56,27 @@ const RealTimeClock = ({ countryCode, timeZoneId, isCollapsed }) => {
          <img 
             src={flagUrl} 
             alt={config.name}
-            className="w-6 h-6 rounded-full object-cover shadow-sm aspect-square border-none" 
+            className="w-6 h-6 rounded-full object-cover aspect-square shadow-sm border-none" 
          />
       </div>
     );
   }
 
   return (
-    <div className="mx-6 mb-2 p-0 flex items-center gap-2 animate-in fade-in transition-all">
-        <div className="relative shrink-0">
+    <div className="mx-[1.25rem] mb-3 p-0 flex items-center gap-3 animate-in fade-in transition-all">
+        <div className="relative shrink-0 flex items-center">
           <img 
               src={flagUrl} 
               alt={config.name}
-              className="w-7 h-7 rounded-full shadow-sm object-cover aspect-square border-none" 
+              className="w-7 h-7 rounded-full shadow-md object-cover aspect-square border-none" 
           />
-          <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-500 border border-slate-900 rounded-full"></div>
+          <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-[1.5px] border-[#0f172a] rounded-full"></div>
         </div>
-        <div className="flex flex-col min-w-0">
-            <span className="text-[12px] font-[900] text-white tracking-widest font-mono leading-none">
-                {timeString}
+        <div className="flex flex-col min-w-0 justify-center">
+            <span className="text-[13px] font-black text-white tracking-widest leading-none">
+                {timeString.toUpperCase()}
             </span>
-            <span className="text-[9px] font-black text-slate-300 mt-1 uppercase leading-none truncate tracking-tighter">
+            <span className="text-[10px] font-bold text-slate-400 mt-1 uppercase leading-none truncate tracking-wide">
                 {dateString}
             </span>
         </div>
