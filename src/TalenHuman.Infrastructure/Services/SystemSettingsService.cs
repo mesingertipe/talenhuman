@@ -7,16 +7,34 @@ namespace TalenHuman.Infrastructure.Services;
 public class SystemSettingsService : ISystemSettingsService
 {
     private readonly IApplicationDbContext _context;
+    private readonly ITenantProvider _tenantProvider;
 
-    public SystemSettingsService(IApplicationDbContext context)
+    public SystemSettingsService(IApplicationDbContext context, ITenantProvider tenantProvider)
     {
         _context = context;
+        _tenantProvider = tenantProvider;
+    }
+
+    private string GetPrefixedKey(string key)
+    {
+        var tenantId = _tenantProvider.GetTenantId();
+        if (tenantId == Guid.Empty) return key; // Global fallback
+        return $"{tenantId}_{key}";
     }
 
     public async Task<string?> GetSettingAsync(string key)
     {
+        var prefixedKey = GetPrefixedKey(key);
         var setting = await _context.SystemSettings
-            .FirstOrDefaultAsync(s => s.Key == key);
+            .FirstOrDefaultAsync(s => s.Key == prefixedKey);
+        
+        // Fallback to global if tenant-specific not found
+        if (setting == null && prefixedKey != key)
+        {
+            setting = await _context.SystemSettings
+                .FirstOrDefaultAsync(s => s.Key == key);
+        }
+        
         return setting?.Value;
     }
 
@@ -37,14 +55,15 @@ public class SystemSettingsService : ISystemSettingsService
 
     public async Task SetSettingAsync(string key, string value, string group = "General", string? description = null)
     {
+        var prefixedKey = GetPrefixedKey(key);
         var setting = await _context.SystemSettings
-            .FirstOrDefaultAsync(s => s.Key == key);
+            .FirstOrDefaultAsync(s => s.Key == prefixedKey);
 
         if (setting == null)
         {
             setting = new SystemSetting
             {
-                Key = key,
+                Key = prefixedKey,
                 Value = value,
                 Group = group,
                 Description = description

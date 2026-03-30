@@ -69,10 +69,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<ExternalApiConfig>().HasQueryFilter(e => e.CompanyId == TenantId);
         builder.Entity<SalesData>().HasQueryFilter(s => s.CompanyId == TenantId);
         builder.Entity<BiometricRecord>().HasQueryFilter(b => b.CompanyId == TenantId);
-        builder.Entity<District>().HasQueryFilter(d => d.CompanyId == TenantId);
         builder.Entity<NovedadAdjunto>().HasQueryFilter(n => n.CompanyId == TenantId);
-        builder.Entity<SyncLog>().HasQueryFilter(s => !s.CompanyId.HasValue || s.CompanyId == TenantId);
-        builder.Entity<SystemSetting>().HasQueryFilter(s => !s.CompanyId.HasValue || s.CompanyId == TenantId);
 
         // Many-to-Many: Supervisor -> Stores
         builder.Entity<SupervisorStore>()
@@ -158,14 +155,6 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         foreach (var entry in ChangeTracker.Entries<IMultitenant>())
         {
             if (entry.State == EntityState.Added && entry.Entity.CompanyId == Guid.Empty)
-            {
-                entry.Entity.CompanyId = tenantId;
-            }
-        }
-
-        foreach (var entry in ChangeTracker.Entries<IOptionalMultitenant>())
-        {
-            if (entry.State == EntityState.Added && !entry.Entity.CompanyId.HasValue)
             {
                 entry.Entity.CompanyId = tenantId;
             }

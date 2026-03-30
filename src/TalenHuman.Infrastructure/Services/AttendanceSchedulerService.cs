@@ -48,10 +48,17 @@ public class AttendanceSchedulerService : BackgroundService
                             var timeZone = TimeZoneInfo.FindSystemTimeZoneById(company.TimeZoneId ?? "SA Pacific Standard Time");
                             var companyNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
                             
-                            // 2. Fetch Setting for this specific company (Ignore global filters to find specific setting)
+                            // 2. Fetch Setting for this specific company using prefix strategy
+                            var prefixedKey = $"{company.Id}_AttendanceConsolidationTime";
                             var setting = await context.SystemSettings
-                                .IgnoreQueryFilters()
-                                .FirstOrDefaultAsync(s => s.CompanyId == company.Id && s.Key == "AttendanceConsolidationTime");
+                                .FirstOrDefaultAsync(s => s.Key == prefixedKey);
+                            
+                            // Fallback to global if not found
+                            if (setting == null)
+                            {
+                                setting = await context.SystemSettings
+                                    .FirstOrDefaultAsync(s => s.Key == "AttendanceConsolidationTime");
+                            }
                             
                             var configTimeStr = setting?.Value ?? "06:00";
 
