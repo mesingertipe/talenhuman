@@ -185,6 +185,9 @@ public class AttendanceController : ControllerBase
         var tenantDateNow = _tenantTimeProvider.Now.Date;
         if ((!start.HasValue || start.Value.Date <= tenantDateNow) && (!end.HasValue || end.Value.Date >= tenantDateNow))
         {
+        IQueryable<TalenHuman.Domain.Entities.BiometricRecord> rawQuery = _context.BiometricRecords
+            .Where(r => r.CompanyId == companyId && r.RecordDate >= tenantDateNow);
+
         // Broaden range for SuperAdmin to avoid token-related tenant mismatches in diagnostic mode
         if (roles.Contains("SuperAdmin"))
         {
