@@ -12,6 +12,8 @@ const AuditLogs = () => {
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [cleaning, setCleaning] = useState(false);
+    const [showClearModal, setShowClearModal] = useState(false);
+    const [daysToKeep, setDaysToKeep] = useState("60");
     
     // Filters
     const [filters, setFilters] = useState({
@@ -56,21 +58,23 @@ const AuditLogs = () => {
         }
     };
 
-    const handleCleanup = async () => {
-        const days = window.prompt("¿Cuántos días de historial deseas conservar? (Ejemplo: 60)", "60");
-        if (!days || isNaN(days)) return;
+    const handleCleanup = () => {
+        setShowClearModal(true);
+    };
 
-        if (window.confirm(`¿Estás completamente seguro de purgar los registros de auditoría anteriores a ${days} días? Esta acción es irreversible y quedará registrada.`)) {
-            try {
-                setCleaning(true);
-                const res = await api.delete(`/auditlogs/clear?olderThanDays=${days}`);
-                alert(res.data.message);
-                fetchLogs();
-            } catch (err) {
-                alert("Error al depurar registros.");
-            } finally {
-                setCleaning(false);
-            }
+    const executeCleanup = async () => {
+        if (!daysToKeep || isNaN(daysToKeep)) return;
+
+        try {
+            setCleaning(true);
+            const res = await api.delete(`/auditlogs/clear?olderThanDays=${daysToKeep}`);
+            setShowClearModal(false);
+            fetchLogs();
+            alert(res.data.message); // Could be replaced by a toast, but keeping alert for success is acceptable if toasts aren't registered
+        } catch (err) {
+            alert("Error al depurar registros.");
+        } finally {
+            setCleaning(false);
         }
     };
 
@@ -129,6 +133,55 @@ const AuditLogs = () => {
                     </button>
                 </div>
             </div>
+
+            {showClearModal && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.2s ease-out' }}>
+                    <div style={{ background: activeColors.card, borderRadius: '24px', padding: '32px', maxWidth: '450px', width: '90%', border: `1px solid ${activeColors.border}`, boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }} className="animate-in zoom-in-95 duration-200">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                            <h2 style={{ fontSize: '1.4rem', fontWeight: '900', color: activeColors.textMain, margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <AlertCircle size={24} className="text-red-500" />
+                                Purgar Historial
+                            </h2>
+                            <button onClick={() => setShowClearModal(false)} style={{ background: 'none', border: 'none', color: activeColors.textMuted, cursor: 'pointer' }}>
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <p style={{ color: activeColors.textMuted, fontSize: '0.95rem', fontWeight: '600', lineHeight: '1.6', marginBottom: '24px' }}>
+                            ¿Estás completamente seguro de purgar los registros de auditoría? Indica cuántos días de historial reciente deseas conservar. Esta acción es <strong>irreversible</strong> y quedará registrada.
+                        </p>
+                        <div style={{ marginBottom: '24px' }}>
+                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '800', color: activeColors.textMuted, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                Días a conservar (Ej: 60)
+                            </label>
+                            <input 
+                                type="number" 
+                                value={daysToKeep} 
+                                onChange={(e) => setDaysToKeep(e.target.value)}
+                                style={{ width: '100%', padding: '14px 16px', borderRadius: '14px', border: `2px solid ${activeColors.border}`, background: activeColors.bg, color: activeColors.textMain, fontSize: '1rem', fontWeight: '700', outline: 'none', transition: 'border 0.2s' }}
+                                min="1"
+                                className="focus:border-indigo-500"
+                            />
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                            <button 
+                                onClick={() => setShowClearModal(false)}
+                                style={{ padding: '12px 24px', borderRadius: '14px', fontWeight: '800', fontSize: '0.9rem', color: activeColors.textMain, background: activeColors.bg, border: `1px solid ${activeColors.border}`, cursor: 'pointer' }}
+                                className="hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                onClick={executeCleanup}
+                                disabled={cleaning || !daysToKeep}
+                                style={{ padding: '12px 24px', borderRadius: '14px', fontWeight: '800', fontSize: '0.9rem', color: '#fff', background: activeColors.danger, border: 'none', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                                className="hover:opacity-90 transition-opacity disabled:opacity-50"
+                            >
+                                <Trash2 size={18} /> {cleaning ? 'Procesando...' : 'Confirmar Purga'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="card" style={{ background: activeColors.card, borderRadius: '24px', border: `1px solid ${activeColors.border}`, padding: '24px', marginBottom: '24px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>

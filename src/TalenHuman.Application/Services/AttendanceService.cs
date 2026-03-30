@@ -16,7 +16,7 @@ public class AttendanceService
 
     public async Task ConsolidateDailyAttendanceAsync(DateTime date, Guid companyId, ExecutionType executionType = ExecutionType.Manual)
     {
-        var day = date.Date;
+        var day = DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
         var log = new SyncLog 
         { 
             StartTime = DateTime.UtcNow, 
@@ -153,7 +153,7 @@ public class AttendanceService
                 TimeSpan.TryParse(store.DefaultStartTime ?? "08:00", out var defStart);
                 TimeSpan.TryParse(store.DefaultEndTime ?? "17:00", out var defEnd);
                 
-                var baseDate = clockIn.Date;
+                var baseDate = DateTime.SpecifyKind(clockIn.Date, DateTimeKind.Utc);
                 var storeStart = baseDate.Add(defStart);
                 var storeEnd = baseDate.Add(defEnd);
                 if (storeEnd <= storeStart) storeEnd = storeEnd.AddDays(1); // Handle overnight
@@ -240,8 +240,8 @@ public class AttendanceService
 
             shifts.Add(new Shift 
             { 
-                StartTime = storeStart, 
-                EndTime = storeEnd,
+                StartTime = DateTime.SpecifyKind(storeStart, DateTimeKind.Utc), 
+                EndTime = DateTime.SpecifyKind(storeEnd, DateTimeKind.Utc),
                 Observation = "Generado automáticamente por horario de sede."
             });
         }
