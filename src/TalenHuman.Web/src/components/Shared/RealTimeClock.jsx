@@ -70,7 +70,7 @@ const RealTimeClock = ({ countryCode, timeZoneId, isCollapsed }) => {
   }
 
   return (
-    <div className="mx-[1.25rem] mb-4 p-0 flex items-center gap-2.5 animate-in fade-in transition-all">
+    <div className="mx-[1.5rem] mb-4 p-0 flex items-center gap-3 animate-in fade-in transition-all">
         <div className="relative shrink-0 flex items-center">
           <div style={{ 
             width: '28px', height: '28px', borderRadius: '50%', overflow: 'hidden', 
@@ -92,7 +92,7 @@ const RealTimeClock = ({ countryCode, timeZoneId, isCollapsed }) => {
         </div>
         <div className="flex flex-col min-w-0 justify-center">
             <span style={{ 
-                fontSize: '10.5px', fontWeight: '800', color: 'white', 
+                fontSize: '11px', fontWeight: '800', color: 'white', 
                 letterSpacing: '0.05em', lineHeight: '1', fontFamily: 'inherit' 
             }}>
                 {timeString.toUpperCase()}
