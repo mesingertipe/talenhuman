@@ -245,8 +245,9 @@ public class AttendanceController : ControllerBase
                 }
             }
         }
+    }
 
-        if (!string.IsNullOrEmpty(searchTerm))
+    if (!string.IsNullOrEmpty(searchTerm))
         {
             consolidated = consolidated.Where(a => 
                 (a.Employee?.FirstName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
