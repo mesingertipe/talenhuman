@@ -39,10 +39,17 @@ export const getTenantTimeZone = (countryCode = 'CO', windowsTzId = '') => {
 };
 
 export const formatTenantDate = (date, countryCode, windowsTzId, options = {}) => {
+    if (!date) return '';
+    
     const locale = getTenantLocale(countryCode);
     const timeZone = getTenantTimeZone(countryCode, windowsTzId);
     
-    return new Date(date).toLocaleString(locale, {
+    // Forzar que el string sea tratado como UTC si no trae zona horaria
+    const dateStr = typeof date === 'string' && !date.includes('Z') && !date.includes('+') 
+        ? `${date}Z` 
+        : date;
+    
+    return new Date(dateStr).toLocaleString(locale, {
         timeZone,
         ...options
     });

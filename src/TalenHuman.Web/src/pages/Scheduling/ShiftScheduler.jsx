@@ -1046,9 +1046,8 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                         {(() => {
                                                                             // Match attendance by employee identification and shift date/time
                                                                             const att = attendances.find(a => 
-                                                                                a.employeeId === emp.documento && 
-                                                                                new Date(a.clockIn).toDateString() === day.toDateString() &&
-                                                                                (!shift.id || a.shiftId === shift.id || (Math.abs(new Date(a.clockIn) - new Date(shift.startTime)) < 4 * 60 * 60 * 1000))
+                                                                                (a.shiftId === shift.id && shift.id) || 
+                                                                                (a.employeeInternalId === emp.id && new Date(a.clockIn).toDateString() === day.toDateString())
                                                                             );
                                                                             if (!att) return null;
                                                                             const colors = att.status === 0 ? 'bg-emerald-400' : att.status === 1 ? 'bg-amber-400' : 'bg-rose-400';

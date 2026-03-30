@@ -309,9 +309,11 @@ public class AttendanceController : ControllerBase
         return Ok(consolidated.OrderByDescending(a => a.ClockIn).Select(a => new {
             a.Id,
             EmployeeName = a.Employee != null ? $"{a.Employee.FirstName} {a.Employee.LastName}" : "N/A",
+            EmployeeInternalId = a.EmployeeId, // Added for GUID matching
             EmployeeId = a.Employee?.IdentificationNumber ?? "N/A",
             StoreId = a.StoreId,
             StoreName = a.Store?.Name ?? "N/A",
+            a.ShiftId, // CRITICAL: Added for scheduler matching
             a.ClockIn, a.ClockOut, Status = (int)a.Status,
             a.StatusObservation,
             StatusText = a.Status == (AttendanceStatus)(-1) ? "En Curso" : (a.Status == (AttendanceStatus)(-2) ? (a.ClockIn.Date < tenantDateNow ? "Sin Consolidación" : "Programado") : a.Status.ToString())
