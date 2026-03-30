@@ -101,9 +101,15 @@ public class AttendanceService
     }
     catch (Exception ex)
     {
+        _context.ChangeTracker.Clear();
         log.EndTime = DateTime.UtcNow;
         log.Status = "Error";
-        log.ErrorMessage = ex.Message;
+        
+        // Limit error length just in case
+        var fullError = ex.InnerException?.Message ?? ex.Message;
+        log.ErrorMessage = fullError.Length > 200 ? fullError.Substring(0, 197) + "..." : fullError;
+        
+        _context.SyncLogs.Update(log);
         await _context.SaveChangesAsync(CancellationToken.None);
         throw;
     }

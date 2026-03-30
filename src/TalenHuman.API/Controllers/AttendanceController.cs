@@ -338,12 +338,19 @@ public class AttendanceController : ControllerBase
     public async Task<IActionResult> Consolidate([FromBody] ConsolidateRequest request)
     {
         var companyId = _tenantProvider.GetTenantId();
-        if (companyId == Guid.Empty) return BadRequest("Company Context Missing");
+        if (companyId == Guid.Empty) return BadRequest(new { Message = "Company Context Missing" });
 
         var date = request.Date ?? _tenantTimeProvider.Now.Date;
-        await _attendanceService.ConsolidateDailyAttendanceAsync(date, companyId, ExecutionType.Manual);
-        
-        return Ok(new { Message = $"Proceso de consolidación completado para {date:yyyy-MM-dd}" });
+        try 
+        {
+            await _attendanceService.ConsolidateDailyAttendanceAsync(date, companyId, ExecutionType.Manual);
+            return Ok(new { Message = $"Proceso de consolidación completado para {date:yyyy-MM-dd}" });
+        }
+        catch (Exception ex)
+        {
+            // The service already logged it to SyncLog, but we return it so the UI shows it nicely.
+            return StatusCode(500, new { Message = ex.InnerException?.Message ?? ex.Message });
+        }
     }
 
     [HttpGet("sync-history")]

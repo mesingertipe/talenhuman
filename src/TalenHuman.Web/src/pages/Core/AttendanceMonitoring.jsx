@@ -123,7 +123,8 @@ const AttendanceMonitoring = () => {
             showToast(`Proceso de consolidación completado para ${datesToProcess.length} día(s)`);
             fetchSyncHistory();
         } catch (err) {
-            showToast("Error al iniciar consolidación", "error");
+            const errorMsg = err.response?.data?.Message || err.message || "Error al iniciar consolidación";
+            showToast(errorMsg.length > 100 ? errorMsg.substring(0, 97) + '...' : errorMsg, "error");
         } finally {
             setExecuting(false);
             setTimeout(() => setProgress(0), 1500);
@@ -135,9 +136,10 @@ const AttendanceMonitoring = () => {
         try {
             setCleaning(true);
             const res = await api.post('/attendance/cleanup');
-            showToast(res.data.message);
+            showToast(res.data.message || res.data.Message, "success");
         } catch (err) {
-            showToast("Error al realizar limpieza", "error");
+            const errorMsg = err.response?.data?.Message || err.message || "Error al realizar limpieza";
+            showToast(errorMsg, "error");
         } finally {
             setCleaning(false);
         }
