@@ -15,12 +15,14 @@ public class AttendanceController : ControllerBase
     private readonly IApplicationDbContext _context;
     private readonly AttendanceService _attendanceService;
     private readonly ITenantTimeProvider _tenantTimeProvider;
+    private readonly ITenantProvider _tenantProvider;
 
-    public AttendanceController(IApplicationDbContext context, AttendanceService attendanceService, ITenantTimeProvider tenantTimeProvider)
+    public AttendanceController(IApplicationDbContext context, AttendanceService attendanceService, ITenantTimeProvider tenantTimeProvider, ITenantProvider tenantProvider)
     {
         _context = context;
         _attendanceService = attendanceService;
         _tenantTimeProvider = tenantTimeProvider;
+        _tenantProvider = tenantProvider;
     }
 
     [HttpGet("config")]
@@ -36,7 +38,7 @@ public class AttendanceController : ControllerBase
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats(DateTime? start, DateTime? end, Guid? storeId, Guid? brandId, Guid? profileId)
     {
-        var companyId = Guid.Parse(User.FindFirst("CompanyId")?.Value ?? Guid.Empty.ToString());
+        var companyId = _tenantProvider.GetTenantId();
         var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
         var roles = User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(r => r.Value).ToList();
 
@@ -149,7 +151,7 @@ public class AttendanceController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAttendances(DateTime? start, DateTime? end, string? searchTerm)
     {
-        var companyId = Guid.Parse(User.FindFirst("CompanyId")?.Value ?? Guid.Empty.ToString());
+        var companyId = _tenantProvider.GetTenantId();
         var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
         var roles = User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(r => r.Value).ToList();
         

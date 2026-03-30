@@ -130,6 +130,8 @@ public class AuthController : ControllerBase
                 user.MustChangePassword, 
                 roles, 
                 companyName = user.Company?.Name,
+                countryCode = user.Company?.CountryCode,
+                timeZoneId = user.Company?.TimeZoneId,
                 storeId,
                 storeName,
                 storeExternalId,
