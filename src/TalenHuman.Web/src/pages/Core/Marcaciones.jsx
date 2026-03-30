@@ -16,8 +16,8 @@ const Marcaciones = ({ user }) => {
     const [loading, setLoading] = useState(true);
     const [isSyncing, setIsSyncing] = useState(false);
     const [dateRange, setDateRange] = useState({
-        start: new Date().toISOString().split('T')[0],
-        end: new Date().toISOString().split('T')[0]
+        start: '',
+        end: ''
     });
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
@@ -47,7 +47,28 @@ const Marcaciones = ({ user }) => {
     } = useTableData(marcaciones, ['employeeName', 'employeeId', 'storeName', 'statusText']);
 
     useEffect(() => {
-        fetchMarcaciones();
+        const initConfig = async () => {
+            try {
+                const res = await api.get('/attendance/config');
+                if (res.data?.today) {
+                    setDateRange({
+                        start: res.data.today,
+                        end: res.data.today
+                    });
+                }
+            } catch (err) {
+                // Fallback to local if API fails
+                const localToday = new Date().toLocaleDateString('en-CA');
+                setDateRange({ start: localToday, end: localToday });
+            }
+        };
+        initConfig();
+    }, []);
+
+    useEffect(() => {
+        if (dateRange.start) {
+            fetchMarcaciones();
+        }
     }, [dateRange]);
 
     const showToast = (message, type = 'success') => {
@@ -65,20 +86,7 @@ const Marcaciones = ({ user }) => {
                 } 
             });
             
-            // RBAC Filtering client-side if needed, though better in API 
-            // For now, let's assume the API handles basic multi-tenancy correctly 
-            // But we'll add extra layer if user has specific store restrictions
-            let filtered = res.data;
-            const isGerente = user?.roles?.includes('Gerente');
-            const isDistrital = user?.roles?.includes('Distrital');
-
-            if (isGerente && user?.storeId) {
-                filtered = filtered.filter(m => m.storeId === user.storeId);
-            } else if (isDistrital && user?.storeIds) {
-                filtered = filtered.filter(m => user.storeIds.includes(m.storeId));
-            }
-
-            setMarcaciones(filtered);
+            setMarcaciones(res.data);
         } catch (err) {
             showToast("Error al cargar marcaciones", "error");
         } finally {

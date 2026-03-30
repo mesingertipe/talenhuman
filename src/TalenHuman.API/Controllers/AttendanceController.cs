@@ -14,11 +14,23 @@ public class AttendanceController : ControllerBase
 {
     private readonly IApplicationDbContext _context;
     private readonly AttendanceService _attendanceService;
+    private readonly ITenantTimeProvider _tenantTimeProvider;
 
-    public AttendanceController(IApplicationDbContext context, AttendanceService attendanceService)
+    public AttendanceController(IApplicationDbContext context, AttendanceService attendanceService, ITenantTimeProvider tenantTimeProvider)
     {
         _context = context;
         _attendanceService = attendanceService;
+        _tenantTimeProvider = tenantTimeProvider;
+    }
+
+    [HttpGet("config")]
+    public IActionResult GetConfig()
+    {
+        var tenantNow = _tenantTimeProvider.Now;
+        return Ok(new {
+            Today = tenantNow.ToString("yyyy-MM-dd"),
+            TimeMessage = $"Zona Horaria del Tenant: {tenantNow:yyyy-MM-dd HH:mm:ss}"
+        });
     }
 
     [HttpGet("stats")]
@@ -28,8 +40,9 @@ public class AttendanceController : ControllerBase
         var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
         var roles = User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(r => r.Value).ToList();
 
-        var startDate = start?.Date ?? DateTime.Today.Date;
-        var endDate = end?.Date ?? DateTime.Today.Date;
+        var tenantToday = _tenantTimeProvider.Now.Date;
+        var startDate = start?.Date ?? tenantToday;
+        var endDate = end?.Date ?? tenantToday;
 
         var employeesQuery = _context.Employees.Where(e => e.CompanyId == companyId && e.IsActive);
         var attendanceQuery = _context.Attendances.Where(a => a.CompanyId == companyId && a.ClockIn.Date >= startDate && a.ClockIn.Date <= endDate);
@@ -102,7 +115,7 @@ public class AttendanceController : ControllerBase
     private async Task<object> GetHistory(Guid companyId, Guid userId, List<string> roles)
     {
         // Return stats for the last 7 days for charts
-        var startDate = DateTime.Today.AddDays(-6);
+        var startDate = _tenantTimeProvider.Now.Date.AddDays(-6);
         var query = _context.Attendances.Where(a => a.CompanyId == companyId && a.ClockIn >= startDate);
 
         // Apply same RBAC filters (simplified for brevity)
@@ -125,7 +138,7 @@ public class AttendanceController : ControllerBase
     public async Task<IActionResult> SendReport([FromBody] ConsolidateRequest request)
     {
          var companyId = Guid.Parse(User.FindFirst("CompanyId")?.Value ?? Guid.Empty.ToString());
-         var date = request.Date ?? DateTime.Today.AddDays(-1);
+         var date = request.Date ?? _tenantTimeProvider.Now.Date.AddDays(-1);
          
          var reportService = HttpContext.RequestServices.GetRequiredService<AttendanceReportService>();
          await reportService.SendAutomaticDailyReportsAsync(companyId, date);
@@ -137,11 +150,28 @@ public class AttendanceController : ControllerBase
     public async Task<IActionResult> GetAttendances(DateTime? start, DateTime? end, string? searchTerm)
     {
         var companyId = Guid.Parse(User.FindFirst("CompanyId")?.Value ?? Guid.Empty.ToString());
+        var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
+        var roles = User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(r => r.Value).ToList();
         
         var query = _context.Attendances
             .Include(a => a.Employee)
             .Include(a => a.Store)
             .Where(a => a.CompanyId == companyId);
+
+        // RBAC Filtering
+        if (!roles.Contains("SuperAdmin") && !roles.Contains("Admin") && !roles.Contains("RH"))
+        {
+            if (roles.Contains("Supervisor") || roles.Contains("Gerente"))
+            {
+                var managedStores = await _context.SupervisorStores.Where(ss => ss.UserId == userId).Select(ss => ss.StoreId).ToListAsync();
+                query = query.Where(a => managedStores.Contains(a.StoreId));
+            }
+            else if (roles.Contains("Distrital"))
+            {
+                var userObj = await _context.Users.FindAsync(userId);
+                if (userObj?.DistrictId != null) query = query.Where(a => a.Store.DistrictId == userObj.DistrictId);
+            }
+        }
 
         if (start.HasValue)
             query = query.Where(a => a.ClockIn >= start.Value.Date);
@@ -151,47 +181,56 @@ public class AttendanceController : ControllerBase
 
         var consolidated = await query.ToListAsync();
         
-        // Real-Time Logic: If today is in range, check for un-consolidated raw records
-        var today = DateTime.Today;
-        if ((!start.HasValue || start.Value.Date <= today) && (!end.HasValue || end.Value.Date >= today))
+        // Real-Time Logic (using Tenant Time)
+        var tenantDateNow = _tenantTimeProvider.Now.Date;
+        if ((!start.HasValue || start.Value.Date <= tenantDateNow) && (!end.HasValue || end.Value.Date >= tenantDateNow))
         {
-            var rawRecords = await _context.BiometricRecords
-                .Where(r => r.CompanyId == companyId && r.RecordDate >= today)
-                .OrderBy(r => r.RecordDate)
-                .ToListAsync();
+            var rawQuery = _context.BiometricRecords.Where(r => r.CompanyId == companyId && r.RecordDate >= tenantDateNow);
+            
+            // Apply RBAC to raw records too
+            if (!roles.Contains("SuperAdmin") && !roles.Contains("Admin") && !roles.Contains("RH"))
+            {
+                if (roles.Contains("Supervisor") || roles.Contains("Gerente"))
+                {
+                    var managedStores = await _context.SupervisorStores.Where(ss => ss.UserId == userId).Select(ss => ss.StoreId).ToListAsync();
+                    rawQuery = rawQuery.Join(_context.Employees, r => r.DeviceUser, e => e.IdentificationNumber, (r, e) => new { r, e })
+                        .Where(x => x.e.CompanyId == companyId && managedStores.Contains(x.e.StoreId))
+                        .Select(x => x.r);
+                }
+            }
+
+            var rawRecords = await rawQuery.OrderBy(r => r.RecordDate).ToListAsync();
 
             if (rawRecords.Any())
             {
                 var groupedRaw = rawRecords.GroupBy(r => r.DeviceUser);
-                var employees = await _context.Employees
-                    .Where(e => e.CompanyId == companyId && e.IsActive)
-                    .ToListAsync();
+                var employeesQuery = _context.Employees.Where(e => e.CompanyId == companyId && e.IsActive);
+                
+                if (!roles.Contains("SuperAdmin") && !roles.Contains("Admin") && !roles.Contains("RH"))
+                {
+                    if (roles.Contains("Supervisor") || roles.Contains("Gerente"))
+                    {
+                        var managedStores = await _context.SupervisorStores.Where(ss => ss.UserId == userId).Select(ss => ss.StoreId).ToListAsync();
+                        employeesQuery = employeesQuery.Where(e => managedStores.Contains(e.StoreId));
+                    }
+                }
+
+                var employees = await employeesQuery.ToListAsync();
 
                 foreach (var group in groupedRaw)
                 {
-                    // Check if this employee already has a consolidated record for today
-                    var hasConsolidated = consolidated.Any(a => a.Employee.IdentificationNumber == group.Key && a.ClockIn.Date == today);
-                    
+                    var hasConsolidated = consolidated.Any(a => a.Employee.IdentificationNumber == group.Key && a.ClockIn.Date == tenantDateNow);
                     if (!hasConsolidated)
                     {
                         var employee = employees.FirstOrDefault(e => e.IdentificationNumber == group.Key);
                         if (employee != null)
                         {
-                            var firstMark = group.First();
-                            var lastMark = group.Last();
-                            
-                            consolidated.Add(new Attendance
-                            {
-                                Id = Guid.Empty, // Virtual ID
-                                Employee = employee,
-                                EmployeeId = employee.Id,
-                                CompanyId = companyId,
-                                StoreId = employee.StoreId,
-                                Store = await _context.Stores.FindAsync(employee.StoreId),
-                                ClockIn = firstMark.RecordDate,
-                                ClockOut = group.Count() > 1 ? lastMark.RecordDate : null,
-                                Status = (AttendanceStatus)(-1), // Custom "En Curso" status
-                                StatusObservation = "Marcación detectada hoy (Pendiente de procesar)"
+                            var store = await _context.Stores.FindAsync(employee.StoreId);
+                            consolidated.Add(new Attendance {
+                                Id = Guid.Empty, Employee = employee, EmployeeId = employee.Id,
+                                CompanyId = companyId, StoreId = employee.StoreId, Store = store,
+                                ClockIn = group.First().RecordDate, ClockOut = group.Count() > 1 ? group.Last().RecordDate : null,
+                                Status = (AttendanceStatus)(-1), StatusObservation = "Real-Time (Pendiente)"
                             });
                         }
                     }
@@ -212,10 +251,9 @@ public class AttendanceController : ControllerBase
             a.Id,
             EmployeeName = a.Employee != null ? $"{a.Employee.FirstName} {a.Employee.LastName}" : "N/A",
             EmployeeId = a.Employee?.IdentificationNumber ?? "N/A",
+            StoreId = a.StoreId,
             StoreName = a.Store?.Name ?? "N/A",
-            a.ClockIn,
-            a.ClockOut,
-            Status = (int)a.Status,
+            a.ClockIn, a.ClockOut, Status = (int)a.Status,
             a.StatusObservation,
             StatusText = a.Status == (AttendanceStatus)(-1) ? "En Curso" : a.Status.ToString()
         }));
