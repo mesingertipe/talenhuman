@@ -101,11 +101,20 @@ const Stores = () => {
     e.preventDefault();
     try {
       setIsSubmitting(true);
+      
+      // Sanitize payload to avoid 400 errors (empty string for Guid fields)
+      const payload = {
+        ...formData,
+        brandId: formData.brandId === '' ? null : formData.brandId,
+        cityId: formData.cityId === '' ? null : formData.cityId,
+        districtId: formData.districtId === '' ? null : formData.districtId
+      };
+
       if (currentStore) {
-        await api.put(`/stores/${currentStore.id}`, formData);
+        await api.put(`/stores/${currentStore.id}`, payload);
         showToast("Sede actualizada con éxito");
       } else {
-        await api.post('/stores', formData);
+        await api.post('/stores', payload);
         showToast("Sede creada con éxito");
       }
       setShowModal(false);

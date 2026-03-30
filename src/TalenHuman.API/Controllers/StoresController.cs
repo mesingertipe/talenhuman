@@ -59,6 +59,12 @@ public class StoresController : ControllerBase
         existing.DistrictId = store.DistrictId;
         existing.IsActive = store.IsActive;
         
+        // Operational Settings
+        existing.UseSequentialPairing = store.UseSequentialPairing;
+        existing.OperationalDayStart = store.OperationalDayStart;
+        existing.DefaultStartTime = store.DefaultStartTime;
+        existing.DefaultEndTime = store.DefaultEndTime;
+        
         await _context.SaveChangesAsync();
         return NoContent();
     }
