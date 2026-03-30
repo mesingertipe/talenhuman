@@ -287,7 +287,7 @@ const Header = ({ user, activePage, currentCompanyName, tenantSettings, companie
               <div style={{ fontSize: '0.65rem', fontWeight: 'bold', color: 'var(--text-muted)', textTransform: 'uppercase', trackingWidest: '0.05em' }}>{user?.roles?.join(' • ')}</div>
               
               {isSuperAdmin && companies.length > 0 && (
-                <div style={{ marginTop: '0.5rem', width: '220px', marginLeft: 'auto' }} className="dark">
+                <div style={{ marginTop: '0.4rem', width: '210px', marginLeft: 'auto' }}>
                   <SearchableSelect
                     options={companies}
                     value={selectedTenant}

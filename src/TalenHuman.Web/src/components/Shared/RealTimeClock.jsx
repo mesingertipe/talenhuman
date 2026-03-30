@@ -43,35 +43,40 @@ const RealTimeClock = ({ countryCode, timeZoneId, isCollapsed }) => {
   };
 
   const timeString = time.toLocaleTimeString(locale, formatOptions);
-  const dateString = time.toLocaleDateString(locale, dateOptions);
+  
+  // Custom Date Format: DD/MM/YYYY
+  const dayStr = String(time.getDate()).padStart(2, '0');
+  const monthStr = String(time.getMonth() + 1).padStart(2, '0');
+  const yearStr = time.getFullYear();
+  const dateString = `${dayStr}/${monthStr}/${yearStr}`;
 
   if (isCollapsed) {
     return (
-      <div className="flex justify-center p-2 animate-in zoom-in-95 duration-300" title={`${config.name}: ${timeString}`}>
+      <div className="flex justify-center p-2 mb-1 animate-in zoom-in-95 duration-300" title={`${config.name}: ${timeString}`}>
          <img 
             src={flagUrl} 
             alt={config.name}
-            className="w-10 h-10 rounded-full border-2 border-indigo-500/30 object-cover shadow-lg aspect-square scale-110" 
+            className="w-6 h-6 rounded-full object-cover shadow-sm aspect-square border-none" 
          />
       </div>
     );
   }
 
   return (
-    <div className="mx-4 mb-4 p-3 bg-slate-800/40 dark:bg-white/5 rounded-xl border border-white/5 dark:border-indigo-500/10 flex items-center gap-3 animate-in fade-in transition-all">
+    <div className="mx-6 mb-2 p-0 flex items-center gap-2 animate-in fade-in transition-all">
         <div className="relative shrink-0">
           <img 
               src={flagUrl} 
               alt={config.name}
-              className="w-10 h-10 rounded-full shadow-md border-2 border-white/10 object-cover aspect-square" 
+              className="w-7 h-7 rounded-full shadow-sm object-cover aspect-square border-none" 
           />
-          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full shadow-sm"></div>
+          <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-500 border border-slate-900 rounded-full"></div>
         </div>
         <div className="flex flex-col min-w-0">
-            <span className="text-[14px] font-[900] text-indigo-400 tracking-tight font-mono leading-none">
+            <span className="text-[12px] font-[900] text-white tracking-widest font-mono leading-none">
                 {timeString}
             </span>
-            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-200 mt-1 uppercase leading-none truncate">
+            <span className="text-[9px] font-black text-slate-300 mt-1 uppercase leading-none truncate tracking-tighter">
                 {dateString}
             </span>
         </div>
