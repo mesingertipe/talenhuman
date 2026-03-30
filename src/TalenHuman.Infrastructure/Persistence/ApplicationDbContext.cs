@@ -51,25 +51,25 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         base.OnModelCreating(builder);
 
         // Apply Multitenancy Global Filter
-        builder.Entity<User>().HasQueryFilter(u => u.CompanyId == TenantId);
-        builder.Entity<Brand>().HasQueryFilter(b => b.CompanyId == TenantId);
-        builder.Entity<Store>().HasQueryFilter(s => s.CompanyId == TenantId);
-        builder.Entity<City>().HasQueryFilter(c => c.CompanyId == TenantId);
-        builder.Entity<Profile>().HasQueryFilter(p => p.CompanyId == TenantId);
-        builder.Entity<Employee>().HasQueryFilter(e => e.CompanyId == TenantId);
-        builder.Entity<Shift>().HasQueryFilter(s => s.CompanyId == TenantId);
-        builder.Entity<Attendance>().HasQueryFilter(a => a.CompanyId == TenantId);
-        builder.Entity<Absence>().HasQueryFilter(a => a.CompanyId == TenantId);
-        builder.Entity<Jornada>().HasQueryFilter(j => j.CompanyId == TenantId);
-        builder.Entity<NovedadTipo>().HasQueryFilter(n => n.CompanyId == TenantId || n.EsPlantilla);
-        builder.Entity<Novedad>().HasQueryFilter(n => n.CompanyId == TenantId);
-        builder.Entity<NovedadLog>().HasQueryFilter(n => n.CompanyId == TenantId);
-        builder.Entity<SupervisorStore>().HasQueryFilter(s => s.CompanyId == TenantId);
-        builder.Entity<ApiKey>().HasQueryFilter(a => a.CompanyId == TenantId);
-        builder.Entity<ExternalApiConfig>().HasQueryFilter(e => e.CompanyId == TenantId);
-        builder.Entity<SalesData>().HasQueryFilter(s => s.CompanyId == TenantId);
-        builder.Entity<BiometricRecord>().HasQueryFilter(b => b.CompanyId == TenantId);
-        builder.Entity<NovedadAdjunto>().HasQueryFilter(n => n.CompanyId == TenantId);
+        builder.Entity<User>().HasQueryFilter(u => u.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<Brand>().HasQueryFilter(b => b.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<Store>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<City>().HasQueryFilter(c => c.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<Profile>().HasQueryFilter(p => p.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<Employee>().HasQueryFilter(e => e.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<Shift>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<Attendance>().HasQueryFilter(a => a.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<Absence>().HasQueryFilter(a => a.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<Jornada>().HasQueryFilter(j => j.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<NovedadTipo>().HasQueryFilter(n => n.CompanyId == TenantId || TenantId == Guid.Empty || n.EsPlantilla);
+        builder.Entity<Novedad>().HasQueryFilter(n => n.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<NovedadLog>().HasQueryFilter(n => n.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<SupervisorStore>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<ApiKey>().HasQueryFilter(a => a.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<ExternalApiConfig>().HasQueryFilter(e => e.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<SalesData>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<BiometricRecord>().HasQueryFilter(b => b.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<NovedadAdjunto>().HasQueryFilter(n => n.CompanyId == TenantId || TenantId == Guid.Empty);
 
         // Many-to-Many: Supervisor -> Stores
         builder.Entity<SupervisorStore>()
