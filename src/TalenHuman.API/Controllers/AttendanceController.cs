@@ -231,6 +231,7 @@ public class AttendanceController : ControllerBase
                         
                     var store = employee != null ? await _context.Stores.FindAsync(employee.StoreId) : null;
                     
+                    var allMarks = string.Join(", ", group.OrderBy(r => r.RecordDate).Select(r => r.RecordDate.ToString("HH:mm")));
                     consolidated.Add(new Attendance {
                         Id = Guid.Empty, 
                         Employee = employee, 
@@ -241,9 +242,9 @@ public class AttendanceController : ControllerBase
                         ClockIn = group.First().RecordDate, 
                         ClockOut = group.Count() > 1 ? group.Last().RecordDate : null,
                         Status = (AttendanceStatus)(-1), 
-                        StatusObservation = employee == null 
-                            ? $"[ALERTA] ID {group.Key} no existe en base de empleados." 
-                            : "Real-Time (Pendiente)"
+                        StatusObservation = (employee == null 
+                            ? $"[ALERTA] ID {group.Key} no existe." 
+                            : "Real-Time (Pendiente)") + $" [Marcaciones: {allMarks}]"
                     });
                 }
             }
