@@ -52,6 +52,7 @@ public class ProfilesController : ControllerBase
 
         existing.Name = profile.Name;
         existing.Description = profile.Description;
+        existing.IsActive = profile.IsActive;
         
         await _context.SaveChangesAsync();
         return NoContent();
