@@ -101,7 +101,7 @@ public class AttendanceService
     }
     catch (Exception ex)
     {
-        _context.ChangeTracker.Clear();
+        ((DbContext)_context).ChangeTracker.Clear();
         log.EndTime = DateTime.UtcNow;
         log.Status = "Error";
         
