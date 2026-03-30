@@ -1066,8 +1066,6 @@ namespace TalenHuman.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId");
-
                     b.ToTable("SyncLogs");
                 });
 
@@ -1075,9 +1073,6 @@ namespace TalenHuman.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1102,8 +1097,6 @@ namespace TalenHuman.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CompanyId");
 
                     b.ToTable("SystemSettings");
                 });
@@ -1640,24 +1633,6 @@ namespace TalenHuman.Infrastructure.Migrations
                     b.Navigation("Store");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("TalenHuman.Domain.Entities.SyncLog", b =>
-                {
-                    b.HasOne("TalenHuman.Domain.Entities.Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId");
-
-                    b.Navigation("Company");
-                });
-
-            modelBuilder.Entity("TalenHuman.Domain.Entities.SystemSetting", b =>
-                {
-                    b.HasOne("TalenHuman.Domain.Entities.Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId");
-
-                    b.Navigation("Company");
                 });
 
             modelBuilder.Entity("TalenHuman.Domain.Entities.User", b =>
