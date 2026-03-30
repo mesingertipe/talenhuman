@@ -28,6 +28,7 @@ public class AttendanceService
         await _context.SaveChangesAsync(CancellationToken.None);
 
         int totalRawRecords = 0;
+        string currentStep = "Iniciada recolección inicial. Buscando tiendas.";
 
         try 
         {
@@ -38,11 +39,13 @@ public class AttendanceService
 
         foreach (var store in stores)
         {
+            currentStep = $"Calculando ventana operativa para la tienda: {store.Name}";
             // Define Operational Window for this store (e.g., 05:00 AM to 04:59 AM next day)
             TimeSpan.TryParse(store.OperationalDayStart ?? "05:00", out var startTime);
             var windowStart = day.Add(startTime);
             var windowEnd = windowStart.AddHours(24).AddMinutes(-1);
 
+            currentStep = $"Buscando empleados en tienda: {store.Name}";
             // Get Employees for this store
             var employees = await _context.Employees
                 .Where(e => e.StoreId == store.Id && e.IsActive)
@@ -50,12 +53,14 @@ public class AttendanceService
 
             foreach (var employee in employees)
             {
+                currentStep = $"[{store.Name}] Limpiando marcaciones anteriores de {employee.FirstName} {employee.LastName} ({employee.IdentificationNumber}).";
                 // Clear previous attendances for this operational window
                 var existingAttendances = await _context.Attendances
                     .Where(a => a.EmployeeId == employee.Id && a.ClockIn >= windowStart && a.ClockIn <= windowEnd)
                     .ToListAsync();
                 _context.Attendances.RemoveRange(existingAttendances);
 
+                currentStep = $"[{store.Name}] Consultando DB BiometricRecords para empleado {employee.IdentificationNumber}.";
                 // Get All Biometric Records for this employee in this window
                 var rawRecords = await _context.BiometricRecords
                     .Where(r => r.CompanyId == companyId && 
@@ -67,9 +72,11 @@ public class AttendanceService
 
                 totalRawRecords += rawRecords.Count;
 
+                currentStep = $"[{store.Name}] Filtrando rebotes biométricos de {employee.IdentificationNumber} ({rawRecords.Count} registros crudos).";
                 // Apply Rebound Filter (Ignore marks within 5 minutes)
                 var filteredRecords = FilterReboundRecords(rawRecords, 5);
 
+                currentStep = $"[{store.Name}] Buscando turnos agendados en Shifts de {employee.IdentificationNumber}.";
                 // Get Scheduled Shifts for this employee in this window
                 var shifts = await _context.Shifts
                     .Where(s => s.EmployeeId == employee.Id && 
@@ -79,6 +86,7 @@ public class AttendanceService
                     .OrderBy(s => s.StartTime)
                     .ToListAsync();
 
+                currentStep = $"[{store.Name}] Ejecutando lógica de emparejamiento {(store.UseSequentialPairing ? "Secuencial" : "Estándar")} para {employee.IdentificationNumber}.";
                 if (store.UseSequentialPairing)
                 {
                     // MODE: SEQUENTIAL PAIRING (Airport Style)
@@ -92,11 +100,14 @@ public class AttendanceService
             }
         }
 
+        currentStep = "Escribiendo lotes finales de Attendance en DB (SaveChangesAsync).";
         await _context.SaveChangesAsync(CancellationToken.None);
 
         log.EndTime = DateTime.UtcNow;
         log.Status = "Exitoso";
         log.RecordsProcessed = totalRawRecords;
+        
+        currentStep = "Guardando el log de integración.";
         await _context.SaveChangesAsync(CancellationToken.None);
     }
     catch (Exception ex)
@@ -106,12 +117,12 @@ public class AttendanceService
         log.Status = "Error";
         
         // Limit error length just in case
-        var fullError = ex.InnerException?.Message ?? ex.Message;
-        log.ErrorMessage = fullError.Length > 200 ? fullError.Substring(0, 197) + "..." : fullError;
+        var fullError = $"[CAÍDA EN]: {currentStep} || ERROR: {(ex.InnerException?.Message ?? ex.Message)}";
+        log.ErrorMessage = fullError.Length > 240 ? fullError.Substring(0, 237) + "..." : fullError;
         
         _context.SyncLogs.Update(log);
         await _context.SaveChangesAsync(CancellationToken.None);
-        throw;
+        throw new ApplicationException(fullError, ex);
     }
 }
 
