@@ -48,6 +48,7 @@ public class AuthController : ControllerBase
     {
         // Search by Email or Username (IdentificationNumber)
         var user = await _userManager.Users
+            .IgnoreQueryFilters()
             .Include(u => u.Company)
             .FirstOrDefaultAsync(u => 
                 u.NormalizedEmail == request.Email.ToUpper() || 
@@ -160,7 +161,7 @@ public class AuthController : ControllerBase
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
-        var user = await _userManager.FindByEmailAsync(request.Email);
+        var user = await _userManager.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.NormalizedEmail == request.Email.ToUpper());
         if (user == null) 
         {
             return Ok(new { message = "Si el correo está registrado, recibirás un código de recuperación." });
@@ -200,7 +201,7 @@ public class AuthController : ControllerBase
     [HttpPost("reset-password-with-token")]
     public async Task<IActionResult> ResetPasswordWithToken([FromBody] ResetPasswordRequest request)
     {
-        var user = await _userManager.FindByEmailAsync(request.Email);
+        var user = await _userManager.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.NormalizedEmail == request.Email.ToUpper());
         if (user == null) return BadRequest(new { message = "Email no encontrado." });
 
         if (user.ResetCode != request.Token || user.ResetCodeExpiry < DateTime.UtcNow)
@@ -285,6 +286,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> SelfServiceReset([FromBody] SelfServiceResetRequest request)
     {
         var employee = await _context.Employees
+            .IgnoreQueryFilters()
             .Include(e => e.User)
             .FirstOrDefaultAsync(e => e.IdentificationNumber == request.IdentificationNumber);
 
