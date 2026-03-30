@@ -219,20 +219,32 @@ public class AttendanceController : ControllerBase
 
                 foreach (var group in groupedRaw)
                 {
-                    var hasConsolidated = consolidated.Any(a => a.Employee.IdentificationNumber == group.Key && a.ClockIn.Date == tenantDateNow);
+                    var hasConsolidated = consolidated.Any(a => 
+                        (a.Employee?.IdentificationNumber == group.Key || a.EmployeeId.ToString() == group.Key) && 
+                        a.ClockIn.Date == tenantDateNow);
+                        
                     if (!hasConsolidated)
                     {
-                        var employee = employees.FirstOrDefault(e => e.IdentificationNumber == group.Key);
-                        if (employee != null)
-                        {
-                            var store = await _context.Stores.FindAsync(employee.StoreId);
-                            consolidated.Add(new Attendance {
-                                Id = Guid.Empty, Employee = employee, EmployeeId = employee.Id,
-                                CompanyId = companyId, StoreId = employee.StoreId, Store = store,
-                                ClockIn = group.First().RecordDate, ClockOut = group.Count() > 1 ? group.Last().RecordDate : null,
-                                Status = (AttendanceStatus)(-1), StatusObservation = "Real-Time (Pendiente)"
-                            });
-                        }
+                        var employee = employees.FirstOrDefault(e => 
+                            e.IdentificationNumber == group.Key || 
+                            e.IdentificationNumber.TrimStart('0') == group.Key.TrimStart('0'));
+                            
+                        var store = employee != null ? await _context.Stores.FindAsync(employee.StoreId) : null;
+                        
+                        consolidated.Add(new Attendance {
+                            Id = Guid.Empty, 
+                            Employee = employee, 
+                            EmployeeId = employee?.Id ?? Guid.Empty,
+                            CompanyId = companyId, 
+                            StoreId = employee?.StoreId ?? Guid.Empty, 
+                            Store = store,
+                            ClockIn = group.First().RecordDate, 
+                            ClockOut = group.Count() > 1 ? group.Last().RecordDate : null,
+                            Status = (AttendanceStatus)(-1), 
+                            StatusObservation = employee == null 
+                                ? $"[ALERTA] ID {group.Key} no existe en base de empleados." 
+                                : "Real-Time (Pendiente)"
+                        });
                     }
                 }
             }

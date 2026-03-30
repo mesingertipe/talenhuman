@@ -20,6 +20,14 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(x => {
+    x.ValueLengthLimit = int.MaxValue;
+    x.MultipartBodyLengthLimit = 52428800; // 50MB
+    x.MemoryBufferThreshold = int.MaxValue;
+});
+builder.WebHost.ConfigureKestrel(options => {
+    options.Limits.MaxRequestBodySize = 52428800; // 50MB
+});
 
 builder.Services.AddCors(options =>
 {

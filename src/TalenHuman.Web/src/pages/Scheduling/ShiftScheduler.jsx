@@ -478,12 +478,12 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
         style.innerHTML = `
             #printable-area { 
                 background: white !important; 
-                padding: 60px !important; 
+                padding: 20px 40px !important; 
                 width: 1700px !important; 
                 color: black !important;
             }
             #printable-area .print-only { display: block !important; visibility: visible !important; }
-            #printable-area .no-print { display: none !important; }
+            #printable-area .no-print { display: none !important; height: 0 !important; margin: 0 !important; padding: 0 !important; }
             
             /* Elite V12 PDF Contrast Fix */
             #printable-area * { 
@@ -833,7 +833,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                     </div>
 
                     {lastSaveComment && (
-                        <div className="flex items-center gap-4 p-5 bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/50 rounded-3xl animate-in slide-in-from-top-2 duration-500">
+                        <div className="no-print flex items-center gap-4 p-5 bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/50 rounded-3xl animate-in slide-in-from-top-2 duration-500">
                             <div className="flex-shrink-0 w-10 h-10 bg-white dark:bg-indigo-950 rounded-2xl flex items-center justify-center shadow-sm">
                                 <FileText size={18} className="text-indigo-600 dark:text-indigo-400" />
                             </div>
@@ -850,7 +850,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                     )}
 
                     {/* Fila 2: Command Center Ultra-Visibilidad V12 (Espaciado e Impacto) */}
-                    <div className="w-full flex flex-col xl:flex-row items-center justify-between gap-16 bg-white dark:bg-slate-900 shadow-xl p-8 border-[1px] border-slate-200 dark:border-slate-800" style={{ borderRadius: '48px' }}>
+                    <div className="no-print w-full flex flex-col xl:flex-row items-center justify-between gap-16 bg-white dark:bg-slate-900 shadow-xl p-8 border-[1px] border-slate-200 dark:border-slate-800" style={{ borderRadius: '48px' }}>
                         {/* Izquierda: Toolkit de Operaciones (Ultra-Espaciado) */}
                         <div className="flex flex-wrap items-center justify-center lg:justify-start p-8 bg-slate-50/50 dark:bg-slate-800/20 border-[1px] border-slate-200 dark:border-slate-700/50" 
                              style={{ borderRadius: '24px', gap: '2rem' }}>
