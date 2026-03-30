@@ -3,7 +3,7 @@ import { Clock } from 'lucide-react';
 import HelpIcon from './HelpIcon';
 import { getTenantTimeZone, getTenantLocale } from '../../utils/localization';
 
-const RealTimeClock = ({ countryCode, timeZoneId }) => {
+const RealTimeClock = ({ countryCode, timeZoneId, isCollapsed }) => {
   const [time, setTime] = useState(new Date());
 
   const countries = {
@@ -45,29 +45,33 @@ const RealTimeClock = ({ countryCode, timeZoneId }) => {
   const timeString = time.toLocaleTimeString(locale, formatOptions);
   const dateString = time.toLocaleDateString(locale, dateOptions);
 
+  if (isCollapsed) {
+    return (
+      <div className="flex justify-center p-2 animate-in zoom-in-95 duration-300" title={`${config.name}: ${timeString}`}>
+         <img 
+            src={flagUrl} 
+            alt={config.name}
+            className="w-8 h-8 rounded-full border-2 border-indigo-500/30 object-cover shadow-sm" 
+         />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex items-center gap-4 px-6 py-2 bg-white/5 dark:bg-white/10 rounded-2xl border border-slate-200/50 dark:border-indigo-500/20 shadow-lg animate-in fade-in transition-all hover:bg-white/10 dark:hover:bg-white/15">
+    <div className="mx-4 mb-4 p-3 bg-slate-800/40 dark:bg-white/5 rounded-xl border border-white/5 dark:border-indigo-500/10 flex items-center gap-3 animate-in fade-in transition-all">
         <img 
             src={flagUrl} 
             alt={config.name}
-            className="w-8 h-auto rounded-sm shadow-md border border-white/20" 
+            className="w-10 h-auto rounded shadow-sm border border-white/10" 
         />
-        <div className="flex flex-col">
-            <div className="flex items-center gap-1.5">
-                <span className="text-[17px] font-[950] text-indigo-600 dark:text-indigo-400 tracking-tighter font-mono leading-none">
-                    {timeString}
-                </span>
-                <HelpIcon 
-                    text={`Hora local de ${config.name} sincronizada con el servidor`}
-                    className="opacity-60 hover:opacity-100"
-                />
-            </div>
-            <span className="text-[11px] font-black text-slate-500 dark:text-slate-200 mt-0.5 capitalize leading-none tracking-tight">
+        <div className="flex flex-col min-w-0">
+            <span className="text-[14px] font-[900] text-indigo-400 tracking-tight font-mono leading-none">
+                {timeString}
+            </span>
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-1 uppercase leading-none truncate">
                 {dateString}
             </span>
         </div>
-      <div className="h-8 w-[1px] bg-slate-200 dark:bg-indigo-500/20 hidden sm:block mx-1"></div>
-      <Clock size={16} className="text-indigo-500/70 hidden sm:block" />
     </div>
   );
 };

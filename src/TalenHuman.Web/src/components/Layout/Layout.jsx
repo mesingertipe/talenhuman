@@ -8,7 +8,7 @@ import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 import SearchableSelect from '../Shared/SearchableSelect';
 
-const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePage, setPage, onLogout, user, companies, selectedTenant, onTenantChange }) => {
+const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePage, setPage, onLogout, user, companies, selectedTenant, onTenantChange, tenantSettings }) => {
   const isSuperAdmin = user?.roles?.includes('SuperAdmin');
   const [expandedHeaders, setExpandedHeaders] = useState(['Configuración Core', 'Operaciones', 'Administración']);
 
@@ -132,9 +132,18 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
         ))}
       </nav>
 
-      <div className="sidebar-footer" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '1rem 0' }}>
+      {/* Relocation: Time & Flag in Sidebar */}
+      {tenantSettings && (
+        <RealTimeClock 
+          countryCode={tenantSettings.countryCode} 
+          timeZoneId={tenantSettings.timeZoneId} 
+          isCollapsed={isCollapsed}
+        />
+      )}
+
+      <div className="sidebar-footer" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '0.6rem 0' }}>
         {isSuperAdmin && !isCollapsed && (
-          <div style={{ padding: '0 1.25rem 1rem 1.25rem' }} className="dark">
+          <div style={{ padding: '0 1.25rem 0.75rem 1.25rem' }} className="dark">
             <p style={{ fontSize: '0.6rem', textTransform: 'uppercase', color: '#64748b', marginBottom: '0.5rem', fontWeight: '800', trackingWidest: '0.05em' }}>Tenant Activo</p>
             <div className="p-0">
               <SearchableSelect
@@ -224,13 +233,7 @@ const Header = ({ user, activePage, currentCompanyName, tenantSettings }) => {
         )}
       </div>
       <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-        {/* Elite V12 RealTime Clock & Flag Support */}
-        {tenantSettings && (
-          <RealTimeClock 
-            countryCode={tenantSettings.countryCode} 
-            timeZoneId={tenantSettings.timeZoneId} 
-          />
-        )}
+        {/* RealTime Clock removed from here - now in Sidebar */}
         {user?.roles?.includes('Gerente') && user?.storeName && (
           <div style={{ 
             display: 'flex', 
@@ -371,6 +374,7 @@ const Layout = ({ children, activePage, setPage, user, onLogout }) => {
         companies={companies}
         selectedTenant={selectedTenant}
         onTenantChange={handleTenantChange}
+        tenantSettings={tenantSettings}
       />
       <div className="main-content">
         <Header 
