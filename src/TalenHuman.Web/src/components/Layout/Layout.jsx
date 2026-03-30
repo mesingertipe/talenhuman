@@ -142,20 +142,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
       )}
 
       <div className="sidebar-footer" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '0.6rem 0' }}>
-        {isSuperAdmin && !isCollapsed && (
-          <div style={{ padding: '0 1.25rem 0.75rem 1.25rem' }} className="dark">
-            <p style={{ fontSize: '0.6rem', textTransform: 'uppercase', color: '#64748b', marginBottom: '0.5rem', fontWeight: '800', trackingWidest: '0.05em' }}>Tenant Activo</p>
-            <div className="p-0">
-              <SearchableSelect
-                options={companies}
-                value={selectedTenant}
-                onChange={(val) => onTenantChange({ target: { value: val } })}
-                placeholder="CAMBIAR TENANT..."
-                icon={Building}
-              />
-            </div>
-          </div>
-        )}
+        {/* Tenant Selector moved to Header for SuperAdmins */}
         
         <button 
           onClick={() => setIsPinned(!isPinned)} 
@@ -203,7 +190,8 @@ const getPageInfo = (page) => {
 
 import RealTimeClock from '../Shared/RealTimeClock';
 
-const Header = ({ user, activePage, currentCompanyName, tenantSettings }) => {
+const Header = ({ user, activePage, currentCompanyName, tenantSettings, companies, selectedTenant, onTenantChange }) => {
+  const isSuperAdmin = user?.roles?.includes('SuperAdmin');
   const { isDarkMode, toggleTheme } = useTheme();
   const showTenantInfo = !!user;
   const pageInfo = getPageInfo(activePage);
@@ -297,6 +285,18 @@ const Header = ({ user, activePage, currentCompanyName, tenantSettings }) => {
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '0.85rem', fontWeight: '900', color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '-0.01em' }}>{user?.fullName || 'Perfil'}</div>
               <div style={{ fontSize: '0.65rem', fontWeight: 'bold', color: 'var(--text-muted)', textTransform: 'uppercase', trackingWidest: '0.05em' }}>{user?.roles?.join(' • ')}</div>
+              
+              {isSuperAdmin && companies.length > 0 && (
+                <div style={{ marginTop: '0.5rem', width: '220px', marginLeft: 'auto' }} className="dark">
+                  <SearchableSelect
+                    options={companies}
+                    value={selectedTenant}
+                    onChange={(val) => onTenantChange({ target: { value: val } })}
+                    placeholder="CAMBIAR EMPRESA..."
+                    icon={Building}
+                  />
+                </div>
+              )}
             </div>
             <div style={{ width: '46px', height: '46px', background: 'linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 16px rgba(79, 70, 229, 0.25)', border: '2px solid white' }} className="dark:border-slate-800">
               <UserIcon size={22} color="white" />
@@ -382,6 +382,9 @@ const Layout = ({ children, activePage, setPage, user, onLogout }) => {
           activePage={activePage} 
           currentCompanyName={currentCompanyName} 
           tenantSettings={tenantSettings}
+          companies={companies}
+          selectedTenant={selectedTenant}
+          onTenantChange={handleTenantChange}
         />
         <main className="content-body" style={{ flex: 1 }}>
           {React.Children.map(children, child => {

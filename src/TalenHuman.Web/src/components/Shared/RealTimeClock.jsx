@@ -51,7 +51,7 @@ const RealTimeClock = ({ countryCode, timeZoneId, isCollapsed }) => {
          <img 
             src={flagUrl} 
             alt={config.name}
-            className="w-8 h-8 rounded-full border-2 border-indigo-500/30 object-cover shadow-sm" 
+            className="w-10 h-10 rounded-full border-2 border-indigo-500/30 object-cover shadow-lg aspect-square scale-110" 
          />
       </div>
     );
@@ -59,16 +59,19 @@ const RealTimeClock = ({ countryCode, timeZoneId, isCollapsed }) => {
 
   return (
     <div className="mx-4 mb-4 p-3 bg-slate-800/40 dark:bg-white/5 rounded-xl border border-white/5 dark:border-indigo-500/10 flex items-center gap-3 animate-in fade-in transition-all">
-        <img 
-            src={flagUrl} 
-            alt={config.name}
-            className="w-10 h-auto rounded shadow-sm border border-white/10" 
-        />
+        <div className="relative shrink-0">
+          <img 
+              src={flagUrl} 
+              alt={config.name}
+              className="w-10 h-10 rounded-full shadow-md border-2 border-white/10 object-cover aspect-square" 
+          />
+          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full shadow-sm"></div>
+        </div>
         <div className="flex flex-col min-w-0">
             <span className="text-[14px] font-[900] text-indigo-400 tracking-tight font-mono leading-none">
                 {timeString}
             </span>
-            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-1 uppercase leading-none truncate">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-200 mt-1 uppercase leading-none truncate">
                 {dateString}
             </span>
         </div>
