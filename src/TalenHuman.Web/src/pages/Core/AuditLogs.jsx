@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
     Activity, Search, ShieldAlert, Download, X, 
-    Trash2, AlertCircle, Database, Calendar
+    Trash2, AlertCircle, Database, Calendar, CheckCircle
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
@@ -14,6 +14,7 @@ const AuditLogs = () => {
     const [cleaning, setCleaning] = useState(false);
     const [showClearModal, setShowClearModal] = useState(false);
     const [daysToKeep, setDaysToKeep] = useState("60");
+    const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     
     // Filters
     const [filters, setFilters] = useState({
@@ -58,6 +59,11 @@ const AuditLogs = () => {
         }
     };
 
+    const showToast = (message, type = 'success') => {
+        setToast({ show: true, message, type });
+        setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3500);
+    };
+
     const handleCleanup = () => {
         setShowClearModal(true);
     };
@@ -70,16 +76,16 @@ const AuditLogs = () => {
             const res = await api.delete(`/auditlogs/clear?olderThanDays=${daysToKeep}`);
             setShowClearModal(false);
             fetchLogs();
-            alert(res.data.message); // Could be replaced by a toast, but keeping alert for success is acceptable if toasts aren't registered
+            showToast(res.data.message, 'success');
         } catch (err) {
-            alert("Error al depurar registros.");
+            showToast("Error al depurar registros de auditoría.", 'error');
         } finally {
             setCleaning(false);
         }
     };
 
     const handleExport = () => {
-        if (logs.length === 0) return alert("No hay datos para exportar");
+        if (logs.length === 0) return showToast("No hay datos para exportar", "error");
         
         const data = logs.map(l => ({
             'Fecha y Hora': new Date(l.timestamp).toLocaleString('es-CO'),
@@ -297,6 +303,14 @@ const AuditLogs = () => {
                     </table>
                 </div>
             </div>
+
+            {/* Premium V12 Toasts */}
+            {toast.show && (
+                <div style={{ position: 'fixed', bottom: '40px', right: '40px', zIndex: 11000, display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 32px', borderRadius: '28px', background: toast.type === 'success' ? 'rgba(16, 185, 129, 0.95)' : 'rgba(239, 68, 68, 0.95)', border: `1px solid ${toast.type === 'success' ? '#34d399' : '#f87171'}`, color: 'white', fontWeight: '900', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', animation: 'slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+                    {toast.type === 'success' ? <CheckCircle size={22} /> : <AlertCircle size={22} />}
+                    {toast.message}
+                </div>
+            )}
         </div>
     );
 };
