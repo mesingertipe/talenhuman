@@ -38,7 +38,9 @@ public class EmployeesController : ControllerBase
             .Include(e => e.Store)
             .Include(e => e.Profile)
             .Include(e => e.Jornada)
+            .Where(e => e.IsActive) // Only include active staff in general lists
             .AsQueryable();
+
 
         // RBAC: Filter by Managed Stores for Managers and Supervisors
         if (!userRoles.Contains("SuperAdmin") && !userRoles.Contains("Admin") && !userRoles.Contains("RH"))
