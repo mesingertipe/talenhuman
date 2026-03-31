@@ -162,6 +162,7 @@ public class AttendanceReportService
                             columns.RelativeColumn();
                             columns.RelativeColumn();
                             columns.RelativeColumn();
+                            columns.RelativeColumn();
                         });
 
                         table.Header(header =>
@@ -170,6 +171,7 @@ public class AttendanceReportService
                             header.Cell().Element(CellStyle).AlignCenter().Text("Total");
                             header.Cell().Element(CellStyle).AlignCenter().Text("Correcto");
                             header.Cell().Element(CellStyle).AlignCenter().Text("Errada");
+                            header.Cell().Element(CellStyle).AlignCenter().Text("Desfase");
                             header.Cell().Element(CellStyle).AlignCenter().Text("Ausente");
 
                             static IContainer CellStyle(IContainer container) => container.DefaultTextStyle(x => x.SemiBold()).PaddingVertical(5).BorderBottom(1).BorderColor(Colors.Black);
@@ -181,11 +183,13 @@ public class AttendanceReportService
                             table.Cell().Element(Padding).AlignCenter().Text(item.Total.ToString());
                             table.Cell().Element(Padding).AlignCenter().Text($"{item.Correct}").FontColor(Colors.Green.Darken2);
                             table.Cell().Element(Padding).AlignCenter().Text($"{item.Errada}").FontColor(Colors.Amber.Darken2);
+                            table.Cell().Element(Padding).AlignCenter().Text($"{item.Desfasada}").FontColor(Colors.Blue.Darken2);
                             table.Cell().Element(Padding).AlignCenter().Text($"{item.SinMarcacion}").FontColor(Colors.Red.Darken2);
 
                             static IContainer Padding(IContainer container) => container.PaddingVertical(5).BorderBottom(1).BorderColor(Colors.Grey.Lighten3);
                         }
                     });
+
 
                     if (!attendanceData.Any())
                     {
