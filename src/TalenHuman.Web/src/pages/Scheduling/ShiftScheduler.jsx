@@ -1093,7 +1093,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                               }}
                                                                               onMouseEnter={e => {
                                                                                  const rect = e.currentTarget.getBoundingClientRect();
-                                                                                 setHoveredShiftData({ ...shift, att, shiftTime, attTime, isLocked });
+                                                                                 setHoveredShiftData({ ...shift, att, shiftTime, attTime, isLocked, borderCol: bgColor });
                                                                                  setHoverPos({ x: rect.left + rect.width / 2, y: rect.top });
                                                                               }}
                                                                               onMouseLeave={() => setHoveredShiftData(null)}
@@ -1139,10 +1139,42 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                         </td>
                                                     );
                                                 })}
-                                                <td className="p-4 text-center bg-slate-50/50 dark:bg-slate-900/50 border-l dark:border-slate-800">
-                                                    <strong className="text-[14px] font-[950] block" style={{ color: isDarkMode ? '#ffffff' : '#1e293b' }}>
-                                                        {formatHours(total)}
-                                                    </strong>
+                                                <td className="p-4 bg-slate-50/50 dark:bg-slate-900/50 border-l dark:border-slate-800">
+                                                    <div className="flex flex-col items-center justify-center gap-1">
+                                                        <div className="flex items-center gap-2 bg-indigo-50/50 dark:bg-indigo-900/20 px-3 py-1 rounded-full border border-indigo-100 dark:border-indigo-800/50">
+                                                            <Calendar size={12} className="text-indigo-500" strokeWidth={3} />
+                                                            <strong className="text-[11px] font-[950] text-indigo-700 dark:text-indigo-300">
+                                                                {formatHours(total)}
+                                                            </strong>
+                                                        </div>
+                                                        
+                                                        {(() => {
+                                                            const workedTotal = attendances
+                                                                .filter(a => a.employeeId === emp.id)
+                                                                .reduce((acc, att) => {
+                                                                    if (!att.clockIn || !att.clockOut) return acc;
+                                                                    const start = new Date(att.clockIn);
+                                                                    const end = new Date(att.clockOut);
+                                                                    let diff = (end - start) / (1000 * 60 * 60);
+                                                                    if (diff < 0) diff += 24;
+                                                                    return acc + diff;
+                                                                }, 0);
+                                                            
+                                                            const hasMarcaciones = attendances.some(a => a.employeeId === emp.id);
+
+                                                            if (hasMarcaciones) {
+                                                                return (
+                                                                    <div className="flex items-center gap-2 bg-emerald-50/50 dark:bg-emerald-900/20 px-3 py-1 rounded-full border border-emerald-100 dark:border-emerald-800/50 animate-in slide-in-from-bottom-1 duration-300">
+                                                                        <Clock size={12} className="text-emerald-500" strokeWidth={3} />
+                                                                        <strong className="text-[11px] font-[950] text-emerald-700 dark:text-emerald-300">
+                                                                            {formatHours(workedTotal)}
+                                                                        </strong>
+                                                                    </div>
+                                                                );
+                                                            }
+                                                            return null;
+                                                        })()}
+                                                    </div>
                                                 </td>
                                             </tr>
                                         );
@@ -1395,7 +1427,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                             {/* Card Container */}
                             <div style={{ 
                                 background: isDarkMode ? '#1e293b' : '#ffffff', 
-                                border: `1px solid ${isDarkMode ? '#334155' : '#f1f5f9'}`,
+                                border: `2px solid ${hoveredShiftData.borderCol}`,
                                 borderRadius: '32px',
                                 padding: '16px 20px',
                                 minWidth: '240px',
@@ -1406,13 +1438,12 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                 {/* Header (Status) */}
                                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-white/5">
                                     <div className="flex flex-col text-left">
-                                        <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">Estado Elite V12</span>
-                                        <span className={`text-[11px] font-[1000] tracking-tight ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'text-emerald-500' : 'text-amber-500') : 'text-slate-500'}`}>
+                                        <span className={`text-[12px] font-[1000] tracking-tight ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'text-emerald-500' : 'text-amber-500') : 'text-slate-500'}`}>
                                             {hoveredShiftData.att ? `ASISTENCIA ${hoveredShiftData.att.status === 0 ? 'CORRECTA' : 'CON NOVEDAD'}` : (hoveredShiftData.isDescanso ? 'DESCANSO' : 'PENDIENTE')}
                                         </span>
                                     </div>
-                                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500') : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
-                                        {hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? <CheckCircle size={16} /> : <AlertCircle size={16} />) : <Clock size={16} />}
+                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'bg-emerald-500 text-white shadow-emerald-200/50' : 'bg-amber-500 text-white shadow-amber-200/50') : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                                        {hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? <CheckCircle size={22} strokeWidth={3} /> : <AlertCircle size={22} strokeWidth={3} />) : <Clock size={20} />}
                                     </div>
                                 </div>
 
@@ -1421,8 +1452,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                     <div className="flex items-center gap-3">
                                         <Calendar size={14} className="text-indigo-500" />
                                         <div className="flex flex-col text-left">
-                                            <span className="text-[7px] font-black uppercase text-slate-400">Turno Plan</span>
-                                            <span className="text-[12px] font-bold tracking-tight">{hoveredShiftData.shiftTime}</span>
+                                            <span className="text-[12px] font-[1000] tracking-tight">{hoveredShiftData.shiftTime}</span>
                                         </div>
                                     </div>
 
@@ -1453,10 +1483,11 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                 
                                 {/* TRIANGULO (ARROW) */}
                                 <div 
-                                    className={`absolute left-1/2 -translate-x-1/2 w-4 h-4 ${isDarkMode ? 'bg-[#1e293b]' : 'bg-white'} rotate-45 border ${isDarkMode ? 'border-slate-700' : 'border-slate-100'}`}
+                                    className={`absolute left-1/2 -translate-x-1/2 w-4 h-4 ${isDarkMode ? 'bg-[#1e293b]' : 'bg-white'} rotate-45 border`}
                                     style={{ 
-                                        bottom: hoverPos.y < 350 ? 'auto' : '-8px',
-                                        top: hoverPos.y < 350 ? '-8px' : 'auto',
+                                        borderColor: hoveredShiftData.borderCol,
+                                        bottom: hoverPos.y < 350 ? 'auto' : '-9px',
+                                        top: hoverPos.y < 350 ? '-9px' : 'auto',
                                         borderTop: hoverPos.y < 350 ? '' : 'none',
                                         borderLeft: hoverPos.y < 350 ? '' : 'none',
                                         borderBottom: hoverPos.y < 350 ? 'none' : '',
