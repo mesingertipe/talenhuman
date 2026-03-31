@@ -330,6 +330,20 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
             return;
         }
 
+        const isLockedDay = new Date(targetDate) < new Date(new Date().setHours(0,0,0,0));
+        if (isLockedDay) {
+            showToast("Día bloqueado: Dato histórico", "error");
+            return;
+        }
+
+        // Check if there is already an attendance in this target slot
+        const existingShifts = shifts.filter(s => s.employeeId === targetEmployeeId && new Date(s.startTime).toDateString() === targetDate.toDateString());
+        const hasAttendance = existingShifts.some(s => attendances.some(a => String(a.shiftId) === String(s.id)));
+        if (hasAttendance) {
+            showToast("Día bloqueado: Ya existe marcación", "warning");
+            return;
+        }
+
         if (source === 'PANEL') {
             if (payload.type === 'Descanso' || payload.type === 'Turno Fuera') {
                 const start = new Date(targetDate); start.setHours(0, 0, 0, 0);
@@ -1093,9 +1107,13 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                      
                                                                      return (
                                                                          <div key={si} 
-                                                                              draggable={!isLocked} 
+                                                                              draggable={isLocked ? "false" : "true"} 
                                                                               onDragStart={e => {
-                                                                                  if (isLocked) { e.preventDefault(); return; }
+                                                                                  if (isLocked) {
+                                                                                      e.preventDefault();
+                                                                                      e.stopPropagation();
+                                                                                      return false;
+                                                                                  }
                                                                                   handleDragStart(e, 'GRID', { employeeId: emp.id, date: day, shiftId: shift.id });
                                                                               }}
                                                                               onClick={() => {
@@ -1119,7 +1137,14 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                               }}
                                                                               onMouseLeave={() => setHoveredShiftData(null)}
                                                                               className={`group rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-md transition-all relative ${isLocked ? (att ? 'cursor-help hover:ring-2 ring-white/50 scale-105' : 'cursor-default opacity-[0.9]') : 'cursor-grab active:cursor-grabbing hover:scale-[1.05] hover:z-50'}`}
-                                                                              style={{ background: bgColor, minWidth: '85px', minHeight: '42px', filter: isLocked ? 'contrast(0.9) saturate(0.8)' : 'none' }}
+                                                                              style={{ 
+                                                                                  background: bgColor, 
+                                                                                  minWidth: '85px', 
+                                                                                  minHeight: '42px', 
+                                                                                  filter: isLocked ? 'contrast(0.9) saturate(0.8)' : 'none',
+                                                                                  userDrag: isLocked ? 'none' : 'auto',
+                                                                                  WebkitUserDrag: isLocked ? 'none' : 'auto'
+                                                                              }}
                                                                          >
                                                                              <div className="flex items-center gap-2 mb-0.5">
                                                                                  {isLocked && <Lock size={11} className="text-white opacity-70" />}
