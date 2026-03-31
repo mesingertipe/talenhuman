@@ -997,20 +997,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                     </div>
                                                 </td>
                                                 {days.map((day, di) => {
-                                                    const scheduledShifts = shifts.filter(s => s.employeeId === emp.id && new Date(s.startTime).toDateString() === day.toDateString());
-                                                    const extraAttendances = attendances.filter(a => a.employeeInternalId === emp.id && 
-                                                                                                 new Date(a.clockIn).toDateString() === day.toDateString() && !a.shiftId);
-                                                    
-                                                    const dayShifts = [
-                                                        ...scheduledShifts,
-                                                        ...extraAttendances.map(a => ({
-                                                            id: null,
-                                                            startTime: a.clockIn,
-                                                            endTime: a.clockOut || a.clockIn,
-                                                            isVirtualAttendance: true,
-                                                            attendance: a
-                                                        }))
-                                                    ];
+                                                    const dayShifts = shifts.filter(s => s.employeeId === emp.id && new Date(s.startTime).toDateString() === day.toDateString());
                                                     const nov = getNovedad(emp.id, day);
                                                     return (
                                                         <td
@@ -1030,18 +1017,24 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                     </div>
                                                                 )}
                                                                 {dayShifts.map((shift, si) => {
-                                                                    const att = shift.attendance || attendances.find(a => (a.shiftId === shift.id && shift.id));
+                                                                    const att = attendances.find(a => String(a.shiftId) === String(shift.id) && shift.id);
                                                                     
-                                                                    // Determine Color Class
-                                                                    let statusClass = shift.isDescanso ? 'grid-event-descanso' : shift.isFuera ? 'grid-event-fuera' : 'grid-event-turno';
+                                                                    // Determine Base Styles
+                                                                    let bgColor = '#4f46e5'; // Default Indigo
+                                                                    let statusText = '';
+                                                                    
                                                                     if (att) {
-                                                                        if (att.status === 0) statusClass = 'bg-emerald-500 border-emerald-400 shadow-emerald-500/20'; // Green
-                                                                        else if (att.status === 1) statusClass = 'bg-amber-400 text-amber-950 border-amber-300 shadow-amber-400/20'; // Yellow
-                                                                        else if (att.status === 3) statusClass = 'bg-rose-500 border-rose-400 shadow-rose-500/20'; // Red
-                                                                        else statusClass = 'bg-orange-500 border-orange-400 shadow-orange-500/20'; // Orange/Error
+                                                                        if (att.status === 0) bgColor = '#10b981'; // Green
+                                                                        else if (att.status === 1) bgColor = '#f59e0b'; // Yellow
+                                                                        else if (att.status === 3) bgColor = '#ef4444'; // Red
+                                                                        else bgColor = '#f97316'; // Orange
+                                                                        statusText = `Entrada: ${new Date(att.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}${att.clockOut ? ` | Salida: ${new Date(att.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}`;
                                                                     } else if (!shift.isDescanso && !shift.isFuera && new Date(shift.startTime) < new Date()) {
-                                                                        statusClass = 'bg-rose-500 border-rose-400 shadow-rose-500/20'; // Past & No attendance = Red
+                                                                        bgColor = '#ef4444'; // Past & No attendance = Red
                                                                     }
+
+                                                                    if (shift.isDescanso) bgColor = '#94a3b8';
+                                                                    if (shift.isFuera) bgColor = '#8b5cf6';
 
                                                                     return (
                                                                         <div key={si} 
@@ -1057,50 +1050,21 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                                     setShowTimeModal(true);
                                                                                 }
                                                                              }}
-                                                                             className={`group rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-lg transition-all cursor-grab active:cursor-grabbing hover:scale-[1.05] relative ${statusClass}`}
+                                                                             title={statusText || (shift.isDescanso ? 'Descanso Programado' : 'Sin marcación aún')}
+                                                                             className="rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-md transition-all cursor-grab active:cursor-grabbing hover:scale-[1.05] relative"
+                                                                             style={{ background: bgColor, minWidth: '80px' }}
                                                                         >
                                                                             <span className="text-[7px] font-black uppercase tracking-[0.1em] opacity-80 leading-none">
-                                                                                {shift.isVirtualAttendance ? 'EXTRA' : (shift.isDescanso ? 'DESC' : shift.isFuera ? 'FUERA' : 'TURNO')}
+                                                                                {shift.isDescanso ? 'DESC' : shift.isFuera ? 'FUERA' : 'TURNO'}
                                                                             </span>
                                                                             <span className="text-[8px] font-[1000] tracking-tighter whitespace-nowrap mt-0.5">
                                                                                 {shift.isDescanso ? 'REST' : `${new Date(shift.startTime).getHours().toString().padStart(2, '0')}:${new Date(shift.startTime).getMinutes().toString().padStart(2, '0')}-${new Date(shift.endTime).getHours().toString().padStart(2, '0')}:${new Date(shift.endTime).getMinutes().toString().padStart(2, '0')}`}
                                                                             </span>
                                                                             
                                                                             {att && (
-                                                                                <>
-                                                                                    {/* Elegant Tooltip on Hover */}
-                                                                                    <div className="absolute top-0 left-0 w-full h-full opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none">
-                                                                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-36 bg-slate-900/95 backdrop-blur-md rounded-2xl p-3 shadow-2xl border border-white/10 text-[8px] pointer-events-none transform scale-95 group-hover:scale-100 transition-all origin-bottom">
-                                                                                            <div className="flex flex-col gap-1.5">
-                                                                                                <div className="flex justify-between items-center border-b border-white/10 pb-1.5 mb-1">
-                                                                                                    <span className="font-black text-indigo-400 tracking-wider">BIO-REGISTRO</span>
-                                                                                                    <Clock size={10} className="text-slate-400" />
-                                                                                                </div>
-                                                                                                <div className="flex justify-between items-center">
-                                                                                                    <span className="text-slate-400 uppercase">Input:</span>
-                                                                                                    <span className="text-white font-bold ml-1">{new Date(att.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                                                                                </div>
-                                                                                                {att.clockOut && (
-                                                                                                    <div className="flex justify-between items-center">
-                                                                                                        <span className="text-slate-400 uppercase">Output:</span>
-                                                                                                        <span className="text-white font-bold ml-1">{new Date(att.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                                                                                    </div>
-                                                                                                )}
-                                                                                                {att.statusObservation && (
-                                                                                                    <div className="mt-1 pt-1 border-t border-white/10 text-[7px] italic text-slate-300 leading-tight">
-                                                                                                        {att.statusObservation}
-                                                                                                    </div>
-                                                                                                )}
-                                                                                            </div>
-                                                                                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45 border-r border-b border-white/10"></div>
-                                                                                        </div>
-                                                                                    </div>
-
-                                                                                    {/* Status Icon Indicator */}
-                                                                                    <div className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border border-white dark:border-slate-800 ${att.status === 0 ? 'bg-emerald-400' : att.status === 1 ? 'bg-amber-400' : 'bg-rose-400'} flex items-center justify-center shadow-md`}>
-                                                                                        {att.status === 0 ? <CheckCircle size={6} /> : <AlertCircle size={6} />}
-                                                                                    </div>
-                                                                                </>
+                                                                                <div className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border border-white dark:border-slate-800 ${att.status === 0 ? 'bg-emerald-400' : 'bg-rose-400'} flex items-center justify-center shadow-sm`}>
+                                                                                    {att.status === 0 ? <CheckCircle size={6} /> : <AlertCircle size={6} />}
+                                                                                </div>
                                                                             )}
                                                                         </div>
                                                                     );
