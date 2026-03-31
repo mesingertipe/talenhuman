@@ -24,15 +24,14 @@ const ModulePermissions = () => {
   useEffect(() => {
     const initLoad = async () => {
       try {
-        const [compRes, modRes] = await Promise.all([
+        const [compRes, modRes, roleRes] = await Promise.all([
           api.get('/companies'),
-          api.get('/system/modules')
+          api.get('/system/modules'),
+          api.get('/system/roles')
         ]);
         setCompanies(compRes.data);
         setModules(modRes.data);
-        
-        // Simple roles list for now (could be fetched from API if needed)
-        setRoles(['Admin', 'Gerente', 'Distrital', 'RH', 'Empleado']);
+        setRoles(roleRes.data);
       } catch (err) {
         console.error("Error loading initial permission data", err);
       }
@@ -58,19 +57,39 @@ const ModulePermissions = () => {
     }
   };
 
-  const getPermStatus = (roleName, moduleId, actionCode) => {
-    // Role matching by simple string for this UI
-    // In a real scenario, we'd match by RoleId
-    const perm = permissions.find(p => p.moduleId === moduleId && p.action === actionCode);
+  const getPermStatus = (roleId, moduleId, actionCode) => {
+    const perm = permissions.find(p => p.roleId === roleId && p.moduleId === moduleId && p.action === actionCode);
     return perm?.isAllowed || false;
   };
 
-  const togglePermission = async (roleName, moduleId, actionCode) => {
-    const currentStatus = getPermStatus(roleName, moduleId, actionCode);
-    // Find RoleId from some lookup or just use roleName logic
-    // For now, we'll assume we need to handle RoleId correctly from Backend Roles
-    // Simplified: we'll fetch roles list with IDs first
-    alert("Funcionalidad de guardado en desarrollo - Use el panel de Empresas para activar módulos base.");
+  const togglePermission = async (roleId, moduleId, actionCode) => {
+    const currentStatus = getPermStatus(roleId, moduleId, actionCode);
+    const newStatus = !currentStatus;
+
+    // Optimistic update
+    const updatedPerms = [...permissions];
+    const index = updatedPerms.findIndex(p => p.roleId === roleId && p.moduleId === moduleId && p.action === actionCode);
+    
+    if (index >= 0) {
+      updatedPerms[index].isAllowed = newStatus;
+    } else {
+      updatedPerms.push({ roleId, moduleId, action: actionCode, isAllowed: newStatus });
+    }
+    setPermissions(updatedPerms);
+
+    try {
+      await api.post('/system/permissions', {
+        companyId: selectedCompanyId,
+        roleId,
+        moduleId,
+        action: actionCode,
+        isAllowed: newStatus
+      });
+    } catch (err) {
+      console.error("Error updating permission", err);
+      // Rollback on error
+      loadPermissions();
+    }
   };
 
   return (
@@ -133,21 +152,25 @@ const ModulePermissions = () => {
                       </thead>
                       <tbody>
                         {roles.map(role => (
-                          <tr key={role} className="border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/10 transition-colors">
+                          <tr key={role.id} className="border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/10 transition-colors">
                             <td className="py-4 font-black text-sm text-slate-700 dark:text-slate-300 pl-2 flex items-center gap-2">
                               <ChevronRight size={14} className="text-indigo-400" />
-                              {role}
+                              {role.name}
                             </td>
-                            {actions.map((action, idx) => (
-                              <td key={action.code} className="py-4 text-center">
-                                <button 
-                                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${idx % 2 === 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'} opacity-50 cursor-not-allowed`}
-                                  title={`${mod.code} / ${role} / ${action.label}`}
-                                >
-                                  {idx % 2 === 0 ? <CheckCircle size={18} /> : <XCircle size={18} />}
-                                </button>
-                              </td>
-                            ))}
+                            {actions.map((action) => {
+                              const isAllowed = getPermStatus(role.id, mod.id, action.code);
+                              return (
+                                <td key={action.code} className="py-4 text-center">
+                                  <button 
+                                    onClick={() => togglePermission(role.id, mod.id, action.code)}
+                                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isAllowed ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400'} hover:scale-110 active:scale-95`}
+                                    title={`${mod.code} / ${role.name} / ${action.label}`}
+                                  >
+                                    {isAllowed ? <CheckCircle size={18} /> : <XCircle size={18} />}
+                                  </button>
+                                </td>
+                              );
+                            })}
                           </tr>
                         ))}
                       </tbody>

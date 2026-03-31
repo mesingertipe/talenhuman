@@ -148,6 +148,15 @@ public class SystemController : ControllerBase
         return Ok(perms);
     }
 
+    [HttpGet("roles")]
+    public async Task<IActionResult> GetRoles()
+    {
+        var roles = await _context.Roles
+            .Select(r => new { r.Id, r.Name })
+            .ToListAsync();
+        return Ok(roles);
+    }
+
     [HttpPost("permissions")]
     public async Task<IActionResult> UpdatePermission([FromBody] UpdatePermissionDto dto)
     {
