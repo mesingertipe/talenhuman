@@ -1169,26 +1169,24 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                             </strong>
                                                         </div>
                                                                            {(() => {
-                                                            const weekAttendances = (attendances || []).filter(a => {
-                                                                if (String(a.employeeId) !== String(emp.id)) return false;
-                                                                if (!a.clockIn) return false;
-                                                                const d = new Date(a.clockIn);
-                                                                return d >= days[0] && d <= new Date(days[days.length-1].getTime() + 86400000);
-                                                            });
-
-                                                            const workedTotal = weekAttendances.reduce((acc, att) => {
-                                                                if (!att.clockIn || !att.clockOut) return acc;
-                                                                const s = Number(att.status);
-                                                                if (s !== 0 && s !== 1) return acc;
-                                                                
-                                                                const start = new Date(att.clockIn);
-                                                                const end = new Date(att.clockOut);
-                                                                if (isNaN(start.getTime()) || isNaN(end.getTime())) return acc;
-                                                                
-                                                                let diff = (end - start) / (1000 * 60 * 60);
-                                                                if (diff < 0) diff += 24;
-                                                                return acc + (isNaN(diff) ? 0 : diff);
-                                                            }, 0);
+                                                            // Calculate total worked hours by looking up attendances for each shift in the current week
+                                                            const workedTotal = shifts
+                                                                .filter(s => s.employeeId === emp.id && !s.isDescanso)
+                                                                .reduce((acc, s) => {
+                                                                    const att = (attendances || []).find(a => String(a.shiftId) === String(s.id));
+                                                                    if (!att || !att.clockIn || !att.clockOut) return acc;
+                                                                    
+                                                                    const status = Number(att.status);
+                                                                    if (status !== 0 && status !== 1) return acc;
+                                                                    
+                                                                    const start = new Date(att.clockIn);
+                                                                    const end = new Date(att.clockOut);
+                                                                    if (isNaN(start.getTime()) || isNaN(end.getTime())) return acc;
+                                                                    
+                                                                    let diff = (end - start) / (1000 * 60 * 60);
+                                                                    if (diff < 0) diff += 24;
+                                                                    return acc + (isNaN(diff) ? 0 : diff);
+                                                                }, 0);
                                                             
                                                             // Always show if there are shifts or if there's worked time
                                                             const hasShifts = shifts.some(s => s.employeeId === emp.id && !s.isDescanso);
@@ -1198,7 +1196,6 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                     <div className="flex items-center gap-2 bg-emerald-50/50 dark:bg-emerald-900/20 px-3 py-1 rounded-full border border-emerald-100 dark:border-emerald-800/50 animate-in slide-in-from-bottom-1 duration-300">
                                                                         <Clock size={12} className="text-emerald-500" strokeWidth={3} />
                                                                         <div className="flex flex-col items-start leading-[1] py-0.5">
-                                                                            <span className="text-[7px] font-black text-emerald-600/70 dark:text-emerald-400/70 uppercase tracking-tighter">Reloj Real</span>
                                                                             <strong className="text-[11px] font-[950] text-emerald-700 dark:text-emerald-300">
                                                                                 {(() => {
                                                                                     const h = Math.floor(workedTotal);
@@ -1496,13 +1493,13 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                     <div className="flex items-center gap-1.5 mb-1.5">
                                                         <LogIn size={13} className="text-emerald-500" />
                                                         <span className="text-[12px] font-black text-slate-700 dark:text-slate-200 uppercase">
-                                                            ENTRY: <span className="text-emerald-600 dark:text-emerald-400">{hoveredShiftData.att && hoveredShiftData.att.clockIn ? new Date(hoveredShiftData.att.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '---'}</span>
+                                                            ENTRADA: <span className="text-emerald-600 dark:text-emerald-400">{hoveredShiftData.att && hoveredShiftData.att.clockIn ? new Date(hoveredShiftData.att.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '---'}</span>
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center gap-1.5">
                                                         <LogOut size={13} className="text-rose-500" />
                                                         <span className="text-[12px] font-black text-slate-700 dark:text-slate-200 uppercase">
-                                                            EXIT: <span className="text-rose-600 dark:text-rose-400">{hoveredShiftData.att && hoveredShiftData.att.clockOut ? new Date(hoveredShiftData.att.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (hoveredShiftData.att ? 'ACTIVE' : '---')}</span>
+                                                            SALIDA: <span className="text-rose-600 dark:text-rose-400">{hoveredShiftData.att && hoveredShiftData.att.clockOut ? new Date(hoveredShiftData.att.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (hoveredShiftData.att ? 'ACTIVE' : '---')}</span>
                                                         </span>
                                                     </div>
                                                 </div>
