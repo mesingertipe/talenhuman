@@ -19,21 +19,39 @@ public static class DbInitializer
             }
         }
 
-        // 2. Seed Modules (Global)
-        if (!await context.Modules.AnyAsync())
+        // 2. Seed/Update Modules (Global) - ELITE V12 Standard Codes
+        var standardModules = new List<Module>
         {
-            var modules = new List<Module>
+            new Module { Code = "CORE", Name = "Configuración Core", Icon = "Boxes", DisplayOrder = 1 },
+            new Module { Code = "OPERATIONS", Name = "Operaciones Asistencia", Icon = "Activity", DisplayOrder = 2 },
+            new Module { Code = "ADVANCED", Name = "Gestión del Modelo", Icon = "Layout", DisplayOrder = 3 },
+            new Module { Code = "SYSTEM", Name = "Administración Sistema", Icon = "Settings", DisplayOrder = 4 }
+        };
+
+        foreach (var std in standardModules)
+        {
+            var existing = await context.Modules.FirstOrDefaultAsync(m => m.Code == std.Code);
+            if (existing == null)
             {
-                new Module { Code = "CORE", Name = "Configuración Core", Icon = "Boxes", DisplayOrder = 1 },
-                new Module { Code = "ATTENDANCE", Name = "Operaciones Asistencia", Icon = "Clock", DisplayOrder = 2 },
-                new Module { Code = "ADMIN", Name = "Administración Sistema", Icon = "Settings", DisplayOrder = 3 }
-            };
-            context.Modules.AddRange(modules);
-            await context.SaveChangesAsync();
+                // Fallback for previous codes
+                if (std.Code == "OPERATIONS") existing = await context.Modules.FirstOrDefaultAsync(m => m.Code == "ATTENDANCE");
+                if (std.Code == "SYSTEM") existing = await context.Modules.FirstOrDefaultAsync(m => m.Code == "ADMIN");
+
+                if (existing != null)
+                {
+                    existing.Code = std.Code;
+                    existing.Name = std.Name;
+                    existing.Icon = std.Icon;
+                }
+                else
+                {
+                    context.Modules.Add(std);
+                }
+            }
         }
+        await context.SaveChangesAsync();
 
         var allModules = await context.Modules.ToListAsync();
-        var allRoles = await roleManager.Roles.ToListAsync();
 
         // 3. Seed Companies (Tenants)
         if (!await context.Companies.AnyAsync())
@@ -99,10 +117,12 @@ public static class DbInitializer
         var allModules = await context.Modules.ToListAsync();
         var roles = await context.Roles.ToListAsync();
 
-        var coreMod = allModules.First(m => m.Code == "CORE");
-        var opsMod = allModules.First(m => m.Code == "OPERATIONS");
-        var advMod = allModules.First(m => m.Code == "ADVANCED");
-        var sysMod = allModules.First(m => m.Code == "SYSTEM");
+        var coreMod = allModules.FirstOrDefault(m => m.Code == "CORE");
+        var opsMod = allModules.FirstOrDefault(m => m.Code == "OPERATIONS");
+        var advMod = allModules.FirstOrDefault(m => m.Code == "ADVANCED");
+        var sysMod = allModules.FirstOrDefault(m => m.Code == "SYSTEM");
+
+        if (coreMod == null || opsMod == null || sysMod == null) return;
 
         var subModules = new[] {
             new { Module = "CORE", Sub = "BRANDS" },
@@ -135,10 +155,12 @@ public static class DbInitializer
                     var mid = item.Module switch {
                         "CORE" => coreMod.Id,
                         "OPERATIONS" => opsMod.Id,
-                        "ADVANCED" => advMod.Id,
+                        "ADVANCED" => advMod?.Id ?? Guid.Empty,
                         "SYSTEM" => sysMod.Id,
                         _ => Guid.Empty
                     };
+
+                    if (mid == Guid.Empty) continue;
 
                     if (role.Name == "SuperAdmin" || role.Name == "Admin")
                     {
@@ -153,7 +175,6 @@ public static class DbInitializer
                     }
                     else if (role.Name == "Gerente")
                     {
-                        // Gerente can READ EMPLOYEES and RECORDS/SHIFTS
                         if (item.Sub == "EMPLOYEES" || item.Module == "OPERATIONS")
                         {
                              context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mid, SubModuleCode = item.Sub, Action = PermissionAction.Read, IsAllowed = true, CompanyId = companyId });

@@ -17,6 +17,9 @@ const ModulePermissions = () => {
   const [selectedSubModule, setSelectedSubModule] = useState(null); 
   const [expandedRoles, setExpandedRoles] = useState([]);
 
+  // Definimos los sub-módulos para cada categoría principal.
+  // Incluimos tanto los códigos nuevos (OPERATIONS, SYSTEM) como los legacy (ATTENDANCE, ADMIN) 
+  // para mayor resiliencia.
   const subModulesByModule = {
     'CORE': [
       { code: 'BRANDS', name: 'Marcas', icon: Palette, desc: 'Gestión de marcas corporativas' },
@@ -32,12 +35,24 @@ const ModulePermissions = () => {
       { code: 'RECORDS', name: 'Marcaciones/Asistencia', icon: Fingerprint, desc: 'Registro de entradas y salidas' },
       { code: 'NOVELTIES', name: 'Gestión Novedades', icon: FileText, desc: 'Procesamiento de novedades e incidencias' }
     ],
+    'ATTENDANCE': [
+      { code: 'SHIFTS', name: 'Programación Turnos', icon: Activity, desc: 'Malla horaria y asignaciones' },
+      { code: 'RECORDS', name: 'Marcaciones/Asistencia', icon: Fingerprint, desc: 'Registro de entradas y salidas' },
+      { code: 'NOVELTIES', name: 'Gestión Novedades', icon: FileText, desc: 'Procesamiento de novedades e incidencias' }
+    ],
     'ADVANCED': [
       { code: 'MONITORING', name: 'Monitoreo Tiempo Real', icon: Monitor, desc: 'Panel de control de asistencia viva' },
       { code: 'TEMPLATES', name: 'Plantillas Novedades', icon: Palette, desc: 'Diseño de tipos de novedades' },
       { code: 'NOVELTY_CONFIG', name: 'Configuración Novedades', icon: Settings, desc: 'Reglas de negocio para incidencias' }
     ],
     'SYSTEM': [
+      { code: 'USERS', name: 'Usuarios Sistema', icon: Users, desc: 'Cuentas de acceso a la plataforma' },
+      { code: 'PERMISSIONS', name: 'Matriz Permisos', icon: Shield, desc: 'Configuración de seguridad granular' },
+      { code: 'AUDIT', name: 'Logs Auditoría', icon: Terminal, desc: 'Trazabilidad de acciones del sistema' },
+      { code: 'COMPANIES', name: 'Gestión Empresas', icon: Building2, desc: 'Configuración de tenants multi-empresa' },
+      { code: 'SYSTEM_CONFIG', name: 'Configuración Global', icon: Settings, desc: 'Parámetros técnicos del núcleo' }
+    ],
+    'ADMIN': [
       { code: 'USERS', name: 'Usuarios Sistema', icon: Users, desc: 'Cuentas de acceso a la plataforma' },
       { code: 'PERMISSIONS', name: 'Matriz Permisos', icon: Shield, desc: 'Configuración de seguridad granular' },
       { code: 'AUDIT', name: 'Logs Auditoría', icon: Terminal, desc: 'Trazabilidad de acciones del sistema' },
@@ -136,7 +151,9 @@ const ModulePermissions = () => {
 
   const ModuleCard = ({ mod }) => {
     const subCount = subModulesByModule[mod.code]?.length || 0;
-    const Icon = mod.code === 'CORE' ? Boxes : mod.code === 'OPERATIONS' ? Activity : mod.code === 'SYSTEM' ? Settings : Shield;
+    const Icon = (mod.code === 'CORE') ? Boxes : 
+                 (mod.code === 'OPERATIONS' || mod.code === 'ATTENDANCE') ? Activity : 
+                 (mod.code === 'SYSTEM' || mod.code === 'ADMIN') ? Settings : Shield;
     
     return (
       <button 
@@ -175,7 +192,7 @@ const ModulePermissions = () => {
             {selectedModule ? selectedModule.name : 'Matriz de Permisos'}
           </h1>
           <p className="text-xs font-bold text-slate-400 mt-1">
-             {selectedModule ? `Personalizando: ${selectedModule.code}` : 'Gestión granular por empresa y rol'}
+             {selectedModule ? `Gestionando: ${selectedModule.code}` : 'Gestión granular por empresa y rol'}
           </p>
         </div>
 
@@ -206,7 +223,7 @@ const ModulePermissions = () => {
             <div className="flex gap-8 flex-col lg:flex-row animate-in slide-in-from-right-4 duration-500">
               {/* Opción Lateral */}
               <div className="lg:w-72 flex-shrink-0 space-y-2">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 px-2">Sub-módulos</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 px-2">Sub-módulos Disponibles</p>
                 {subModulesByModule[selectedModule.code]?.map(sub => (
                   <button
                     key={sub.code}
@@ -227,8 +244,8 @@ const ModulePermissions = () => {
                 {!selectedSubModule ? (
                   <div className="card h-full flex flex-col items-center justify-center p-20 text-center opacity-30 border-dashed border-2 border-slate-300">
                     <Search size={40} className="mb-4" />
-                    <h4 className="text-lg font-black uppercase tracking-tight">Elija un sub-módulo</h4>
-                    <p className="text-[10px] font-bold text-slate-500 mt-1">Navegue por las opciones de la izquierda</p>
+                    <h4 className="text-lg font-black uppercase tracking-tight">Seleccione una opción</h4>
+                    <p className="text-[10px] font-bold text-slate-500 mt-1">Elija un sub-módulo de la izquierda para gestionar sus perfiles</p>
                   </div>
                 ) : (
                   <div className="space-y-6">
