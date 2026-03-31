@@ -1454,7 +1454,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-white/5">
                                     <div className="flex flex-col text-left">
                                         <span className={`text-[12px] font-[1000] tracking-tight ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'text-emerald-500' : (hoveredShiftData.att.status === 3 ? 'text-rose-600' : 'text-amber-500')) : 'text-slate-500'}`}>
-                                            {hoveredShiftData.att ? `TURNO ${hoveredShiftData.att.status === 0 ? 'CORRECTO' : (hoveredShiftData.att.status === 3 ? 'SIN MARCACIÓN (DANGER)' : 'CON NOVEDAD')}` : (hoveredShiftData.isDescanso ? 'DESCANSO' : 'PENDIENTE')}
+                                            {hoveredShiftData.att ? `TURNO ${hoveredShiftData.att.status === 0 ? 'CORRECTO' : (hoveredShiftData.att.status === 3 ? 'SIN MARCACIÓN' : 'DESFASADO')}` : (hoveredShiftData.isDescanso ? 'DESCANSO' : 'PENDIENTE')}
                                         </span>
                                     </div>
                                     <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'bg-emerald-500 text-white shadow-emerald-200/50' : (hoveredShiftData.att.status === 3 ? 'bg-rose-600 text-white shadow-rose-200/50' : 'bg-amber-500 text-white shadow-amber-200/50')) : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
