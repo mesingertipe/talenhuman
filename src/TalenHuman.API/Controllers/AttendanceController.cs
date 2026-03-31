@@ -76,7 +76,7 @@ public class AttendanceController : ControllerBase
         // RBAC: Filter by Managed Stores for Managers and Supervisors
         if (!roles.Contains("SuperAdmin") && !roles.Contains("Admin") && !roles.Contains("RH"))
         {
-            if (roles.Contains("Supervisor") || roles.Contains("Gerente"))
+            if (roles.Contains("Gerente"))
             {
                 var managedStores = await _context.SupervisorStores
                     .Where(ss => ss.UserId == userId)
@@ -87,7 +87,7 @@ public class AttendanceController : ControllerBase
                 attendanceQuery = attendanceQuery.Where(a => managedStores.Contains(a.StoreId));
                 storesQuery = storesQuery.Where(s => managedStores.Contains(s.Id));
             }
-            else if (roles.Contains("Distrital"))
+            else if (roles.Contains("Distrital") || roles.Contains("Supervisor"))
             {
                 var user = await _context.Users.FindAsync(userId);
                 if (user?.DistrictId != null)

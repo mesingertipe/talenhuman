@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using TalenHuman.Application.Common.Interfaces;
 using TalenHuman.Domain.Entities;
 
@@ -84,13 +85,19 @@ public class IdentityService : IIdentityService
         if (user == null) return new List<string>();
 
         var userRoles = await _userManager.GetRolesAsync(user);
-        var roleEntities = _context.Roles.Where(r => userRoles.Contains(r.Name!)).ToList();
+        var roleEntities = _context.Roles
+            .IgnoreQueryFilters()
+            .Where(r => userRoles.Contains(r.Name!))
+            .ToList();
         var roleIds = roleEntities.Select(r => r.Id).ToList();
 
         // Get permissions linked to these roles and the specific Company
+        // Use IgnoreQueryFilters to ensure permissions are found during login regardless of context
         var permissions = _context.ModulePermissions
+            .IgnoreQueryFilters()
+            .Include(p => p.Module)
             .Where(p => p.CompanyId == user.CompanyId && roleIds.Contains(p.RoleId) && p.IsAllowed)
-            .Select(p => new { p.Module!.Code, p.Action })
+            .Select(p => new { Code = p.Module!.Code, p.Action })
             .ToList();
 
         // Group by Module and format actions
@@ -98,7 +105,7 @@ public class IdentityService : IIdentityService
             .GroupBy(p => p.Code)
             .Select(g => 
             {
-                var actions = string.Join(",", g.Select(p => p.Action.ToString().Substring(0, 1)).OrderBy(a => a));
+                var actions = string.Join(",", g.Select(p => p.Action.ToString().Substring(0, 1)).Distinct().OrderBy(a => a));
                 return $"{g.Key}:{actions}";
             })
             .ToList();
