@@ -7,6 +7,7 @@ using System.Reflection;
 
 namespace TalenHuman.Infrastructure.Persistence;
 
+// Deployment sync: 2026-03-31 - Triggering modular architecture update
 public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplicationDbContext
 {
     private readonly ITenantProvider _tenantProvider;
