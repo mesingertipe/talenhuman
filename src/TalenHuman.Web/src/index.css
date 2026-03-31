@@ -32,6 +32,11 @@
   color: var(--text-main);
 }
 
+#modal-root {
+  position: relative;
+  z-index: 1000000 !important;
+}
+
 * {
   margin: 0;
   padding: 0;

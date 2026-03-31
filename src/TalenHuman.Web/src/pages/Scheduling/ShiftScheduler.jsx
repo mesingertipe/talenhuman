@@ -29,7 +29,8 @@ import {
     ShieldCheck,
     CheckSquare,
     Square,
-    Activity
+    Activity,
+    Lock
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import HelpIcon from '../../components/Shared/HelpIcon';
@@ -1031,7 +1032,17 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                         >
                                                             <div className="flex flex-col gap-1 min-h-[96px] justify-center">
                                                                 {nov && (
-                                                                    <div onClick={() => { setSelectedNov({ ...nov, empName: `${emp.firstName} ${emp.lastName}` }); setShowNovModal(true); }}
+                                                                    <div onClick={() => {
+                                                                                 if (isLocked) {
+                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
+                                                                                     return;
+                                                                                 }
+                                                                                 
+                                                                                 if (isLocked) {
+                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
+                                                                                     return;
+                                                                                 }
+                                                                                  setSelectedNov({ ...nov, empName: `${emp.firstName} ${emp.lastName}` }); setShowNovModal(true); }}
                                                                          className="rounded-2xl h-12 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition-all border-2 border-blue-200 bg-blue-50 dark:bg-blue-900/10 dark:border-blue-800 shrink-0">
                                                                         <span className="text-[8px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-1 leading-none">NOVEDAD</span>
                                                                         <div className="h-4 w-4 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center text-blue-500">
@@ -1063,11 +1074,26 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
 
                                                                     const displayText = viewMode === 'SHIFTS' ? (shift.isDescanso ? 'REST' : shiftTime) : (shift.isDescanso ? 'REST' : attTime);
 
-                                                                    return (
-                                                                        <div key={si} 
-                                                                             draggable 
-                                                                             onDragStart={e => handleDragStart(e, 'GRID', { employeeId: emp.id, date: day, shiftId: shift.id })}
+                                                                    const isLocked = !!att || new Date(day) < new Date(new Date().setHours(0,0,0,0));
+                                                                     
+                                                                     return (
+                                                                         <div key={si} 
+                                                                              draggable={!isLocked} 
+                                                                              onDragStart={e => {
+                                                                                  if (isLocked) { e.preventDefault(); return; }
+                                                                                  handleDragStart(e, 'GRID', { employeeId: emp.id, date: day, shiftId: shift.id });
+                                                                              }}
                                                                              onClick={() => {
+                                                                                 if (isLocked) {
+                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
+                                                                                     return;
+                                                                                 }
+                                                                                 
+                                                                                 if (isLocked) {
+                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
+                                                                                     return;
+                                                                                 }
+                                                                                 
                                                                                 setPendingEvent({ employeeId: emp.id, date: day, type: shift.isDescanso ? 'Descanso' : shift.isFuera ? 'Turno Fuera' : 'Turno', existingShift: shift });
                                                                                 if (!shift.isDescanso && !shift.isFuera) {
                                                                                     const sd = new Date(shift.startTime);
@@ -1079,14 +1105,16 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                              }}
                                                                              onMouseEnter={e => {
                                                                                 const rect = e.currentTarget.getBoundingClientRect();
-                                                                                setHoveredShiftData({ ...shift, att, shiftTime, attTime });
+                                                                                setHoveredShiftData({ ...shift, att, shiftTime, attTime, isLocked });
                                                                                 setHoverPos({ x: rect.left + rect.width / 2, y: rect.top });
                                                                              }}
                                                                              onMouseLeave={() => setHoveredShiftData(null)}
-                                                                             className="group rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-md transition-all cursor-grab active:cursor-grabbing hover:scale-[1.08] hover:z-50 relative"
-                                                                             style={{ background: bgColor, minWidth: '85px', minHeight: '42px' }}
+                                                                             className={`group rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-md transition-all relative ${isLocked ? 'cursor-not-allowed opacity-[0.9]' : 'cursor-grab active:cursor-grabbing hover:scale-[1.05] hover:z-50'}`}
+                                                                             style={{ background: bgColor, minWidth: '85px', minHeight: '42px', filter: isLocked ? 'contrast(0.9) saturate(0.8)' : 'none' }}
                                                                         >
-                                                                            <span className="text-[7px] font-black uppercase tracking-[0.1em] opacity-80 leading-none">
+                                                                            <div className="flex items-center gap-1">
+                                                                                 {isLocked && <Lock size={7} className="text-white opacity-60" />}
+                                                                                 <span className="text-[7px] font-black uppercase tracking-[0.1em] opacity-80 leading-none">
                                                                                 {viewMode === 'SHIFTS' ? (shift.isDescanso ? 'DESC' : shift.isFuera ? 'FUERA' : 'TURNO') : 'MARCACIÓN'}
                                                                             </span>
                                                                             <span className={`text-[8px] font-[1000] tracking-tighter whitespace-nowrap mt-0.5 ${viewMode === 'ATTENDANCE' && !att ? 'opacity-40 animate-pulse' : ''}`}>
@@ -1102,7 +1130,17 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                     );
                                                                 })}
                                                                 {!nov && dayShifts.length === 0 && (
-                                                                    <div onClick={() => { 
+                                                                    <div onClick={() => {
+                                                                                 if (isLocked) {
+                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
+                                                                                     return;
+                                                                                 }
+                                                                                 
+                                                                                 if (isLocked) {
+                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
+                                                                                     return;
+                                                                                 }
+                                                                                  
                                                                             setPendingEvent({ employeeId: emp.id, date: day, type: 'Turno' }); 
                                                                             setStartTime('08:00'); setEndTime('17:00'); setShowTimeModal(true); 
                                                                          }}
@@ -1111,7 +1149,17 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                     </div>
                                                                 )}
                                                                 {!nov && dayShifts.length > 0 && dayShifts.length < 3 && (
-                                                                    <div onClick={() => { 
+                                                                    <div onClick={() => {
+                                                                                 if (isLocked) {
+                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
+                                                                                     return;
+                                                                                 }
+                                                                                 
+                                                                                 if (isLocked) {
+                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
+                                                                                     return;
+                                                                                 }
+                                                                                  
                                                                             setPendingEvent({ employeeId: emp.id, date: day, type: 'Turno' }); 
                                                                             setStartTime('14:00'); setEndTime('22:00'); setShowTimeModal(true); 
                                                                          }}
@@ -1274,6 +1322,16 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                 <button
                                                     key={i}
                                                     onClick={() => {
+                                                                                 if (isLocked) {
+                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
+                                                                                     return;
+                                                                                 }
+                                                                                 
+                                                                                 if (isLocked) {
+                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
+                                                                                     return;
+                                                                                 }
+                                                                                 
                                                         const newDays = [...bulkData.days];
                                                         newDays[i] = !newDays[i];
                                                         setBulkData({...bulkData, days: newDays});
@@ -1289,6 +1347,16 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                         <button onClick={handleBulkApply} style={{ width: '100%', padding: '20px', borderRadius: '20px', border: 'none', background: '#4f46e5', color: 'white', fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 12px 24px rgba(79, 70, 229, 0.3)' }}>Pre-cargar Turnos</button>
                                         <button onClick={() => {
+                                                                                 if (isLocked) {
+                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
+                                                                                     return;
+                                                                                 }
+                                                                                 
+                                                                                 if (isLocked) {
+                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
+                                                                                     return;
+                                                                                 }
+                                                                                 
                                             const newShifts = [...shifts].filter(s => !selectedEmployees.includes(s.employeeId));
                                             setShifts(newShifts);
                                             setShowBulkModal(false);
@@ -1359,10 +1427,13 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                 <div className="relative flex flex-col gap-4">
                                     <div className="flex justify-between items-center border-b border-indigo-500/30 pb-3 mb-1">
                                         <div className="flex flex-col text-left">
-                                            <span className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Visión Elite V12</span>
-                                            <span className="text-[8px] font-bold text-indigo-400 uppercase tracking-widest leading-none">Status Biométrico Real</span>
+                                            <span className="text-[11px] font-black text-white uppercase tracking-[0.2em]">{hoveredShiftData.isLocked ? 'Protección Elite' : 'Visión Elite V12'}</span>
+                                            <span className="text-[8px] font-bold text-indigo-400 uppercase tracking-widest leading-none">{hoveredShiftData.isLocked ? 'Dato Histórico Protegido' : 'Status Biométrico Real'}</span>
                                         </div>
-                                        <div className={`w-3 h-3 rounded-full ${hoveredShiftData.att ? 'bg-emerald-400 animate-ping' : 'bg-rose-400'}`}></div>
+                                        <div className={`flex items-center gap-2`}>
+                                            {hoveredShiftData.isLocked && <Lock size={12} className="text-amber-400 mr-1" />}
+                                            <div className={`w-3 h-3 rounded-full ${hoveredShiftData.att ? 'bg-emerald-400 animate-ping' : 'bg-rose-400'}`}></div>
+                                        </div>
                                     </div>
                                     
                                     <div className="space-y-3">
