@@ -376,14 +376,12 @@ public class AttendanceController : ControllerBase
         {
             var companyId = _tenantProvider.GetTenantId();
             
-            // Execute in DB first (strict selection)
             var logsData = await _context.SyncLogs
                 .Where(l => l.CompanyId == companyId)
                 .OrderByDescending(l => l.StartTime)
                 .Take(10)
                 .ToListAsync();
 
-            // Project in memory to avoid SQL translation errors with date arithmetic
             var logs = logsData.Select(l => new {
                     l.Id,
                     l.StartTime,
@@ -403,9 +401,15 @@ public class AttendanceController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { Message = ex.InnerException?.Message ?? ex.Message });
+            Console.WriteLine($"[SYNC-HISTORY ERROR]: {ex}");
+            return StatusCode(500, new { 
+                Message = ex.Message, 
+                Detail = ex.InnerException?.Message,
+                Type = ex.GetType().Name 
+            });
         }
     }
+
 
 
 

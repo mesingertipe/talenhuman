@@ -99,7 +99,8 @@ const AttendanceMonitoring = () => {
             const res = await api.get('/attendance/sync-history');
             setSyncLogs(res.data);
         } catch (err) {
-            console.error("Error fetching sync logs:", err);
+            const errorMsg = err.response?.data?.Message || err.response?.data?.message || err.message;
+            console.error("Error fetching sync logs:", errorMsg, err.response?.data);
         }
     };
 
