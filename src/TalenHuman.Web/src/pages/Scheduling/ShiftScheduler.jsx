@@ -1067,20 +1067,20 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                     
                                                                     if (att) {
                                                                         if (att.status === 3) {
-                                                                            bgColor = '#c2410c'; // Naranja Oscuro (Incompleto)
+                                                                            bgColor = '#f97316'; // Naranja Brillante (Incompleto)
                                                                         } else if (att.clockIn && !att.clockOut) {
                                                                             bgColor = '#f97316'; // Naranja (Pendiente)
                                                                         } else if (att.status === 0) {
                                                                             bgColor = '#10b981'; // Verde (Correcto)
                                                                         } else if (att.status === 1) {
-                                                                            bgColor = '#fde047'; // Amarillo Claro (Desfasado)
+                                                                            bgColor = '#eab308'; // Amarillo Vibrante (Desfasado)
                                                                         } else if (att.status === 2) {
                                                                             bgColor = '#3b82f6'; // Azul (Errado)
                                                                         } else {
                                                                             bgColor = '#f97316'; // Default a Naranja si no cuadra
                                                                         }
                                                                     } else if (!shift.isDescanso && !shift.isFuera && new Date(shift.startTime) < new Date()) {
-                                                                        bgColor = '#c2410c'; // Naranja Oscuro (Incompleto/Pasado)
+                                                                        bgColor = '#ef4444'; // Rojo Brillante (Sin Marcación)
                                                                     }
 
                                                                     if (shift.isDescanso) bgColor = '#94a3b8';
@@ -1453,11 +1453,11 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                 {/* Header (Status) */}
                                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-white/5">
                                     <div className="flex flex-col text-left">
-                                        <span className={`text-[12px] font-[1000] tracking-tight ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'text-emerald-500' : (hoveredShiftData.att.status === 3 ? 'text-orange-600' : 'text-amber-500')) : 'text-slate-500'}`}>
+                                        <span className={`text-[12px] font-[1000] tracking-tight`} style={{ color: hoveredShiftData.borderCol }}>
                                             {hoveredShiftData.att ? `TURNO ${hoveredShiftData.att.status === 0 ? 'CORRECTO' : (hoveredShiftData.att.status === 3 ? 'INCOMPLETO' : 'DESFASADO')}` : (hoveredShiftData.isDescanso ? 'DESCANSO' : (hoveredShiftData.isLocked ? 'TURNO SIN MARCACIONES' : 'PENDIENTE'))}
                                         </span>
                                     </div>
-                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'bg-emerald-500 text-white shadow-emerald-200/50' : (hoveredShiftData.att.status === 3 ? 'bg-rose-600 text-white shadow-rose-200/50' : 'bg-amber-500 text-white shadow-amber-200/50')) : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg`} style={{ backgroundColor: hoveredShiftData.borderCol, color: 'white' }}>
                                         {hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? <CheckCircle size={22} strokeWidth={3} /> : (hoveredShiftData.att.status === 3 ? <AlertTriangle size={22} strokeWidth={3} /> : <AlertCircle size={22} strokeWidth={3} />)) : <Clock size={20} />}
                                     </div>
                                 </div>
