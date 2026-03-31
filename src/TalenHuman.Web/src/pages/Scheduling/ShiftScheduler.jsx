@@ -211,6 +211,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                 status: a.status !== undefined ? a.status : (a.Status !== undefined ? a.Status : 0)
             }));
 
+            setShifts(normalizedShifts);
             setAttendances(normalizedAttendances);
             setNews(newsRes.data);
 
