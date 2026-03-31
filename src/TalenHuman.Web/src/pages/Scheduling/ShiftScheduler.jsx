@@ -1070,7 +1070,10 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                         let statusIcon = 'check';
                                                                         
                                                                         if (att) {
-                                                                            if (!att.clockOut) {
+                                                                            if (att.status === 3) {
+                                                                                bgColor = '#ef4444'; // Rojo (Sin Marcacion - Prioridad)
+                                                                                statusIcon = 'alert';
+                                                                            } else if (att.clockIn && !att.clockOut) {
                                                                                 bgColor = '#f97316'; // Naranja (Pendiente / En Curso)
                                                                                 statusIcon = 'clock';
                                                                             } else if (att.status === 0) {
@@ -1082,9 +1085,6 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                             } else if (att.status === 2) {
                                                                                 bgColor = '#3b82f6'; // Azul (Errado)
                                                                                 statusIcon = 'x';
-                                                                            } else if (att.status === 3) {
-                                                                                bgColor = '#ef4444'; // Rojo (Sin Marcacion)
-                                                                                statusIcon = 'alert';
                                                                             } else {
                                                                                 bgColor = '#64748b'; // Gris (Otros)
                                                                             }
@@ -1233,18 +1233,20 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                         </div>
                                                         
                                                         {(() => {
-                                                            const workedTotal = attendances
-                                                                .filter(a => String(a.employeeId) === String(emp.id))
+                                                            const employeeAttendances = attendances.filter(a => String(a.employeeId) === String(emp.id));
+                                                            const workedTotal = employeeAttendances
                                                                 .reduce((acc, att) => {
                                                                     if (!att.clockIn || !att.clockOut) return acc;
                                                                     const start = new Date(att.clockIn);
                                                                     const end = new Date(att.clockOut);
+                                                                    if (isNaN(start.getTime()) || isNaN(end.getTime())) return acc;
+                                                                    
                                                                     let diff = (end - start) / (1000 * 60 * 60);
                                                                     if (diff < 0) diff += 24;
-                                                                    return acc + diff;
+                                                                    return acc + (isNaN(diff) ? 0 : diff);
                                                                 }, 0);
                                                             
-                                                            const hasMarcaciones = attendances.some(a => String(a.employeeId) === String(emp.id));
+                                                            const hasMarcaciones = employeeAttendances.length > 0;
 
                                                             if (hasMarcaciones) {
                                                                 return (
