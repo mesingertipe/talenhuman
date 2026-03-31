@@ -163,7 +163,7 @@ public class AttendanceController : ControllerBase
         // RBAC Filtering
         if (!roles.Contains("SuperAdmin") && !roles.Contains("Admin") && !roles.Contains("RH"))
         {
-            if (roles.Contains("Supervisor") || roles.Contains("Gerente"))
+            if (roles.Contains("Distrital") || roles.Contains("Gerente"))
             {
                 var managedStores = await _context.SupervisorStores.Where(ss => ss.UserId == userId).Select(ss => ss.StoreId).ToListAsync();
                 query = query.Where(a => managedStores.Contains(a.StoreId));

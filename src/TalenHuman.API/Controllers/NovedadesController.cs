@@ -74,8 +74,8 @@ public class NovedadesController : ControllerBase
             // If it is already APPROVED/RECHAZADO, it is "public" for the store management.
             query = query.Where(n => n.Status != NovedadStatus.Pendiente || userRoles.Contains(n.NovedadTipo.RolAprobador));
 
-            // If it's a Supervisor/Gerente, further filter by their managed stores
-            if (userRoles.Contains("Supervisor") || userRoles.Contains("Gerente"))
+            // If it's a Distrital/Gerente, further filter by their managed stores
+            if (userRoles.Contains("Distrital") || userRoles.Contains("Gerente"))
             {
                 var managedStores = await _context.SupervisorStores
                     .Where(s => s.UserId == userId)

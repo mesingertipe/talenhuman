@@ -364,7 +364,7 @@ public class UsersController : ControllerBase
                 finalStoreIds.Add(id);
             }
 
-            // Sync the District's SupervisorId as well
+            // Sync the District's DistritalId as well
             var district = await _context.Set<District>().IgnoreQueryFilters()
                 .FirstOrDefaultAsync(d => d.Id == districtId.Value);
             

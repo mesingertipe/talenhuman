@@ -60,12 +60,12 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
             setNewsTypes(resTypes.data);
             
             const isManager = user?.roles?.includes('Gerente');
-            const isSupervisor = user?.roles?.includes('Supervisor');
+            const isDistrital = user?.roles?.includes('Distrital');
             let filteredStores = resStores.data.filter(s => s.isActive);
 
             if (isManager && user?.storeId) {
                 filteredStores = filteredStores.filter(s => s.id === user.storeId);
-            } else if (isSupervisor && user?.storeIds && user.storeIds.length > 0) {
+            } else if (isDistrital && user?.storeIds && user.storeIds.length > 0) {
                 filteredStores = filteredStores.filter(s => user.storeIds.includes(s.id));
             }
             

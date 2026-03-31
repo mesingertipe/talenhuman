@@ -45,7 +45,7 @@ public class EmployeesController : ControllerBase
         // RBAC: Filter by Managed Stores for Managers and Supervisors
         if (!userRoles.Contains("SuperAdmin") && !userRoles.Contains("Admin") && !userRoles.Contains("RH"))
         {
-            if (userRoles.Contains("Supervisor") || userRoles.Contains("Gerente"))
+            if (userRoles.Contains("Distrital") || userRoles.Contains("Gerente"))
             {
                 var managedStores = await _context.Set<SupervisorStore>()
                     .Where(ss => ss.UserId == userId)

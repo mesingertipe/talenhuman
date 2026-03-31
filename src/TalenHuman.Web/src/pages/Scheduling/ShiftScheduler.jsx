@@ -114,14 +114,14 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
     useEffect(() => {
         api.get('/stores').then(res => {
             const isManager = user?.roles?.includes('Gerente');
-            const isSupervisor = user?.roles?.includes('Supervisor');
+            const isDistrital = user?.roles?.includes('Distrital');
             let filteredStores = res.data.filter(s => s.isActive);
 
             if (isManager && user?.storeId) {
                 filteredStores = filteredStores.filter(s => s.id === user.storeId);
                 setStores(filteredStores);
                 setSelectedStore(user.storeId);
-            } else if (isSupervisor && user?.storeIds && user.storeIds.length > 0) {
+            } else if (isDistrital && user?.storeIds && user.storeIds.length > 0) {
                 filteredStores = filteredStores.filter(s => user.storeIds.includes(s.id));
                 setStores(filteredStores);
                 if (filteredStores.length > 0) setSelectedStore(filteredStores[0].id);

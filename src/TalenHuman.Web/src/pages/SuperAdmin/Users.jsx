@@ -49,7 +49,7 @@ const Users = () => {
     districtId: ''
   });
 
-  const availableRoles = ["Admin", "Gerente", "Supervisor", "RH", "SuperAdmin"];
+  const availableRoles = ["Admin", "Gerente", "Distrital", "RH", "SuperAdmin"];
   
   const currentUserRole = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).roles : [];
   const isSuperAdminUser = currentUserRole.includes('SuperAdmin');
@@ -494,7 +494,7 @@ const Users = () => {
                     </div>
                   )}
 
-                  {formData.roles.includes('Supervisor') && (
+                  {formData.roles.includes('Distrital') && (
                     <div className="col-span-2 animate-in slide-in-from-top-2 duration-300">
                         <SearchableSelect
                             label="Distrital a cargo de (Distrito)"

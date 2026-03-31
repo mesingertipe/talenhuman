@@ -62,7 +62,7 @@ const Districts = () => {
         api.get('/stores')
       ]);
       setDistricts(districtsRes.data);
-      const supervisorUsers = usersRes.data.filter(u => u.roles?.some(r => r.toLowerCase() === 'supervisor'));
+      const supervisorUsers = usersRes.data.filter(u => u.roles?.some(r => r.toLowerCase() === 'distrital'));
       setSupervisors(supervisorUsers);
       setStores(storesRes.data);
     } catch (err) {
@@ -116,7 +116,7 @@ const Districts = () => {
   const handleExportExcel = () => {
     const dataToExport = districts.map(d => ({
       Distrito: d.name,
-      Supervisor: d.supervisorName || 'Sin asignar',
+      Distrital: d.supervisorName || 'Sin asignar',
       Tiendas: d.storeCount,
       Sedes: d.storeNames?.join(', ') || ''
     }));
@@ -134,7 +134,7 @@ const Districts = () => {
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4rem', gap: '2rem' }}>
         <div>
           <h1 style={{ fontSize: '2.2rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.03em' }}>Gestión de distritos</h1>
-          <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginTop: '6px' }}>Agrupación de sedes y asignación de supervisores</p>
+          <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginTop: '6px' }}>Agrupación de sedes y asignación de distritales</p>
         </div>
 
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center', width: '100%', maxWidth: '850px' }}>
@@ -207,7 +207,7 @@ const Districts = () => {
                         <span className="font-bold text-slate-700 dark:text-slate-300">{d.supervisorName}</span>
                       </div>
                     ) : (
-                      <span className="font-black text-[10px] text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-700 italic">Sin supervisor</span>
+                      <span className="font-black text-[10px] text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-700 italic">Sin distrital</span>
                     )}
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
@@ -353,7 +353,7 @@ const Districts = () => {
                 <div className="mt-8 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-start gap-3">
                   <MapPin size={18} className="text-indigo-400 mt-0.5 shrink-0" />
                   <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tight leading-normal">
-                    La agrupación por distrito permite reportes consolidados y gestión directa por supervisor de zona.
+                    La agrupación por distrito permite reportes consolidados y gestión directa por distrital de zona.
                   </p>
                 </div>
               </div>

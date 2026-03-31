@@ -7,8 +7,18 @@ public static class DbInitializer
 {
     public static async Task SeedAsync(ApplicationDbContext context, UserManager<User> userManager, RoleManager<Role> roleManager)
     {
-        // Seed Roles
-        string[] roles = { "SuperAdmin", "Admin", "Gerente", "Supervisor", "RH", "Empleado" };
+        // Seed / Migrate Roles
+        string[] roles = { "SuperAdmin", "Admin", "Gerente", "Distrital", "RH", "Empleado" };
+        
+        // Handle migration: If "Supervisor" exists, rename it to "Distrital"
+        var supervisorRole = await roleManager.FindByNameAsync("Supervisor");
+        if (supervisorRole != null)
+        {
+            supervisorRole.Name = "Distrital";
+            supervisorRole.NormalizedName = "DISTRITAL";
+            await roleManager.UpdateAsync(supervisorRole);
+        }
+
         foreach (var role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role))
@@ -16,6 +26,7 @@ public static class DbInitializer
                 await roleManager.CreateAsync(new Role { Name = role });
             }
         }
+
 
         // Seed Companies (Tenants)
         if (!context.Companies.Any())

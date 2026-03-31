@@ -115,7 +115,7 @@ public class AuthController : ControllerBase
             storeExternalId = employee.Store.ExternalId;
         }
 
-        // Load all assigned stores (primarily for Supervisors / Fallback for Managers)
+        // Load all assigned stores (primarily for Distritales / Fallback for Managers)
         var supervisorStoreAssignments = await _context.SupervisorStores
             .Include(ss => ss.Store)
             .Where(ss => ss.UserId == user.Id)

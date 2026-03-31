@@ -90,12 +90,12 @@ const Employees = ({ user }) => {
       setEmployees(empRes.data);
       
       const isManager = user?.roles?.includes('Gerente');
-      const isSupervisor = user?.roles?.includes('Supervisor');
+      const isDistrital = user?.roles?.includes('Distrital');
       let filteredStores = storeRes.data;
 
       if (isManager && user?.storeId) {
           filteredStores = storeRes.data.filter(s => s.id === user.storeId);
-      } else if (isSupervisor && user?.storeIds && user.storeIds.length > 0) {
+      } else if (isDistrital && user?.storeIds && user.storeIds.length > 0) {
           filteredStores = storeRes.data.filter(s => user.storeIds.includes(s.id));
       }
 

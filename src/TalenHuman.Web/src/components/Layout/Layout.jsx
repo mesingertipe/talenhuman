@@ -240,7 +240,7 @@ const Header = ({ user, activePage, currentCompanyName, tenantSettings, companie
           </div>
         )}
         
-        {user?.roles?.includes('Supervisor') && !user?.roles?.includes('Gerente') && (
+        {user?.roles?.includes('Distrital') && !user?.roles?.includes('Gerente') && (
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
