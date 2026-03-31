@@ -76,26 +76,48 @@ public class AttendanceController : ControllerBase
         // RBAC: Filter by Managed Stores for Managers and Supervisors
         if (!roles.Contains("SuperAdmin") && !roles.Contains("Admin") && !roles.Contains("RH"))
         {
-            if (roles.Contains("Gerente"))
+            var managedStoreIds = new List<Guid>();
+
+            // 1. Stores assigned via SupervisorStores (Direct mapping)
+            var directStores = await _context.SupervisorStores
+                .IgnoreQueryFilters()
+                .Where(ss => ss.UserId == userId)
+                .Select(ss => ss.StoreId)
+                .ToListAsync();
+            managedStoreIds.AddRange(directStores);
+
+            // 2. Stores assigned via District Hierarchy (where user is District Supervisor OR assigned to a District)
+            var user = await _context.Users.FindAsync(userId);
+            var districtQueries = _context.Districts.AsQueryable();
+            
+            // Districts where user is the Supervisor
+            var managedDistricts = await _context.Districts
+                .Where(d => d.SupervisorId == userId || (user != null && d.Id == user.DistrictId))
+                .Select(d => d.Id)
+                .ToListAsync();
+
+            if (managedDistricts.Any())
             {
-                var managedStores = await _context.SupervisorStores
-                    .Where(ss => ss.UserId == userId)
-                    .Select(ss => ss.StoreId)
+                var districtStores = await _context.Stores
+                    .Where(s => managedDistricts.Contains(s.DistrictId ?? Guid.Empty))
+                    .Select(s => s.Id)
                     .ToListAsync();
-                
-                employeesQuery = employeesQuery.Where(e => managedStores.Contains(e.StoreId));
-                attendanceQuery = attendanceQuery.Where(a => managedStores.Contains(a.StoreId));
-                storesQuery = storesQuery.Where(s => managedStores.Contains(s.Id));
+                managedStoreIds.AddRange(districtStores);
             }
-            else if (roles.Contains("Distrital") || roles.Contains("Supervisor"))
+
+            managedStoreIds = managedStoreIds.Distinct().ToList();
+
+            if (managedStoreIds.Any())
             {
-                var user = await _context.Users.FindAsync(userId);
-                if (user?.DistrictId != null)
-                {
-                    attendanceQuery = attendanceQuery.Where(a => a.Store.DistrictId == user.DistrictId);
-                    employeesQuery = employeesQuery.Where(e => e.Store.DistrictId == user.DistrictId);
-                    storesQuery = storesQuery.Where(s => s.DistrictId == user.DistrictId);
-                }
+                employeesQuery = employeesQuery.Where(e => managedStoreIds.Contains(e.StoreId));
+                attendanceQuery = attendanceQuery.Where(a => managedStoreIds.Contains(a.StoreId));
+                storesQuery = storesQuery.Where(s => managedStoreIds.Contains(s.Id));
+            }
+            else
+            {
+                employeesQuery = employeesQuery.Where(e => false);
+                attendanceQuery = attendanceQuery.Where(a => false);
+                storesQuery = storesQuery.Where(s => false);
             }
         }
 
@@ -166,16 +188,21 @@ public class AttendanceController : ControllerBase
         // RBAC Filtering
         if (!roles.Contains("SuperAdmin") && !roles.Contains("Admin") && !roles.Contains("RH"))
         {
-            if (roles.Contains("Distrital") || roles.Contains("Gerente"))
+            var managedStoreIds = new List<Guid>();
+            var directStores = await _context.SupervisorStores.IgnoreQueryFilters().Where(ss => ss.UserId == userId).Select(ss => ss.StoreId).ToListAsync();
+            managedStoreIds.AddRange(directStores);
+
+            var user = await _context.Users.FindAsync(userId);
+            var managedDistricts = await _context.Districts.Where(d => d.SupervisorId == userId || (user != null && d.Id == user.DistrictId)).Select(d => d.Id).ToListAsync();
+            
+            if (managedDistricts.Any())
             {
-                var managedStores = await _context.SupervisorStores.Where(ss => ss.UserId == userId).Select(ss => ss.StoreId).ToListAsync();
-                query = query.Where(a => managedStores.Contains(a.StoreId));
+                var districtStores = await _context.Stores.Where(s => managedDistricts.Contains(s.DistrictId ?? Guid.Empty)).Select(s => s.Id).ToListAsync();
+                managedStoreIds.AddRange(districtStores);
             }
-            else if (roles.Contains("Distrital"))
-            {
-                var userObj = await _context.Users.FindAsync(userId);
-                if (userObj?.DistrictId != null) query = query.Where(a => a.Store.DistrictId == userObj.DistrictId);
-            }
+
+            managedStoreIds = managedStoreIds.Distinct().ToList();
+            query = query.Where(a => managedStoreIds.Contains(a.StoreId));
         }
 
         if (start.HasValue)
@@ -210,16 +237,20 @@ public class AttendanceController : ControllerBase
         // Apply RBAC to shifts
         if (!roles.Contains("SuperAdmin") && !roles.Contains("Admin") && !roles.Contains("RH"))
         {
-            if (roles.Contains("Supervisor") || roles.Contains("Gerente"))
+            var managedStoreIds = new List<Guid>();
+            var directStores = await _context.SupervisorStores.IgnoreQueryFilters().Where(ss => ss.UserId == userId).Select(ss => ss.StoreId).ToListAsync();
+            managedStoreIds.AddRange(directStores);
+            
+            var user = await _context.Users.FindAsync(userId);
+            var managedDistricts = await _context.Districts.Where(d => d.SupervisorId == userId || (user != null && d.Id == user.DistrictId)).Select(d => d.Id).ToListAsync();
+            if (managedDistricts.Any())
             {
-                var managedStores = await _context.SupervisorStores.Where(ss => ss.UserId == userId).Select(ss => ss.StoreId).ToListAsync();
-                shiftsQuery = shiftsQuery.Where(s => managedStores.Contains(s.StoreId));
+                var districtStores = await _context.Stores.Where(s => managedDistricts.Contains(s.DistrictId ?? Guid.Empty)).Select(s => s.Id).ToListAsync();
+                managedStoreIds.AddRange(districtStores);
             }
-            else if (roles.Contains("Distrital"))
-            {
-                 var userObj = await _context.Users.FindAsync(userId);
-                 if (userObj?.DistrictId != null) shiftsQuery = shiftsQuery.Where(s => s.Store.DistrictId == userObj.DistrictId);
-            }
+
+            managedStoreIds = managedStoreIds.Distinct().ToList();
+            shiftsQuery = shiftsQuery.Where(s => managedStoreIds.Contains(s.StoreId));
         }
 
         var shifts = await shiftsQuery.ToListAsync();
@@ -230,11 +261,21 @@ public class AttendanceController : ControllerBase
         // RBAC to employees for virtual matching
         if (!roles.Contains("SuperAdmin") && !roles.Contains("Admin") && !roles.Contains("RH"))
         {
-            if (roles.Contains("Supervisor") || roles.Contains("Gerente"))
+            var managedStoreIds = new List<Guid>();
+            var directStores = await _context.SupervisorStores.IgnoreQueryFilters().Where(ss => ss.UserId == userId).Select(ss => ss.StoreId).ToListAsync();
+            managedStoreIds.AddRange(directStores);
+
+            var user = await _context.Users.FindAsync(userId);
+            var managedDistricts = await _context.Districts.Where(d => d.SupervisorId == userId || (user != null && d.Id == user.DistrictId)).Select(d => d.Id).ToListAsync();
+            
+            if (managedDistricts.Any())
             {
-                var managedStores = await _context.SupervisorStores.Where(ss => ss.UserId == userId).Select(ss => ss.StoreId).ToListAsync();
-                employeesQuery = employeesQuery.Where(e => managedStores.Contains(e.StoreId));
+                var districtStores = await _context.Stores.Where(s => managedDistricts.Contains(s.DistrictId ?? Guid.Empty)).Select(s => s.Id).ToListAsync();
+                managedStoreIds.AddRange(districtStores);
             }
+
+            managedStoreIds = managedStoreIds.Distinct().ToList();
+            employeesQuery = employeesQuery.Where(e => managedStoreIds.Contains(e.StoreId));
         }
 
         var employees = await employeesQuery.ToListAsync();
