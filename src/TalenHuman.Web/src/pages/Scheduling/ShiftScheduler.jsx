@@ -1117,7 +1117,8 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                                  <span className="text-[7px] font-black uppercase tracking-[0.1em] opacity-80 leading-none">
                                                                                 {viewMode === 'SHIFTS' ? (shift.isDescanso ? 'DESC' : shift.isFuera ? 'FUERA' : 'TURNO') : 'MARCACIÓN'}
                                                                             </span>
-                                                                            <span className={`text-[8px] font-[1000] tracking-tighter whitespace-nowrap mt-0.5 ${viewMode === 'ATTENDANCE' && !att ? 'opacity-40 animate-pulse' : ''}`}>
+                                                                            </div>
+                                                                             <span className={`text-[8px] font-[1000] tracking-tighter whitespace-nowrap mt-0.5 ${viewMode === 'ATTENDANCE' && !att ? 'opacity-40 animate-pulse' : ''}`}>
                                                                                 {displayText}
                                                                             </span>
                                                                             
