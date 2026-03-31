@@ -201,18 +201,16 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                 observation: s.observation || s.Observation
             }));
 
-            setShifts(normalizedShifts);
-            
-            const normalizedAttendances = attRes.data.map(a => ({
+            const normalizedAttendances = (attRes.data || []).map(a => ({
                 ...a,
                 id: a.id || a.Id,
                 employeeId: a.employeeId || a.EmployeeId,
                 shiftId: a.shiftId || a.ShiftId,
-                clockIn: a.clockIn || a.ClockIn,
-                clockOut: a.clockOut || a.ClockOut,
-                status: a.status !== undefined ? a.status : a.Status
+                clockIn: a.clockIn || a.ClockIn || a.clock_in,
+                clockOut: a.clockOut || a.ClockOut || a.clock_out,
+                status: a.status !== undefined ? a.status : (a.Status !== undefined ? a.Status : 0)
             }));
-            
+
             setAttendances(normalizedAttendances);
             setNews(newsRes.data);
 
@@ -1054,155 +1052,91 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                 {nov && (
                                                                     <div onClick={() => { setSelectedNov({ ...nov, empName: `${emp.firstName} ${emp.lastName}` }); setShowNovModal(true); }}
                                                                          className="rounded-2xl h-12 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition-all border-2 border-blue-200 bg-blue-50 dark:bg-blue-900/10 dark:border-blue-800 shrink-0">
-                                        <span className="text-[8px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-1 leading-none">NOVEDAD</span>
+                                                                        <span className="text-[8px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-1 leading-none">NOVEDAD</span>
                                                                         <div className="h-4 w-4 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center text-blue-500">
                                                                             <Info size={10} strokeWidth={3} />
                                                                         </div>
                                                                     </div>
                                                                 )}
-                                                                {(() => {
-                                                                    const dayAttendances = attendances.filter(a => String(a.employeeId) === String(emp.id) && new Date(a.clockIn).toDateString() === day.toDateString());
+                                                                {dayShifts.map((shift, si) => {
+                                                                    const att = attendances.find(a => String(a.shiftId) === String(shift.id) && shift.id);
+                                                                    let bgColor = '#4f46e5';
                                                                     
-                                                                    // 1. Render Programmed Shifts (with linked or missing attendances)
-                                                                    const renderedShifts = dayShifts.map((shift, si) => {
-                                                                        const att = dayAttendances.find(a => String(a.shiftId) === String(shift.id) && shift.id);
-                                                                        let bgColor = '#4f46e5';
-                                                                        let statusIcon = 'check';
-                                                                        
-                                                                        if (att) {
-                                                                            if (att.status === 3) {
-                                                                                bgColor = '#ef4444'; // Rojo (Sin Marcacion - Prioridad)
-                                                                                statusIcon = 'alert';
-                                                                            } else if (att.clockIn && !att.clockOut) {
-                                                                                bgColor = '#f97316'; // Naranja (Pendiente / En Curso)
-                                                                                statusIcon = 'clock';
-                                                                            } else if (att.status === 0) {
-                                                                                bgColor = '#10b981'; // Verde (Correcto)
-                                                                                statusIcon = 'check';
-                                                                            } else if (att.status === 1) {
-                                                                                bgColor = '#fbbf24'; // Amarillo Vivo (Desfasado)
-                                                                                statusIcon = 'alert';
-                                                                            } else if (att.status === 2) {
-                                                                                bgColor = '#3b82f6'; // Azul (Errado)
-                                                                                statusIcon = 'x';
-                                                                            } else {
-                                                                                bgColor = '#64748b'; // Gris (Otros)
-                                                                            }
-                                                                        } else if (!shift.isDescanso && !shift.isFuera && new Date(shift.startTime) < new Date()) {
-                                                                            bgColor = '#ef4444'; // Rojo (Sin Marcacion historico)
+                                                                    if (att) {
+                                                                        if (att.status === 3) {
+                                                                            bgColor = '#ef4444'; // Rojo (Sin Marcacion)
+                                                                        } else if (att.clockIn && !att.clockOut) {
+                                                                            bgColor = '#f97316'; // Naranja (Pendiente)
+                                                                        } else if (att.status === 0) {
+                                                                            bgColor = '#10b981'; // Verde (Correcto)
+                                                                        } else if (att.status === 1) {
+                                                                            bgColor = '#fbbf24'; // Amarillo Vivo (Desfasado)
+                                                                        } else if (att.status === 2) {
+                                                                            bgColor = '#3b82f6'; // Azul (Errado)
+                                                                        } else {
+                                                                            bgColor = '#f97316'; // Default a Naranja si no cuadra
                                                                         }
+                                                                    } else if (!shift.isDescanso && !shift.isFuera && new Date(shift.startTime) < new Date()) {
+                                                                        bgColor = '#ef4444';
+                                                                    }
 
-                                                                        if (shift.isDescanso) bgColor = '#94a3b8';
-                                                                        if (shift.isFuera) bgColor = '#8b5cf6';
+                                                                    if (shift.isDescanso) bgColor = '#94a3b8';
+                                                                    if (shift.isFuera) bgColor = '#8b5cf6';
 
-                                                                        const shiftTime = `${new Date(shift.startTime).getHours().toString().padStart(2, '0')}:${new Date(shift.startTime).getMinutes().toString().padStart(2, '0')}-${new Date(shift.endTime).getHours().toString().padStart(2, '0')}:${new Date(shift.endTime).getMinutes().toString().padStart(2, '0')}`;
-                                                                        const attTime = att ? `${new Date(att.clockIn).getHours().toString().padStart(2, '0')}:${new Date(att.clockIn).getMinutes().toString().padStart(2, '0')}—${att.clockOut ? new Date(att.clockOut).getHours().toString().padStart(2, '0') + ':' + new Date(att.clockOut).getMinutes().toString().padStart(2, '0') : '...'}` : 'S/MARCAR';
-                                                                        const displayText = viewMode === 'SHIFTS' ? (shift.isDescanso ? 'REST' : shiftTime) : (shift.isDescanso ? 'REST' : attTime);
-                                                                        const isLocked = !!att || isLockedDay;
-
-                                                                        return (
-                                                                            <div key={si} 
-                                                                                 draggable={!isLocked} 
-                                                                                 onDragStart={e => {
-                                                                                     if (isLocked) { e.preventDefault(); return; }
-                                                                                     handleDragStart(e, 'GRID', { employeeId: emp.id, date: day, shiftId: shift.id });
-                                                                                 }}
-                                                                                 onClick={() => {
-                                                                                     if (isLocked) {
-                                                                                         const displayObj = { 
-                                                                                             ...shift, 
-                                                                                             att, 
-                                                                                             borderCol: bgColor, 
-                                                                                             shiftTime: (shift.isDescanso ? 'DESCANSO' : shiftTime)
-                                                                                         };
-                                                                                         setHoveredShiftData(displayObj);
-                                                                                         setHoverPos({ x: 300, y: 300 }); // Centered for touch/click on locked
-                                                                                         return;
-                                                                                     }
-                                                                                     setPendingEvent({ employeeId: emp.id, date: day, type: 'Turno', existingShift: shift });
-                                                                                 }}
-                                                                                 onMouseEnter={e => {
-                                                                                     const rect = e.currentTarget.getBoundingClientRect();
-                                                                                     setHoverPos({ x: rect.left + window.scrollX, y: rect.top + window.scrollY - 10 });
-                                                                                     setHoveredShiftData({ 
-                                                                                         ...shift, 
-                                                                                         att, 
-                                                                                         borderCol: bgColor, 
-                                                                                         shiftTime: (shift.isDescanso ? 'DESCANSO' : shiftTime)
-                                                                                     });
-                                                                                 }}
-                                                                                 onMouseLeave={() => setHoveredShiftData(null)}
-                                                                                 className={`group relative p-2.5 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 cursor-pointer border-2 shadow-sm mb-1 ${isLocked ? 'cursor-default' : 'hover:scale-[1.03] active:scale-95'}`}
-                                                                                 style={{ 
-                                                                                     backgroundColor: isDarkMode ? `${bgColor}15` : `${bgColor}08`,
-                                                                                     borderColor: isDarkMode ? `${bgColor}35` : `${bgColor}15`,
-                                                                                     color: bgColor,
-                                                                                     minHeight: '52px',
-                                                                                     width: '100%'
-                                                                                 }}
-                                                                            >
-                                                                                <div className="flex items-center gap-1.5 opacity-90">
-                                                                                    <span className="text-[10px] font-[950] tracking-tight uppercase">
-                                                                                        {shift.isDescanso ? 'Descanso' : 'Turno'}
-                                                                                    </span>
-                                                                                </div>
-                                                                                <span className={`text-[8px] font-[1000] tracking-tighter whitespace-nowrap mt-0.5 ${viewMode === 'ATTENDANCE' && !att ? 'opacity-40 animate-pulse' : ''}`}>
-                                                                                    {displayText}
-                                                                                </span>
-                                                                                
-                                                                                {att && (
-                                                                                    <div className={`absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-800 flex items-center justify-center shadow-md animate-in zoom-in duration-300`} style={{ backgroundColor: bgColor, color: 'white' }}>
-                                                                                        {statusIcon === 'check' ? <CheckCircle size={9} strokeWidth={4} /> : (statusIcon === 'x' ? <XCircle size={9} strokeWidth={4} /> : (statusIcon === 'clock' ? <Clock size={9} strokeWidth={4} /> : <AlertCircle size={9} strokeWidth={4} />))}
-                                                                                    </div>
-                                                                                )}
-                                                                            </div>
-                                                                        );
-                                                                    });
-
-                                                                    // 2. Render Extra Shifts (Attendances without shifts)
-                                                                    const unlinkedAttendances = dayAttendances.filter(a => !dayShifts.some(s => String(s.id) === String(a.shiftId)));
-                                                                    const renderedExtras = unlinkedAttendances.map((ea, eai) => {
-                                                                        const bgColor = '#a855f7'; // Morado (Extra)
-                                                                        const attTime = `${new Date(ea.clockIn).getHours().toString().padStart(2, '0')}:${new Date(ea.clockIn).getMinutes().toString().padStart(2, '0')}—${ea.clockOut ? new Date(ea.clockOut).getHours().toString().padStart(2, '0') + ':' + new Date(ea.clockOut).getMinutes().toString().padStart(2, '0') : '...'}`;
-                                                                        
-                                                                        return (
-                                                                            <div key={`extra-${eai}`}
-                                                                                 className="relative p-2.5 rounded-2xl flex flex-col items-center justify-center border-2 shadow-sm mb-1"
-                                                                                 onMouseEnter={e => {
-                                                                                     const rect = e.currentTarget.getBoundingClientRect();
-                                                                                     setHoverPos({ x: rect.left + window.scrollX, y: rect.top + window.scrollY - 10 });
-                                                                                     setHoveredShiftData({ 
-                                                                                         id: `extra-${ea.id}`,
-                                                                                         att: ea, 
-                                                                                         borderCol: bgColor, 
-                                                                                         shiftTime: 'EXTRA / ADICIONAL',
-                                                                                         isExtra: true
-                                                                                     });
-                                                                                 }}
-                                                                                 onMouseLeave={() => setHoveredShiftData(null)}
-                                                                                 style={{ 
-                                                                                     backgroundColor: isDarkMode ? `${bgColor}15` : `${bgColor}08`,
-                                                                                     borderColor: isDarkMode ? `${bgColor}35` : `${bgColor}15`,
-                                                                                     color: bgColor,
-                                                                                     minHeight: '52px',
-                                                                                     width: '100%'
-                                                                                 }}
-                                                                            >
-                                                                                <div className="flex items-center gap-1.5 opacity-90">
-                                                                                    <span className="text-[10px] font-[950] tracking-tight uppercase">Extra</span>
-                                                                                </div>
-                                                                                <span className="text-[8px] font-[1000] tracking-tighter whitespace-nowrap mt-0.5">
-                                                                                    {attTime}
-                                                                                </span>
-                                                                                <div className={`absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-800 flex items-center justify-center shadow-md`} style={{ backgroundColor: bgColor, color: 'white' }}>
-                                                                                    <Zap size={9} strokeWidth={4} />
-                                                                                </div>
-                                                                            </div>
-                                                                        );
-                                                                    });
-
-                                                                    return [...renderedShifts, ...renderedExtras];
-                                                                })()}
+                                                                    const shiftTime = `${new Date(shift.startTime).getHours().toString().padStart(2, '0')}:${new Date(shift.startTime).getMinutes().toString().padStart(2, '0')}-${new Date(shift.endTime).getHours().toString().padStart(2, '0')}:${new Date(shift.endTime).getMinutes().toString().padStart(2, '0')}`;
+                                                                    const attTime = att ? `${new Date(att.clockIn).getHours().toString().padStart(2, '0')}:${new Date(att.clockIn).getMinutes().toString().padStart(2, '0')}—${att.clockOut ? new Date(att.clockOut).getHours().toString().padStart(2, '0') + ':' + new Date(att.clockOut).getMinutes().toString().padStart(2, '0') : '...'}` : 'S/MARCAR';
+                                                                    const displayText = viewMode === 'SHIFTS' ? (shift.isDescanso ? 'REST' : shiftTime) : (shift.isDescanso ? 'REST' : attTime);
+                                                                    const isLocked = !!att || isLockedDay;
+                                                                     
+                                                                     return (
+                                                                         <div key={si} 
+                                                                              draggable={!isLocked} 
+                                                                              onDragStart={e => {
+                                                                                  if (isLocked) { e.preventDefault(); return; }
+                                                                                  handleDragStart(e, 'GRID', { employeeId: emp.id, date: day, shiftId: shift.id });
+                                                                              }}
+                                                                              onClick={() => {
+                                                                                  if (isLocked) {
+                                                                                      if (!att) showToast("Turno bloqueado: Dato histórico", "info");
+                                                                                      return;
+                                                                                  }
+                                                                                  setPendingEvent({ employeeId: emp.id, date: day, type: shift.isDescanso ? 'Descanso' : shift.isFuera ? 'Turno Fuera' : 'Turno', existingShift: shift });
+                                                                                  if (!shift.isDescanso && !shift.isFuera) {
+                                                                                      const sd = new Date(shift.startTime);
+                                                                                      const ed = new Date(shift.endTime);
+                                                                                      setStartTime(`${String(sd.getHours()).padStart(2, '0')}:${String(sd.getMinutes()).padStart(2, '0')}`);
+                                                                                      setEndTime(`${String(ed.getHours()).padStart(2, '0')}:${String(ed.getMinutes()).padStart(2, '0')}`);
+                                                                                      setShowTimeModal(true);
+                                                                                  }
+                                                                              }}
+                                                                              onMouseEnter={e => {
+                                                                                 const rect = e.currentTarget.getBoundingClientRect();
+                                                                                 setHoveredShiftData({ ...shift, att, shiftTime, attTime, isLocked, borderCol: bgColor });
+                                                                                 setHoverPos({ x: rect.left + rect.width / 2, y: rect.top });
+                                                                              }}
+                                                                              onMouseLeave={() => setHoveredShiftData(null)}
+                                                                              className={`group rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-md transition-all relative ${isLocked ? (att ? 'cursor-help hover:ring-2 ring-white/50 scale-105' : 'cursor-default opacity-[0.9]') : 'cursor-grab active:cursor-grabbing hover:scale-[1.05] hover:z-50'}`}
+                                                                              style={{ background: bgColor, minWidth: '85px', minHeight: '42px', filter: isLocked ? 'contrast(0.9) saturate(0.8)' : 'none' }}
+                                                                         >
+                                                                             <div className="flex items-center gap-2 mb-0.5">
+                                                                                 {isLocked && <Lock size={11} className="text-white opacity-70" />}
+                                                                                 {att && <Activity size={12} className="text-white opacity-100 animate-pulse" />}
+                                                                                 <span className="text-[7px] font-black uppercase tracking-[0.1em] opacity-80 leading-none">
+                                                                                    {viewMode === 'SHIFTS' ? (shift.isDescanso ? 'DESC' : shift.isFuera ? 'FUERA' : 'TURNO') : 'MARCACIÓN'}
+                                                                                 </span>
+                                                                             </div>
+                                                                             <span className={`text-[8px] font-[1000] tracking-tighter whitespace-nowrap mt-0.5 ${viewMode === 'ATTENDANCE' && !att ? 'opacity-40 animate-pulse' : ''}`}>
+                                                                                 {displayText}
+                                                                             </span>
+                                                                             
+                                                                             {att && (
+                                                                                 <div className={`absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-800 flex items-center justify-center shadow-md animate-in zoom-in duration-300`} style={{ backgroundColor: bgColor, color: 'white' }}>
+                                                                                     {att.status === 0 ? <CheckCircle size={9} strokeWidth={4} /> : (att.status === 2 ? <XCircle size={9} strokeWidth={4} /> : (!att.clockOut ? <Clock size={9} strokeWidth={4} /> : <AlertCircle size={9} strokeWidth={4} />))}
+                                                                                 </div>
+                                                                             )}
+                                                                         </div>
+                                                                     );
+                                                                 })}
                                                                 {!nov && dayShifts.length === 0 && (
                                                                     <div onClick={() => {
                                                                                  if (isLockedDay) {
@@ -1233,14 +1167,13 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                         </div>
                                                         
                                                         {(() => {
-                                                            const employeeAttendances = attendances.filter(a => String(a.employeeId) === String(emp.id));
+                                                            const employeeAttendances = (attendances || []).filter(a => String(a.employeeId) === String(emp.id));
                                                             const workedTotal = employeeAttendances
                                                                 .reduce((acc, att) => {
                                                                     if (!att.clockIn || !att.clockOut) return acc;
                                                                     const start = new Date(att.clockIn);
                                                                     const end = new Date(att.clockOut);
                                                                     if (isNaN(start.getTime()) || isNaN(end.getTime())) return acc;
-                                                                    
                                                                     let diff = (end - start) / (1000 * 60 * 60);
                                                                     if (diff < 0) diff += 24;
                                                                     return acc + (isNaN(diff) ? 0 : diff);
@@ -1524,57 +1457,12 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                 {/* Header (Status) */}
                                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-white/5">
                                     <div className="flex flex-col text-left">
-                                        <span className={`text-[12px] font-[1000] tracking-tight ${(() => {
-                                            if (hoveredShiftData.att) {
-                                                if (hoveredShiftData.isExtra) return 'text-purple-500';
-                                                if (!hoveredShiftData.att.clockOut) return 'text-orange-500';
-                                                
-                                                const s = hoveredShiftData.att.status;
-                                                if (s === 0) return 'text-emerald-500';
-                                                if (s === 1) return 'text-amber-500';
-                                                if (s === 2) return 'text-blue-500';
-                                                if (s === 3) return 'text-rose-600';
-                                                return 'text-slate-500';
-                                            }
-                                            return 'text-slate-500';
-                                        })()}`}>
-                                            {(() => {
-                                                if (hoveredShiftData.isExtra) return 'TURNO EXTRA / ADICIONAL';
-                                                
-                                                if (hoveredShiftData.att) {
-                                                    if (!hoveredShiftData.att.clockOut) return 'TURNO PENDIENTE / EN CURSO';
-                                                    
-                                                    const s = hoveredShiftData.att.status;
-                                                    if (s === 0) return 'TURNO CORRECTO';
-                                                    if (s === 1) return 'TURNO DESFASADO';
-                                                    if (s === 2) return 'TURNO ERRADO';
-                                                    if (s === 3) return 'TURNO SIN MARCACION';
-                                                    return 'TURNO PENDIENTE';
-                                                }
-                                                return hoveredShiftData.isDescanso ? 'DESCANSO' : 'TURNO PENDIENTE';
-                                            })()}
+                                        <span className={`text-[12px] font-[1000] tracking-tight ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'text-emerald-500' : 'text-amber-500') : 'text-slate-500'}`}>
+                                            {hoveredShiftData.att ? `ASISTENCIA ${hoveredShiftData.att.status === 0 ? 'CORRECTA' : 'CON NOVEDAD'}` : (hoveredShiftData.isDescanso ? 'DESCANSO' : 'PENDIENTE')}
                                         </span>
                                     </div>
-                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg ${(() => {
-                                        if (hoveredShiftData.att) {
-                                            if (hoveredShiftData.isExtra) return 'bg-purple-500 text-white shadow-purple-200/50';
-                                            if (!hoveredShiftData.att.clockOut) return 'bg-orange-500 text-white shadow-orange-200/50';
-                                            
-                                            const s = hoveredShiftData.att.status;
-                                            if (s === 0) return 'bg-emerald-500 text-white shadow-emerald-200/50';
-                                            if (s === 1) return 'bg-amber-400 text-white shadow-amber-200/50';
-                                            if (s === 2) return 'bg-blue-500 text-white shadow-blue-200/50';
-                                            if (s === 3) return 'bg-rose-600 text-white shadow-rose-200/50';
-                                            return 'bg-slate-100 text-slate-400';
-                                        }
-                                        return 'bg-slate-100 dark:bg-slate-800 text-slate-400';
-                                    })()}`}>
-                                        {hoveredShiftData.att ? (
-                                            hoveredShiftData.isExtra ? <Zap size={22} strokeWidth={3} /> :
-                                            (!hoveredShiftData.att.clockOut ? <Clock size={22} strokeWidth={3} /> :
-                                            (hoveredShiftData.att.status === 0 ? <CheckCircle size={22} strokeWidth={3} /> : 
-                                            (hoveredShiftData.att.status === 2 ? <XCircle size={22} strokeWidth={3} /> : <AlertCircle size={22} strokeWidth={3} />)))
-                                        ) : <Clock size={20} />}
+                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'bg-emerald-500 text-white shadow-emerald-200/50' : 'bg-amber-500 text-white shadow-amber-200/50') : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                                        {hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? <CheckCircle size={22} strokeWidth={3} /> : <AlertCircle size={22} strokeWidth={3} />) : <Clock size={20} />}
                                     </div>
                                 </div>
 
