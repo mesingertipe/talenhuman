@@ -19,6 +19,7 @@ public class SystemSettingsService : ISystemSettingsService
     {
         var tenantId = _tenantProvider.GetTenantId();
         if (tenantId == Guid.Empty) return key; // Global fallback
+        if (key.StartsWith($"{tenantId}_")) return key; // Already prefixed
         return $"{tenantId}_{key}";
     }
 
@@ -34,6 +35,7 @@ public class SystemSettingsService : ISystemSettingsService
             setting = await _context.SystemSettings
                 .FirstOrDefaultAsync(s => s.Key == key);
         }
+
         
         return setting?.Value;
     }

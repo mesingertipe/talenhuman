@@ -64,7 +64,14 @@ const AttendanceMonitoring = () => {
         try {
             setLoading(true);
             const res = await api.get('/systemsettings');
-            const attendanceSettings = res.data.filter(s => s.group === 'Attendance');
+            
+            // Filter by group and normalize keys (remove company prefix for matching)
+            const attendanceSettings = res.data
+                .filter(s => s.group === 'Attendance')
+                .map(s => ({
+                    ...s,
+                    key: s.key.includes('_') ? s.key.split('_').pop() : s.key
+                }));
             
             // Ensure defaults exist in state for UI
             const defaults = [
