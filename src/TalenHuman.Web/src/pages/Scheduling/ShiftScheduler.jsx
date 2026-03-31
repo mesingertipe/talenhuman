@@ -1414,11 +1414,12 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                     {/* Elite Detail Card Portal (Single Instance) - Ultra High Fidelity */}
                     {hoveredShiftData && (
                         <div 
-                            className="fixed pointer-events-none z-[1000000] animate-in zoom-in-95 fade-in duration-300"
+                            className="fixed pointer-events-none z-[1000000] transition-all duration-200"
                             style={{ 
                                 left: `${hoverPos.x}px`, 
                                 top: `${hoverPos.y}px`, 
-                                transform: 'translate(-50%, -100%) translateY(-25px)' 
+                                transform: hoverPos.y < 350 ? 'translate(-50%, 10px)' : 'translate(-50%, -100%) translateY(-25px)',
+                                opacity: hoveredShiftData ? 1 : 0
                             }}
                         >
                             <div className="bg-slate-900/95 backdrop-blur-3xl border border-white/20 rounded-[24px] p-5 shadow-[0_50px_100px_rgba(0,0,0,0.7)] overflow-hidden w-[240px] relative">
