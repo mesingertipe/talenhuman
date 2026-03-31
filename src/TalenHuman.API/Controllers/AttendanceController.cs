@@ -272,7 +272,8 @@ public class AttendanceController : ControllerBase
                 });
             }
         }
-        // Match Shifts that don't have consolidated attendance nor raw marks
+        // SKIP: Virtual shifts injection removed per user request (noise reduction)
+        /*
         foreach (var shift in shifts)
         {
             var hasConsolidated = consolidated.Any(a => 
@@ -295,6 +296,7 @@ public class AttendanceController : ControllerBase
                 });
             }
         }
+        */
 
         if (!string.IsNullOrEmpty(searchTerm))
         {
@@ -306,18 +308,30 @@ public class AttendanceController : ControllerBase
             ).ToList();
         }
 
-        return Ok(consolidated.OrderByDescending(a => a.ClockIn).Select(a => new {
-            a.Id,
-            EmployeeName = a.Employee != null ? $"{a.Employee.FirstName} {a.Employee.LastName}" : "N/A",
-            EmployeeInternalId = a.EmployeeId, // Added for GUID matching
-            EmployeeId = a.Employee?.IdentificationNumber ?? "N/A",
-            StoreId = a.StoreId,
-            StoreName = a.Store?.Name ?? "N/A",
-            a.ShiftId, // CRITICAL: Added for scheduler matching
-            a.ClockIn, a.ClockOut, Status = (int)a.Status,
-            a.StatusObservation,
-            StatusText = a.Status == (AttendanceStatus)(-1) ? "En Curso" : (a.Status == (AttendanceStatus)(-2) ? (a.ClockIn.Date < tenantDateNow ? "Sin Consolidación" : "Programado") : a.Status.ToString())
+        return Ok(consolidated.OrderByDescending(a => a.ClockIn).Select(a => {
+            string statusText = "N/A";
+            switch(a.Status) {
+                case (AttendanceStatus)(-1): statusText = "Tiempo Real"; break;
+                case AttendanceStatus.Correcto: statusText = "Correcto"; break;
+                case AttendanceStatus.Desfasado: statusText = "Desfase"; break;
+                case AttendanceStatus.MarcacionErrada: statusText = "Errada"; break;
+                case AttendanceStatus.SinMarcacion: statusText = "Sin Marcación"; break;
+            }
+
+            return new {
+                a.Id,
+                EmployeeName = a.Employee != null ? $"{a.Employee.FirstName} {a.Employee.LastName}" : "N/A",
+                EmployeeInternalId = a.EmployeeId,
+                EmployeeId = a.Employee?.IdentificationNumber ?? "N/A",
+                StoreId = a.StoreId,
+                StoreName = a.Store?.Name ?? "N/A",
+                a.ShiftId, 
+                a.ClockIn, a.ClockOut, Status = (int)a.Status,
+                a.StatusObservation,
+                StatusText = statusText
+            };
         }));
+
     }
 
     [HttpGet("raw")]

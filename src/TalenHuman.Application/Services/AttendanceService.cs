@@ -25,14 +25,15 @@ public class AttendanceService
             Status = "Iniciado",
             ProcessedDate = day
         };
-        _context.SyncLogs.Add(log);
-        await _context.SaveChangesAsync(CancellationToken.None);
 
         int totalRawRecords = 0;
         string currentStep = "Iniciada recolección inicial. Buscando tiendas.";
 
         try 
         {
+            _context.SyncLogs.Add(log);
+            await _context.SaveChangesAsync(CancellationToken.None);
+
             // 1. Get all Stores for this company to check settings
         var stores = await _context.Stores
             .Where(s => s.CompanyId == companyId && s.IsActive)
