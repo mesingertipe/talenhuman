@@ -159,6 +159,8 @@ public class ModulePermission : BaseEntity, IMultitenant
     public Guid ModuleId { get; set; }
     public Module? Module { get; set; }
 
+    public string? SubModuleCode { get; set; } // e.g., "CORE_STORES", "CORE_EMPLOYEES"
+
     public PermissionAction Action { get; set; }
     public bool IsAllowed { get; set; } = true;
 

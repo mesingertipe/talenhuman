@@ -7,8 +7,9 @@ import SearchableSelect from '../../components/Shared/SearchableSelect';
 import { useTableData } from '../../hooks/useTableData';
 import Pagination from '../../components/Shared/Pagination';
 import { useTheme } from '../../context/ThemeContext';
+import PermissionGate from '../../components/Shared/PermissionGate';
 
-const Stores = () => {
+const Stores = ({ user }) => {
   const { isDarkMode } = useTheme();
   const activeColors = {
     bg: isDarkMode ? '#0f172a' : '#f8fafc',
@@ -181,46 +182,52 @@ const Stores = () => {
             />
           </div>
           <div className="flex gap-3">
-            <button 
-              onClick={handleExportExcel}
-              className="btn-premium btn-premium-secondary"
-              style={{ borderRadius: '20px', height: '56px', padding: '0 20px', border: '1px solid #e2e8f0', background: 'white', color: '#64748b' }}
-              title="Descargar Excel"
-            >
-              <Download size={18} />
-            </button>
-            <button 
-              onClick={() => setShowImport(true)}
-              className="btn-premium btn-premium-secondary"
-              style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
-            >
-              <FileSpreadsheet size={18} /> Importar
-            </button>
-            <button 
-              onClick={() => { 
-                setCurrentStore(null); 
-                setFormData({ 
-                  name: '', 
-                  address: '', 
-                  brandId: '', 
-                  cityId: '', 
-                  districtId: '', 
-                  externalId: '', 
-                  biometricId: '', 
-                  isActive: true,
-                  useSequentialPairing: true,
-                  operationalDayStart: '05:00',
-                  defaultStartTime: '08:00',
-                  defaultEndTime: '17:00'
-                }); 
-                setFormTab('general');
-                setShowModal(true); 
-              }}
-              className="btn-premium btn-premium-primary"
-              style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
-            >
-              <Plus size={20} /> Nueva Tienda
-            </button>
+            <PermissionGate module="CORE" sub="STORES" action="E" user={user}>
+              <button 
+                onClick={handleExportExcel}
+                className="btn-premium btn-premium-secondary"
+                style={{ borderRadius: '20px', height: '56px', padding: '0 20px', border: '1px solid #e2e8f0', background: 'white', color: '#64748b' }}
+                title="Descargar Excel"
+              >
+                <Download size={18} />
+              </button>
+            </PermissionGate>
+            <PermissionGate module="CORE" sub="STORES" action="C" user={user}>
+              <button 
+                onClick={() => setShowImport(true)}
+                className="btn-premium btn-premium-secondary"
+                style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
+              >
+                <FileSpreadsheet size={18} /> Importar
+              </button>
+            </PermissionGate>
+            <PermissionGate module="CORE" sub="STORES" action="C" user={user}>
+              <button 
+                onClick={() => { 
+                  setCurrentStore(null); 
+                  setFormData({ 
+                    name: '', 
+                    address: '', 
+                    brandId: '', 
+                    cityId: '', 
+                    districtId: '', 
+                    externalId: '', 
+                    biometricId: '', 
+                    isActive: true,
+                    useSequentialPairing: true,
+                    operationalDayStart: '05:00',
+                    defaultStartTime: '08:00',
+                    defaultEndTime: '17:00'
+                  }); 
+                  setFormTab('general');
+                  setShowModal(true); 
+                }}
+                className="btn-premium btn-premium-primary"
+                style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
+              >
+                <Plus size={20} /> Nueva Tienda
+              </button>
+            </PermissionGate>
           </div>
         </div>
       </div>
@@ -290,39 +297,43 @@ const Stores = () => {
                       <Tag size={12} /> {store.brandName || 'N/A'}
                     </span>
                   </td>
-                  <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
-                    <button 
-                      onClick={() => { 
-                        setCurrentStore(store); 
-                        setFormData({ 
-                          name: store.name, 
-                          address: store.address, 
-                          brandId: store.brandId, 
-                          cityId: store.cityId || '',
-                          externalId: store.externalId || '',
-                          biometricId: store.biometricId || '',
-                          districtId: store.districtId || '',
-                          isActive: store.isActive !== false,
-                          useSequentialPairing: !!store.useSequentialPairing,
-                          operationalDayStart: store.operationalDayStart || '05:00',
-                          defaultStartTime: store.defaultStartTime || '08:00',
-                          defaultEndTime: store.defaultEndTime || '17:00'
-                        }); 
-                        setFormTab('general');
-                        setShowModal(true); 
-                      }}
-                      style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', padding: '0.5rem' }}
-                      className="hover:scale-110 transition-transform"
-                    >
-                      <Edit size={18} />
-                    </button>
-                    <button 
-                      onClick={() => { setCurrentStore(store); setShowConfirm(true); }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
-                      className="hover:scale-110 transition-transform"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
+                    <PermissionGate module="CORE" sub="STORES" action="U" user={user}>
+                      <button 
+                        onClick={() => { 
+                          setCurrentStore(store); 
+                          setFormData({ 
+                            name: store.name, 
+                            address: store.address, 
+                            brandId: store.brandId, 
+                            cityId: store.cityId || '',
+                            externalId: store.externalId || '',
+                            biometricId: store.biometricId || '',
+                            districtId: store.districtId || '',
+                            isActive: store.isActive !== false,
+                            useSequentialPairing: !!store.useSequentialPairing,
+                            operationalDayStart: store.operationalDayStart || '05:00',
+                            defaultStartTime: store.defaultStartTime || '08:00',
+                            defaultEndTime: store.defaultEndTime || '17:00'
+                          }); 
+                          setFormTab('general');
+                          setShowModal(true); 
+                        }}
+                        style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', padding: '0.5rem' }}
+                        className="hover:scale-110 transition-transform"
+                      >
+                        <Edit size={18} />
+                      </button>
+                    </PermissionGate>
+                    <PermissionGate module="CORE" sub="STORES" action="D" user={user}>
+                      <button 
+                        onClick={() => { setCurrentStore(store); setShowConfirm(true); }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
+                        className="hover:scale-110 transition-transform"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </PermissionGate>
                   </td>
                 </tr>
               ))}

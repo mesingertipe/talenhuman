@@ -92,17 +92,23 @@ public class IdentityService : IIdentityService
         var roleIds = roleEntities.Select(r => r.Id).ToList();
 
         // Get permissions linked to these roles and the specific Company
-        // Use IgnoreQueryFilters to ensure permissions are found during login regardless of context
         var permissions = _context.ModulePermissions
             .IgnoreQueryFilters()
             .Include(p => p.Module)
             .Where(p => p.CompanyId == user.CompanyId && roleIds.Contains(p.RoleId) && p.IsAllowed)
-            .Select(p => new { Code = p.Module!.Code, p.Action })
+            .Select(p => new { 
+                ModuleCode = p.Module!.Code, 
+                SubModuleCode = p.SubModuleCode,
+                p.Action 
+            })
             .ToList();
 
         // Group by Module and format actions
+        // Logic: 
+        // 1. If SubModuleCode is present, use "Module:SubModule:Actions"
+        // 2. If SubModuleCode is null, use "Module:Actions" (legacy/global)
         var grouped = permissions
-            .GroupBy(p => p.Code)
+            .GroupBy(p => string.IsNullOrEmpty(p.SubModuleCode) ? p.ModuleCode : $"{p.ModuleCode}:{p.SubModuleCode}")
             .Select(g => 
             {
                 var actions = string.Join(",", g.Select(p => p.Action.ToString().Substring(0, 1)).Distinct().OrderBy(a => a));

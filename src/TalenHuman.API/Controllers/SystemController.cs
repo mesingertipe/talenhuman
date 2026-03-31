@@ -146,13 +146,13 @@ public class SystemController : ControllerBase
                 p.Id,
                 p.RoleId,
                 p.ModuleId,
+                p.SubModuleCode,
                 p.Action,
                 p.IsAllowed
             })
             .ToListAsync();
         return Ok(perms);
     }
-
     [HttpGet("roles")]
     public async Task<IActionResult> GetRoles()
     {
@@ -161,13 +161,17 @@ public class SystemController : ControllerBase
             .ToListAsync();
         return Ok(roles);
     }
-
     [HttpPost("permissions")]
     public async Task<IActionResult> UpdatePermission([FromBody] UpdatePermissionDto dto)
     {
         var perm = await _context.ModulePermissions
             .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(p => p.CompanyId == dto.CompanyId && p.RoleId == dto.RoleId && p.ModuleId == dto.ModuleId && p.Action == dto.Action);
+            .FirstOrDefaultAsync(p => 
+                p.CompanyId == dto.CompanyId && 
+                p.RoleId == dto.RoleId && 
+                p.ModuleId == dto.ModuleId && 
+                p.SubModuleCode == dto.SubModuleCode &&
+                p.Action == dto.Action);
 
         if (perm != null)
         {
@@ -180,6 +184,7 @@ public class SystemController : ControllerBase
                 CompanyId = dto.CompanyId,
                 RoleId = dto.RoleId,
                 ModuleId = dto.ModuleId,
+                SubModuleCode = dto.SubModuleCode,
                 Action = dto.Action,
                 IsAllowed = dto.IsAllowed
             };
@@ -196,6 +201,7 @@ public class UpdatePermissionDto
     public Guid CompanyId { get; set; }
     public Guid RoleId { get; set; }
     public Guid ModuleId { get; set; }
+    public string? SubModuleCode { get; set; }
     public PermissionAction Action { get; set; }
     public bool IsAllowed { get; set; }
 }

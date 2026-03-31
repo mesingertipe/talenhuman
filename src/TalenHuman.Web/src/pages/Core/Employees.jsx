@@ -12,6 +12,7 @@ import { useTableData } from '../../hooks/useTableData';
 import Pagination from '../../components/Shared/Pagination';
 import { useTheme } from '../../context/ThemeContext';
 import HelpIcon from '../../components/Shared/HelpIcon';
+import PermissionGate from '../../components/Shared/PermissionGate';
 
 const Employees = ({ user }) => {
   const { isDarkMode } = useTheme();
@@ -193,40 +194,46 @@ const Employees = ({ user }) => {
             />
           </div>
           <div className="flex gap-3">
-            <button 
-                onClick={handleExportExcel}
+            <PermissionGate module="CORE" sub="EMPLOYEES" action="E" user={user}>
+              <button 
+                  onClick={handleExportExcel}
+                  className="btn-premium btn-premium-secondary"
+                  style={{ borderRadius: '20px', height: '56px', padding: '0 20px', border: '1px solid #e2e8f0', background: 'white', color: '#64748b' }}
+                  title="Descargar Reporte"
+              >
+                  <Download size={18} />
+              </button>
+            </PermissionGate>
+            <PermissionGate module="CORE" sub="EMPLOYEES" action="C" user={user}>
+              <button 
+                onClick={() => setShowImport(true)}
                 className="btn-premium btn-premium-secondary"
-                style={{ borderRadius: '20px', height: '56px', padding: '0 20px', border: '1px solid #e2e8f0', background: 'white', color: '#64748b' }}
-                title="Descargar Reporte"
-            >
-                <Download size={18} />
-            </button>
-            <button 
-              onClick={() => setShowImport(true)}
-              className="btn-premium btn-premium-secondary"
-              style={{ borderRadius: '20px', height: '56px', padding: '0 20px' }}
-              title="Carga masiva"
-            >
-              <FileSpreadsheet size={18} />
-            </button>
-            <button 
-              onClick={() => { 
-                  setCurrentEmployee(null); 
-                  setFormData({ 
-                      firstName: '', lastName: '', 
-                      identificationNumber: '', birthDate: '',
-                      storeId: stores[0]?.id || '', 
-                      profileId: profiles[0]?.id || '',
-                      jornadaId: jornadas[0]?.id || '',
-                      email: '', isActive: true, mustChangePassword: false
-                  }); 
-                  setShowModal(true); 
-              }}
-              className="btn-premium btn-premium-primary whitespace-nowrap"
-              style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
-            >
-              <UserPlus size={18} /> <span className="hidden md:inline">Nuevo Colaborador</span>
-            </button>
+                style={{ borderRadius: '20px', height: '56px', padding: '0 20px' }}
+                title="Carga masiva"
+              >
+                <FileSpreadsheet size={18} />
+              </button>
+            </PermissionGate>
+            <PermissionGate module="CORE" sub="EMPLOYEES" action="C" user={user}>
+              <button 
+                onClick={() => { 
+                    setCurrentEmployee(null); 
+                    setFormData({ 
+                        firstName: '', lastName: '', 
+                        identificationNumber: '', birthDate: '',
+                        storeId: stores[0]?.id || '', 
+                        profileId: profiles[0]?.id || '',
+                        jornadaId: jornadas[0]?.id || '',
+                        email: '', isActive: true, mustChangePassword: false
+                    }); 
+                    setShowModal(true); 
+                }}
+                className="btn-premium btn-premium-primary whitespace-nowrap"
+                style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
+              >
+                <UserPlus size={18} /> <span className="hidden md:inline">Nuevo Colaborador</span>
+              </button>
+            </PermissionGate>
           </div>
         </div>
       </div>
@@ -320,28 +327,33 @@ const Employees = ({ user }) => {
                     </span>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
-                    <button 
-                      onClick={() => { 
-                        setCurrentEmployee(emp); 
-                        setFormData({ 
-                          ...emp, 
-                          dailySalary: emp.dailySalary || 0,
-                          mustChangePassword: false 
-                        }); 
-                        setShowModal(true); 
-                      }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '1rem', color: '#6366f1' }}
-                      className="hover:scale-110 transition-transform dark:text-indigo-400"
-                    >
-                      <Edit size={18} />
-                    </button>
-                    <button 
-                      onClick={() => { setCurrentEmployee(emp); setShowConfirm(true); }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
-                      className="hover:scale-110 transition-transform dark:text-red-400 font-bold"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    <PermissionGate module="CORE" sub="EMPLOYEES" action="U" user={user}>
+                      <button 
+                        onClick={() => { 
+                          setCurrentEmployee(emp); 
+                          setFormData({ 
+                            ...emp, 
+                            dailySalary: emp.dailySalary || 0,
+                            mustChangePassword: false 
+                          }); 
+                          setShowModal(true); 
+                        }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '1rem', color: '#6366f1' }}
+                        className="hover:scale-110 transition-transform dark:text-indigo-400"
+                      >
+                        <Edit size={18} />
+                      </button>
+                    </PermissionGate>
+                    
+                    <PermissionGate module="CORE" sub="EMPLOYEES" action="D" user={user}>
+                      <button 
+                        onClick={() => { setCurrentEmployee(emp); setShowConfirm(true); }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
+                        className="hover:scale-110 transition-transform dark:text-red-400 font-bold"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </PermissionGate>
                   </td>
                 </tr>
               ))}

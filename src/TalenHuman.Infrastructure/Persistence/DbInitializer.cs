@@ -99,47 +99,74 @@ public static class DbInitializer
         var allModules = await context.Modules.ToListAsync();
         var roles = await context.Roles.ToListAsync();
 
+        var coreMod = allModules.First(m => m.Code == "CORE");
+        var opsMod = allModules.First(m => m.Code == "OPERATIONS");
+        var advMod = allModules.First(m => m.Code == "ADVANCED");
+        var sysMod = allModules.First(m => m.Code == "SYSTEM");
+
+        var subModules = new[] {
+            new { Module = "CORE", Sub = "BRANDS" },
+            new { Module = "CORE", Sub = "CITIES" },
+            new { Module = "CORE", Sub = "PROFILES" },
+            new { Module = "CORE", Sub = "SCHEDULES" },
+            new { Module = "CORE", Sub = "DISTRICTS" },
+            new { Module = "CORE", Sub = "STORES" },
+            new { Module = "CORE", Sub = "EMPLOYEES" },
+            new { Module = "OPERATIONS", Sub = "SHIFTS" },
+            new { Module = "OPERATIONS", Sub = "RECORDS" },
+            new { Module = "OPERATIONS", Sub = "NOVELTIES" },
+            new { Module = "ADVANCED", Sub = "MONITORING" },
+            new { Module = "ADVANCED", Sub = "TEMPLATES" },
+            new { Module = "ADVANCED", Sub = "NOVELTY_CONFIG" },
+            new { Module = "SYSTEM", Sub = "USERS" },
+            new { Module = "SYSTEM", Sub = "PERMISSIONS" },
+            new { Module = "SYSTEM", Sub = "AUDIT" },
+            new { Module = "SYSTEM", Sub = "COMPANIES" },
+            new { Module = "SYSTEM", Sub = "SYSTEM_CONFIG" }
+        };
+
         // Seed Permission Matrix for Company if it doesn't have any
         if (!await context.ModulePermissions.IgnoreQueryFilters().AnyAsync(p => p.CompanyId == companyId))
         {
-            foreach (var mod in allModules)
+            foreach (var role in roles)
             {
-                foreach (var role in roles)
+                foreach (var item in subModules)
                 {
-                    // SuperAdmin / Admin: Full Access
+                    var mid = item.Module switch {
+                        "CORE" => coreMod.Id,
+                        "OPERATIONS" => opsMod.Id,
+                        "ADVANCED" => advMod.Id,
+                        "SYSTEM" => sysMod.Id,
+                        _ => Guid.Empty
+                    };
+
                     if (role.Name == "SuperAdmin" || role.Name == "Admin")
                     {
                         foreach (PermissionAction action in Enum.GetValues(typeof(PermissionAction)))
                         {
                             context.ModulePermissions.Add(new ModulePermission { 
-                                RoleId = role.Id, ModuleId = mod.Id, 
+                                RoleId = role.Id, ModuleId = mid, SubModuleCode = item.Sub,
                                 Action = action, IsAllowed = true, 
                                 CompanyId = companyId 
                             });
                         }
                     }
-                    // Gerente: Read in Core, Read/Create in Attendance
                     else if (role.Name == "Gerente")
                     {
-                        if (mod.Code == "CORE") 
-                            context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Read, IsAllowed = true, CompanyId = companyId });
-                        
-                        if (mod.Code == "ATTENDANCE")
+                        // Gerente can READ EMPLOYEES and RECORDS/SHIFTS
+                        if (item.Sub == "EMPLOYEES" || item.Module == "OPERATIONS")
                         {
-                            context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Read, IsAllowed = true, CompanyId = companyId });
-                            context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Create, IsAllowed = true, CompanyId = companyId });
+                             context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mid, SubModuleCode = item.Sub, Action = PermissionAction.Read, IsAllowed = true, CompanyId = companyId });
+                             if (item.Module == "OPERATIONS")
+                                context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mid, SubModuleCode = item.Sub, Action = PermissionAction.Create, IsAllowed = true, CompanyId = companyId });
                         }
                     }
-                    // Distrital: Read in Core, Read/Export in Attendance
                     else if (role.Name == "Distrital")
                     {
-                        if (mod.Code == "CORE") 
-                            context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Read, IsAllowed = true, CompanyId = companyId });
-                        
-                        if (mod.Code == "ATTENDANCE")
+                        if (item.Sub == "EMPLOYEES" || item.Module == "OPERATIONS")
                         {
-                            context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Read, IsAllowed = true, CompanyId = companyId });
-                            context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Export, IsAllowed = true, CompanyId = companyId });
+                             context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mid, SubModuleCode = item.Sub, Action = PermissionAction.Read, IsAllowed = true, CompanyId = companyId });
+                             context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mid, SubModuleCode = item.Sub, Action = PermissionAction.Export, IsAllowed = true, CompanyId = companyId });
                         }
                     }
                 }

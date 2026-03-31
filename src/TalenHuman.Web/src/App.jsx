@@ -94,73 +94,82 @@ function App() {
   const renderPage = () => {
     const isSuperAdmin = user.roles?.includes('SuperAdmin');
     
-    const hasPerm = (module, action = 'Read') => {
+    const hasPerm = (module, sub = null, action = 'R') => {
       if (isSuperAdmin) return true;
       const isModuleActive = user.activeModules?.includes(module);
       if (!isModuleActive) return false;
-      const modPerm = user.permissions?.find(p => p.startsWith(`${module}:`));
-      if (!modPerm) return false;
-      const allowedActions = modPerm.split(':')[1];
+
+      // Check granular permission
+      const granularKey = sub ? `${module}:${sub}` : module;
+      const permItem = user.permissions?.find(p => p.startsWith(`${granularKey}:`));
+      
+      if (!permItem) return false;
+
+      const allowedActions = permItem.split(':').pop(); // Get last part (ACTIONS)
       const actionCode = action.substring(0, 1).toUpperCase();
       return allowedActions.includes(actionCode);
     };
 
     switch(currentPage) {
       case 'Marcas': 
-        if (hasPerm('CORE')) return <Brands user={user} />;
+        if (hasPerm('CORE', 'BRANDS')) return <Brands user={user} />;
         return <Dashboard />;
       case 'Tiendas': 
-        if (hasPerm('CORE')) return <Stores user={user} />;
+        if (hasPerm('CORE', 'STORES')) return <Stores user={user} />;
         return <Dashboard />;
       case 'Ciudades': 
-        if (hasPerm('CORE')) return <Cities user={user} />;
+        if (hasPerm('CORE', 'CITIES')) return <Cities user={user} />;
         return <Dashboard />;
       case 'Distritos': 
-        if (hasPerm('CORE')) return <Districts />;
+        if (hasPerm('CORE', 'DISTRICTS')) return <Districts user={user} />;
         return <Dashboard />;
       case 'Cargos': 
-        if (hasPerm('CORE')) return <Profiles user={user} />;
+        if (hasPerm('CORE', 'PROFILES')) return <Profiles user={user} />;
         return <Dashboard />;
       case 'Empleados': 
-        if (hasPerm('CORE')) return <Employees user={user} />;
-        return <Dashboard />;
-      case 'Usuarios': 
-        if (hasPerm('ADMIN')) return <Users />;
+        if (hasPerm('CORE', 'EMPLOYEES')) return <Employees user={user} />;
         return <Dashboard />;
       case 'Jornadas':
-        if (hasPerm('CORE')) return <Jornadas />;
+        if (hasPerm('CORE', 'SCHEDULES')) return <Jornadas user={user} />;
         return <Dashboard />;
+      
       case 'Turnos': 
-        if (hasPerm('ATTENDANCE')) return <ShiftScheduler user={user} />;
+        if (hasPerm('OPERATIONS', 'SHIFTS')) return <ShiftScheduler user={user} />;
         return <Dashboard />;
       case 'Marcaciones': 
-        if (hasPerm('ATTENDANCE')) return <Marcaciones user={user} />;
-        return <Dashboard />;
-      case 'Monitoreo Asistencia':
-        if (hasPerm('ADMIN')) return <AttendanceMonitoring />;
+        if (hasPerm('OPERATIONS', 'RECORDS')) return <Marcaciones user={user} />;
         return <Dashboard />;
       case 'Novedades': 
-        if (hasPerm('ATTENDANCE')) return <NewsInbox user={user} />;
+        if (hasPerm('OPERATIONS', 'NOVELTIES')) return <NewsInbox user={user} />;
+        return <Dashboard />;
+      
+      case 'Monitoreo Asistencia':
+        if (hasPerm('ADVANCED', 'MONITORING')) return <AttendanceMonitoring user={user} />;
         return <Dashboard />;
       case 'Configuración novedades':
-        if (hasPerm('ADMIN')) return <NewsDesigner />;
-        return <Dashboard />;
-      case 'Empresas': 
-        if (isSuperAdmin) return <Companies />;
-        return <Dashboard />;
-      case 'Permisos':
-        if (isSuperAdmin) return <ModulePermissions />;
-        return <Dashboard />;
-      case 'Configuración Sistema':
-        if (isSuperAdmin) return <SystemSettings />;
+        if (hasPerm('ADVANCED', 'NOVELTY_CONFIG')) return <NewsDesigner user={user} />;
         return <Dashboard />;
       case 'Diseñador de Plantillas':
-        if (isSuperAdmin) return <NewsTemplateDesigner />;
+        if (hasPerm('ADVANCED', 'TEMPLATES')) return <NewsTemplateDesigner user={user} />;
+        return <Dashboard />;
+
+      case 'Usuarios': 
+        if (hasPerm('SYSTEM', 'USERS')) return <Users user={user} />;
+        return <Dashboard />;
+      case 'Empresas': 
+        if (hasPerm('SYSTEM', 'COMPANIES')) return <Companies user={user} />;
+        return <Dashboard />;
+      case 'Permisos':
+        if (hasPerm('SYSTEM', 'PERMISSIONS')) return <ModulePermissions user={user} />;
+        return <Dashboard />;
+      case 'Configuración Sistema':
+        if (hasPerm('SYSTEM', 'SYSTEM_CONFIG')) return <SystemSettings user={user} />;
         return <Dashboard />;
       case 'Auditoría':
-        if (hasPerm('ADMIN')) return <AuditLogs />;
+        if (hasPerm('SYSTEM', 'AUDIT')) return <AuditLogs user={user} />;
         return <Dashboard />;
-      default: return <Dashboard />;
+        
+      default: return <Dashboard user={user} />;
     }
   };
 

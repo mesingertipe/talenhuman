@@ -10,7 +10,7 @@ import SearchableSelect from '../Shared/SearchableSelect';
 
 const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePage, setPage, onLogout, user, companies, selectedTenant, onTenantChange, tenantSettings }) => {
   const isSuperAdmin = user?.roles?.includes('SuperAdmin');
-  const [expandedHeaders, setExpandedHeaders] = useState(['Configuración Core', 'Operaciones', 'Administración']);
+  const [expandedHeaders, setExpandedHeaders] = useState(['Configuración Core', 'Operaciones', 'Gestión del Modelo', 'Panel de Sistema']);
 
   const toggleHeader = (label) => {
     setExpandedHeaders(prev => 
@@ -24,38 +24,45 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
       isHeader: true,
       module: 'CORE',
       children: [
-        { icon: <Boxes size={20} />, label: 'Marcas', roles: ['SuperAdmin', 'Admin'], action: 'Read' },
-        { icon: <MapPin size={20} />, label: 'Ciudades', roles: ['SuperAdmin', 'Admin'], action: 'Read' },
-        { icon: <Briefcase size={20} />, label: 'Cargos', roles: ['SuperAdmin', 'Admin'], action: 'Read' },
-        { icon: <Calendar size={20} />, label: 'Jornadas', roles: ['SuperAdmin', 'Admin'], action: 'Read' },
-        { icon: <Building size={20} />, label: 'Distritos', roles: ['SuperAdmin', 'Admin'], action: 'Read' },
-        { icon: <Store size={20} />, label: 'Tiendas', roles: ['SuperAdmin', 'Admin'], action: 'Read' },
-        { icon: <Users size={20} />, label: 'Empleados', action: 'Read' },
+        { icon: <Boxes size={20} />, label: 'Marcas', sub: 'BRANDS' },
+        { icon: <MapPin size={20} />, label: 'Ciudades', sub: 'CITIES' },
+        { icon: <Briefcase size={20} />, label: 'Cargos', sub: 'PROFILES' },
+        { icon: <Calendar size={20} />, label: 'Jornadas', sub: 'SCHEDULES' },
+        { icon: <Building size={20} />, label: 'Distritos', sub: 'DISTRICTS' },
+        { icon: <Store size={20} />, label: 'Tiendas', sub: 'STORES' },
+        { icon: <Users size={20} />, label: 'Empleados', sub: 'EMPLOYEES' },
       ]
     },
     { 
       label: 'Operaciones', 
       isHeader: true,
-      module: 'ATTENDANCE',
+      module: 'OPERATIONS',
       children: [
-        { icon: <Calendar size={20} />, label: 'Turnos', action: 'Read' },
-        { icon: <Clock size={20} />, label: 'Marcaciones', action: 'Read' },
-        { icon: <FileText size={20} />, label: 'Novedades', action: 'Read' },
+        { icon: <Calendar size={20} />, label: 'Turnos', sub: 'SHIFTS' },
+        { icon: <Clock size={20} />, label: 'Marcaciones', sub: 'RECORDS' },
+        { icon: <FileText size={20} />, label: 'Novedades', sub: 'NOVELTIES' },
       ]
     },
     { 
-      label: 'Administración', 
+      label: 'Gestión del Modelo', 
       isHeader: true,
-      module: 'ADMIN',
+      module: 'ADVANCED',
       children: [
-        { icon: <Activity size={20} />, label: 'Monitoreo Asistencia', roles: ['SuperAdmin', 'Admin'], action: 'Read' },
-        { icon: <ShieldAlert size={20} />, label: 'Auditoría', roles: ['SuperAdmin', 'Admin'], action: 'Read' },
-        { icon: <Settings size={20} />, label: 'Usuarios', roles: ['SuperAdmin', 'Admin'], action: 'Read' },
-        { icon: <FileText size={20} />, label: 'Configuración novedades', roles: ['SuperAdmin', 'Admin'], action: 'Read' },
-        { icon: <Globe size={20} />, label: 'Diseñador de Plantillas', roles: ['SuperAdmin'], action: 'Read' },
-        { icon: <Building2 size={20} />, label: 'Empresas', roles: ['SuperAdmin'], action: 'Read' },
-        { icon: <Shield size={20} />, label: 'Permisos', roles: ['SuperAdmin'], action: 'Read' },
-        { icon: <Cpu size={20} />, label: 'Configuración Sistema', roles: ['SuperAdmin'], action: 'Read' },
+        { icon: <Activity size={20} />, label: 'Monitoreo Asistencia', sub: 'MONITORING' },
+        { icon: <Globe size={20} />, label: 'Diseñador de Plantillas', sub: 'TEMPLATES' },
+        { icon: <FileText size={20} />, label: 'Configuración novedades', sub: 'NOVELTY_CONFIG' },
+      ]
+    },
+    { 
+      label: 'Panel de Sistema', 
+      isHeader: true,
+      module: 'SYSTEM',
+      children: [
+        { icon: <Users size={20} />, label: 'Usuarios', sub: 'USERS' },
+        { icon: <Shield size={20} />, label: 'Permisos', sub: 'PERMISSIONS' },
+        { icon: <ShieldAlert size={20} />, label: 'Auditoría', sub: 'AUDIT' },
+        { icon: <Building2 size={20} />, label: 'Empresas', sub: 'COMPANIES' },
+        { icon: <Cpu size={20} />, label: 'Configuración Sistema', sub: 'SYSTEM_CONFIG' },
       ]
     },
   ];
@@ -63,26 +70,21 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
   const filteredStructure = menuStructure.map(section => ({
     ...section,
     children: section.children.filter(item => {
-      // SuperAdmin override
       if (isSuperAdmin) return true;
 
       // 1. Check Module activation
       const isModuleActive = user?.activeModules?.includes(section.module);
       if (!isModuleActive) return false;
 
-      // 2. Check Permissions
-      // Format in user.permissions: ["CORE:R,C,U", "ATTENDANCE:R"]
-      const modPerm = user?.permissions?.find(p => p.startsWith(`${section.module}:`));
-      if (!modPerm) return false;
+      // 2. Check Granular Permissions
+      // Format in user.permissions: ["MODULE:SUBMODULE:ACTIONS"] or "MODULE:ACTIONS"
+      const granularKey = `${section.module}:${item.sub}`;
+      const permItem = user?.permissions?.find(p => p.startsWith(`${granularKey}:`));
+      
+      if (!permItem) return false;
 
-      const allowedActions = modPerm.split(':')[1];
-      const actionCode = item.action ? item.action.substring(0, 1).toUpperCase() : 'R';
-      if (!allowedActions.includes(actionCode)) return false;
-
-      // 3. Check specific roles if defined
-      if (item.roles && !item.roles.some(r => user?.roles?.includes(r))) return false;
-
-      return true;
+      const allowedActions = permItem.split(':')[2]; // Index 2 for MODULE:SUB:ACTIONS
+      return allowedActions.includes('R'); // Sidebar items need Read access
     })
   })).filter(section => section.children.length > 0);
 
