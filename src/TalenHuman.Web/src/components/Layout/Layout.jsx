@@ -22,36 +22,40 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
     { 
       label: 'Configuración Core', 
       isHeader: true,
+      module: 'CORE',
       children: [
-        { icon: <Boxes size={20} />, label: 'Marcas', roles: ['SuperAdmin', 'Admin'] },
-        { icon: <MapPin size={20} />, label: 'Ciudades', roles: ['SuperAdmin', 'Admin'] },
-        { icon: <Briefcase size={20} />, label: 'Cargos', roles: ['SuperAdmin', 'Admin'] },
-        { icon: <Calendar size={20} />, label: 'Jornadas', roles: ['SuperAdmin', 'Admin'] },
-        { icon: <Building size={20} />, label: 'Distritos', roles: ['SuperAdmin', 'Admin'] },
-        { icon: <Store size={20} />, label: 'Tiendas', roles: ['SuperAdmin', 'Admin'] },
-        { icon: <Users size={20} />, label: 'Empleados' },
+        { icon: <Boxes size={20} />, label: 'Marcas', roles: ['SuperAdmin', 'Admin'], action: 'Read' },
+        { icon: <MapPin size={20} />, label: 'Ciudades', roles: ['SuperAdmin', 'Admin'], action: 'Read' },
+        { icon: <Briefcase size={20} />, label: 'Cargos', roles: ['SuperAdmin', 'Admin'], action: 'Read' },
+        { icon: <Calendar size={20} />, label: 'Jornadas', roles: ['SuperAdmin', 'Admin'], action: 'Read' },
+        { icon: <Building size={20} />, label: 'Distritos', roles: ['SuperAdmin', 'Admin'], action: 'Read' },
+        { icon: <Store size={20} />, label: 'Tiendas', roles: ['SuperAdmin', 'Admin'], action: 'Read' },
+        { icon: <Users size={20} />, label: 'Empleados', action: 'Read' },
       ]
     },
     { 
       label: 'Operaciones', 
       isHeader: true,
+      module: 'ATTENDANCE',
       children: [
-        { icon: <Calendar size={20} />, label: 'Turnos' },
-        { icon: <Clock size={20} />, label: 'Marcaciones' },
-        { icon: <FileText size={20} />, label: 'Novedades' },
+        { icon: <Calendar size={20} />, label: 'Turnos', action: 'Read' },
+        { icon: <Clock size={20} />, label: 'Marcaciones', action: 'Read' },
+        { icon: <FileText size={20} />, label: 'Novedades', action: 'Read' },
       ]
     },
     { 
       label: 'Administración', 
       isHeader: true,
+      module: 'ADMIN',
       children: [
-        { icon: <Activity size={20} />, label: 'Monitoreo Asistencia', roles: ['SuperAdmin', 'Admin'] },
-        { icon: <ShieldAlert size={20} />, label: 'Auditoría', roles: ['SuperAdmin', 'Admin'] },
-        { icon: <Settings size={20} />, label: 'Usuarios', roles: ['SuperAdmin', 'Admin'] },
-        { icon: <FileText size={20} />, label: 'Configuración novedades', roles: ['SuperAdmin', 'Admin'] },
-        { icon: <Globe size={20} />, label: 'Diseñador de Plantillas', roles: ['SuperAdmin'] },
-        { icon: <Building size={20} />, label: 'Empresas', roles: ['SuperAdmin'] },
-        { icon: <Cpu size={20} />, label: 'Configuración Sistema', roles: ['SuperAdmin'] },
+        { icon: <Activity size={20} />, label: 'Monitoreo Asistencia', roles: ['SuperAdmin', 'Admin'], action: 'Read' },
+        { icon: <ShieldAlert size={20} />, label: 'Auditoría', roles: ['SuperAdmin', 'Admin'], action: 'Read' },
+        { icon: <Settings size={20} />, label: 'Usuarios', roles: ['SuperAdmin', 'Admin'], action: 'Read' },
+        { icon: <FileText size={20} />, label: 'Configuración novedades', roles: ['SuperAdmin', 'Admin'], action: 'Read' },
+        { icon: <Globe size={20} />, label: 'Diseñador de Plantillas', roles: ['SuperAdmin'], action: 'Read' },
+        { icon: <Building2 size={20} />, label: 'Empresas', roles: ['SuperAdmin'], action: 'Read' },
+        { icon: <Shield size={20} />, label: 'Permisos', roles: ['SuperAdmin'], action: 'Read' },
+        { icon: <Cpu size={20} />, label: 'Configuración Sistema', roles: ['SuperAdmin'], action: 'Read' },
       ]
     },
   ];
@@ -59,8 +63,26 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
   const filteredStructure = menuStructure.map(section => ({
     ...section,
     children: section.children.filter(item => {
-      if (!item.roles) return true;
-      return item.roles.some(r => user?.roles?.includes(r));
+      // SuperAdmin override
+      if (isSuperAdmin) return true;
+
+      // 1. Check Module activation
+      const isModuleActive = user?.activeModules?.includes(section.module);
+      if (!isModuleActive) return false;
+
+      // 2. Check Permissions
+      // Format in user.permissions: ["CORE:R,C,U", "ATTENDANCE:R"]
+      const modPerm = user?.permissions?.find(p => p.startsWith(`${section.module}:`));
+      if (!modPerm) return false;
+
+      const allowedActions = modPerm.split(':')[1];
+      const actionCode = item.action ? item.action.substring(0, 1).toUpperCase() : 'R';
+      if (!allowedActions.includes(actionCode)) return false;
+
+      // 3. Check specific roles if defined
+      if (item.roles && !item.roles.some(r => user?.roles?.includes(r))) return false;
+
+      return true;
     })
   })).filter(section => section.children.length > 0);
 

@@ -1,0 +1,8 @@
+D:\Tito Pedraza\OneDrive\Proyectos\Codigo Fuente\repos\HumanCore\src\TalenHuman.Infrastructure\Persistence\ApplicationDbContext.cs(48,18): error CS0104: 'Module' is an ambiguous reference between 'TalenHuman.Domain.Entities.Module' and 'System.Reflection.Module' [D:\Tito Pedraza\OneDrive\Proyectos\Codigo Fuente\repos\HumanCore\src\TalenHuman.Infrastructure\TalenHuman.Infrastructure.csproj]
+D:\Tito Pedraza\OneDrive\Proyectos\Codigo Fuente\repos\HumanCore\src\TalenHuman.Infrastructure\Persistence\ApplicationDbContext.cs(10,74): error CS0738: 'ApplicationDbContext' does not implement interface member 'IApplicationDbContext.Modules'. 'ApplicationDbContext.Modules' cannot implement 'IApplicationDbContext.Modules' because it does not have the matching return type of 'DbSet<Module>'. [D:\Tito Pedraza\OneDrive\Proyectos\Codigo Fuente\repos\HumanCore\src\TalenHuman.Infrastructure\TalenHuman.Infrastructure.csproj]
+
+Build FAILED.
+    15 Warning(s)
+    2 Error(s)
+
+Time Elapsed 00:00:03.19

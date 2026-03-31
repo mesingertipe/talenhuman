@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using TalenHuman.Application.Common.Interfaces;
 using TalenHuman.Application.Services;
 using TalenHuman.Domain.Entities;
+using TalenHuman.API.Infrastructure.Security;
 
 namespace TalenHuman.API.Controllers;
 
@@ -36,6 +37,7 @@ public class AttendanceController : ControllerBase
     }
 
     [HttpGet("stats")]
+    [AuthorizePermission("ATTENDANCE", PermissionAction.Read)]
     public async Task<IActionResult> GetStats(DateTime? start, DateTime? end, Guid? storeId, Guid? brandId, Guid? profileId)
     {
         var companyId = _tenantProvider.GetTenantId();
@@ -149,6 +151,7 @@ public class AttendanceController : ControllerBase
     }
 
     [HttpGet]
+    [AuthorizePermission("ATTENDANCE", PermissionAction.Read)]
     public async Task<IActionResult> GetAttendances(DateTime? start, DateTime? end, string? searchTerm)
     {
         var companyId = _tenantProvider.GetTenantId();

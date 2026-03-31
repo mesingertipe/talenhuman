@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using TalenHuman.Domain.Entities;
 
 namespace TalenHuman.Infrastructure.Persistence;
@@ -7,18 +8,9 @@ public static class DbInitializer
 {
     public static async Task SeedAsync(ApplicationDbContext context, UserManager<User> userManager, RoleManager<Role> roleManager)
     {
-        // Seed / Migrate Roles
+        // 1. Seed / Migrate Roles
         string[] roles = { "SuperAdmin", "Admin", "Gerente", "Distrital", "RH", "Empleado" };
         
-        // Handle migration: If "Supervisor" exists, rename it to "Distrital"
-        var supervisorRole = await roleManager.FindByNameAsync("Supervisor");
-        if (supervisorRole != null)
-        {
-            supervisorRole.Name = "Distrital";
-            supervisorRole.NormalizedName = "DISTRITAL";
-            await roleManager.UpdateAsync(supervisorRole);
-        }
-
         foreach (var role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role))
@@ -27,9 +19,24 @@ public static class DbInitializer
             }
         }
 
+        // 2. Seed Modules (Global)
+        if (!await context.Modules.AnyAsync())
+        {
+            var modules = new List<Module>
+            {
+                new Module { Code = "CORE", Name = "Configuración Core", Icon = "Boxes", DisplayOrder = 1 },
+                new Module { Code = "ATTENDANCE", Name = "Operaciones Asistencia", Icon = "Clock", DisplayOrder = 2 },
+                new Module { Code = "ADMIN", Name = "Administración Sistema", Icon = "Settings", DisplayOrder = 3 }
+            };
+            context.Modules.AddRange(modules);
+            await context.SaveChangesAsync();
+        }
 
-        // Seed Companies (Tenants)
-        if (!context.Companies.Any())
+        var allModules = await context.Modules.ToListAsync();
+        var allRoles = await roleManager.Roles.ToListAsync();
+
+        // 3. Seed Companies (Tenants)
+        if (!await context.Companies.AnyAsync())
         {
             var company1 = new Company { 
                 Name = "TalenHuman Corp", 
@@ -46,22 +53,89 @@ public static class DbInitializer
             
             context.Companies.AddRange(company1, company2);
             await context.SaveChangesAsync();
+        }
 
-            // Seed Super Admin
+        var allCompanies = await context.Companies.ToListAsync();
+
+        // 4. Per-Company Seeding (Modules & Isolated Permissions)
+        foreach (var comp in allCompanies)
+        {
+            // Activate Modules for Company
+            foreach (var mod in allModules)
+            {
+                if (!await context.CompanyModules.AnyAsync(cm => cm.CompanyId == comp.Id && cm.ModuleId == mod.Id))
+                {
+                    context.CompanyModules.Add(new CompanyModule { CompanyId = comp.Id, ModuleId = mod.Id, IsActive = true });
+                }
+            }
+
+            // Seed Permission Matrix for Company
+            if (!await context.ModulePermissions.IgnoreQueryFilters().AnyAsync(p => p.CompanyId == comp.Id))
+            {
+                foreach (var mod in allModules)
+                {
+                    foreach (var role in allRoles)
+                    {
+                        // SuperAdmin / Admin: Full Access
+                        if (role.Name == "SuperAdmin" || role.Name == "Admin")
+                        {
+                            foreach (PermissionAction action in Enum.GetValues(typeof(PermissionAction)))
+                            {
+                                context.ModulePermissions.Add(new ModulePermission { 
+                                    RoleId = role.Id, ModuleId = mod.Id, 
+                                    Action = action, IsAllowed = true, 
+                                    CompanyId = comp.Id 
+                                });
+                            }
+                        }
+                        // Gerente: Read in Core, Read/Create in Attendance
+                        else if (role.Name == "Gerente")
+                        {
+                            if (mod.Code == "CORE") 
+                                context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Read, CompanyId = comp.Id });
+                            
+                            if (mod.Code == "ATTENDANCE")
+                            {
+                                context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Read, CompanyId = comp.Id });
+                                context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Create, CompanyId = comp.Id });
+                            }
+                        }
+                        // Distrital: Read in Core, Read/Export in Attendance
+                        else if (role.Name == "Distrital")
+                        {
+                            if (mod.Code == "CORE") 
+                                context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Read, CompanyId = comp.Id });
+                            
+                            if (mod.Code == "ATTENDANCE")
+                            {
+                                context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Read, CompanyId = comp.Id });
+                                context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Export, CompanyId = comp.Id });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        await context.SaveChangesAsync();
+
+        // 5. Seed Initial Super Admin User if not exists
+        var company1Id = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var adminEmail = "admin@talenhuman.com";
+        var existingAdmin = await userManager.FindByEmailAsync(adminEmail);
+        
+        if (existingAdmin == null)
+        {
             var superAdmin = new User
             {
-                UserName = "admin@talenhuman.com",
-                Email = "admin@talenhuman.com",
+                UserName = adminEmail,
+                Email = adminEmail,
                 FullName = "Super Administrador",
-                CompanyId = company1.Id,
+                CompanyId = company1Id,
                 EmailConfirmed = true
             };
 
-            if (await userManager.FindByEmailAsync(superAdmin.Email) == null)
-            {
-                await userManager.CreateAsync(superAdmin, "Admin123!");
-                await userManager.AddToRoleAsync(superAdmin, "SuperAdmin");
-            }
+            await userManager.CreateAsync(superAdmin, "Admin123!");
+            await userManager.AddToRoleAsync(superAdmin, "SuperAdmin");
         }
     }
 }

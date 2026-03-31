@@ -87,6 +87,25 @@ public class AuthController : ControllerBase
             claims.Add(new Claim(ClaimTypes.Role, role));
         }
 
+        // Add Modular Permissions
+        var permissions = await _identityService.GetUserPermissionsAsync(user.Id);
+        foreach (var perm in permissions)
+        {
+            claims.Add(new Claim("perm", perm));
+        }
+
+        // Add Active Modules for the Tenant
+        var activeModules = await _context.CompanyModules
+            .Include(cm => cm.Module)
+            .Where(cm => cm.CompanyId == user.CompanyId && cm.IsActive)
+            .Select(cm => cm.Module!.Code)
+            .ToListAsync();
+        
+        foreach (var mod in activeModules)
+        {
+            claims.Add(new Claim("mod", mod));
+        }
+
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("SuperSecretKey123!_TalenHuman_2026_Secure"));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
@@ -153,7 +172,9 @@ public class AuthController : ControllerBase
                 storeId,
                 storeName,
                 storeExternalId,
-                storeIds
+                storeIds,
+                activeModules,
+                permissions
             }
         });
     }

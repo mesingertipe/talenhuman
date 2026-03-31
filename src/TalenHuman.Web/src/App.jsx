@@ -20,6 +20,7 @@ import Marcaciones from './pages/Core/Marcaciones';
 import AttendanceMonitoring from './pages/Core/AttendanceMonitoring';
 import Cities from './pages/Core/Cities';
 import Districts from './pages/Core/Districts';
+import ModulePermissions from './pages/SuperAdmin/ModulePermissions';
 import SystemSettings from './pages/SuperAdmin/SystemSettings';
 import NewsTemplateDesigner from './pages/SuperAdmin/NewsTemplateDesigner';
 import AuditLogs from './pages/Core/AuditLogs';
@@ -92,43 +93,63 @@ function App() {
 
   const renderPage = () => {
     const isSuperAdmin = user.roles?.includes('SuperAdmin');
-    const isAdmin = user.roles?.includes('Admin');
+    
+    const hasPerm = (module, action = 'Read') => {
+      if (isSuperAdmin) return true;
+      const isModuleActive = user.activeModules?.includes(module);
+      if (!isModuleActive) return false;
+      const modPerm = user.permissions?.find(p => p.startsWith(`${module}:`));
+      if (!modPerm) return false;
+      const allowedActions = modPerm.split(':')[1];
+      const actionCode = action.substring(0, 1).toUpperCase();
+      return allowedActions.includes(actionCode);
+    };
 
     switch(currentPage) {
       case 'Marcas': 
-        if (isSuperAdmin || isAdmin) return <Brands user={user} />;
+        if (hasPerm('CORE')) return <Brands user={user} />;
         return <Dashboard />;
       case 'Tiendas': 
-        if (isSuperAdmin || isAdmin) return <Stores user={user} />;
+        if (hasPerm('CORE')) return <Stores user={user} />;
         return <Dashboard />;
       case 'Ciudades': 
-        if (isSuperAdmin || isAdmin) return <Cities user={user} />;
+        if (hasPerm('CORE')) return <Cities user={user} />;
         return <Dashboard />;
       case 'Distritos': 
-        if (isSuperAdmin || isAdmin) return <Districts />;
+        if (hasPerm('CORE')) return <Districts />;
         return <Dashboard />;
       case 'Cargos': 
-        if (isSuperAdmin || isAdmin) return <Profiles user={user} />;
+        if (hasPerm('CORE')) return <Profiles user={user} />;
         return <Dashboard />;
-      case 'Empleados': return <Employees user={user} />;
+      case 'Empleados': 
+        if (hasPerm('CORE')) return <Employees user={user} />;
+        return <Dashboard />;
       case 'Usuarios': 
-        if (isSuperAdmin || isAdmin) return <Users />;
+        if (hasPerm('ADMIN')) return <Users />;
         return <Dashboard />;
       case 'Jornadas':
-        if (isSuperAdmin || isAdmin) return <Jornadas />;
+        if (hasPerm('CORE')) return <Jornadas />;
         return <Dashboard />;
-      case 'Turnos': return <ShiftScheduler user={user} />;
-      case 'Marcaciones': // Added case for Marcaciones
-        return <Marcaciones user={user} />;
+      case 'Turnos': 
+        if (hasPerm('ATTENDANCE')) return <ShiftScheduler user={user} />;
+        return <Dashboard />;
+      case 'Marcaciones': 
+        if (hasPerm('ATTENDANCE')) return <Marcaciones user={user} />;
+        return <Dashboard />;
       case 'Monitoreo Asistencia':
-        if (isSuperAdmin || isAdmin) return <AttendanceMonitoring />;
+        if (hasPerm('ADMIN')) return <AttendanceMonitoring />;
         return <Dashboard />;
-      case 'Novedades': return <NewsInbox user={user} />;
+      case 'Novedades': 
+        if (hasPerm('ATTENDANCE')) return <NewsInbox user={user} />;
+        return <Dashboard />;
       case 'Configuración novedades':
-        if (isSuperAdmin || isAdmin) return <NewsDesigner />;
+        if (hasPerm('ADMIN')) return <NewsDesigner />;
         return <Dashboard />;
       case 'Empresas': 
         if (isSuperAdmin) return <Companies />;
+        return <Dashboard />;
+      case 'Permisos':
+        if (isSuperAdmin) return <ModulePermissions />;
         return <Dashboard />;
       case 'Configuración Sistema':
         if (isSuperAdmin) return <SystemSettings />;
@@ -137,7 +158,7 @@ function App() {
         if (isSuperAdmin) return <NewsTemplateDesigner />;
         return <Dashboard />;
       case 'Auditoría':
-        if (isSuperAdmin || isAdmin) return <AuditLogs />;
+        if (hasPerm('ADMIN')) return <AuditLogs />;
         return <Dashboard />;
       default: return <Dashboard />;
     }

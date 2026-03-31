@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit, X, Building2, Hash, Shield, AlertCircle, CheckCircle } from 'lucide-react';
+import { Plus, Trash2, Edit, X, Building2, Hash, Shield, AlertCircle, CheckCircle, Boxes } from 'lucide-react';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
+import ModuleActivationModal from '../../components/SuperAdmin/ModuleActivationModal';
 
 const Companies = () => {
   const { isDarkMode } = useTheme();
@@ -21,6 +22,7 @@ const Companies = () => {
   const [showModal, setShowModal] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [currentCompany, setCurrentCompany] = useState(null);
+  const [showModulesModal, setShowModulesModal] = useState(false);
   const [formData, setFormData] = useState({ 
     id: '', 
     name: '', 
@@ -171,6 +173,14 @@ const Companies = () => {
                     </span>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
+                    <button 
+                      onClick={() => { setCurrentCompany(c); setShowModulesModal(true); }}
+                      style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', padding: '0.5rem' }}
+                      className="hover:scale-110 transition-transform"
+                      title="Activar Módulos"
+                    >
+                      <Boxes size={20} />
+                    </button>
                     <button 
                       onClick={() => { setFormData({ id: c.id, name: c.name, taxId: c.taxId, isActive: c.isActive, countryCode: c.countryCode || 'CO', timeZoneId: c.timeZoneId || 'SA Pacific Standard Time' }); setShowModal(true); }}
                       style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', padding: '0.5rem' }}
@@ -329,6 +339,15 @@ const Companies = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {showModulesModal && currentCompany && (
+        <ModuleActivationModal 
+           isOpen={showModulesModal}
+           onClose={() => setShowModulesModal(false)}
+           companyId={currentCompany.id}
+           companyName={currentCompany.name}
+        />
       )}
 
       {toast.show && (

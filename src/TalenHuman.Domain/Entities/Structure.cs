@@ -1,6 +1,17 @@
 using TalenHuman.Domain.Common;
+using System.ComponentModel.DataAnnotations;
 
 namespace TalenHuman.Domain.Entities;
+
+public enum PermissionAction
+{
+    Read = 0,
+    Create = 1,
+    Update = 2,
+    Delete = 3,
+    Export = 4,
+    Approve = 5
+}
 
 public class Company : BaseEntity
 {
@@ -16,6 +27,7 @@ public class Company : BaseEntity
 
     // Relationships
     public ICollection<Brand> Brands { get; set; } = new List<Brand>();
+    public ICollection<CompanyModule> CompanyModules { get; set; } = new List<CompanyModule>();
 }
 
 public class Brand : BaseEntity, IMultitenant
@@ -115,4 +127,41 @@ public class SystemSetting : BaseEntity
     public string Value { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string Group { get; set; } = "General"; // e.g., "Storage", "Email"
+}
+
+public class Module : BaseEntity
+{
+    public string Code { get; set; } = string.Empty; // e.g., "CORE", "ATTENDANCE", "TIPS"
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string? Icon { get; set; } // Lucide icon name
+    public int DisplayOrder { get; set; }
+    public bool IsActive { get; set; } = true;
+
+    public ICollection<CompanyModule> CompanyModules { get; set; } = new List<CompanyModule>();
+}
+
+public class CompanyModule : BaseEntity
+{
+    public Guid CompanyId { get; set; }
+    public Company? Company { get; set; }
+
+    public Guid ModuleId { get; set; }
+    public Module? Module { get; set; }
+
+    public bool IsActive { get; set; } = true;
+}
+
+public class ModulePermission : BaseEntity, IMultitenant
+{
+    public Guid RoleId { get; set; } // Reference to AspNetRoles
+    
+    public Guid ModuleId { get; set; }
+    public Module? Module { get; set; }
+
+    public PermissionAction Action { get; set; }
+    public bool IsAllowed { get; set; } = true;
+
+    public Guid CompanyId { get; set; }
+    public Company? Company { get; set; }
 }

@@ -88,6 +88,102 @@ public class SystemController : ControllerBase
         await _context.SaveChangesAsync();
         return NoContent();
     }
+
+    // --- Modular Architecture Endpoints ---
+
+    [HttpGet("modules")]
+    public async Task<IActionResult> GetModules()
+    {
+        var modules = await _context.Modules.OrderBy(m => m.DisplayOrder).ToListAsync();
+        return Ok(modules);
+    }
+
+    [HttpGet("companies/{id}/modules")]
+    public async Task<IActionResult> GetCompanyModules(Guid id)
+    {
+        var activeModules = await _context.CompanyModules
+            .Where(cm => cm.CompanyId == id && cm.IsActive)
+            .Select(cm => cm.ModuleId)
+            .ToListAsync();
+        return Ok(activeModules);
+    }
+
+    [HttpPost("companies/{id}/modules")]
+    public async Task<IActionResult> UpdateCompanyModules(Guid id, [FromBody] List<Guid> moduleIds)
+    {
+        var existing = await _context.CompanyModules.Where(cm => cm.CompanyId == id).ToListAsync();
+        
+        // Deactivate removed
+        foreach (var ex in existing.Where(e => !moduleIds.Contains(e.ModuleId)))
+        {
+            ex.IsActive = false;
+        }
+
+        // Activate or create new
+        foreach (var mid in moduleIds)
+        {
+            var ex = existing.FirstOrDefault(e => e.ModuleId == mid);
+            if (ex != null) ex.IsActive = true;
+            else _context.CompanyModules.Add(new CompanyModule { CompanyId = id, ModuleId = mid, IsActive = true });
+        }
+
+        await _context.SaveChangesAsync();
+        return Ok();
+    }
+
+    [HttpGet("permissions/{companyId}")]
+    public async Task<IActionResult> GetPermissions(Guid companyId)
+    {
+        var perms = await _context.ModulePermissions
+            .IgnoreQueryFilters()
+            .Where(p => p.CompanyId == companyId)
+            .Select(p => new {
+                p.Id,
+                p.RoleId,
+                p.ModuleId,
+                p.Action,
+                p.IsAllowed
+            })
+            .ToListAsync();
+        return Ok(perms);
+    }
+
+    [HttpPost("permissions")]
+    public async Task<IActionResult> UpdatePermission([FromBody] UpdatePermissionDto dto)
+    {
+        var perm = await _context.ModulePermissions
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(p => p.CompanyId == dto.CompanyId && p.RoleId == dto.RoleId && p.ModuleId == dto.ModuleId && p.Action == dto.Action);
+
+        if (perm != null)
+        {
+            perm.IsAllowed = dto.IsAllowed;
+        }
+        else
+        {
+            perm = new ModulePermission
+            {
+                CompanyId = dto.CompanyId,
+                RoleId = dto.RoleId,
+                ModuleId = dto.ModuleId,
+                Action = dto.Action,
+                IsAllowed = dto.IsAllowed
+            };
+            _context.ModulePermissions.Add(perm);
+        }
+
+        await _context.SaveChangesAsync();
+        return Ok(perm);
+    }
+}
+
+public class UpdatePermissionDto
+{
+    public Guid CompanyId { get; set; }
+    public Guid RoleId { get; set; }
+    public Guid ModuleId { get; set; }
+    public PermissionAction Action { get; set; }
+    public bool IsAllowed { get; set; }
 }
 
 public class ApiKeyDto

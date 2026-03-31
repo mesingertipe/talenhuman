@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using TalenHuman.Application.Common.Interfaces;
 using TalenHuman.Domain.Entities;
 using TalenHuman.Infrastructure.Persistence;
+using TalenHuman.API.Infrastructure.Security;
 
 namespace TalenHuman.API.Controllers;
 
@@ -24,6 +25,7 @@ public class BrandsController : ControllerBase
     }
 
     [HttpGet]
+    [AuthorizePermission("CORE", PermissionAction.Read)]
     public async Task<ActionResult<IEnumerable<Brand>>> GetBrands()
     {
         return await _context.Brands.ToListAsync();
@@ -38,6 +40,7 @@ public class BrandsController : ControllerBase
     }
 
     [HttpPost]
+    [AuthorizePermission("CORE", PermissionAction.Create)]
     public async Task<ActionResult<Brand>> CreateBrand(Brand brand)
     {
         brand.CompanyId = _tenantProvider.GetTenantId();
@@ -50,6 +53,7 @@ public class BrandsController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [AuthorizePermission("CORE", PermissionAction.Update)]
     public async Task<IActionResult> UpdateBrand(Guid id, Brand brand)
     {
         var existing = await _context.Brands.FindAsync(id);
@@ -65,6 +69,7 @@ public class BrandsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [AuthorizePermission("CORE", PermissionAction.Delete)]
     public async Task<IActionResult> DeleteBrand(Guid id)
     {
         var brand = await _context.Brands.FindAsync(id);

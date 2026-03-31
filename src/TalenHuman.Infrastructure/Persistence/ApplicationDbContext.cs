@@ -22,6 +22,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     }
 
     public DbSet<Company> Companies => Set<Company>();
+    public DbSet<User> Users => Set<User>();
     public DbSet<Brand> Brands => Set<Brand>();
     public DbSet<Store> Stores => Set<Store>();
     public DbSet<City> Cities => Set<City>();
@@ -44,6 +45,9 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<District> Districts => Set<District>();
     public DbSet<SyncLog> SyncLogs => Set<SyncLog>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<TalenHuman.Domain.Entities.Module> Modules => Set<TalenHuman.Domain.Entities.Module>();
+    public DbSet<CompanyModule> CompanyModules => Set<CompanyModule>();
+    public DbSet<ModulePermission> ModulePermissions => Set<ModulePermission>();
     public Guid TenantId => _tenantProvider.GetTenantId();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -71,6 +75,8 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<BiometricRecord>().HasQueryFilter(b => b.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<NovedadAdjunto>().HasQueryFilter(n => n.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<AuditLog>().HasQueryFilter(a => a.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<CompanyModule>().HasQueryFilter(c => c.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<ModulePermission>().HasQueryFilter(m => m.CompanyId == TenantId || TenantId == Guid.Empty);
 
         // Many-to-Many: Supervisor -> Stores
         builder.Entity<SupervisorStore>()

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit, X, Building2, FileSpreadsheet, CheckCircle, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
 import BulkImportModal from '../../components/Shared/BulkImportModal';
+import PermissionGuard from '../../components/Shared/PermissionGuard';
 import { useTableData } from '../../hooks/useTableData';
 import Pagination from '../../components/Shared/Pagination';
 import { Search } from 'lucide-react';
@@ -119,20 +120,22 @@ const Brands = () => {
             />
           </div>
           <div className="flex gap-3">
-            <button 
-              onClick={() => setShowImport(true)}
-              className="btn-premium btn-premium-secondary"
-              style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
-            >
-              <FileSpreadsheet size={18} /> Importar
-            </button>
-            <button 
-              onClick={() => { setCurrentBrand(null); setFormData({ name: '', isActive: true }); setShowModal(true); }}
-              className="btn-premium btn-premium-primary"
-              style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
-            >
-              <Plus size={20} /> Nueva Marca
-            </button>
+            <PermissionGuard module="CORE" action="Create" user={user}>
+              <button 
+                onClick={() => setShowImport(true)}
+                className="btn-premium btn-premium-secondary"
+                style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
+              >
+                <FileSpreadsheet size={18} /> Importar
+              </button>
+              <button 
+                onClick={() => { setCurrentBrand(null); setFormData({ name: '', isActive: true }); setShowModal(true); }}
+                className="btn-premium btn-premium-primary"
+                style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
+              >
+                <Plus size={20} /> Nueva Marca
+              </button>
+            </PermissionGuard>
           </div>
         </div>
       </div>
@@ -183,20 +186,24 @@ const Brands = () => {
                     </span>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
-                    <button 
-                      onClick={() => { setCurrentBrand(brand); setFormData({ name: brand.name, isActive: brand.isActive !== false }); setShowModal(true); }}
-                      style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', padding: '0.5rem' }}
-                      className="hover:scale-110 transition-transform"
-                    >
-                      <Edit size={20} />
-                    </button>
-                    <button 
-                      onClick={() => { setCurrentBrand(brand); setShowConfirm(true); }}
-                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.5rem' }}
-                      className="hover:scale-110 transition-transform"
-                    >
-                      <Trash2 size={20} />
-                    </button>
+                    <PermissionGuard module="CORE" action="Update" user={user}>
+                      <button 
+                        onClick={() => { setCurrentBrand(brand); setFormData({ name: brand.name, isActive: brand.isActive !== false }); setShowModal(true); }}
+                        style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', padding: '0.5rem' }}
+                        className="hover:scale-110 transition-transform"
+                      >
+                        <Edit size={20} />
+                      </button>
+                    </PermissionGuard>
+                    <PermissionGuard module="CORE" action="Delete" user={user}>
+                      <button 
+                        onClick={() => { setCurrentBrand(brand); setShowConfirm(true); }}
+                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.5rem' }}
+                        className="hover:scale-110 transition-transform"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    </PermissionGuard>
                   </td>
                 </tr>
               ))}

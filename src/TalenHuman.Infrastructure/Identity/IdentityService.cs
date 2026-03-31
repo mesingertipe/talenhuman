@@ -8,13 +8,16 @@ public class IdentityService : IIdentityService
 {
     private readonly UserManager<User> _userManager;
     private readonly RoleManager<Role> _roleManager;
+    private readonly IApplicationDbContext _context;
 
     public IdentityService(
         UserManager<User> userManager,
-        RoleManager<Role> roleManager)
+        RoleManager<Role> roleManager,
+        IApplicationDbContext context)
     {
         _userManager = userManager;
         _roleManager = roleManager;
+        _context = context;
     }
 
     public async Task<(bool Succeeded, Guid UserId)> CreateUserAsync(
@@ -73,5 +76,33 @@ public class IdentityService : IIdentityService
             return result.Succeeded;
         }
         return false;
+    }
+
+    public async Task<List<string>> GetUserPermissionsAsync(Guid userId)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user == null) return new List<string>();
+
+        var userRoles = await _userManager.GetRolesAsync(user);
+        var roleEntities = _context.Roles.Where(r => userRoles.Contains(r.Name!)).ToList();
+        var roleIds = roleEntities.Select(r => r.Id).ToList();
+
+        // Get permissions linked to these roles and the specific Company
+        var permissions = _context.ModulePermissions
+            .Where(p => p.CompanyId == user.CompanyId && roleIds.Contains(p.RoleId) && p.IsAllowed)
+            .Select(p => new { p.Module!.Code, p.Action })
+            .ToList();
+
+        // Group by Module and format actions
+        var grouped = permissions
+            .GroupBy(p => p.Code)
+            .Select(g => 
+            {
+                var actions = string.Join(",", g.Select(p => p.Action.ToString().Substring(0, 1)).OrderBy(a => a));
+                return $"{g.Key}:{actions}";
+            })
+            .ToList();
+
+        return grouped;
     }
 }

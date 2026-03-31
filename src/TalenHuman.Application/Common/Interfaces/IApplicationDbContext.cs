@@ -25,9 +25,14 @@ public interface IApplicationDbContext
     DbSet<ApiKey> ApiKeys { get; }
     DbSet<ExternalApiConfig> ExternalApiConfigs { get; }
     DbSet<User> Users { get; }
+    DbSet<Role> Roles { get; }
     DbSet<SalesData> SalesData { get; }
     DbSet<SyncLog> SyncLogs { get; }
     DbSet<AuditLog> AuditLogs { get; }
+    DbSet<District> Districts { get; }
+    DbSet<TalenHuman.Domain.Entities.Module> Modules { get; }
+    DbSet<CompanyModule> CompanyModules { get; }
+    DbSet<ModulePermission> ModulePermissions { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }
