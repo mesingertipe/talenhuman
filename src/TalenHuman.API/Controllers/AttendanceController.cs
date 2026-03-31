@@ -372,16 +372,43 @@ public class AttendanceController : ControllerBase
     [HttpGet("sync-history")]
     public async Task<IActionResult> GetSyncHistory()
     {
-        var companyId = _tenantProvider.GetTenantId();
-        
-        var logs = await _context.SyncLogs
-            .Where(l => l.CompanyId == companyId)
-            .OrderByDescending(l => l.StartTime)
-            .Take(10)
-            .ToListAsync();
-        
-        return Ok(logs);
+        try 
+        {
+            var companyId = _tenantProvider.GetTenantId();
+            
+            // Execute in DB first (strict selection)
+            var logsData = await _context.SyncLogs
+                .Where(l => l.CompanyId == companyId)
+                .OrderByDescending(l => l.StartTime)
+                .Take(10)
+                .ToListAsync();
+
+            // Project in memory to avoid SQL translation errors with date arithmetic
+            var logs = logsData.Select(l => new {
+                    l.Id,
+                    l.StartTime,
+                    l.EndTime,
+                    l.Status,
+                    l.ErrorMessage,
+                    l.RecordsProcessed,
+                    ExecutionType = (int)l.ExecutionType,
+                    l.ProcessedDate,
+                    DurationSeconds = l.EndTime.HasValue 
+                        ? (l.EndTime.Value - l.StartTime).TotalSeconds 
+                        : (DateTime.UtcNow - l.StartTime).TotalSeconds
+                })
+                .ToList();
+            
+            return Ok(logs);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Message = ex.InnerException?.Message ?? ex.Message });
+        }
     }
+
+
+
 
 
 

@@ -217,9 +217,9 @@ const Dashboard = () => {
             <PieIcon size={20} className="text-indigo-500" />
             <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tighter">Distribución Asistencia</h2>
           </div>
-          <div className="h-[300px] w-full">
+          <div className="w-full" style={{ height: '300px', position: 'relative' }}>
             {pieData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%" minHeight={300}>
+                <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                     <Pie
                     data={pieData}
@@ -258,9 +258,9 @@ const Dashboard = () => {
             </div>
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Últimos 7 días analizados</span>
           </div>
-          <div className="h-[300px] w-full">
+          <div className="w-full" style={{ height: '300px', position: 'relative' }}>
             {stats?.history && stats.history.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%" minHeight={300}>
+                <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats.history}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                     <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700 }} dy={10} />
