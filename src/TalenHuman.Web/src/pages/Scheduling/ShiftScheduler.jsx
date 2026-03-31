@@ -915,7 +915,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                              style={{ borderRadius: '24px', gap: '2rem' }}>
                             {[
                                 { type: 'Turno', color: 'bg-indigo-600', icon: Clock, label: 'TURNO', tip: 'Turno de Trabajo (Arrastrar al grid)' },
-                                { type: 'Descanso', color: 'bg-slate-400', icon: Calendar, label: 'DESC', tip: 'Descanso (Arrastrar al grid)' },
+                                { type: 'Descanso', color: 'bg-slate-400 dark:bg-slate-500', icon: Calendar, label: 'DESC', tip: 'Descanso (Arrastrar al grid)' },
                                 { type: 'Turno Fuera', color: 'bg-purple-600', icon: AlertCircle, label: 'FUERA', tip: 'Turno Fuera de Sede (Arrastrar al grid)' }
                             ].map((tool, idx) => (
                                 <div key={idx} draggable onDragStart={(e) => handleDragStart(e, 'PANEL', { type: tool.type })} 
@@ -1106,7 +1106,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
 
                                                                     const shiftTime = `${new Date(shift.startTime).getHours().toString().padStart(2, '0')}:${new Date(shift.startTime).getMinutes().toString().padStart(2, '0')}-${new Date(shift.endTime).getHours().toString().padStart(2, '0')}:${new Date(shift.endTime).getMinutes().toString().padStart(2, '0')}`;
                                                                     const attTime = att ? `${new Date(att.clockIn).getHours().toString().padStart(2, '0')}:${new Date(att.clockIn).getMinutes().toString().padStart(2, '0')}—${att.clockOut ? new Date(att.clockOut).getHours().toString().padStart(2, '0') + ':' + new Date(att.clockOut).getMinutes().toString().padStart(2, '0') : '...'}` : 'S/MARCAR';
-                                                                    const displayText = viewMode === 'SHIFTS' ? (shift.isDescanso ? 'REST' : shiftTime) : (shift.isDescanso ? 'REST' : attTime);
+                                                                    const displayText = viewMode === 'SHIFTS' ? (shift.isDescanso ? 'DESC 00:00-00:00' : shiftTime) : (shift.isDescanso ? 'DESC 00:00-00:00' : attTime);
                                                                     const isLocked = !!att || isLockedDay;
                                                                      
                                                                     return (
