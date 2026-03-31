@@ -1,7 +1,10 @@
+using TalenHuman.Domain.Entities;
+
 namespace TalenHuman.Application.Common.Interfaces;
 
 public interface ISystemSettingsService
 {
+
     Task<string?> GetSettingAsync(string key);
     Task<T?> GetSettingAsync<T>(string key);
     Task SetSettingAsync(string key, string value, string group = "General", string? description = null);
