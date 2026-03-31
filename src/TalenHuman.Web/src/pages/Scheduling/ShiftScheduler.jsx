@@ -80,6 +80,8 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
     const [selectedEmployees, setSelectedEmployees] = useState([]);
     const [showBulkModal, setShowBulkModal] = useState(false);
     const [viewMode, setViewMode] = useState('SHIFTS'); // 'SHIFTS' or 'ATTENDANCE'
+    const [hoveredShiftData, setHoveredShiftData] = useState(null);
+    const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
     const [bulkData, setBulkData] = useState({
         startTime: '08:00',
         endTime: '17:00',
@@ -1075,6 +1077,12 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                                     setShowTimeModal(true);
                                                                                 }
                                                                              }}
+                                                                             onMouseEnter={e => {
+                                                                                const rect = e.currentTarget.getBoundingClientRect();
+                                                                                setHoveredShiftData({ ...shift, att, shiftTime, attTime });
+                                                                                setHoverPos({ x: rect.left + rect.width / 2, y: rect.top });
+                                                                             }}
+                                                                             onMouseLeave={() => setHoveredShiftData(null)}
                                                                              className="group rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-md transition-all cursor-grab active:cursor-grabbing hover:scale-[1.08] hover:z-50 relative"
                                                                              style={{ background: bgColor, minWidth: '85px', minHeight: '42px' }}
                                                                         >
@@ -1085,37 +1093,6 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                                 {displayText}
                                                                             </span>
                                                                             
-                                                                            {/* Elite Pop-over Card */}
-                                                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-[150px] opacity-0 group-hover:opacity-100 pointer-events-none transition-all scale-95 group-hover:scale-100 duration-200 z-[9999]">
-                                                                                <div className="bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl p-3 shadow-2xl overflow-hidden shadow-black/40">
-                                                                                    <div className="flex flex-col gap-1.5">
-                                                                                        <div className="flex justify-between items-center border-b border-indigo-500/30 pb-1.5 mb-1">
-                                                                                            <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">Detalle Elite</span>
-                                                                                            <Activity size={10} className="text-emerald-400" />
-                                                                                        </div>
-                                                                                        
-                                                                                        <div className="space-y-1">
-                                                                                            <div className="flex justify-between">
-                                                                                                <span className="text-[7px] font-bold text-slate-400 uppercase">Programado:</span>
-                                                                                                <span className="text-[8px] font-black text-white">{shiftTime}</span>
-                                                                                            </div>
-                                                                                            <div className="flex justify-between">
-                                                                                                <span className="text-[7px] font-bold text-slate-400 uppercase">Real Bio:</span>
-                                                                                                <span className={`text-[8px] font-black ${att ? 'text-emerald-400' : 'text-rose-400'}`}>{attTime}</span>
-                                                                                            </div>
-                                                                                            {att && att.statusObservation && (
-                                                                                                <div className="mt-1 pt-1 border-t border-white/5">
-                                                                                                    <p className="text-[7px] text-slate-300 italic leading-tight">
-                                                                                                        {att.statusObservation}
-                                                                                                    </p>
-                                                                                                </div>
-                                                                                            )}
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45 border-r border-b border-white/10"></div>
-                                                                                </div>
-                                                                            </div>
-
                                                                             {att && (
                                                                                 <div className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border border-white dark:border-slate-800 ${att.status === 0 ? 'bg-emerald-400' : 'bg-rose-400'} flex items-center justify-center shadow-sm`}>
                                                                                     {att.status === 0 ? <CheckCircle size={6} /> : <AlertCircle size={6} />}
@@ -1378,6 +1355,47 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                         <p className="text-sm font-bold text-slate-400 leading-relaxed px-4">Optimizando calidad HD y preparando datos seguros. Esto puede tardar unos segundos...</p>
                     </div>
                 </div>
+            )}
+
+            {/* Elite Detail Card Portal (Single Instance) */}
+            {hoveredShiftData && createPortal(
+                <div 
+                    className="fixed pointer-events-none z-[999999] transition-all duration-200 ease-out"
+                    style={{ 
+                        left: `${hoverPos.x}px`, 
+                        top: `${hoverPos.y}px`, 
+                        transform: 'translate(-50%, -100%) translateY(-12px)' 
+                    }}
+                >
+                    <div className="bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl overflow-hidden shadow-black/60 w-[180px] animate-in zoom-in-95 fade-in duration-200">
+                        <div className="flex flex-col gap-2">
+                            <div className="flex justify-between items-center border-b border-indigo-500/30 pb-2 mb-1">
+                                <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Detalle Elite</span>
+                                <Activity size={12} className="text-emerald-400 animate-pulse" />
+                            </div>
+                            
+                            <div className="space-y-1.5">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[8px] font-bold text-slate-400 uppercase">Programado:</span>
+                                    <span className="text-[9px] font-black text-white">{hoveredShiftData.shiftTime}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[8px] font-bold text-slate-400 uppercase">Real Bio:</span>
+                                    <span className={`text-[9px] font-black ${hoveredShiftData.att ? 'text-emerald-400' : 'text-rose-400'}`}>{hoveredShiftData.attTime}</span>
+                                </div>
+                                {hoveredShiftData.att && hoveredShiftData.att.statusObservation && (
+                                    <div className="mt-2 pt-2 border-t border-white/5">
+                                        <p className="text-[8px] text-slate-300 italic leading-snug">
+                                            {hoveredShiftData.att.statusObservation}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-900 rotate-45 border-r border-b border-white/10"></div>
+                    </div>
+                </div>,
+                document.body
             )}
         </>
     );
