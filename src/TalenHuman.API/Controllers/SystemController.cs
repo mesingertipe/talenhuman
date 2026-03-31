@@ -132,6 +132,7 @@ public class SystemController : ControllerBase
         }
 
         await _context.SaveChangesAsync();
+        await DbInitializer.SeedPermissionsForCompanyAsync((ApplicationDbContext)_context, id);
         return Ok();
     }
 

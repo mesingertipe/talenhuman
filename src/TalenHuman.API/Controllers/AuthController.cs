@@ -96,6 +96,7 @@ public class AuthController : ControllerBase
 
         // Add Active Modules for the Tenant
         var activeModules = await _context.CompanyModules
+            .IgnoreQueryFilters()
             .Include(cm => cm.Module)
             .Where(cm => cm.CompanyId == user.CompanyId && cm.IsActive)
             .Select(cm => cm.Module!.Code)

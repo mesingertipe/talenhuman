@@ -69,52 +69,7 @@ public static class DbInitializer
                 }
             }
 
-            // Seed Permission Matrix for Company
-            if (!await context.ModulePermissions.IgnoreQueryFilters().AnyAsync(p => p.CompanyId == comp.Id))
-            {
-                foreach (var mod in allModules)
-                {
-                    foreach (var role in allRoles)
-                    {
-                        // SuperAdmin / Admin: Full Access
-                        if (role.Name == "SuperAdmin" || role.Name == "Admin")
-                        {
-                            foreach (PermissionAction action in Enum.GetValues(typeof(PermissionAction)))
-                            {
-                                context.ModulePermissions.Add(new ModulePermission { 
-                                    RoleId = role.Id, ModuleId = mod.Id, 
-                                    Action = action, IsAllowed = true, 
-                                    CompanyId = comp.Id 
-                                });
-                            }
-                        }
-                        // Gerente: Read in Core, Read/Create in Attendance
-                        else if (role.Name == "Gerente")
-                        {
-                            if (mod.Code == "CORE") 
-                                context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Read, CompanyId = comp.Id });
-                            
-                            if (mod.Code == "ATTENDANCE")
-                            {
-                                context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Read, CompanyId = comp.Id });
-                                context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Create, CompanyId = comp.Id });
-                            }
-                        }
-                        // Distrital: Read in Core, Read/Export in Attendance
-                        else if (role.Name == "Distrital")
-                        {
-                            if (mod.Code == "CORE") 
-                                context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Read, CompanyId = comp.Id });
-                            
-                            if (mod.Code == "ATTENDANCE")
-                            {
-                                context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Read, CompanyId = comp.Id });
-                                context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Export, CompanyId = comp.Id });
-                            }
-                        }
-                    }
-                }
-            }
+            await SeedPermissionsForCompanyAsync(context, comp.Id);
         }
         await context.SaveChangesAsync();
 
@@ -136,6 +91,60 @@ public static class DbInitializer
 
             await userManager.CreateAsync(superAdmin, "Admin123!");
             await userManager.AddToRoleAsync(superAdmin, "SuperAdmin");
+        }
+    }
+
+    public static async Task SeedPermissionsForCompanyAsync(ApplicationDbContext context, Guid companyId)
+    {
+        var allModules = await context.Modules.ToListAsync();
+        var roles = await context.Roles.ToListAsync();
+
+        // Seed Permission Matrix for Company if it doesn't have any
+        if (!await context.ModulePermissions.IgnoreQueryFilters().AnyAsync(p => p.CompanyId == companyId))
+        {
+            foreach (var mod in allModules)
+            {
+                foreach (var role in roles)
+                {
+                    // SuperAdmin / Admin: Full Access
+                    if (role.Name == "SuperAdmin" || role.Name == "Admin")
+                    {
+                        foreach (PermissionAction action in Enum.GetValues(typeof(PermissionAction)))
+                        {
+                            context.ModulePermissions.Add(new ModulePermission { 
+                                RoleId = role.Id, ModuleId = mod.Id, 
+                                Action = action, IsAllowed = true, 
+                                CompanyId = companyId 
+                            });
+                        }
+                    }
+                    // Gerente: Read in Core, Read/Create in Attendance
+                    else if (role.Name == "Gerente")
+                    {
+                        if (mod.Code == "CORE") 
+                            context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Read, IsAllowed = true, CompanyId = companyId });
+                        
+                        if (mod.Code == "ATTENDANCE")
+                        {
+                            context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Read, IsAllowed = true, CompanyId = companyId });
+                            context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Create, IsAllowed = true, CompanyId = companyId });
+                        }
+                    }
+                    // Distrital: Read in Core, Read/Export in Attendance
+                    else if (role.Name == "Distrital")
+                    {
+                        if (mod.Code == "CORE") 
+                            context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Read, IsAllowed = true, CompanyId = companyId });
+                        
+                        if (mod.Code == "ATTENDANCE")
+                        {
+                            context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Read, IsAllowed = true, CompanyId = companyId });
+                            context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mod.Id, Action = PermissionAction.Export, IsAllowed = true, CompanyId = companyId });
+                        }
+                    }
+                }
+            }
+            await context.SaveChangesAsync();
         }
     }
 }
