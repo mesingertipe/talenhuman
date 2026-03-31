@@ -78,6 +78,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
     const [selectedProfile, setSelectedProfile] = useState('');
     const [selectedEmployees, setSelectedEmployees] = useState([]);
     const [showBulkModal, setShowBulkModal] = useState(false);
+    const [viewMode, setViewMode] = useState('SHIFTS'); // 'SHIFTS' or 'ATTENDANCE'
     const [bulkData, setBulkData] = useState({
         startTime: '08:00',
         endTime: '17:00',
@@ -805,8 +806,27 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                 <div className="w-[1px] h-8 bg-slate-100 dark:bg-slate-800 ml-4"></div>
                             </div>
 
-                            {/* Lado Derecho: Carga Inteligente + Ayuda (flex-1 para empujar) */}
-                            <div className="flex-1 flex justify-end items-center gap-3 pr-2">
+                            {/* Lado Derecho: Switch de Vista + Carga Inteligente + Ayuda */}
+                            <div className="flex-1 flex justify-end items-center gap-6 pr-2">
+                                
+                                {/* Elite View Mode Switch */}
+                                <div className="flex items-center bg-slate-50 dark:bg-slate-800/80 p-1 rounded-full border border-slate-100 dark:border-slate-700/50 shadow-inner">
+                                    <button 
+                                        onClick={() => setViewMode('SHIFTS')}
+                                        className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === 'SHIFTS' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                    >
+                                        Programado
+                                    </button>
+                                    <button 
+                                        onClick={() => setViewMode('ATTENDANCE')}
+                                        className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === 'ATTENDANCE' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                    >
+                                        Marcado
+                                    </button>
+                                </div>
+
+                                <div className="w-[1px] h-8 bg-slate-100 dark:bg-slate-800 hidden xl:block"></div>
+
                                 <button className="flex items-center gap-3 px-6 h-[56px] bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 rounded-[30px] transition-all active:scale-95 hover:bg-white dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-100 dark:hover:border-indigo-900 group"
                                         data-v12-tooltip="Carga Inteligente de Turnos Proyectados">
                                     <Sparkles size={18} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform" />
@@ -1021,20 +1041,24 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                     
                                                                     // Determine Base Styles
                                                                     let bgColor = '#4f46e5'; // Default Indigo
-                                                                    let statusText = '';
                                                                     
                                                                     if (att) {
                                                                         if (att.status === 0) bgColor = '#10b981'; // Green
                                                                         else if (att.status === 1) bgColor = '#f59e0b'; // Yellow
                                                                         else if (att.status === 3) bgColor = '#ef4444'; // Red
                                                                         else bgColor = '#f97316'; // Orange
-                                                                        statusText = `Entrada: ${new Date(att.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}${att.clockOut ? ` | Salida: ${new Date(att.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}`;
                                                                     } else if (!shift.isDescanso && !shift.isFuera && new Date(shift.startTime) < new Date()) {
                                                                         bgColor = '#ef4444'; // Past & No attendance = Red
                                                                     }
 
                                                                     if (shift.isDescanso) bgColor = '#94a3b8';
                                                                     if (shift.isFuera) bgColor = '#8b5cf6';
+
+                                                                    // Dynamic Content Based on ViewMode
+                                                                    const shiftTime = `${new Date(shift.startTime).getHours().toString().padStart(2, '0')}:${new Date(shift.startTime).getMinutes().toString().padStart(2, '0')}-${new Date(shift.endTime).getHours().toString().padStart(2, '0')}:${new Date(shift.endTime).getMinutes().toString().padStart(2, '0')}`;
+                                                                    const attTime = att ? `${new Date(att.clockIn).getHours().toString().padStart(2, '0')}:${new Date(att.clockIn).getMinutes().toString().padStart(2, '0')}—${att.clockOut ? new Date(att.clockOut).getHours().toString().padStart(2, '0') + ':' + new Date(att.clockOut).getMinutes().toString().padStart(2, '0') : '...'}` : 'S/MARCAR';
+
+                                                                    const displayText = viewMode === 'SHIFTS' ? (shift.isDescanso ? 'REST' : shiftTime) : (shift.isDescanso ? 'REST' : attTime);
 
                                                                     return (
                                                                         <div key={si} 
@@ -1050,17 +1074,47 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                                     setShowTimeModal(true);
                                                                                 }
                                                                              }}
-                                                                             title={statusText || (shift.isDescanso ? 'Descanso Programado' : 'Sin marcación aún')}
-                                                                             className="rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-md transition-all cursor-grab active:cursor-grabbing hover:scale-[1.05] relative"
-                                                                             style={{ background: bgColor, minWidth: '80px' }}
+                                                                             className="group rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-md transition-all cursor-grab active:cursor-grabbing hover:scale-[1.08] hover:z-50 relative"
+                                                                             style={{ background: bgColor, minWidth: '85px', minHeight: '42px' }}
                                                                         >
                                                                             <span className="text-[7px] font-black uppercase tracking-[0.1em] opacity-80 leading-none">
-                                                                                {shift.isDescanso ? 'DESC' : shift.isFuera ? 'FUERA' : 'TURNO'}
+                                                                                {viewMode === 'SHIFTS' ? (shift.isDescanso ? 'DESC' : shift.isFuera ? 'FUERA' : 'TURNO') : 'MARCACIÓN'}
                                                                             </span>
-                                                                            <span className="text-[8px] font-[1000] tracking-tighter whitespace-nowrap mt-0.5">
-                                                                                {shift.isDescanso ? 'REST' : `${new Date(shift.startTime).getHours().toString().padStart(2, '0')}:${new Date(shift.startTime).getMinutes().toString().padStart(2, '0')}-${new Date(shift.endTime).getHours().toString().padStart(2, '0')}:${new Date(shift.endTime).getMinutes().toString().padStart(2, '0')}`}
+                                                                            <span className={`text-[8px] font-[1000] tracking-tighter whitespace-nowrap mt-0.5 ${viewMode === 'ATTENDANCE' && !att ? 'opacity-40 animate-pulse' : ''}`}>
+                                                                                {displayText}
                                                                             </span>
                                                                             
+                                                                            {/* Elite Pop-over Card */}
+                                                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-[150px] opacity-0 group-hover:opacity-100 pointer-events-none transition-all scale-95 group-hover:scale-100 duration-200 z-[9999]">
+                                                                                <div className="bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl p-3 shadow-2xl overflow-hidden shadow-black/40">
+                                                                                    <div className="flex flex-col gap-1.5">
+                                                                                        <div className="flex justify-between items-center border-b border-indigo-500/30 pb-1.5 mb-1">
+                                                                                            <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">Detalle Elite</span>
+                                                                                            <Activity size={10} className="text-emerald-400" />
+                                                                                        </div>
+                                                                                        
+                                                                                        <div className="space-y-1">
+                                                                                            <div className="flex justify-between">
+                                                                                                <span className="text-[7px] font-bold text-slate-400 uppercase">Programado:</span>
+                                                                                                <span className="text-[8px] font-black text-white">{shiftTime}</span>
+                                                                                            </div>
+                                                                                            <div className="flex justify-between">
+                                                                                                <span className="text-[7px] font-bold text-slate-400 uppercase">Real Bio:</span>
+                                                                                                <span className={`text-[8px] font-black ${att ? 'text-emerald-400' : 'text-rose-400'}`}>{attTime}</span>
+                                                                                            </div>
+                                                                                            {att && att.statusObservation && (
+                                                                                                <div className="mt-1 pt-1 border-t border-white/5">
+                                                                                                    <p className="text-[7px] text-slate-300 italic leading-tight">
+                                                                                                        {att.statusObservation}
+                                                                                                    </p>
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45 border-r border-b border-white/10"></div>
+                                                                                </div>
+                                                                            </div>
+
                                                                             {att && (
                                                                                 <div className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border border-white dark:border-slate-800 ${att.status === 0 ? 'bg-emerald-400' : 'bg-rose-400'} flex items-center justify-center shadow-sm`}>
                                                                                     {att.status === 0 ? <CheckCircle size={6} /> : <AlertCircle size={6} />}
