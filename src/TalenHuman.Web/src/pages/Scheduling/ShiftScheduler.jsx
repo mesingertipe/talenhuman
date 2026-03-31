@@ -78,6 +78,8 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
     const [endTime, setEndTime] = useState('17:00');
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [saveComment, setSaveComment] = useState('');
+    const [snapshotData, setSnapshotData] = useState(null);
+    const [showSnapshotModal, setShowSnapshotModal] = useState(false);
     const [lastSaveComment, setLastSaveComment] = useState('');
     const [profiles, setProfiles] = useState([]);
     const [selectedProfile, setSelectedProfile] = useState('');
@@ -1037,7 +1039,12 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                 {nov && (
                                                                     <div onClick={() => {
                                                                                  if (isLocked) {
-                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
+                                                                                     if (att) {
+                                                                                         setSnapshotData({ ...shift, att, shiftTime, attTime });
+                                                                                         setShowSnapshotModal(true);
+                                                                                     } else {
+                                                                                         showToast("Turno bloqueado: Dato histórico", "info");
+                                                                                     }
                                                                                      return;
                                                                                  }
                                                                                  
@@ -1117,6 +1124,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                         >
                                                                             <div className="flex items-center gap-1">
                                                                                  {isLocked && <Lock size={7} className="text-white opacity-60" />}
+                                                                                 {att && <Activity size={7} className="text-white opacity-80 animate-pulse" />}
                                                                                  <span className="text-[7px] font-black uppercase tracking-[0.1em] opacity-80 leading-none">
                                                                                 {viewMode === 'SHIFTS' ? (shift.isDescanso ? 'DESC' : shift.isFuera ? 'FUERA' : 'TURNO') : 'MARCACIÓN'}
                                                                             </span>
