@@ -1030,6 +1030,8 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                 {days.map((day, di) => {
                                                     const dayShifts = shifts.filter(s => s.employeeId === emp.id && new Date(s.startTime).toDateString() === day.toDateString());
                                                     const nov = getNovedad(emp.id, day);
+                                                    const isLockedDay = new Date(day) < new Date(new Date().setHours(0,0,0,0));
+
                                                     return (
                                                         <td
                                                             key={di}
@@ -1039,22 +1041,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                         >
                                                             <div className="flex flex-col gap-1 min-h-[96px] justify-center">
                                                                 {nov && (
-                                                                    <div onClick={() => {
-                                                                                 if (isLocked) {
-                                                                                     if (att) {
-                                                                                         setSnapshotData({ ...shift, att, shiftTime, attTime });
-                                                                                         setShowSnapshotModal(true);
-                                                                                     } else {
-                                                                                         showToast("Turno bloqueado: Dato histórico", "info");
-                                                                                     }
-                                                                                     return;
-                                                                                 }
-                                                                                 
-                                                                                 if (isLocked) {
-                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
-                                                                                     return;
-                                                                                 }
-                                                                                  setSelectedNov({ ...nov, empName: `${emp.firstName} ${emp.lastName}` }); setShowNovModal(true); }}
+                                                                    <div onClick={() => { setSelectedNov({ ...nov, empName: `${emp.firstName} ${emp.lastName}` }); setShowNovModal(true); }}
                                                                          className="rounded-2xl h-12 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition-all border-2 border-blue-200 bg-blue-50 dark:bg-blue-900/10 dark:border-blue-800 shrink-0">
                                                                         <span className="text-[8px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-1 leading-none">NOVEDAD</span>
                                                                         <div className="h-4 w-4 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center text-blue-500">
@@ -1064,40 +1051,34 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                 )}
                                                                 {dayShifts.map((shift, si) => {
                                                                     const att = attendances.find(a => String(a.shiftId) === String(shift.id) && shift.id);
-                                                                    
-                                                                    // Determine Base Styles
-                                                                    let bgColor = '#4f46e5'; // Default Indigo
+                                                                    let bgColor = '#4f46e5';
                                                                     
                                                                     if (att) {
-                                                                        if (att.status === 0) bgColor = '#10b981'; // Green
-                                                                        else if (att.status === 1) bgColor = '#f59e0b'; // Yellow
-                                                                        else if (att.status === 3) bgColor = '#ef4444'; // Red
-                                                                        else bgColor = '#f97316'; // Orange
+                                                                        if (att.status === 0) bgColor = '#10b981';
+                                                                        else if (att.status === 1) bgColor = '#f59e0b';
+                                                                        else if (att.status === 3) bgColor = '#ef4444';
+                                                                        else bgColor = '#f97316';
                                                                     } else if (!shift.isDescanso && !shift.isFuera && new Date(shift.startTime) < new Date()) {
-                                                                        bgColor = '#ef4444'; // Past & No attendance = Red
+                                                                        bgColor = '#ef4444';
                                                                     }
 
                                                                     if (shift.isDescanso) bgColor = '#94a3b8';
                                                                     if (shift.isFuera) bgColor = '#8b5cf6';
 
-                                                                    // Dynamic Content Based on ViewMode
                                                                     const shiftTime = `${new Date(shift.startTime).getHours().toString().padStart(2, '0')}:${new Date(shift.startTime).getMinutes().toString().padStart(2, '0')}-${new Date(shift.endTime).getHours().toString().padStart(2, '0')}:${new Date(shift.endTime).getMinutes().toString().padStart(2, '0')}`;
                                                                     const attTime = att ? `${new Date(att.clockIn).getHours().toString().padStart(2, '0')}:${new Date(att.clockIn).getMinutes().toString().padStart(2, '0')}—${att.clockOut ? new Date(att.clockOut).getHours().toString().padStart(2, '0') + ':' + new Date(att.clockOut).getMinutes().toString().padStart(2, '0') : '...'}` : 'S/MARCAR';
-
                                                                     const displayText = viewMode === 'SHIFTS' ? (shift.isDescanso ? 'REST' : shiftTime) : (shift.isDescanso ? 'REST' : attTime);
-
-                                                                    const isLocked = !!att || new Date(day) < new Date(new Date().setHours(0,0,0,0));
+                                                                    const isLocked = !!att || isLockedDay;
                                                                      
                                                                      return (
                                                                          <div key={si} 
-                                                                               draggable={!isLocked} 
-                                                                               onDragStart={e => {
-                                                                                   if (isLocked) { e.preventDefault(); return; }
-                                                                                   handleDragStart(e, 'GRID', { employeeId: emp.id, date: day, shiftId: shift.id });
-                                                                               }}
+                                                                              draggable={!isLocked} 
+                                                                              onDragStart={e => {
+                                                                                  if (isLocked) { e.preventDefault(); return; }
+                                                                                  handleDragStart(e, 'GRID', { employeeId: emp.id, date: day, shiftId: shift.id });
+                                                                              }}
                                                                               onClick={() => {
                                                                                   if (isLocked) {
-                                                                                      // Click redundant in hover mode, but we can show toast if no att
                                                                                       if (!att) showToast("Turno bloqueado: Dato histórico", "info");
                                                                                       return;
                                                                                   }
@@ -1113,70 +1094,45 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                               onMouseEnter={e => {
                                                                                  const rect = e.currentTarget.getBoundingClientRect();
                                                                                  setHoveredShiftData({ ...shift, att, shiftTime, attTime, isLocked });
-                                                                                 // Centrar la burbuja sobre el turno
                                                                                  setHoverPos({ x: rect.left + rect.width / 2, y: rect.top });
                                                                               }}
                                                                               onMouseLeave={() => setHoveredShiftData(null)}
-                                                                             className={`group rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-md transition-all relative ${isLocked ? 'cursor-not-allowed opacity-[0.9]' : 'cursor-grab active:cursor-grabbing hover:scale-[1.05] hover:z-50'}`}
-                                                                             style={{ background: bgColor, minWidth: '85px', minHeight: '42px', filter: isLocked ? 'contrast(0.9) saturate(0.8)' : 'none' }}
-                                                                        >
-                                                                            <div className="flex items-center gap-1">
-                                                                                 <div className="flex items-center gap-2 mb-0.5">
+                                                                              className={`group rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-md transition-all relative ${isLocked ? (att ? 'cursor-help hover:ring-2 ring-white/50 scale-105' : 'cursor-default opacity-[0.9]') : 'cursor-grab active:cursor-grabbing hover:scale-[1.05] hover:z-50'}`}
+                                                                              style={{ background: bgColor, minWidth: '85px', minHeight: '42px', filter: isLocked ? 'contrast(0.9) saturate(0.8)' : 'none' }}
+                                                                         >
+                                                                             <div className="flex items-center gap-2 mb-0.5">
                                                                                  {isLocked && <Lock size={11} className="text-white opacity-70" />}
                                                                                  {att && <Activity size={12} className="text-white opacity-100 animate-pulse" />}
-                                                                                 {att && <Activity size={7} className="text-white opacity-80 animate-pulse" />}
                                                                                  <span className="text-[7px] font-black uppercase tracking-[0.1em] opacity-80 leading-none">
-                                                                                {viewMode === 'SHIFTS' ? (shift.isDescanso ? 'DESC' : shift.isFuera ? 'FUERA' : 'TURNO') : 'MARCACIÓN'}
-                                                                            </span>
-                                                                            </div>
+                                                                                    {viewMode === 'SHIFTS' ? (shift.isDescanso ? 'DESC' : shift.isFuera ? 'FUERA' : 'TURNO') : 'MARCACIÓN'}
+                                                                                 </span>
+                                                                             </div>
                                                                              <span className={`text-[8px] font-[1000] tracking-tighter whitespace-nowrap mt-0.5 ${viewMode === 'ATTENDANCE' && !att ? 'opacity-40 animate-pulse' : ''}`}>
-                                                                                {displayText}
-                                                                            </span>
-                                                                            
-                                                                            {att && (
-                                                                                <div className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border border-white dark:border-slate-800 ${att.status === 0 ? 'bg-emerald-400' : 'bg-rose-400'} flex items-center justify-center shadow-sm`}>
-                                                                                    {att.status === 0 ? <CheckCircle size={6} /> : <AlertCircle size={6} />}
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    );
-                                                                })}
+                                                                                 {displayText}
+                                                                             </span>
+                                                                             
+                                                                             {att && (
+                                                                                 <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white dark:border-slate-800 ${att.status === 0 ? 'bg-emerald-400' : 'bg-rose-400'} flex items-center justify-center shadow-md animate-bounce`}>
+                                                                                     {att.status === 0 ? <CheckCircle size={8} /> : <AlertCircle size={8} />}
+                                                                                 </div>
+                                                                             )}
+                                                                         </div>
+                                                                     );
+                                                                 })}
                                                                 {!nov && dayShifts.length === 0 && (
                                                                     <div onClick={() => {
-                                                                                 if (isLocked) {
-                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
+                                                                                 if (isLockedDay) {
+                                                                                     showToast("Turno bloqueado: Dato histórico", "info");
                                                                                      return;
                                                                                  }
-                                                                                 
-                                                                                 if (isLocked) {
-                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
-                                                                                     return;
-                                                                                 }
-                                                                                  
-                                                                            setPendingEvent({ employeeId: emp.id, date: day, type: 'Turno' }); 
-                                                                            setStartTime('08:00'); setEndTime('17:00'); setShowTimeModal(true); 
-                                                                         }}
-                                                                         className="h-20 w-full group/cell flex items-center justify-center border-2 border-slate-100 dark:border-slate-800/50 rounded-2xl transition-all hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                                                                        <Plus size={16} className="opacity-0 group-hover/cell:opacity-100 text-slate-400 transition-opacity" />
-                                                                    </div>
-                                                                )}
-                                                                {!nov && dayShifts.length > 0 && dayShifts.length < 3 && (
-                                                                    <div onClick={() => {
-                                                                                 if (isLocked) {
-                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
-                                                                                     return;
-                                                                                 }
-                                                                                 
-                                                                                 if (isLocked) {
-                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
-                                                                                     return;
-                                                                                 }
-                                                                                  
-                                                                            setPendingEvent({ employeeId: emp.id, date: day, type: 'Turno' }); 
-                                                                            setStartTime('14:00'); setEndTime('22:00'); setShowTimeModal(true); 
-                                                                         }}
-                                                                         className="h-6 w-full flex items-center justify-center border border-dashed border-slate-200 dark:border-slate-700 rounded-lg hover:border-indigo-400 transition-colors group/add cursor-pointer">
-                                                                        <Plus size={10} className="text-slate-300 group-hover/add:text-indigo-400" />
+                                                                                 setPendingEvent({ employeeId: emp.id, date: day, type: 'Turno', existingShift: null });
+                                                                                 setStartTime('08:00');
+                                                                                 setEndTime('17:00');
+                                                                                 setShowTimeModal(true);
+                                                                             }} 
+                                                                             className={`h-12 border-2 border-dashed rounded-2xl flex items-center justify-center transition-all ${isLockedDay ? 'border-slate-100 dark:border-slate-800 cursor-not-allowed opacity-[0.4]' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 cursor-pointer group'}`}
+                                                                    >
+                                                                        <Plus size={16} className={`${isLockedDay ? 'text-slate-300' : 'text-slate-400 group-hover:text-indigo-500 group-hover:scale-125'} transition-all`} />
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -1422,73 +1378,92 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                         </div>
                     )}
 
-                    {/* Elite Detail Snapshot Modal - Click Persistent */}
-                    {showSnapshotModal && snapshotData && (
-                        <div className="no-print" style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 15, 0.85)', backdropFilter: 'blur(30px)', zIndex: 100005, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-                            <div style={{ background: isDarkMode ? '#1e293b' : '#ffffff', width: '100%', maxWidth: '380px', borderRadius: '48px', overflow: 'hidden', border: isDarkMode ? '1px solid #334155' : 'none', boxShadow: '0 50px 100px rgba(0,0,0,0.5)', animation: 'modalSlideUp 0.3s ease-out' }}>
-                                <div className={`p-8 pb-4 flex items-center justify-between ${snapshotData.att ? (snapshotData.att.status === 0 ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-amber-50 dark:bg-amber-500/10') : 'bg-slate-50 dark:bg-slate-800/50'}`}>
+                    {/* Elite SnapShot Bubble Tooltip (Fidelity Style) */}
+                    {hoveredShiftData && (
+                        <div 
+                            className="no-print"
+                            style={{ 
+                                position: 'fixed', 
+                                zIndex: 1000000, 
+                                left: `${hoverPos.x}px`, 
+                                top: `${hoverPos.y}px`, 
+                                transform: hoverPos.y < 350 ? 'translate(-50%, 45px)' : 'translate(-50%, -100%) translateY(-25px)',
+                                transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                                pointerEvents: 'none'
+                            }}
+                        >
+                            {/* Card Container */}
+                            <div style={{ 
+                                background: isDarkMode ? '#1e293b' : '#ffffff', 
+                                border: `1px solid ${isDarkMode ? '#334155' : '#f1f5f9'}`,
+                                borderRadius: '32px',
+                                padding: '16px 20px',
+                                minWidth: '240px',
+                                boxShadow: '0 30px 60px rgba(0,0,0,0.15)',
+                                color: isDarkMode ? 'white' : '#1e293b',
+                                position: 'relative'
+                            }}>
+                                {/* Header (Status) */}
+                                <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-white/5">
                                     <div className="flex flex-col text-left">
-                                        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-tight">Consulta Biometría Elite</span>
-                                        <span className={`text-[15px] font-[1000] tracking-tight ${snapshotData.att ? (snapshotData.att.status === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400') : 'text-slate-500'}`}>
-                                            {snapshotData.isDescanso ? 'Día de Descanso' : (snapshotData.att ? (snapshotData.att.status === 0 ? 'ASISTENCIA CORRECTA' : 'MARCACIÓN CON DESFASE') : 'SIN MARCACIONES')}
+                                        <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">Estado Elite V12</span>
+                                        <span className={`text-[11px] font-[1000] tracking-tight ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'text-emerald-500' : 'text-amber-500') : 'text-slate-500'}`}>
+                                            {hoveredShiftData.att ? `ASISTENCIA ${hoveredShiftData.att.status === 0 ? 'CORRECTA' : 'CON NOVEDAD'}` : (hoveredShiftData.isDescanso ? 'DESCANSO' : 'PENDIENTE')}
                                         </span>
                                     </div>
-                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${snapshotData.att ? (snapshotData.att.status === 0 ? 'bg-emerald-100 dark:bg-emerald-400/20 text-emerald-600' : 'bg-amber-100 dark:bg-amber-400/20 text-amber-600') : 'bg-slate-100 dark:bg-slate-700 text-slate-400'}`}>
-                                        {snapshotData.att ? (snapshotData.att.status === 0 ? <CheckCircle size={24} /> : <AlertCircle size={24} />) : <Clock size={24} />}
+                                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500') : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                                        {hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? <CheckCircle size={16} /> : <AlertCircle size={16} />) : <Clock size={16} />}
                                     </div>
                                 </div>
 
-                                <div className="p-8 pt-6 space-y-6">
-                                    <div className="flex items-center gap-5">
-                                        <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500">
-                                            <Calendar size={20} />
-                                        </div>
+                                {/* Content */}
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-3">
+                                        <Calendar size={14} className="text-indigo-500" />
                                         <div className="flex flex-col text-left">
-                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Planificación de Turno</span>
-                                            <span className="text-[14px] font-[1000] text-slate-800 dark:text-white tracking-tight">{snapshotData.shiftTime}</span>
+                                            <span className="text-[7px] font-black uppercase text-slate-400">Turno Plan</span>
+                                            <span className="text-[12px] font-bold tracking-tight">{hoveredShiftData.shiftTime}</span>
                                         </div>
                                     </div>
 
-                                    {!snapshotData.isDescanso && (
-                                        <div className="grid grid-cols-2 gap-5 pt-4 border-t border-slate-100 dark:border-white/5">
+                                    {!hoveredShiftData.isDescanso && (
+                                        <div className="flex items-center justify-between gap-4 p-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-white/5">
                                             <div className="flex flex-col text-left">
-                                                <div className="flex items-center gap-2 mb-1.5">
-                                                    <LogIn size={14} className="text-emerald-500" />
-                                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Registro In</span>
+                                                <div className="flex items-center gap-1.5 mb-0.5">
+                                                    <LogIn size={11} className="text-emerald-500" />
+                                                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Entry</span>
                                                 </div>
-                                                <span className="text-[16px] font-[1000] text-slate-800 dark:text-white tracking-tight">
-                                                    {snapshotData.att ? new Date(snapshotData.att.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--'}
+                                                <span className="text-[12px] font-[1000]">
+                                                    {hoveredShiftData.att ? new Date(hoveredShiftData.att.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--'}
                                                 </span>
                                             </div>
+                                            <div className="w-[1px] h-6 bg-slate-200 dark:bg-white/10"></div>
                                             <div className="flex flex-col text-left">
-                                                <div className="flex items-center gap-2 mb-1.5">
-                                                    <LogOut size={14} className="text-rose-500" />
-                                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Registro Out</span>
+                                                <div className="flex items-center gap-1.5 mb-0.5">
+                                                    <LogOut size={11} className="text-rose-500" />
+                                                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Exit</span>
                                                 </div>
-                                                <span className="text-[16px] font-[1000] text-slate-800 dark:text-white tracking-tight">
-                                                    {snapshotData.att && snapshotData.att.clockOut ? new Date(snapshotData.att.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : (snapshotData.att ? 'ACTIVO' : '--:--')}
+                                                <span className="text-[12px] font-[1000]">
+                                                    {hoveredShiftData.att && hoveredShiftData.att.clockOut ? new Date(hoveredShiftData.att.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : (hoveredShiftData.att ? 'ACTIVE' : '--:--')}
                                                 </span>
                                             </div>
                                         </div>
                                     )}
-
-                                    {snapshotData.att && snapshotData.att.statusObservation && (
-                                        <div className="p-5 bg-slate-50 dark:bg-slate-800/80 rounded-3xl border border-slate-100 dark:border-white/5 text-left shadow-inner">
-                                            <div className="flex items-center gap-2 mb-2 text-slate-400">
-                                                <Info size={12} />
-                                                <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">Observaciones Biométricas</span>
-                                            </div>
-                                            <p className="text-[11px] text-slate-600 dark:text-slate-400 font-bold italic leading-relaxed">
-                                                "{snapshotData.att.statusObservation}"
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    <button 
-                                        onClick={() => setShowSnapshotModal(false)}
-                                        style={{ width: '100%', padding: '18px', borderRadius: '22px', border: 'none', background: '#3b82f6', color: 'white', fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 12px 24px rgba(59, 130, 246, 0.3)', marginTop: '10px' }}
-                                    > Entendido </button>
                                 </div>
+                                
+                                {/* TRIANGULO (ARROW) */}
+                                <div 
+                                    className={`absolute left-1/2 -translate-x-1/2 w-4 h-4 ${isDarkMode ? 'bg-[#1e293b]' : 'bg-white'} rotate-45 border ${isDarkMode ? 'border-slate-700' : 'border-slate-100'}`}
+                                    style={{ 
+                                        bottom: hoverPos.y < 350 ? 'auto' : '-8px',
+                                        top: hoverPos.y < 350 ? '-8px' : 'auto',
+                                        borderTop: hoverPos.y < 350 ? '' : 'none',
+                                        borderLeft: hoverPos.y < 350 ? '' : 'none',
+                                        borderBottom: hoverPos.y < 350 ? 'none' : '',
+                                        borderRight: hoverPos.y < 350 ? 'none' : '',
+                                        zIndex: -1
+                                    }}
+                                ></div>
                             </div>
                         </div>
                     )}
