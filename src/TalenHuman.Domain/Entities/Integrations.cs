@@ -38,6 +38,7 @@ public class SyncLog : BaseEntity
     public string? ErrorMessage { get; set; }
     public int RecordsProcessed { get; set; } = 0;
     public ExecutionType ExecutionType { get; set; } = ExecutionType.Manual;
+    public DateTime? ProcessedDate { get; set; } // The day being consolidated
     
     public double DurationSeconds => EndTime.HasValue 
         ? (EndTime.Value - StartTime).TotalSeconds 

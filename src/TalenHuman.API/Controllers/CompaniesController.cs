@@ -18,6 +18,21 @@ public class CompaniesController : ControllerBase
         _context = context;
     }
 
+    [HttpGet("current")]
+    public async Task<ActionResult<Company>> GetCurrentCompany()
+    {
+        // Tenant Provider returns the current context ID
+        var tenantId = Guid.Empty;
+        var claim = User.FindFirst("CompanyId")?.Value;
+        if (string.IsNullOrEmpty(claim)) return BadRequest("Token missing CompanyId claim.");
+        
+        tenantId = Guid.Parse(claim);
+        var company = await _context.Companies.FindAsync(tenantId);
+        if (company == null) return NotFound();
+        
+        return Ok(company);
+    }
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Company>>> GetCompanies()
     {

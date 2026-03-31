@@ -10,6 +10,7 @@ import { formatTenantDate } from '../../utils/localization';
 const AttendanceMonitoring = () => {
     const { isDarkMode } = useTheme();
     const [user, setUser] = useState(null);
+    const [company, setCompany] = useState(null);
     const [settings, setSettings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -42,7 +43,17 @@ const AttendanceMonitoring = () => {
         if (savedUser) setUser(JSON.parse(savedUser));
         fetchSettings();
         fetchSyncHistory();
+        fetchCompany();
     }, []);
+
+    const fetchCompany = async () => {
+        try {
+            const res = await api.get('/companies/current');
+            setCompany(res.data);
+        } catch (err) {
+            console.error("Error fetching company context:", err);
+        }
+    };
 
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });
@@ -293,12 +304,23 @@ const AttendanceMonitoring = () => {
                         ) : syncLogs.map((log, i) => (
                             <div key={log.id || i} style={{ padding: '1.5rem', background: activeColors.bg, borderRadius: '24px', border: `1px solid ${activeColors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div>
-                                    <div style={{ fontSize: '0.9rem', fontWeight: '800', color: activeColors.textMain }}>
-                                        {formatTenantDate(log.startTime, user?.countryCode, null, { 
-                                            day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' 
-                                        })}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div style={{ fontSize: '0.9rem', fontWeight: '800', color: activeColors.textMain }}>
+                                            {formatTenantDate(log.startTime, company?.countryCode, null, { 
+                                                day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' 
+                                            })}
+                                        </div>
+                                        {log.processedDate && (
+                                            <span style={{ 
+                                                fontSize: '0.65rem', fontWeight: '950', padding: '3px 8px', 
+                                                background: activeColors.accent + '20', color: activeColors.accent,
+                                                borderRadius: '8px', letterSpacing: '0.02em'
+                                            }}>
+                                                DÍA: {new Date(log.processedDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }).toUpperCase()}
+                                            </span>
+                                        )}
                                     </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
                                         <span style={{ fontSize: '0.65rem', fontWeight: '900', textTransform: 'uppercase', color: activeColors.textMuted }}>
                                             {log.executionType === 0 ? 'Manual' : 'Programado'}
                                         </span>

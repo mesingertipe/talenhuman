@@ -22,7 +22,8 @@ public class AttendanceService
             StartTime = DateTime.UtcNow, 
             ExecutionType = executionType,
             CompanyId = companyId,
-            Status = "Iniciado"
+            Status = "Iniciado",
+            ProcessedDate = day
         };
         _context.SyncLogs.Add(log);
         await _context.SaveChangesAsync(CancellationToken.None);

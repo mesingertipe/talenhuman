@@ -70,12 +70,12 @@ const RealTimeClock = ({ countryCode, timeZoneId, isCollapsed }) => {
   }
 
   return (
-    <div className="mx-[1.25rem] mb-4 p-0 flex items-center gap-4 animate-in fade-in transition-all">
+    <div className="ml-[1.1rem] mr-[1.25rem] mb-6 p-0 flex items-center gap-3 animate-in fade-in transition-all">
         <div className="relative shrink-0 flex items-center">
           <div style={{ 
-            width: '28px', height: '28px', borderRadius: '50%', overflow: 'hidden', 
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.4)', position: 'relative',
-            border: '1px solid rgba(255, 255, 255, 0.1)'
+            width: '26px', height: '26px', borderRadius: '50%', overflow: 'hidden', 
+            boxShadow: '0 4px 10px rgba(0, 0, 0, 0.4)', position: 'relative',
+            border: '1.5px solid rgba(255, 255, 255, 0.15)'
           }}>
             <img 
                 src={flagUrl} 
@@ -85,22 +85,22 @@ const RealTimeClock = ({ countryCode, timeZoneId, isCollapsed }) => {
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/30 pointer-events-none"></div>
           </div>
           <div style={{
-            position: 'absolute', bottom: '-2px', right: '-2px', 
-            width: '9px', height: '9px', backgroundColor: '#10b981', 
+            position: 'absolute', bottom: '-1px', right: '-1px', 
+            width: '8px', height: '8px', backgroundColor: '#10b981', 
             border: '1.5px solid #0f172a', borderRadius: '50%'
           }}></div>
         </div>
         <div className="flex flex-col min-w-0 justify-center">
             <span style={{ 
-                fontSize: '11px', fontWeight: '800', color: 'white', 
+                fontSize: '10px', fontWeight: '950', color: 'white', 
                 letterSpacing: '0.05em', lineHeight: '1', fontFamily: 'inherit' 
             }}>
                 {timeString.toUpperCase()}
             </span>
             <span style={{ 
-                fontSize: '8px', fontWeight: '600', color: '#94a3b8', 
+                fontSize: '7.5px', fontWeight: '700', color: '#94a3b8', 
                 marginTop: '4px', textTransform: 'uppercase', lineHeight: '1',
-                letterSpacing: '0.02em', whiteSpace: 'nowrap'
+                letterSpacing: '0.05em', whiteSpace: 'nowrap'
             }}>
                 {dateString}
             </span>
