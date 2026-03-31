@@ -262,19 +262,20 @@ const Header = ({ user, activePage, currentCompanyName, tenantSettings, companie
           </div>
         )}
         
-        {user?.roles?.includes('Distrital') && !user?.roles?.includes('Gerente') && (
+        {user?.roles?.includes('Distrital') && (
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
             gap: '8px', 
             padding: '8px 16px', 
-            background: 'rgba(79, 70, 229, 0.1)', 
-            border: '1.5px solid rgba(79, 70, 229, 0.2)', 
-            borderRadius: '14px'
+            background: isDarkMode ? 'rgba(99, 102, 241, 0.15)' : 'rgba(79, 70, 229, 0.1)', 
+            border: isDarkMode ? '1.5px solid rgba(99, 102, 241, 0.3)' : '1.5px solid rgba(79, 70, 229, 0.2)', 
+            borderRadius: '14px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
           }}>
-            <Shield size={16} className="text-indigo-500" />
-            <span style={{ fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase', color: 'var(--text-main)', letterSpacing: '0.02em' }}>
-              Multisede • {user.storeIds?.length || 0} tiendas
+            <Shield size={16} className="text-indigo-500 dark:text-indigo-400" />
+            <span style={{ fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase', color: isDarkMode ? '#fff' : 'var(--text-main)', letterSpacing: '0.02em' }}>
+              {user.districtName ? `DISTRITO: ${user.districtName}` : `MULTISEDE • ${user.storeIds?.length || 0} TIENDAS`}
             </span>
           </div>
         )}

@@ -125,6 +125,7 @@ public class AuthController : ControllerBase
         List<Guid> storeIds = new();
 
         var employee = await _context.Employees
+            .IgnoreQueryFilters()
             .Include(e => e.Store)
             .FirstOrDefaultAsync(e => e.Id == user.EmployeeId);
 
@@ -137,13 +138,41 @@ public class AuthController : ControllerBase
 
         // Load all assigned stores (primarily for Distritales / Fallback for Managers)
         var supervisorStoreAssignments = await _context.SupervisorStores
+            .IgnoreQueryFilters()
             .Include(ss => ss.Store)
             .Where(ss => ss.UserId == user.Id)
             .ToListAsync();
 
         storeIds = supervisorStoreAssignments.Select(ss => ss.StoreId).ToList();
 
-        // Fallback for storeName/ExternalId if not found via Employee
+        // Check if user is a District Supervisor
+        var managedDistricts = await _context.Districts
+            .IgnoreQueryFilters()
+            .Where(d => d.SupervisorId == user.Id)
+            .ToListAsync();
+
+        foreach (var dist in managedDistricts)
+        {
+            var distStores = await _context.Stores
+                .IgnoreQueryFilters()
+                .Where(s => s.DistrictId == dist.Id)
+                .ToListAsync();
+            
+            storeIds.AddRange(distStores.Select(s => s.Id));
+            
+            // Fallback for primary store name if not found yet
+            if (storeName == null && distStores.Any())
+            {
+                var first = distStores.First();
+                storeId = first.Id;
+                storeName = first.Name;
+                storeExternalId = first.ExternalId;
+            }
+        }
+
+        storeIds = storeIds.Distinct().ToList();
+
+        // Fallback for storeName/ExternalId if not found via Employee or District
         if (storeId == null && supervisorStoreAssignments.Any())
         {
             var primary = supervisorStoreAssignments.First().Store;
@@ -157,6 +186,8 @@ public class AuthController : ControllerBase
 
         // Log success
         await _auditService.LogAsync("LOGIN", "Auth", user.Id.ToString(), "Login exitoso", true, user.Id, user.CompanyId, user.Email);
+
+        var firstDistrictName = managedDistricts.FirstOrDefault()?.Name;
 
         return Ok(new
         {
@@ -173,6 +204,7 @@ public class AuthController : ControllerBase
                 storeId,
                 storeName,
                 storeExternalId,
+                districtName = firstDistrictName,
                 storeIds,
                 activeModules,
                 permissions
