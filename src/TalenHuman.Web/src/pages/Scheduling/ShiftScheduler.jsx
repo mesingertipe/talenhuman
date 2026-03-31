@@ -1341,11 +1341,74 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                             </div>
                         </div>
                     )}
+
+                    {/* Elite Detail Card Portal (Single Instance) - Ultra High Fidelity */}
+                    {hoveredShiftData && (
+                        <div 
+                            className="fixed pointer-events-none z-[1000000] animate-in zoom-in-95 fade-in duration-300"
+                            style={{ 
+                                left: `${hoverPos.x}px`, 
+                                top: `${hoverPos.y}px`, 
+                                transform: 'translate(-50%, -100%) translateY(-25px)' 
+                            }}
+                        >
+                            <div className="bg-slate-900/95 backdrop-blur-3xl border border-white/20 rounded-[24px] p-5 shadow-[0_50px_100px_rgba(0,0,0,0.7)] overflow-hidden w-[240px] relative">
+                                {/* Brillo V12 Elite */}
+                                <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/20 blur-3xl rounded-full animate-pulse"></div>
+                                
+                                <div className="relative flex flex-col gap-4">
+                                    <div className="flex justify-between items-center border-b border-indigo-500/30 pb-3 mb-1">
+                                        <div className="flex flex-col text-left">
+                                            <span className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Visión Elite V12</span>
+                                            <span className="text-[8px] font-bold text-indigo-400 uppercase tracking-widest leading-none">Status Biométrico Real</span>
+                                        </div>
+                                        <div className={`w-3 h-3 rounded-full ${hoveredShiftData.att ? 'bg-emerald-400 animate-ping' : 'bg-rose-400'}`}></div>
+                                    </div>
+                                    
+                                    <div className="space-y-3">
+                                        <div className={`flex flex-col p-3 rounded-2xl transition-all ${viewMode === 'SHIFTS' ? 'bg-white/5 border border-white/5' : 'bg-indigo-600/20 border border-indigo-500/30 shadow-inner scale-[1.02]'}`}>
+                                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Horario Programado</span>
+                                            <div className="flex items-center gap-2">
+                                                <div className="p-1 px-2 rounded-lg bg-indigo-500/20 text-indigo-400 text-[10px] font-black whitespace-nowrap">SHIFT</div>
+                                                <span className="text-[12px] font-black text-white tracking-tight">{hoveredShiftData.shiftTime}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className={`flex flex-col p-3 rounded-2xl transition-all ${viewMode === 'ATTENDANCE' ? 'bg-white/5 border border-white/5' : (hoveredShiftData.att ? 'bg-emerald-600/20 border border-emerald-500/30 shadow-lg scale-[1.02]' : 'bg-rose-600/20 border border-rose-500/30')}`}>
+                                            <div className="flex justify-between items-start mb-1 text-left">
+                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Ejecución Biometría</span>
+                                                {hoveredShiftData.att && (
+                                                    <span className={`text-[7px] px-2 py-0.5 rounded-full font-black uppercase ${hoveredShiftData.att.status === 0 ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}>
+                                                        {hoveredShiftData.att.status === 0 ? 'CORRECTO' : 'DESFASE'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <div className={`p-1 px-2 rounded-lg text-[10px] font-black whitespace-nowrap ${hoveredShiftData.att ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>REAL</div>
+                                                <span className={`text-[12px] font-black tracking-tight ${hoveredShiftData.att ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                                    {hoveredShiftData.attTime}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        
+                                        {hoveredShiftData.att && hoveredShiftData.att.statusObservation && (
+                                            <div className="mt-1 p-3 bg-slate-800/80 rounded-2xl border border-white/5 text-left shadow-inner">
+                                                <p className="text-[9px] text-slate-300 italic leading-snug font-medium">
+                                                    "{hoveredShiftData.att.statusObservation}"
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-900 rotate-45 border-r border-b border-white/10"></div>
+                            </div>
+                        </div>
+                    )}
                 </>,
                 document.getElementById('modal-root') || document.body
             )}
             {isExporting && (
-                <div className="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-white dark:bg-slate-900 p-8 md:p-12 rounded-[3.5rem] shadow-2xl border border-white/10 flex flex-col items-center max-w-md w-full text-center animate-in zoom-in-95 duration-300">
                         <div className="relative mb-8">
                             <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 animate-pulse"></div>
@@ -1355,71 +1418,6 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                         <p className="text-sm font-bold text-slate-400 leading-relaxed px-4">Optimizando calidad HD y preparando datos seguros. Esto puede tardar unos segundos...</p>
                     </div>
                 </div>
-            )}
-
-            {/* Elite Detail Card Portal (Single Instance) - Ultra High Fidelity */}
-            {hoveredShiftData && createPortal(
-                <div 
-                    className="fixed pointer-events-none z-[999999] transition-all duration-300 ease-out"
-                    style={{ 
-                        left: `${hoverPos.x}px`, 
-                        top: `${hoverPos.y}px`, 
-                        transform: 'translate(-50%, -100%) translateY(-20px)' 
-                    }}
-                >
-                    <div className="bg-slate-900/90 backdrop-blur-2xl border border-white/20 rounded-[28px] p-5 shadow-[0_30px_70px_rgba(0,0,0,0.5)] overflow-hidden w-[220px] animate-in zoom-in-90 fade-in slide-in-from-bottom-2 duration-300">
-                        {/* Brillo V12 */}
-                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-indigo-500/20 blur-3xl rounded-full"></div>
-                        
-                        <div className="relative flex flex-col gap-3">
-                            <div className="flex justify-between items-center border-b border-white/10 pb-3 mb-1">
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Registro Elite</span>
-                                    <span className="text-[7px] font-bold text-indigo-400 uppercase tracking-widest leading-none">Análisis Biométrico</span>
-                                </div>
-                                <Activity size={16} className={`${hoveredShiftData.att ? 'text-emerald-400 animate-pulse' : 'text-slate-500'}`} />
-                            </div>
-                            
-                            <div className="space-y-2.5">
-                                <div className={`flex flex-col p-2.5 rounded-2xl ${viewMode === 'SHIFTS' ? 'bg-white/5 border border-white/5' : 'bg-indigo-500/10 border border-indigo-500/20 shadow-inner'}`}>
-                                    <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">Programación Teórica</span>
-                                    <div className="flex items-center gap-2">
-                                        <Clock size={10} className="text-indigo-400" />
-                                        <span className="text-[11px] font-[1000] text-white tracking-tight">{hoveredShiftData.shiftTime}</span>
-                                    </div>
-                                </div>
-
-                                <div className={`flex flex-col p-2.5 rounded-2xl ${viewMode === 'ATTENDANCE' ? 'bg-white/5 border border-white/5' : (hoveredShiftData.att ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-rose-500/10 border border-rose-500/20')}`}>
-                                    <div className="flex justify-between items-start mb-1">
-                                        <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">Realidad Biometría</span>
-                                        {hoveredShiftData.att && (
-                                            <span className={`text-[6px] px-1.5 py-0.5 rounded-full font-black uppercase ${hoveredShiftData.att.status === 0 ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}>
-                                                {hoveredShiftData.att.status === 0 ? 'OK' : 'DESFASE'}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Activity size={10} className={hoveredShiftData.att ? 'text-emerald-400' : 'text-rose-400'} />
-                                        <span className={`text-[11px] font-[1000] tracking-tight ${hoveredShiftData.att ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                            {hoveredShiftData.attTime}
-                                        </span>
-                                    </div>
-                                </div>
-                                
-                                {hoveredShiftData.att && hoveredShiftData.att.statusObservation && (
-                                    <div className="mt-1 p-2.5 bg-slate-800/50 rounded-xl border border-white/5">
-                                        <p className="text-[8px] text-slate-300 italic leading-snug font-medium">
-                                            "{hoveredShiftData.att.statusObservation}"
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                        {/* Decoración V12 Elite */}
-                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-900 rotate-45 border-r border-b border-white/10"></div>
-                    </div>
-                </div>,
-                document.body
             )}
         </>
     );
