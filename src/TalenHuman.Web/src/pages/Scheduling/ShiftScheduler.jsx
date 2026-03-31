@@ -919,8 +919,13 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                 { type: 'Turno Fuera', color: 'bg-purple-600', icon: AlertCircle, label: 'FUERA', tip: 'Turno Fuera de Sede (Arrastrar al grid)' }
                             ].map((tool, idx) => (
                                 <div key={idx} draggable onDragStart={(e) => handleDragStart(e, 'PANEL', { type: tool.type })} 
-                                    className={`flex-shrink-0 ${tool.color} text-white flex flex-col items-center justify-center cursor-grab shadow-sm hover:scale-105 active:scale-95 transition-all group relative`}
-                                    style={{ width: '96px', height: '64px', borderRadius: '16px' }}
+                                    className={`flex-shrink-0 ${tool.type === 'Descanso' ? '' : tool.color} text-white flex flex-col items-center justify-center cursor-grab shadow-sm hover:scale-105 active:scale-95 transition-all group relative`}
+                                    style={{ 
+                                        width: '96px', 
+                                        height: '64px', 
+                                        borderRadius: '16px',
+                                        backgroundColor: tool.type === 'Descanso' ? '#94a3b8' : undefined 
+                                    }}
                                     data-v12-tooltip={tool.tip}
                                 >
                                     <tool.icon size={22} strokeWidth={2.5} className="mb-1" />
@@ -1106,7 +1111,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
 
                                                                     const shiftTime = `${new Date(shift.startTime).getHours().toString().padStart(2, '0')}:${new Date(shift.startTime).getMinutes().toString().padStart(2, '0')}-${new Date(shift.endTime).getHours().toString().padStart(2, '0')}:${new Date(shift.endTime).getMinutes().toString().padStart(2, '0')}`;
                                                                     const attTime = att ? `${new Date(att.clockIn).getHours().toString().padStart(2, '0')}:${new Date(att.clockIn).getMinutes().toString().padStart(2, '0')}—${att.clockOut ? new Date(att.clockOut).getHours().toString().padStart(2, '0') + ':' + new Date(att.clockOut).getMinutes().toString().padStart(2, '0') : '...'}` : 'S/MARCAR';
-                                                                    const displayText = viewMode === 'SHIFTS' ? (shift.isDescanso ? 'DESC 00:00-00:00' : shiftTime) : (shift.isDescanso ? 'DESC 00:00-00:00' : attTime);
+                                                                    const displayText = viewMode === 'SHIFTS' ? (shift.isDescanso ? '00:00-00:00' : shiftTime) : (shift.isDescanso ? '00:00-00:00' : attTime);
                                                                     const isLocked = !!att || isLockedDay;
                                                                      
                                                                     return (
