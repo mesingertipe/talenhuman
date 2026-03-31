@@ -202,7 +202,18 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
             }));
 
             setShifts(normalizedShifts);
-            setAttendances(attRes.data);
+            
+            const normalizedAttendances = attRes.data.map(a => ({
+                ...a,
+                id: a.id || a.Id,
+                employeeId: a.employeeId || a.EmployeeId,
+                shiftId: a.shiftId || a.ShiftId,
+                clockIn: a.clockIn || a.ClockIn,
+                clockOut: a.clockOut || a.ClockOut,
+                status: a.status !== undefined ? a.status : a.Status
+            }));
+            
+            setAttendances(normalizedAttendances);
             setNews(newsRes.data);
 
             // Extract the common observation/comment for this week
@@ -1054,12 +1065,13 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                     let bgColor = '#4f46e5';
                                                                     
                                                                     if (att) {
-                                                                        if (att.status === 0) bgColor = '#10b981';
-                                                                        else if (att.status === 1) bgColor = '#f59e0b';
-                                                                        else if (att.status === 3) bgColor = '#ef4444';
-                                                                        else bgColor = '#f97316';
+                                                                        if (att.status === 0) bgColor = '#10b981'; // Verde (Correcto)
+                                                                        else if (att.status === 1) bgColor = '#f59e0b'; // Amarillo (Desfasado)
+                                                                        else if (att.status === 2) bgColor = '#f97316'; // Naranja (Errado)
+                                                                        else if (att.status === 3) bgColor = '#ef4444'; // Rojo (Sin Marcacion)
+                                                                        else bgColor = '#64748b'; // Gris (Otros)
                                                                     } else if (!shift.isDescanso && !shift.isFuera && new Date(shift.startTime) < new Date()) {
-                                                                        bgColor = '#ef4444';
+                                                                        bgColor = '#ef4444'; // Rojo (Sin Marcacion historico)
                                                                     }
 
                                                                     if (shift.isDescanso) bgColor = '#94a3b8';
@@ -1438,11 +1450,41 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                 {/* Header (Status) */}
                                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-white/5">
                                     <div className="flex flex-col text-left">
-                                        <span className={`text-[12px] font-[1000] tracking-tight ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'text-emerald-500' : 'text-amber-500') : 'text-slate-500'}`}>
-                                            {hoveredShiftData.att ? `ASISTENCIA ${hoveredShiftData.att.status === 0 ? 'CORRECTA' : 'CON NOVEDAD'}` : (hoveredShiftData.isDescanso ? 'DESCANSO' : 'PENDIENTE')}
+                                        <span className={`text-[12px] font-[1000] tracking-tight ${(() => {
+                                            if (hoveredShiftData.att) {
+                                                const s = hoveredShiftData.att.status;
+                                                if (s === 0) return 'text-emerald-500';
+                                                if (s === 1) return 'text-amber-500';
+                                                if (s === 2) return 'text-orange-500';
+                                                if (s === 3) return 'text-rose-500';
+                                                return 'text-slate-500';
+                                            }
+                                            return 'text-slate-500';
+                                        })()}`}>
+                                            {(() => {
+                                                if (hoveredShiftData.att) {
+                                                    const s = hoveredShiftData.att.status;
+                                                    if (s === 0) return 'TURNO CORRECTO';
+                                                    if (s === 1) return 'TURNO DESFASADO';
+                                                    if (s === 2) return 'TURNO ERRADO';
+                                                    if (s === 3) return 'TURNO SIN MARCACION';
+                                                    return 'TURNO PENDIENTE';
+                                                }
+                                                return hoveredShiftData.isDescanso ? 'DESCANSO' : 'TURNO PENDIENTE';
+                                            })()}
                                         </span>
                                     </div>
-                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'bg-emerald-500 text-white shadow-emerald-200/50' : 'bg-amber-500 text-white shadow-amber-200/50') : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg ${(() => {
+                                        if (hoveredShiftData.att) {
+                                            const s = hoveredShiftData.att.status;
+                                            if (s === 0) return 'bg-emerald-500 text-white shadow-emerald-200/50';
+                                            if (s === 1) return 'bg-amber-500 text-white shadow-amber-200/50';
+                                            if (s === 2) return 'bg-orange-500 text-white shadow-orange-200/50';
+                                            if (s === 3) return 'bg-rose-500 text-white shadow-rose-200/50';
+                                            return 'bg-slate-100 text-slate-400';
+                                        }
+                                        return 'bg-slate-100 dark:bg-slate-800 text-slate-400';
+                                    })()}`}>
                                         {hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? <CheckCircle size={22} strokeWidth={3} /> : <AlertCircle size={22} strokeWidth={3} />) : <Clock size={20} />}
                                     </div>
                                 </div>
