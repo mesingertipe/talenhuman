@@ -376,7 +376,10 @@ public class AttendanceController : ControllerBase
         {
             // AUTO-REPAIR: Ensure schema consistency for PostgreSQL (fixes 42703 error)
             try {
-                await _context.Database.ExecuteSqlRawAsync("ALTER TABLE \"SyncLogs\" ADD COLUMN IF NOT EXISTS \"ProcessedDate\" timestamp with time zone NULL;");
+                if (_context is DbContext dbContext)
+                {
+                    await dbContext.Database.ExecuteSqlRawAsync("ALTER TABLE \"SyncLogs\" ADD COLUMN IF NOT EXISTS \"ProcessedDate\" timestamp with time zone NULL;");
+                }
             } catch { /* Silent fail: the query below will throw if truly broken */ }
 
             var companyId = _tenantProvider.GetTenantId();
