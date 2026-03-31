@@ -102,6 +102,7 @@ public class SystemController : ControllerBase
     public async Task<IActionResult> GetCompanyModules(Guid id)
     {
         var activeModules = await _context.CompanyModules
+            .IgnoreQueryFilters()
             .Where(cm => cm.CompanyId == id && cm.IsActive)
             .Select(cm => cm.ModuleId)
             .ToListAsync();
@@ -111,7 +112,10 @@ public class SystemController : ControllerBase
     [HttpPost("companies/{id}/modules")]
     public async Task<IActionResult> UpdateCompanyModules(Guid id, [FromBody] List<Guid> moduleIds)
     {
-        var existing = await _context.CompanyModules.Where(cm => cm.CompanyId == id).ToListAsync();
+        var existing = await _context.CompanyModules
+            .IgnoreQueryFilters()
+            .Where(cm => cm.CompanyId == id)
+            .ToListAsync();
         
         // Deactivate removed
         foreach (var ex in existing.Where(e => !moduleIds.Contains(e.ModuleId)))
