@@ -34,7 +34,8 @@ import {
     LogIn,
     LogOut,
     ArrowDown,
-    XCircle
+    XCircle,
+    AlertTriangle
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import HelpIcon from '../../components/Shared/HelpIcon';
@@ -1133,7 +1134,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                              
                                                                              {att && (
                                                                                  <div className={`absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-slate-800 flex items-center justify-center shadow-md animate-in zoom-in duration-300`} style={{ backgroundColor: bgColor, color: 'white' }}>
-                                                                                     {att.status === 0 ? <CheckCircle size={9} strokeWidth={4} /> : (att.status === 2 ? <XCircle size={9} strokeWidth={4} /> : (!att.clockOut ? <Clock size={9} strokeWidth={4} /> : <AlertCircle size={9} strokeWidth={4} />))}
+                                                                                     {att.status === 0 ? <CheckCircle size={9} strokeWidth={4} /> : (att.status === 2 ? <XCircle size={9} strokeWidth={4} /> : (att.status === 3 ? <AlertTriangle size={9} strokeWidth={4} /> : (!att.clockOut ? <Clock size={9} strokeWidth={4} /> : <AlertCircle size={9} strokeWidth={4} />)))}
                                                                                  </div>
                                                                              )}
                                                                          </div>
@@ -1173,9 +1174,14 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                             const workedTotal = employeeAttendances
                                                                 .reduce((acc, att) => {
                                                                     if (!att.clockIn || !att.clockOut) return acc;
+                                                                    // Only count Correct (0) or Delayed (1) attendance as real worked hours
+                                                                    const s = Number(att.status);
+                                                                    if (s !== 0 && s !== 1) return acc;
+                                                                    
                                                                     const start = new Date(att.clockIn);
                                                                     const end = new Date(att.clockOut);
                                                                     if (isNaN(start.getTime()) || isNaN(end.getTime())) return acc;
+                                                                    
                                                                     let diff = (end - start) / (1000 * 60 * 60);
                                                                     if (diff < 0) diff += 24;
                                                                     return acc + (isNaN(diff) ? 0 : diff);
@@ -1343,16 +1349,6 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                 <button
                                                     key={i}
                                                     onClick={() => {
-                                                                                 if (isLocked) {
-                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
-                                                                                     return;
-                                                                                 }
-                                                                                 
-                                                                                 if (isLocked) {
-                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
-                                                                                     return;
-                                                                                 }
-                                                                                 
                                                         const newDays = [...bulkData.days];
                                                         newDays[i] = !newDays[i];
                                                         setBulkData({...bulkData, days: newDays});
@@ -1368,16 +1364,6 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                         <button onClick={handleBulkApply} style={{ width: '100%', padding: '20px', borderRadius: '20px', border: 'none', background: '#4f46e5', color: 'white', fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 12px 24px rgba(79, 70, 229, 0.3)' }}>Pre-cargar Turnos</button>
                                         <button onClick={() => {
-                                                                                 if (isLocked) {
-                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
-                                                                                     return;
-                                                                                 }
-                                                                                 
-                                                                                 if (isLocked) {
-                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
-                                                                                     return;
-                                                                                 }
-                                                                                 
                                             const newShifts = [...shifts].filter(s => !selectedEmployees.includes(s.employeeId));
                                             setShifts(newShifts);
                                             setShowBulkModal(false);
@@ -1459,12 +1445,12 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                 {/* Header (Status) */}
                                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-white/5">
                                     <div className="flex flex-col text-left">
-                                        <span className={`text-[12px] font-[1000] tracking-tight ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'text-emerald-500' : 'text-amber-500') : 'text-slate-500'}`}>
-                                            {hoveredShiftData.att ? `ASISTENCIA ${hoveredShiftData.att.status === 0 ? 'CORRECTA' : 'CON NOVEDAD'}` : (hoveredShiftData.isDescanso ? 'DESCANSO' : 'PENDIENTE')}
+                                        <span className={`text-[12px] font-[1000] tracking-tight ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'text-emerald-500' : (hoveredShiftData.att.status === 3 ? 'text-rose-600' : 'text-amber-500')) : 'text-slate-500'}`}>
+                                            {hoveredShiftData.att ? `TURNO ${hoveredShiftData.att.status === 0 ? 'CORRECTO' : (hoveredShiftData.att.status === 3 ? 'SIN MARCACIÓN (DANGER)' : 'CON NOVEDAD')}` : (hoveredShiftData.isDescanso ? 'DESCANSO' : 'PENDIENTE')}
                                         </span>
                                     </div>
-                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'bg-emerald-500 text-white shadow-emerald-200/50' : 'bg-amber-500 text-white shadow-amber-200/50') : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
-                                        {hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? <CheckCircle size={22} strokeWidth={3} /> : <AlertCircle size={22} strokeWidth={3} />) : <Clock size={20} />}
+                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'bg-emerald-500 text-white shadow-emerald-200/50' : (hoveredShiftData.att.status === 3 ? 'bg-rose-600 text-white shadow-rose-200/50' : 'bg-amber-500 text-white shadow-amber-200/50')) : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+                                        {hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? <CheckCircle size={22} strokeWidth={3} /> : (hoveredShiftData.att.status === 3 ? <AlertTriangle size={22} strokeWidth={3} /> : <AlertCircle size={22} strokeWidth={3} />)) : <Clock size={20} />}
                                     </div>
                                 </div>
 
@@ -1473,7 +1459,22 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                     <div className="flex items-center gap-3">
                                         <Calendar size={14} className="text-indigo-500" />
                                         <div className="flex flex-col text-left">
-                                            <span className="text-[12px] font-[1000] tracking-tight">{hoveredShiftData.shiftTime}</span>
+                                            <span className="text-[12px] font-[1000] tracking-tight uppercase">
+                                                {hoveredShiftData.shiftTime}
+                                                {!hoveredShiftData.isDescanso && (
+                                                    <span className="ml-1.5 text-indigo-400 font-bold lowercase">
+                                                        {(() => {
+                                                            const start = new Date(hoveredShiftData.startTime);
+                                                            const end = new Date(hoveredShiftData.endTime);
+                                                            let diff = (end - start) / (1000 * 60 * 60);
+                                                            if (diff < 0) diff += 24;
+                                                            const h = Math.floor(diff);
+                                                            const m = Math.round((diff - h) * 60);
+                                                            return `(${h}h ${m.toString().padStart(2, '0')}m)`;
+                                                        })()}
+                                                    </span>
+                                                )}
+                                            </span>
                                         </div>
                                     </div>
 
