@@ -1090,42 +1090,40 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                      
                                                                      return (
                                                                          <div key={si} 
-                                                                              draggable={!isLocked} 
-                                                                              onDragStart={e => {
-                                                                                  if (isLocked) { e.preventDefault(); return; }
-                                                                                  handleDragStart(e, 'GRID', { employeeId: emp.id, date: day, shiftId: shift.id });
+                                                                               draggable={!isLocked} 
+                                                                               onDragStart={e => {
+                                                                                   if (isLocked) { e.preventDefault(); return; }
+                                                                                   handleDragStart(e, 'GRID', { employeeId: emp.id, date: day, shiftId: shift.id });
+                                                                               }}
+                                                                              onClick={() => {
+                                                                                  if (isLocked) {
+                                                                                      // Click redundant in hover mode, but we can show toast if no att
+                                                                                      if (!att) showToast("Turno bloqueado: Dato histórico", "info");
+                                                                                      return;
+                                                                                  }
+                                                                                  setPendingEvent({ employeeId: emp.id, date: day, type: shift.isDescanso ? 'Descanso' : shift.isFuera ? 'Turno Fuera' : 'Turno', existingShift: shift });
+                                                                                  if (!shift.isDescanso && !shift.isFuera) {
+                                                                                      const sd = new Date(shift.startTime);
+                                                                                      const ed = new Date(shift.endTime);
+                                                                                      setStartTime(`${String(sd.getHours()).padStart(2, '0')}:${String(sd.getMinutes()).padStart(2, '0')}`);
+                                                                                      setEndTime(`${String(ed.getHours()).padStart(2, '0')}:${String(ed.getMinutes()).padStart(2, '0')}`);
+                                                                                      setShowTimeModal(true);
+                                                                                  }
                                                                               }}
-                                                                             onClick={() => {
-                                                                                 if (isLocked) {
-                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
-                                                                                     return;
-                                                                                 }
-                                                                                 
-                                                                                 if (isLocked) {
-                                                                                     showToast("Turno bloqueado: Ya procesado o histórico", "info");
-                                                                                     return;
-                                                                                 }
-                                                                                 
-                                                                                setPendingEvent({ employeeId: emp.id, date: day, type: shift.isDescanso ? 'Descanso' : shift.isFuera ? 'Turno Fuera' : 'Turno', existingShift: shift });
-                                                                                if (!shift.isDescanso && !shift.isFuera) {
-                                                                                    const sd = new Date(shift.startTime);
-                                                                                    const ed = new Date(shift.endTime);
-                                                                                    setStartTime(`${String(sd.getHours()).padStart(2, '0')}:${String(sd.getMinutes()).padStart(2, '0')}`);
-                                                                                    setEndTime(`${String(ed.getHours()).padStart(2, '0')}:${String(ed.getMinutes()).padStart(2, '0')}`);
-                                                                                    setShowTimeModal(true);
-                                                                                }
-                                                                             }}
-                                                                             onMouseEnter={e => {
-                                                                                const rect = e.currentTarget.getBoundingClientRect();
-                                                                                setHoveredShiftData({ ...shift, att, shiftTime, attTime, isLocked });
-                                                                                setHoverPos({ x: rect.left + rect.width / 2, y: rect.top });
-                                                                             }}
-                                                                             onMouseLeave={() => setHoveredShiftData(null)}
+                                                                              onMouseEnter={e => {
+                                                                                 const rect = e.currentTarget.getBoundingClientRect();
+                                                                                 setHoveredShiftData({ ...shift, att, shiftTime, attTime, isLocked });
+                                                                                 // Centrar la burbuja sobre el turno
+                                                                                 setHoverPos({ x: rect.left + rect.width / 2, y: rect.top });
+                                                                              }}
+                                                                              onMouseLeave={() => setHoveredShiftData(null)}
                                                                              className={`group rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-md transition-all relative ${isLocked ? 'cursor-not-allowed opacity-[0.9]' : 'cursor-grab active:cursor-grabbing hover:scale-[1.05] hover:z-50'}`}
                                                                              style={{ background: bgColor, minWidth: '85px', minHeight: '42px', filter: isLocked ? 'contrast(0.9) saturate(0.8)' : 'none' }}
                                                                         >
                                                                             <div className="flex items-center gap-1">
-                                                                                 {isLocked && <Lock size={7} className="text-white opacity-60" />}
+                                                                                 <div className="flex items-center gap-2 mb-0.5">
+                                                                                 {isLocked && <Lock size={11} className="text-white opacity-70" />}
+                                                                                 {att && <Activity size={12} className="text-white opacity-100 animate-pulse" />}
                                                                                  {att && <Activity size={7} className="text-white opacity-80 animate-pulse" />}
                                                                                  <span className="text-[7px] font-black uppercase tracking-[0.1em] opacity-80 leading-none">
                                                                                 {viewMode === 'SHIFTS' ? (shift.isDescanso ? 'DESC' : shift.isFuera ? 'FUERA' : 'TURNO') : 'MARCACIÓN'}
