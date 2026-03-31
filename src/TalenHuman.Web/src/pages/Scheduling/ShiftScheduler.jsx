@@ -1168,34 +1168,45 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                 {formatHours(total)}
                                                             </strong>
                                                         </div>
-                                                        
-                                                        {(() => {
-                                                            const employeeAttendances = (attendances || []).filter(a => String(a.employeeId) === String(emp.id));
-                                                            const workedTotal = employeeAttendances
-                                                                .reduce((acc, att) => {
-                                                                    if (!att.clockIn || !att.clockOut) return acc;
-                                                                    // Only count Correct (0) or Delayed (1) attendance as real worked hours
-                                                                    const s = Number(att.status);
-                                                                    if (s !== 0 && s !== 1) return acc;
-                                                                    
-                                                                    const start = new Date(att.clockIn);
-                                                                    const end = new Date(att.clockOut);
-                                                                    if (isNaN(start.getTime()) || isNaN(end.getTime())) return acc;
-                                                                    
-                                                                    let diff = (end - start) / (1000 * 60 * 60);
-                                                                    if (diff < 0) diff += 24;
-                                                                    return acc + (isNaN(diff) ? 0 : diff);
-                                                                }, 0);
-                                                            
-                                                            const hasMarcaciones = employeeAttendances.length > 0;
+                                                                           {(() => {
+                                                            const weekAttendances = (attendances || []).filter(a => {
+                                                                if (String(a.employeeId) !== String(emp.id)) return false;
+                                                                if (!a.clockIn) return false;
+                                                                const d = new Date(a.clockIn);
+                                                                return d >= days[0] && d <= new Date(days[days.length-1].getTime() + 86400000);
+                                                            });
 
-                                                            if (hasMarcaciones) {
+                                                            const workedTotal = weekAttendances.reduce((acc, att) => {
+                                                                if (!att.clockIn || !att.clockOut) return acc;
+                                                                const s = Number(att.status);
+                                                                if (s !== 0 && s !== 1) return acc;
+                                                                
+                                                                const start = new Date(att.clockIn);
+                                                                const end = new Date(att.clockOut);
+                                                                if (isNaN(start.getTime()) || isNaN(end.getTime())) return acc;
+                                                                
+                                                                let diff = (end - start) / (1000 * 60 * 60);
+                                                                if (diff < 0) diff += 24;
+                                                                return acc + (isNaN(diff) ? 0 : diff);
+                                                            }, 0);
+                                                            
+                                                            // Always show if there are shifts or if there's worked time
+                                                            const hasShifts = shifts.some(s => s.employeeId === emp.id && !s.isDescanso);
+
+                                                            if (hasShifts || workedTotal > 0) {
                                                                 return (
                                                                     <div className="flex items-center gap-2 bg-emerald-50/50 dark:bg-emerald-900/20 px-3 py-1 rounded-full border border-emerald-100 dark:border-emerald-800/50 animate-in slide-in-from-bottom-1 duration-300">
                                                                         <Clock size={12} className="text-emerald-500" strokeWidth={3} />
-                                                                        <strong className="text-[11px] font-[950] text-emerald-700 dark:text-emerald-300">
-                                                                            {formatHours(workedTotal)}
-                                                                        </strong>
+                                                                        <div className="flex flex-col items-start leading-[1] py-0.5">
+                                                                            <span className="text-[7px] font-black text-emerald-600/70 dark:text-emerald-400/70 uppercase tracking-tighter">Reloj Real</span>
+                                                                            <strong className="text-[11px] font-[950] text-emerald-700 dark:text-emerald-300">
+                                                                                {(() => {
+                                                                                    const h = Math.floor(workedTotal);
+                                                                                    const m = Math.round((workedTotal - h) * 60);
+                                                                                    return `${h}h ${m.toString().padStart(2, '0')}m`;
+                                                                                })()}
+                                                                            </strong>
+                                                                        </div>
                                                                     </div>
                                                                 );
                                                             }
@@ -1479,26 +1490,40 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                     </div>
 
                                     {!hoveredShiftData.isDescanso && (
-                                        <div className="flex items-center justify-between gap-4 p-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-white/5">
-                                            <div className="flex flex-col text-left">
-                                                <div className="flex items-center gap-1.5 mb-0.5">
-                                                    <LogIn size={11} className="text-emerald-500" />
-                                                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Entry</span>
+                                        <div className="flex flex-col gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-white/5">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex flex-col text-left">
+                                                    <div className="flex items-center gap-1.5 mb-1.5">
+                                                        <LogIn size={13} className="text-emerald-500" />
+                                                        <span className="text-[12px] font-black text-slate-700 dark:text-slate-200 uppercase">
+                                                            ENTRY: <span className="text-emerald-600 dark:text-emerald-400">{hoveredShiftData.att && hoveredShiftData.att.clockIn ? new Date(hoveredShiftData.att.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '---'}</span>
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <LogOut size={13} className="text-rose-500" />
+                                                        <span className="text-[12px] font-black text-slate-700 dark:text-slate-200 uppercase">
+                                                            EXIT: <span className="text-rose-600 dark:text-rose-400">{hoveredShiftData.att && hoveredShiftData.att.clockOut ? new Date(hoveredShiftData.att.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (hoveredShiftData.att ? 'ACTIVE' : '---')}</span>
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <span className="text-[12px] font-[1000]">
-                                                    {hoveredShiftData.att ? new Date(hoveredShiftData.att.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--'}
-                                                </span>
                                             </div>
-                                            <div className="w-[1px] h-6 bg-slate-200 dark:bg-white/10"></div>
-                                            <div className="flex flex-col text-left">
-                                                <div className="flex items-center gap-1.5 mb-0.5">
-                                                    <LogOut size={11} className="text-rose-500" />
-                                                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Exit</span>
+                                            
+                                            {hoveredShiftData.att && hoveredShiftData.att.clockIn && hoveredShiftData.att.clockOut && (
+                                                <div className="mt-1 pt-2 border-t border-slate-200 dark:border-white/10 flex items-center gap-2">
+                                                    <Activity size={12} className="text-indigo-500" strokeWidth={3} />
+                                                    <span className="text-[11px] font-[950] text-indigo-700 dark:text-indigo-300 uppercase tracking-tight">
+                                                        REAL: {(() => {
+                                                            const start = new Date(hoveredShiftData.att.clockIn);
+                                                            const end = new Date(hoveredShiftData.att.clockOut);
+                                                            let diff = (end - start) / (1000 * 60 * 60);
+                                                            if (diff < 0) diff += 24;
+                                                            const h = Math.floor(diff);
+                                                            const m = Math.round((diff - h) * 60);
+                                                            return `${h}h ${m.toString().padStart(2, '0')}m`;
+                                                        })()}
+                                                    </span>
                                                 </div>
-                                                <span className="text-[12px] font-[1000]">
-                                                    {hoveredShiftData.att && hoveredShiftData.att.clockOut ? new Date(hoveredShiftData.att.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : (hoveredShiftData.att ? 'ACTIVE' : '--:--')}
-                                                </span>
-                                            </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
