@@ -16,7 +16,8 @@ public class AttendanceService
 
     public async Task ConsolidateDailyAttendanceAsync(DateTime date, Guid companyId, ExecutionType executionType = ExecutionType.Manual)
     {
-        var day = DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
+        // Use Unspecified kind for the "ProcessedDate" to prevent UTC shifts in DB mappings
+        var day = DateTime.SpecifyKind(date.Date, DateTimeKind.Unspecified);
         var log = new SyncLog 
         { 
             StartTime = DateTime.UtcNow, 

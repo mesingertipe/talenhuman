@@ -78,30 +78,52 @@ public class AttendanceReportService
     {
         QuestPDF.Settings.License = LicenseType.Community;
 
-        var query = _context.Attendances
-            .Include(a => a.Employee)
+        // 1. Get Master List of Active Stores for this context
+        var storeQuery = _context.Stores
+            .Where(s => s.CompanyId == companyId && s.IsActive);
+
+        if (districtId.HasValue)
+        {
+            storeQuery = storeQuery.Where(s => s.DistrictId == districtId.Value);
+        }
+        else if (storeIds != null && storeIds.Any())
+        {
+            storeQuery = storeQuery.Where(s => storeIds.Contains(s.Id));
+        }
+
+        var allContextStores = await storeQuery.ToListAsync();
+
+        // 2. Fetch Attendance Data for the same day
+        var attendanceQuery = _context.Attendances
             .Include(a => a.Store)
             .Where(a => a.CompanyId == companyId && a.ClockIn.Date == date.Date);
 
         if (districtId.HasValue)
         {
-            query = query.Where(a => a.Store.DistrictId == districtId.Value);
+            attendanceQuery = attendanceQuery.Where(a => a.Store.DistrictId == districtId.Value);
         }
         else if (storeIds != null && storeIds.Any())
         {
-            query = query.Where(a => storeIds.Contains(a.StoreId));
+            attendanceQuery = attendanceQuery.Where(a => storeIds.Contains(a.StoreId));
         }
 
-        var data = await query.ToListAsync();
-        var stats = data.GroupBy(a => a.Store.Name)
-            .Select(g => new {
-                Store = g.Key,
-                Total = g.Count(),
-                Correct = g.Count(x => x.Status == AttendanceStatus.Correcto),
-                Errada = g.Count(x => x.Status == AttendanceStatus.MarcacionErrada),
-                Desfasada = g.Count(x => x.Status == AttendanceStatus.Desfasado),
-                SinMarcacion = g.Count(x => x.Status == AttendanceStatus.SinMarcacion)
-            }).ToList();
+        var attendanceData = await attendanceQuery.ToListAsync();
+        var attendanceGroups = attendanceData.GroupBy(a => a.StoreId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        // 3. Project stats using ALL stores (Left Join Logic)
+        var stats = allContextStores.Select(s => {
+            var records = attendanceGroups.ContainsKey(s.Id) ? attendanceGroups[s.Id] : new List<Attendance>();
+            return new {
+                Store = s.Name,
+                Total = records.Count(),
+                Correct = records.Count(x => x.Status == AttendanceStatus.Correcto),
+                Errada = records.Count(x => x.Status == AttendanceStatus.MarcacionErrada),
+                Desfasada = records.Count(x => x.Status == AttendanceStatus.Desfasado),
+                SinMarcacion = records.Count(x => x.Status == AttendanceStatus.SinMarcacion)
+            };
+        }).OrderBy(s => s.Store).ToList();
+
 
         var document = Document.Create(container =>
         {
@@ -165,10 +187,11 @@ public class AttendanceReportService
                         }
                     });
 
-                    if (!data.Any())
+                    if (!attendanceData.Any())
                     {
-                        col.Item().PaddingTop(20).AlignCenter().Text("No se encontraron registros para la fecha seleccionada.").Italic().FontColor(Colors.Grey.Medium);
+                        col.Item().PaddingTop(20).AlignCenter().Text("No se encontraron registros de marcación para la fecha seleccionada.").Italic().FontColor(Colors.Grey.Medium);
                     }
+
                 });
 
                 page.Footer().AlignCenter().Text(x =>
