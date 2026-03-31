@@ -37,7 +37,7 @@ public class AttendanceController : ControllerBase
     }
 
     [HttpGet("stats")]
-    [AuthorizePermission("ATTENDANCE", PermissionAction.Read)]
+    [AuthorizePermission("OPERATIONS", PermissionAction.Read)]
     public async Task<IActionResult> GetStats(DateTime? start, DateTime? end, Guid? storeId, Guid? brandId, Guid? profileId)
     {
         var companyId = _tenantProvider.GetTenantId();
@@ -173,7 +173,7 @@ public class AttendanceController : ControllerBase
     }
 
     [HttpGet]
-    [AuthorizePermission("ATTENDANCE", PermissionAction.Read)]
+    [AuthorizePermission("OPERATIONS", PermissionAction.Read)]
     public async Task<IActionResult> GetAttendances(DateTime? start, DateTime? end, string? searchTerm)
     {
         var companyId = _tenantProvider.GetTenantId();
@@ -316,32 +316,7 @@ public class AttendanceController : ControllerBase
                 });
             }
         }
-        // SKIP: Virtual shifts injection removed per user request (noise reduction)
-        /*
-        foreach (var shift in shifts)
-        {
-            var hasConsolidated = consolidated.Any(a => 
-                a.EmployeeId == shift.EmployeeId && 
-                a.ClockIn.Date == shift.StartTime.Date);
-            
-            if (!hasConsolidated)
-            {
-                consolidated.Add(new Attendance {
-                    Id = Guid.Empty,
-                    Employee = shift.Employee,
-                    EmployeeId = shift.EmployeeId,
-                    CompanyId = shift.CompanyId,
-                    StoreId = shift.StoreId,
-                    Store = shift.Store,
-                    ClockIn = shift.StartTime,
-                    ClockOut = shift.EndTime,
-                    Status = (AttendanceStatus)(-2), // Virtual: Scheduled but no activity found yet
-                    StatusObservation = shift.StartTime.Date < tenantDateNow ? "Sin Consolidación (Falta proceso)" : "Turno Programado"
-                });
-            }
-        }
-        */
-
+        
         if (!string.IsNullOrEmpty(searchTerm))
         {
             consolidated = consolidated.Where(a => 
@@ -461,13 +436,6 @@ public class AttendanceController : ControllerBase
             });
         }
     }
-
-
-
-
-
-
-
 
     [HttpPost("cleanup")]
     public async Task<IActionResult> Cleanup()

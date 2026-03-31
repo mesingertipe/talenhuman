@@ -34,27 +34,44 @@ public class AuthorizePermissionAttribute : Attribute, IAsyncAuthorizationFilter
 
         // 1. Check if Module is active (claim 'mod')
         var activeModules = user.Claims.Where(c => c.Type == "mod").Select(c => c.Value).ToList();
-        if (!activeModules.Contains(_moduleCode))
+        
+        // Support legacy name mapping for the active module check
+        var targetModule = _moduleCode;
+        if (targetModule == "ATTENDANCE") targetModule = "OPERATIONS";
+        if (targetModule == "ADMIN") targetModule = "SYSTEM";
+
+        if (!activeModules.Contains(targetModule) && !activeModules.Contains(_moduleCode))
         {
             context.Result = new ForbidResult();
             return Task.CompletedTask;
         }
 
         // 2. Check Permissions (claim 'perm')
-        // Format: "MODULE:ActionShortCodes" (e.g. "CORE:R,C,U,D")
-        var permissionClaims = user.Claims.Where(c => c.Type == "perm").Select(c => c.Value).ToList();
-        var modulePerm = permissionClaims.FirstOrDefault(p => p.StartsWith($"{_moduleCode}:"));
+        // Supports both formats: 
+        // - "MODULE:Actions" (Legacy)
+        // - "MODULE:SUBMODULE:Actions" (Granular)
+        var actionShort = _action.ToString().Substring(0, 1).ToUpper();
+        var permissionClaims = user.Claims
+            .Where(c => c.Type == "perm")
+            .Select(c => c.Value)
+            .Where(v => v.StartsWith($"{targetModule}:") || v.StartsWith($"{_moduleCode}:"))
+            .ToList();
 
-        if (modulePerm == null)
+        bool isAllowed = false;
+        foreach (var claimValue in permissionClaims)
         {
-            context.Result = new ForbidResult();
-            return Task.CompletedTask;
+            var parts = claimValue.Split(':');
+            if (parts.Length < 2) continue;
+            
+            var actions = parts.Last();
+            if (actions.Contains(actionShort))
+            {
+                isAllowed = true;
+                break;
+            }
         }
 
-        var actionShortCode = _action.ToString().Substring(0, 1).ToUpper();
-        var allowedActions = modulePerm.Split(':')[1];
-
-        if (!allowedActions.Contains(actionShortCode))
+        if (!isAllowed)
         {
             context.Result = new ForbidResult();
             return Task.CompletedTask;
