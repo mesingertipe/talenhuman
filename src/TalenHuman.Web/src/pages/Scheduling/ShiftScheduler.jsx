@@ -819,18 +819,20 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                             <div className="flex-1 flex justify-end items-center gap-6 pr-2">
                                 
                                 {/* Elite View Mode Switch */}
-                                <div className="flex items-center bg-slate-50 dark:bg-slate-800/80 p-1 rounded-full border border-slate-100 dark:border-slate-700/50 shadow-inner">
+                                <div className="flex items-center bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-full border border-slate-200 dark:border-slate-700/50 shadow-inner gap-1">
                                     <button 
                                         onClick={() => setViewMode('SHIFTS')}
-                                        className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === 'SHIFTS' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                        className={`w-12 h-12 flex items-center justify-center rounded-full transition-all ${viewMode === 'SHIFTS' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/40 scale-105' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                        data-v12-tooltip="VISTA PROGRAMACIÓN (AGENDA)"
                                     >
-                                        Programado
+                                        <Calendar size={20} strokeWidth={2.5} />
                                     </button>
                                     <button 
                                         onClick={() => setViewMode('ATTENDANCE')}
-                                        className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${viewMode === 'ATTENDANCE' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/30' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                        className={`w-12 h-12 flex items-center justify-center rounded-full transition-all ${viewMode === 'ATTENDANCE' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/40 scale-105' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                                        data-v12-tooltip="VISTA BIOMETRÍA (RELOJ)"
                                     >
-                                        Marcado
+                                        <Clock size={20} strokeWidth={2.5} />
                                     </button>
                                 </div>
 
@@ -1422,84 +1424,73 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                         </div>
                     )}
 
-                    {/* Elite Detail Card Portal (Single Instance) - Ultra High Fidelity */}
-                    {hoveredShiftData && (
-                        <div 
-                            className="fixed pointer-events-none z-[1000002] transition-all duration-300"
-                            style={{ 
-                                left: `${hoverPos.x}px`, 
-                                top: `${hoverPos.y}px`, 
-                                transform: hoverPos.y < 350 ? 'translate(-50%, 20px)' : 'translate(-50%, -100%) translateY(-20px)',
-                                opacity: hoveredShiftData ? 1 : 0
-                            }}
-                        >
-                            <div className={`relative bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 rounded-[28px] p-0 shadow-[0_40px_80px_rgba(0,0,0,0.25)] overflow-hidden w-[260px]`}>
-                                {/* Header con Status */}
-                                <div className={`p-4 flex items-center justify-between ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-amber-50 dark:bg-amber-500/10') : 'bg-slate-50 dark:bg-slate-800/50'}`}>
-                                    <div className="flex flex-col">
-                                        <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-tight">Estado de Ejecución</span>
-                                        <span className={`text-[13px] font-[1000] tracking-tight ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400') : 'text-slate-500'}`}>
-                                            {hoveredShiftData.isDescanso ? 'Día de Descanso' : (hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'CORRECTO' : 'DESFASE') : 'PENDIENTE')}
+                    {/* Elite Detail Snapshot Modal - Click Persistent */}
+                    {showSnapshotModal && snapshotData && (
+                        <div className="no-print" style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 15, 0.85)', backdropFilter: 'blur(30px)', zIndex: 100005, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                            <div style={{ background: isDarkMode ? '#1e293b' : '#ffffff', width: '100%', maxWidth: '380px', borderRadius: '48px', overflow: 'hidden', border: isDarkMode ? '1px solid #334155' : 'none', boxShadow: '0 50px 100px rgba(0,0,0,0.5)', animation: 'modalSlideUp 0.3s ease-out' }}>
+                                <div className={`p-8 pb-4 flex items-center justify-between ${snapshotData.att ? (snapshotData.att.status === 0 ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-amber-50 dark:bg-amber-500/10') : 'bg-slate-50 dark:bg-slate-800/50'}`}>
+                                    <div className="flex flex-col text-left">
+                                        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-tight">Consulta Biometría Elite</span>
+                                        <span className={`text-[15px] font-[1000] tracking-tight ${snapshotData.att ? (snapshotData.att.status === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400') : 'text-slate-500'}`}>
+                                            {snapshotData.isDescanso ? 'Día de Descanso' : (snapshotData.att ? (snapshotData.att.status === 0 ? 'ASISTENCIA CORRECTA' : 'MARCACIÓN CON DESFASE') : 'SIN MARCACIONES')}
                                         </span>
                                     </div>
-                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? 'bg-emerald-100 dark:bg-emerald-400/20 text-emerald-600' : 'bg-amber-100 dark:bg-amber-400/20 text-amber-600') : 'bg-slate-100 dark:bg-slate-700 text-slate-400'}`}>
-                                        {hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? <CheckCircle size={20} /> : <AlertCircle size={20} />) : <Clock size={20} />}
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${snapshotData.att ? (snapshotData.att.status === 0 ? 'bg-emerald-100 dark:bg-emerald-400/20 text-emerald-600' : 'bg-amber-100 dark:bg-amber-400/20 text-amber-600') : 'bg-slate-100 dark:bg-slate-700 text-slate-400'}`}>
+                                        {snapshotData.att ? (snapshotData.att.status === 0 ? <CheckCircle size={24} /> : <AlertCircle size={24} />) : <Clock size={24} />}
                                     </div>
                                 </div>
 
-                                {/* Cuerpo de Datos */}
-                                <div className="p-5 space-y-4">
-                                    {/* Turno Programado */}
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500">
-                                            <Calendar size={16} />
+                                <div className="p-8 pt-6 space-y-6">
+                                    <div className="flex items-center gap-5">
+                                        <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+                                            <Calendar size={20} />
                                         </div>
                                         <div className="flex flex-col text-left">
-                                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Turno Programado</span>
-                                            <span className="text-[12px] font-black text-slate-800 dark:text-white tracking-tight">{hoveredShiftData.shiftTime}</span>
+                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Planificación de Turno</span>
+                                            <span className="text-[14px] font-[1000] text-slate-800 dark:text-white tracking-tight">{snapshotData.shiftTime}</span>
                                         </div>
                                     </div>
 
-                                    {/* Marcaciones Reales */}
-                                    {!hoveredShiftData.isDescanso && (
-                                        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100 dark:border-white/5">
+                                    {!snapshotData.isDescanso && (
+                                        <div className="grid grid-cols-2 gap-5 pt-4 border-t border-slate-100 dark:border-white/5">
                                             <div className="flex flex-col text-left">
-                                                <div className="flex items-center gap-1.5 mb-1">
-                                                    <LogIn size={10} className="text-emerald-500" />
-                                                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Entrada</span>
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                    <LogIn size={14} className="text-emerald-500" />
+                                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Registro In</span>
                                                 </div>
-                                                <span className="text-[12px] font-[1000] text-slate-800 dark:text-white tracking-tight">
-                                                    {hoveredShiftData.att ? new Date(hoveredShiftData.att.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--'}
+                                                <span className="text-[16px] font-[1000] text-slate-800 dark:text-white tracking-tight">
+                                                    {snapshotData.att ? new Date(snapshotData.att.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--'}
                                                 </span>
                                             </div>
                                             <div className="flex flex-col text-left">
-                                                <div className="flex items-center gap-1.5 mb-1">
-                                                    <LogOut size={10} className="text-rose-500" />
-                                                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Salida</span>
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                    <LogOut size={14} className="text-rose-500" />
+                                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Registro Out</span>
                                                 </div>
-                                                <span className="text-[12px] font-[1000] text-slate-800 dark:text-white tracking-tight">
-                                                    {hoveredShiftData.att && hoveredShiftData.att.clockOut ? new Date(hoveredShiftData.att.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : (hoveredShiftData.att ? 'ACTIVO' : '--:--')}
+                                                <span className="text-[16px] font-[1000] text-slate-800 dark:text-white tracking-tight">
+                                                    {snapshotData.att && snapshotData.att.clockOut ? new Date(snapshotData.att.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : (snapshotData.att ? 'ACTIVO' : '--:--')}
                                                 </span>
                                             </div>
                                         </div>
                                     )}
 
-                                    {/* Observaciones (Si hay) */}
-                                    {hoveredShiftData.att && hoveredShiftData.att.statusObservation && (
-                                        <div className="mt-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-white/5 text-left">
-                                            <div className="flex items-center gap-1.5 mb-1 text-slate-400">
-                                                <Info size={9} />
-                                                <span className="text-[7px] font-black uppercase tracking-widest text-slate-500">Observación Médica</span>
+                                    {snapshotData.att && snapshotData.att.statusObservation && (
+                                        <div className="p-5 bg-slate-50 dark:bg-slate-800/80 rounded-3xl border border-slate-100 dark:border-white/5 text-left shadow-inner">
+                                            <div className="flex items-center gap-2 mb-2 text-slate-400">
+                                                <Info size={12} />
+                                                <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">Observaciones Biométricas</span>
                                             </div>
-                                            <p className="text-[10px] text-slate-600 dark:text-slate-400 font-bold italic leading-tight">
-                                                "{hoveredShiftData.att.statusObservation}"
+                                            <p className="text-[11px] text-slate-600 dark:text-slate-400 font-bold italic leading-relaxed">
+                                                "{snapshotData.att.statusObservation}"
                                             </p>
                                         </div>
                                     )}
+
+                                    <button 
+                                        onClick={() => setShowSnapshotModal(false)}
+                                        style={{ width: '100%', padding: '18px', borderRadius: '22px', border: 'none', background: '#3b82f6', color: 'white', fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 12px 24px rgba(59, 130, 246, 0.3)', marginTop: '10px' }}
+                                    > Entendido </button>
                                 </div>
-                                
-                                {/* Triángulo Indicador */}
-                                <div className={`absolute left-1/2 -translate-x-1/2 w-4 h-4 bg-white dark:bg-slate-900 rotate-45 border border-slate-100 dark:border-white/10 ${hoverPos.y < 350 ? '-top-2 border-b-0 border-r-0' : '-bottom-2 border-t-0 border-l-0 shadow-lg'}`}></div>
                             </div>
                         </div>
                     )}
