@@ -13,12 +13,12 @@ const ModulePermissions = () => {
   const [saving, setSaving] = useState(false);
 
   const actions = [
-    { code: 'Read', label: 'Leer', short: 'R' },
-    { code: 'Create', label: 'Crear', short: 'C' },
-    { code: 'Update', label: 'Editar', short: 'U' },
-    { code: 'Delete', label: 'Eliminar', short: 'D' },
-    { code: 'Export', label: 'Exportar', short: 'E' },
-    { code: 'Approve', label: 'Aprobar', short: 'A' }
+    { code: 'Read', label: 'Leer', short: 'R', value: 0 },
+    { code: 'Create', label: 'Crear', short: 'C', value: 1 },
+    { code: 'Update', label: 'Editar', short: 'U', value: 2 },
+    { code: 'Delete', label: 'Eliminar', short: 'D', value: 3 },
+    { code: 'Export', label: 'Exportar', short: 'E', value: 4 },
+    { code: 'Approve', label: 'Aprobar', short: 'A', value: 5 }
   ];
 
   useEffect(() => {
@@ -31,7 +31,10 @@ const ModulePermissions = () => {
         ]);
         setCompanies(compRes.data);
         setModules(modRes.data);
-        setRoles(roleRes.data);
+        // User feedback: "Supervisor" was replaced by "Distrital"
+        // Also hiding SuperAdmin to avoid accidental self-lockout
+        const filteredRoles = roleRes.data.filter(r => r.name !== 'Supervisor' && r.name !== 'SuperAdmin');
+        setRoles(filteredRoles);
       } catch (err) {
         console.error("Error loading initial permission data", err);
       }
@@ -57,23 +60,24 @@ const ModulePermissions = () => {
     }
   };
 
-  const getPermStatus = (roleId, moduleId, actionCode) => {
-    const perm = permissions.find(p => p.roleId === roleId && p.moduleId === moduleId && p.action === actionCode);
+  const getPermStatus = (roleId, moduleId, actionValue) => {
+    // API returns the integer value for Action
+    const perm = permissions.find(p => p.roleId === roleId && p.moduleId === moduleId && p.action === actionValue);
     return perm?.isAllowed || false;
   };
 
-  const togglePermission = async (roleId, moduleId, actionCode) => {
-    const currentStatus = getPermStatus(roleId, moduleId, actionCode);
+  const togglePermission = async (roleId, moduleId, action) => {
+    const currentStatus = getPermStatus(roleId, moduleId, action.value);
     const newStatus = !currentStatus;
 
     // Optimistic update
     const updatedPerms = [...permissions];
-    const index = updatedPerms.findIndex(p => p.roleId === roleId && p.moduleId === moduleId && p.action === actionCode);
+    const index = updatedPerms.findIndex(p => p.roleId === roleId && p.moduleId === moduleId && p.action === action.value);
     
     if (index >= 0) {
       updatedPerms[index].isAllowed = newStatus;
     } else {
-      updatedPerms.push({ roleId, moduleId, action: actionCode, isAllowed: newStatus });
+      updatedPerms.push({ roleId, moduleId, action: action.value, isAllowed: newStatus });
     }
     setPermissions(updatedPerms);
 
@@ -82,7 +86,7 @@ const ModulePermissions = () => {
         companyId: selectedCompanyId,
         roleId,
         moduleId,
-        action: actionCode,
+        action: action.value, // Sending integer value for Enum compatibility
         isAllowed: newStatus
       });
     } catch (err) {
@@ -158,11 +162,11 @@ const ModulePermissions = () => {
                               {role.name}
                             </td>
                             {actions.map((action) => {
-                              const isAllowed = getPermStatus(role.id, mod.id, action.code);
+                              const isAllowed = getPermStatus(role.id, mod.id, action.value);
                               return (
                                 <td key={action.code} className="py-4 text-center">
                                   <button 
-                                    onClick={() => togglePermission(role.id, mod.id, action.code)}
+                                    onClick={() => togglePermission(role.id, mod.id, action)}
                                     className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isAllowed ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400'} hover:scale-110 active:scale-95`}
                                     title={`${mod.code} / ${role.name} / ${action.label}`}
                                   >
