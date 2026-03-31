@@ -44,7 +44,7 @@ const SearchableSelect = ({
     <div 
       className="relative w-full" 
       ref={containerRef}
-      style={{ zIndex: isOpen ? 100 : 1 }}
+      style={{ zIndex: isOpen ? 500 : 1 }}
     >
       {label && (
         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">

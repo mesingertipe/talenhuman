@@ -70,7 +70,7 @@ const RealTimeClock = ({ countryCode, timeZoneId, isCollapsed }) => {
   }
 
   return (
-    <div style={{ padding: '0.85rem 1.25rem', marginBottom: '1.5rem' }} className="flex items-center gap-3 animate-in fade-in transition-all">
+    <div style={{ padding: '0.85rem 1.25rem', marginBottom: '0.25rem' }} className="flex items-center gap-3 animate-in fade-in transition-all">
         <div className="relative shrink-0 flex items-center">
           <div style={{ 
             width: '26px', height: '26px', borderRadius: '50%', overflow: 'hidden', 
