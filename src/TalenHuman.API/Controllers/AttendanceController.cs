@@ -373,23 +373,16 @@ public class AttendanceController : ControllerBase
     public async Task<IActionResult> GetSyncHistory()
     {
         var companyId = _tenantProvider.GetTenantId();
-        var roles = User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(r => r.Value).ToList();
-
-        var query = _context.SyncLogs.AsQueryable();
-
-        // SuperAdmin can see global history to monitor the engine
-        if (!roles.Contains("SuperAdmin"))
-        {
-            query = query.Where(l => l.CompanyId == companyId);
-        }
-
-        var logs = await query
+        
+        var logs = await _context.SyncLogs
+            .Where(l => l.CompanyId == companyId)
             .OrderByDescending(l => l.StartTime)
             .Take(10)
             .ToListAsync();
         
         return Ok(logs);
     }
+
 
 
     [HttpPost("cleanup")]
