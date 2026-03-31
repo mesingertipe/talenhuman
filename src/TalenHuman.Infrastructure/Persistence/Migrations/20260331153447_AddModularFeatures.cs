@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -11,11 +11,6 @@ namespace TalenHuman.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<DateTime>(
-                name: "ProcessedDate",
-                table: "SyncLogs",
-                type: "timestamp without time zone",
-                nullable: true);
 
             migrationBuilder.CreateTable(
                 name: "Modules",
@@ -115,9 +110,6 @@ namespace TalenHuman.Infrastructure.Persistence.Migrations
             migrationBuilder.DropTable(
                 name: "Modules");
 
-            migrationBuilder.DropColumn(
-                name: "ProcessedDate",
-                table: "SyncLogs");
         }
     }
 }
