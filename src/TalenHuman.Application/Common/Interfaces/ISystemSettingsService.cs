@@ -6,4 +6,6 @@ public interface ISystemSettingsService
     Task<T?> GetSettingAsync<T>(string key);
     Task SetSettingAsync(string key, string value, string group = "General", string? description = null);
     Task<IDictionary<string, string>> GetGroupSettingsAsync(string group);
+    Task<IEnumerable<SystemSetting>> GetMergedSettingsAsync();
 }
+

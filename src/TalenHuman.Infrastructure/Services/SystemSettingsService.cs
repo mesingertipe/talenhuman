@@ -88,4 +88,41 @@ public class SystemSettingsService : ISystemSettingsService
             .Where(s => s.Group == group)
             .ToDictionaryAsync(s => s.Key, s => s.Value);
     }
+
+    public async Task<IEnumerable<SystemSetting>> GetMergedSettingsAsync()
+    {
+        var tenantId = _tenantProvider.GetTenantId();
+        var allSettings = await _context.SystemSettings.AsNoTracking().ToListAsync();
+        
+        // 1. Identify relevant settings (global or current tenant)
+        var filteredSettings = allSettings.Where(s => 
+            !s.Key.Contains('_') || 
+            (tenantId != Guid.Empty && s.Key.StartsWith($"{tenantId}_"))
+        ).ToList();
+
+        // 2. Group by "Clean Key" to resolve priority
+        var mergedResult = filteredSettings
+            .Select(s => new { 
+                CleanKey = s.Key.Contains('_') ? s.Key.Split('_', 2)[1] : s.Key,
+                IsTenantSpecific = s.Key.Contains('_'),
+                Original = s
+            })
+            .GroupBy(x => x.CleanKey)
+            .Select(g => {
+                // Prioritize Tenant if exists, otherwise Global
+                var best = g.OrderByDescending(x => x.IsTenantSpecific).First();
+                
+                // Return a copy with the clean key for UI matching
+                return new SystemSetting {
+                    Key = best.CleanKey,
+                    Value = best.Original.Value,
+                    Group = best.Original.Group,
+                    Description = best.Original.Description
+                };
+            })
+            .ToList();
+
+        return mergedResult;
+    }
 }
+

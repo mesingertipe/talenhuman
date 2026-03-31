@@ -65,13 +65,9 @@ const AttendanceMonitoring = () => {
             setLoading(true);
             const res = await api.get('/systemsettings');
             
-            // Filter by group and normalize keys (remove company prefix for matching)
+            // Filter by group (API already prioritized tenant over global and cleaned keys)
             const attendanceSettings = res.data
-                .filter(s => s.group === 'Attendance')
-                .map(s => ({
-                    ...s,
-                    key: s.key.includes('_') ? s.key.split('_').pop() : s.key
-                }));
+                .filter(s => s.group === 'Attendance');
             
             // Ensure defaults exist in state for UI
             const defaults = [
@@ -88,6 +84,7 @@ const AttendanceMonitoring = () => {
 
             setSettings(finalSettings);
         } catch (err) {
+            console.error("Error fetching settings:", err);
             showToast("Error al cargar configuración", "error");
         } finally {
             setLoading(false);

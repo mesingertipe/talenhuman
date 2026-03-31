@@ -23,11 +23,9 @@ public class SystemSettingsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<SystemSetting>>> GetSettings()
     {
-        return await _context.SystemSettings
-            .OrderBy(s => s.Group)
-            .ThenBy(s => s.Key)
-            .ToListAsync();
+        return Ok(await _settingsService.GetMergedSettingsAsync());
     }
+
 
     [HttpGet("group/{group}")]
     public async Task<ActionResult<IDictionary<string, string>>> GetGroupSettings(string group)
