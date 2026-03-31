@@ -330,13 +330,15 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
             return;
         }
 
-        const isLockedDay = new Date(targetDate) < new Date(new Date().setHours(0,0,0,0));
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const isLockedDay = new Date(targetDate).getTime() < today.getTime();
+        
         if (isLockedDay) {
             showToast("Día bloqueado: Dato histórico", "error");
             return;
         }
 
-        // Check if there is already an attendance in this target slot
         const existingShifts = shifts.filter(s => s.employeeId === targetEmployeeId && new Date(s.startTime).toDateString() === targetDate.toDateString());
         const hasAttendance = existingShifts.some(s => attendances.some(a => String(a.shiftId) === String(s.id)));
         if (hasAttendance) {
@@ -913,7 +915,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                              style={{ borderRadius: '24px', gap: '2rem' }}>
                             {[
                                 { type: 'Turno', color: 'bg-indigo-600', icon: Clock, label: 'TURNO', tip: 'Turno de Trabajo (Arrastrar al grid)' },
-                                { type: 'Descanso', color: 'bg-amber-500', icon: Calendar, label: 'DESC', tip: 'Descanso (Arrastrar al grid)' },
+                                { type: 'Descanso', color: 'bg-slate-400', icon: Calendar, label: 'DESC', tip: 'Descanso (Arrastrar al grid)' },
                                 { type: 'Turno Fuera', color: 'bg-purple-600', icon: AlertCircle, label: 'FUERA', tip: 'Turno Fuera de Sede (Arrastrar al grid)' }
                             ].map((tool, idx) => (
                                 <div key={idx} draggable onDragStart={(e) => handleDragStart(e, 'PANEL', { type: tool.type })} 
@@ -1056,7 +1058,9 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                 {days.map((day, di) => {
                                                     const dayShifts = shifts.filter(s => s.employeeId === emp.id && new Date(s.startTime).toDateString() === day.toDateString());
                                                     const nov = getNovedad(emp.id, day);
-                                                    const isLockedDay = new Date(day) < new Date(new Date().setHours(0,0,0,0));
+                                                    const today = new Date();
+                                                    today.setHours(0,0,0,0);
+                                                    const isLockedDay = new Date(day).getTime() < today.getTime();
 
                                                     return (
                                                         <td
@@ -1105,14 +1109,13 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                     const displayText = viewMode === 'SHIFTS' ? (shift.isDescanso ? 'REST' : shiftTime) : (shift.isDescanso ? 'REST' : attTime);
                                                                     const isLocked = !!att || isLockedDay;
                                                                      
-                                                                     return (
+                                                                    return (
                                                                          <div key={si} 
-                                                                              draggable={isLocked ? "false" : "true"} 
+                                                                              draggable={!isLocked} 
                                                                               onDragStart={e => {
                                                                                   if (isLocked) {
                                                                                       e.preventDefault();
-                                                                                      e.stopPropagation();
-                                                                                      return false;
+                                                                                      return;
                                                                                   }
                                                                                   handleDragStart(e, 'GRID', { employeeId: emp.id, date: day, shiftId: shift.id });
                                                                               }}
@@ -1137,13 +1140,11 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                               }}
                                                                               onMouseLeave={() => setHoveredShiftData(null)}
                                                                               className={`group rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-md transition-all relative ${isLocked ? (att ? 'cursor-help hover:ring-2 ring-white/50 scale-105' : 'cursor-default opacity-[0.9]') : 'cursor-grab active:cursor-grabbing hover:scale-[1.05] hover:z-50'}`}
-                                                                              style={{ 
+                                                                               style={{ 
                                                                                   background: bgColor, 
                                                                                   minWidth: '85px', 
                                                                                   minHeight: '42px', 
-                                                                                  filter: isLocked ? 'contrast(0.9) saturate(0.8)' : 'none',
-                                                                                  userDrag: isLocked ? 'none' : 'auto',
-                                                                                  WebkitUserDrag: isLocked ? 'none' : 'auto'
+                                                                                  filter: isLocked ? 'contrast(0.9) saturate(0.8)' : 'none'
                                                                               }}
                                                                          >
                                                                              <div className="flex items-center gap-2 mb-0.5">
