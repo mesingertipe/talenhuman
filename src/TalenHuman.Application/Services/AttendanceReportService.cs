@@ -111,11 +111,20 @@ public class AttendanceReportService
         var attendanceGroups = attendanceData.GroupBy(a => a.StoreId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
-        // 3. Project stats using ALL stores (Left Join Logic)
+        // 3. Fetch Employee counts per store for "Plantilla"
+        var employeeCounts = await _context.Employees
+            .Where(e => e.CompanyId == companyId && e.IsActive)
+            .GroupBy(e => e.StoreId)
+            .Select(g => new { StoreId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.StoreId, x => x.Count);
+
+        // 4. Project stats using ALL stores (Left Join Logic)
         var stats = allContextStores.Select(s => {
             var records = attendanceGroups.ContainsKey(s.Id) ? attendanceGroups[s.Id] : new List<Attendance>();
+            var empCount = employeeCounts.ContainsKey(s.Id) ? employeeCounts[s.Id] : 0;
             return new {
                 Store = s.Name,
+                Plantilla = empCount,
                 Total = records.Count(),
                 Correct = records.Count(x => x.Status == AttendanceStatus.Correcto),
                 Errada = records.Count(x => x.Status == AttendanceStatus.MarcacionErrada),
@@ -163,12 +172,14 @@ public class AttendanceReportService
                             columns.RelativeColumn();
                             columns.RelativeColumn();
                             columns.RelativeColumn();
+                            columns.RelativeColumn();
                         });
 
                         table.Header(header =>
                         {
                             header.Cell().Element(CellStyle).Text("Sede");
-                            header.Cell().Element(CellStyle).AlignCenter().Text("Total");
+                            header.Cell().Element(CellStyle).AlignCenter().Text("Plantilla");
+                            header.Cell().Element(CellStyle).AlignCenter().Text("Turnos");
                             header.Cell().Element(CellStyle).AlignCenter().Text("Correcto");
                             header.Cell().Element(CellStyle).AlignCenter().Text("Errada");
                             header.Cell().Element(CellStyle).AlignCenter().Text("Desfase");
@@ -180,6 +191,7 @@ public class AttendanceReportService
                         foreach (var item in stats)
                         {
                             table.Cell().Element(Padding).Text(item.Store);
+                            table.Cell().Element(Padding).AlignCenter().Text(item.Plantilla.ToString());
                             table.Cell().Element(Padding).AlignCenter().Text(item.Total.ToString());
                             table.Cell().Element(Padding).AlignCenter().Text($"{item.Correct}").FontColor(Colors.Green.Darken2);
                             table.Cell().Element(Padding).AlignCenter().Text($"{item.Errada}").FontColor(Colors.Amber.Darken2);
@@ -189,6 +201,7 @@ public class AttendanceReportService
                             static IContainer Padding(IContainer container) => container.PaddingVertical(5).BorderBottom(1).BorderColor(Colors.Grey.Lighten3);
                         }
                     });
+
 
 
                     if (!attendanceData.Any())
