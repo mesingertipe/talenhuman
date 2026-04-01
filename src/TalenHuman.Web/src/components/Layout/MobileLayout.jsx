@@ -13,7 +13,12 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout }) => {
           </div>
           <div>
             <h1 className="text-sm font-bold leading-none">TalenHuman</h1>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">{user?.tenantName || 'Elite V12'}</p>
+            <div className="flex items-center space-x-1.5 mt-0.5">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">{user?.tenantName || 'Elite V12'}</p>
+              <span className="text-[8px] bg-indigo-500/10 text-indigo-500 px-1 rounded font-mono font-bold tracking-tight border border-indigo-500/10 whitespace-nowrap">
+                {window.localStorage.getItem('app_version') || 'v12'}
+              </span>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-3">

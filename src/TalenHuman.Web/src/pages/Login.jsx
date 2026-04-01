@@ -196,6 +196,9 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset }) => {
                <p>
                  ¿Necesitas ayuda? <a href="#">Contactar a Soporte</a>
                </p>
+               <p className="mt-2 text-[10px] font-mono text-slate-400 opacity-50">
+                 {window.localStorage.getItem('app_version') || 'v12-stable'}
+               </p>
             </div>
           </div>
         </div>

@@ -31,11 +31,14 @@ import EmployeeDashboard from './pages/Employee/EmployeeDashboard'
 import InstallPWA from './components/PWA/InstallPWA'
 import PrivacyConsentModal from './components/Legal/PrivacyConsentModal'
 
+// CRITICAL CACHE BUSTING VERSION
+const APP_VERSION = "Elite-V12.5.2-STABLE";
+
 function App() {
   const [user, setUser] = React.useState(null);
   const [currentPage, setCurrentPage] = React.useState('Dashboard');
   const [authLoading, setAuthLoading] = React.useState(true);
-  const [authView, setAuthView] = React.useState('login'); // 'login', 'forgot', 'reset'
+  const [authView, setAuthView] = React.useState('login'); 
   const [resetEmail, setResetEmail] = React.useState('');
   const [token, setToken] = React.useState(null); 
   const [deferredPrompt, setDeferredPrompt] = React.useState(null);
@@ -50,13 +53,30 @@ function App() {
                         window.innerWidth < 1024;
 
   React.useEffect(() => {
+    // 1. Force refresh if version mismatch in storage (Bust Cache)
+    const storedVersion = localStorage.getItem('app_version');
+    if (storedVersion && storedVersion !== APP_VERSION) {
+      console.log("CACHE BUST: New version detected. Clearing storage...");
+      localStorage.clear();
+      localStorage.setItem('app_version', APP_VERSION);
+      window.location.reload(true);
+      return;
+    }
+    localStorage.setItem('app_version', APP_VERSION);
+
     const savedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('token'); 
     if (savedUser && storedToken) {
-      const userData = JSON.parse(savedUser);
-      setUser(userData);
-      setToken(storedToken); 
-      initializeFirebase(userData);
+      try {
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
+        setToken(storedToken); 
+        initializeFirebase(userData);
+      } catch (e) {
+        localStorage.clear();
+        setAuthLoading(false);
+        return;
+      }
     }
     setAuthLoading(false);
 
@@ -85,6 +105,7 @@ function App() {
   const handleLogin = (userData, userToken) => {
     localStorage.setItem('user', JSON.stringify(userData));
     localStorage.setItem('token', userToken);
+    localStorage.setItem('app_version', APP_VERSION);
     setUser(userData);
     setToken(userToken);
     initializeFirebase(userData);
@@ -97,13 +118,20 @@ function App() {
     setToken(null);
   };
 
-  if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 font-bold">Iniciando TalenHuman...</div>;
+  if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 font-bold">Cargando TalenHuman {APP_VERSION}...</div>;
 
   if (!token) {
     if (authView === 'forgot') return <ForgotPassword onBack={() => setAuthView('login')} onNext={(em) => { setResetEmail(em); setAuthView('reset'); }} />;
     if (authView === 'reset') return <ResetForgottenPassword email={resetEmail} onBack={() => setAuthView('login')} />;
     if (authView === 'self-service') return <SelfServiceReset onBack={() => setAuthView('login')} />;
-    return <Login onLogin={handleLogin} onForgotPassword={() => setAuthView('forgot')} onSelfServiceReset={() => setAuthView('self-service')} />;
+    return (
+      <Login 
+        onLogin={handleLogin} 
+        onForgotPassword={() => setAuthView('forgot')} 
+        onSelfServiceReset={() => setAuthView('self-service')} 
+        version={APP_VERSION}
+      />
+    );
   }
 
   if (user.mustChangePassword) {
@@ -164,23 +192,24 @@ function App() {
           onAccepted={(updatedUser) => setUser(updatedUser)} 
           onLogout={handleLogout}
           policyText={user.privacyPolicyText}
+          version={APP_VERSION}
         />
       );
     }
 
     if (isMobileDevice && !isStandalone) {
-      return <InstallPWA deferredPrompt={deferredPrompt} onLogout={handleLogout} />;
+      return <InstallPWA deferredPrompt={deferredPrompt} onLogout={handleLogout} version={APP_VERSION} />;
     }
 
     return (
-      <MobileLayout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout}>
+      <MobileLayout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout} version={APP_VERSION}>
         {renderPage()}
       </MobileLayout>
     );
   }
 
   return (
-    <Layout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout}>
+    <Layout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout} version={APP_VERSION}>
       {renderPage()}
     </Layout>
   );
