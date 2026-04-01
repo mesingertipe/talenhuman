@@ -213,6 +213,7 @@ public class AuthController : ControllerBase
                 storeExternalId,
                 districtName = firstDistrictName,
                 storeIds,
+                employeeId = user.EmployeeId,
                 activeModules,
                 permissions,
                 // Global Config

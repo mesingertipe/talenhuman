@@ -41,22 +41,25 @@ function App() {
   const [deferredPrompt, setDeferredPrompt] = React.useState(null);
   const [isStandalone, setIsStandalone] = React.useState(false);
 
-  const isEmployee = user?.roleName === 'Employee' || user?.roles?.includes('Employee');
+  // Global Role and Device Detection
+  const isEmployee = user?.roleName === 'Employee' || 
+                     user?.roles?.includes('Employee') || 
+                     (user?.employeeId && user?.employeeId !== '00000000-0000-0000-0000-000000000000');
+
+  const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                        window.innerWidth < 1024;
 
   React.useEffect(() => {
     const savedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token'); // Renamed to avoid conflict
+    const storedToken = localStorage.getItem('token'); 
     if (savedUser && storedToken) {
       const userData = JSON.parse(savedUser);
       setUser(userData);
-      setToken(storedToken); // Set token state
-      
-      // Initialize Firebase with tenant config if available
+      setToken(storedToken); 
       initializeFirebase(userData);
     }
     setAuthLoading(false);
 
-    // PWA detection
     const checkStandalone = () => {
       const isIOS = /iPad|iPhone|iPod/.test(window.navigator.userAgent) && !window.MSStream;
       const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || 
@@ -79,13 +82,11 @@ function App() {
     };
   }, []);
 
-  const handleLogin = (userData, userToken) => { // Modified handleLogin to accept token
+  const handleLogin = (userData, userToken) => {
     localStorage.setItem('user', JSON.stringify(userData));
     localStorage.setItem('token', userToken);
     setUser(userData);
-    setToken(userToken); // Set token state on login
-    
-    // Initialize Firebase with tenant config
+    setToken(userToken);
     initializeFirebase(userData);
   };
 
@@ -93,37 +94,16 @@ function App() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
-    setToken(null); // Clear token state on logout
+    setToken(null);
   };
 
   if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 font-bold">Iniciando TalenHuman...</div>;
 
   if (!token) {
-    if (authView === 'forgot') {
-        return <ForgotPassword
-          onBack={() => setAuthView('login')}
-          onNext={(email) => {
-            setResetEmail(email);
-            setAuthView('reset');
-          }}
-        />;
-    }
-    if (authView === 'reset') {
-        return <ResetForgottenPassword
-          email={resetEmail}
-          onBack={() => setAuthView('login')}
-        />;
-    }
-    if (authView === 'self-service') {
-      return <SelfServiceReset onBack={() => setAuthView('login')} />;
-    }
-    return (
-      <Login
-        onLogin={handleLogin}
-        onForgotPassword={() => setAuthView('forgot')}
-        onSelfServiceReset={() => setAuthView('self-service')}
-      />
-    );
+    if (authView === 'forgot') return <ForgotPassword onBack={() => setAuthView('login')} onNext={(em) => { setResetEmail(em); setAuthView('reset'); }} />;
+    if (authView === 'reset') return <ResetForgottenPassword email={resetEmail} onBack={() => setAuthView('login')} />;
+    if (authView === 'self-service') return <SelfServiceReset onBack={() => setAuthView('login')} />;
+    return <Login onLogin={handleLogin} onForgotPassword={() => setAuthView('forgot')} onSelfServiceReset={() => setAuthView('self-service')} />;
   }
 
   if (user.mustChangePassword) {
@@ -132,19 +112,14 @@ function App() {
 
   const renderPage = () => {
     const isSuperAdmin = user.roles?.includes('SuperAdmin');
-    
     const hasPerm = (module, sub = null, action = 'R') => {
       if (isSuperAdmin) return true;
       const isModuleActive = user.activeModules?.includes(module);
       if (!isModuleActive) return false;
-
-      // Check granular permission
       const granularKey = sub ? `${module}:${sub}` : module;
       const permItem = user.permissions?.find(p => p.startsWith(`${granularKey}:`));
-      
       if (!permItem) return false;
-
-      const allowedActions = permItem.split(':').pop(); // Get last part (ACTIONS)
+      const allowedActions = permItem.split(':').pop();
       const actionCode = action.substring(0, 1).toUpperCase();
       return allowedActions.includes(actionCode);
     };
@@ -160,70 +135,29 @@ function App() {
     }
 
     switch(currentPage) {
-      case 'Marcas': 
-        if (hasPerm('CORE', 'BRANDS')) return <Brands user={user} />;
-        return <Dashboard />;
-      case 'Tiendas': 
-        if (hasPerm('CORE', 'STORES')) return <Stores user={user} />;
-        return <Dashboard />;
-      case 'Ciudades': 
-        if (hasPerm('CORE', 'CITIES')) return <Cities user={user} />;
-        return <Dashboard />;
-      case 'Distritos': 
-        if (hasPerm('CORE', 'DISTRICTS')) return <Districts user={user} />;
-        return <Dashboard />;
-      case 'Cargos': 
-        if (hasPerm('CORE', 'PROFILES')) return <Profiles user={user} />;
-        return <Dashboard />;
-      case 'Empleados': 
-        if (hasPerm('CORE', 'EMPLOYEES')) return <Employees user={user} />;
-        return <Dashboard />;
-      case 'Jornadas':
-        if (hasPerm('CORE', 'SCHEDULES')) return <Jornadas user={user} />;
-        return <Dashboard />;
-      
-      case 'Turnos': 
-        if (hasPerm('OPERATIONS', 'SHIFTS')) return <ShiftScheduler user={user} />;
-        return <Dashboard />;
-      case 'Marcaciones': 
-        if (hasPerm('OPERATIONS', 'RECORDS')) return <Marcaciones user={user} />;
-        return <Dashboard />;
-      case 'Novedades': 
-        if (hasPerm('OPERATIONS', 'NOVELTIES')) return <NewsInbox user={user} />;
-        return <Dashboard />;
-      
-      case 'Monitoreo Asistencia':
-        if (hasPerm('ADVANCED', 'MONITORING')) return <AttendanceMonitoring user={user} />;
-        return <Dashboard />;
-      case 'Configuración novedades':
-        if (hasPerm('ADVANCED', 'NOVELTY_CONFIG')) return <NewsDesigner user={user} />;
-        return <Dashboard />;
-      case 'Diseñador de Plantillas':
-        if (hasPerm('ADVANCED', 'TEMPLATES')) return <NewsTemplateDesigner user={user} />;
-        return <Dashboard />;
-
-      case 'Usuarios': 
-        if (hasPerm('SYSTEM', 'USERS')) return <Users user={user} />;
-        return <Dashboard />;
-      case 'Empresas': 
-        if (hasPerm('SYSTEM', 'COMPANIES')) return <Companies user={user} />;
-        return <Dashboard />;
-      case 'Permisos':
-        if (hasPerm('SYSTEM', 'PERMISSIONS')) return <ModulePermissions user={user} />;
-        return <Dashboard />;
-      case 'Configuración Sistema':
-        if (hasPerm('SYSTEM', 'SYSTEM_CONFIG')) return <SystemSettings user={user} />;
-        return <Dashboard />;
-      case 'Auditoría':
-        if (hasPerm('SYSTEM', 'AUDIT')) return <AuditLogs user={user} />;
-        return <Dashboard />;
-        
+      case 'Marcas': return hasPerm('CORE', 'BRANDS') ? <Brands user={user} /> : <Dashboard />;
+      case 'Tiendas': return hasPerm('CORE', 'STORES') ? <Stores user={user} /> : <Dashboard />;
+      case 'Ciudades': return hasPerm('CORE', 'CITIES') ? <Cities user={user} /> : <Dashboard />;
+      case 'Distritos': return hasPerm('CORE', 'DISTRICTS') ? <Districts user={user} /> : <Dashboard />;
+      case 'Cargos': return hasPerm('CORE', 'PROFILES') ? <Profiles user={user} /> : <Dashboard />;
+      case 'Empleados': return hasPerm('CORE', 'EMPLOYEES') ? <Employees user={user} /> : <Dashboard />;
+      case 'Jornadas': return hasPerm('CORE', 'SCHEDULES') ? <Jornadas user={user} /> : <Dashboard />;
+      case 'Turnos': return hasPerm('OPERATIONS', 'SHIFTS') ? <ShiftScheduler user={user} /> : <Dashboard />;
+      case 'Marcaciones': return hasPerm('OPERATIONS', 'RECORDS') ? <Marcaciones user={user} /> : <Dashboard />;
+      case 'Novedades': return hasPerm('OPERATIONS', 'NOVELTIES') ? <NewsInbox user={user} /> : <Dashboard />;
+      case 'Monitoreo Asistencia': return hasPerm('ADVANCED', 'MONITORING') ? <AttendanceMonitoring user={user} /> : <Dashboard />;
+      case 'Configuración novedades': return hasPerm('ADVANCED', 'NOVELTY_CONFIG') ? <NewsDesigner user={user} /> : <Dashboard />;
+      case 'Diseñador de Plantillas': return hasPerm('ADVANCED', 'TEMPLATES') ? <NewsTemplateDesigner user={user} /> : <Dashboard />;
+      case 'Usuarios': return hasPerm('SYSTEM', 'USERS') ? <Users user={user} /> : <Dashboard />;
+      case 'Empresas': return hasPerm('SYSTEM', 'COMPANIES') ? <Companies user={user} /> : <Dashboard />;
+      case 'Permisos': return hasPerm('SYSTEM', 'PERMISSIONS') ? <ModulePermissions user={user} /> : <Dashboard />;
+      case 'Configuración Sistema': return hasPerm('SYSTEM', 'SYSTEM_CONFIG') ? <SystemSettings user={user} /> : <Dashboard />;
+      case 'Auditoría': return hasPerm('SYSTEM', 'AUDIT') ? <AuditLogs user={user} /> : <Dashboard />;
       default: return <Dashboard user={user} />;
     }
   };
 
   if (isEmployee) {
-    // 1. REGLA DE ORO LEGAL: Aceptar privacidad antes de cualquier otra cosa
     if (!user.acceptedPrivacyPolicy) {
       return (
         <PrivacyConsentModal 
@@ -234,8 +168,7 @@ function App() {
       );
     }
 
-    // 2. REQUISITO OPERATIVO: Instalar PWA después de lo legal
-    if (!isStandalone) {
+    if (isMobileDevice && !isStandalone) {
       return <InstallPWA deferredPrompt={deferredPrompt} onLogout={handleLogout} />;
     }
 
@@ -250,7 +183,7 @@ function App() {
     <Layout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout}>
       {renderPage()}
     </Layout>
-  )
+  );
 }
 
-export default App
+export default App;
