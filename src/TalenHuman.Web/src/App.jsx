@@ -31,8 +31,8 @@ import EmployeeDashboard from './pages/Employee/EmployeeDashboard'
 import InstallPWA from './components/PWA/InstallPWA'
 import PrivacyConsentModal from './components/Legal/PrivacyConsentModal'
 
-// RADICAL CACHE BUSTING VERSION - V12.5.3-FINAL
-const APP_VERSION = "Elite-V12.5.3-FINAL";
+// STABLE VERSION - V12.5.4-STABLE (Fixing UI & iOS Bypass)
+const APP_VERSION = "Elite-V12.5.4-STABLE";
 
 function App() {
   const [user, setUser] = React.useState(null);
@@ -45,7 +45,6 @@ function App() {
   const [isStandalone, setIsStandalone] = React.useState(false);
 
   // Global Role and Device Detection
-  // We use multiple checks to ensure the user is correctly identified as employee
   const isEmployee = user?.roleName === 'Employee' || 
                      user?.roles?.includes('Employee') || 
                      (user?.employeeId && user?.employeeId !== '00000000-0000-0000-0000-000000000000');
@@ -53,27 +52,34 @@ function App() {
   const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
                         window.innerWidth < 1024;
 
+  const handleLogout = () => {
+    localStorage.clear();
+    setUser(null);
+    setToken(null);
+    window.location.replace('/');
+  };
+
   React.useEffect(() => {
-    // 1. RADICAL CACHE BUST: If no version or different version, wipe EVERYTHING.
     const storedVersion = localStorage.getItem('app_version');
     if (!storedVersion || storedVersion !== APP_VERSION) {
       console.log("CRITICAL UPDATE: Forcing fresh reload...");
       localStorage.clear();
       localStorage.setItem('app_version', APP_VERSION);
-      window.location.replace('/'); // Hard redirect to root
+      window.location.replace('/');
       return;
     }
 
     const savedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('token'); 
+    
     if (savedUser && storedToken) {
       try {
         const userData = JSON.parse(savedUser);
         
-        // Final sanity check: if it's an employee but has no roles array, force logout to repopulate
-        if (userData?.employeeId && !userData?.roles) {
-          localStorage.clear();
-          window.location.reload();
+        // FAIL-SAFE FOR iOS/OLD CACHE: If no roles but has token/user, it is an invalid session.
+        if (!userData || !userData.roles || userData.roles.length === 0) {
+          console.warn("INVALID SESSION: Roles missing. Forcing Logout.");
+          handleLogout();
           return;
         }
 
@@ -81,8 +87,7 @@ function App() {
         setToken(storedToken); 
         initializeFirebase(userData);
       } catch (e) {
-        localStorage.clear();
-        setAuthLoading(false);
+        handleLogout();
         return;
       }
     }
@@ -119,26 +124,13 @@ function App() {
     initializeFirebase(userData);
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    setUser(null);
-    setToken(null);
-  };
-
   if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 font-bold">Iniciando Elite V12 {APP_VERSION}...</div>;
 
   if (!token) {
     if (authView === 'forgot') return <ForgotPassword onBack={() => setAuthView('login')} onNext={(em) => { setResetEmail(em); setAuthView('reset'); }} />;
     if (authView === 'reset') return <ResetForgottenPassword email={resetEmail} onBack={() => setAuthView('login')} />;
     if (authView === 'self-service') return <SelfServiceReset onBack={() => setAuthView('login')} />;
-    return (
-      <Login 
-        onLogin={handleLogin} 
-        onForgotPassword={() => setAuthView('forgot')} 
-        onSelfServiceReset={() => setAuthView('self-service')} 
-        version={APP_VERSION}
-      />
-    );
+    return <Login onLogin={handleLogin} onForgotPassword={() => setAuthView('forgot')} onSelfServiceReset={() => setAuthView('self-service')} version={APP_VERSION} />;
   }
 
   if (user.mustChangePassword) {
@@ -150,13 +142,11 @@ function App() {
     const hasPerm = (module, sub = null, action = 'R') => {
       if (isSuperAdmin) return true;
       const isModuleActive = user.activeModules?.includes(module);
-      if (!isModuleActive) return false;
       const granularKey = sub ? `${module}:${sub}` : module;
       const permItem = user.permissions?.find(p => p.startsWith(`${granularKey}:`));
       if (!permItem) return false;
       const allowedActions = permItem.split(':').pop();
-      const actionCode = action.substring(0, 1).toUpperCase();
-      return allowedActions.includes(actionCode);
+      return allowedActions.includes(action.substring(0, 1).toUpperCase());
     };
 
     if (isEmployee) {
@@ -194,32 +184,15 @@ function App() {
 
   if (isEmployee) {
     if (!user.acceptedPrivacyPolicy) {
-      return (
-        <PrivacyConsentModal 
-          onAccepted={(updatedUser) => setUser(updatedUser)} 
-          onLogout={handleLogout}
-          policyText={user.privacyPolicyText}
-          version={APP_VERSION}
-        />
-      );
+      return <PrivacyConsentModal onAccepted={(updatedUser) => setUser(updatedUser)} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
     }
-
     if (isMobileDevice && !isStandalone) {
       return <InstallPWA deferredPrompt={deferredPrompt} onLogout={handleLogout} version={APP_VERSION} />;
     }
-
-    return (
-      <MobileLayout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout} version={APP_VERSION}>
-        {renderPage()}
-      </MobileLayout>
-    );
+    return <MobileLayout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout} version={APP_VERSION}>{renderPage()}</MobileLayout>;
   }
 
-  return (
-    <Layout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout} version={APP_VERSION}>
-      {renderPage()}
-    </Layout>
-  );
+  return <Layout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout} version={APP_VERSION}>{renderPage()}</Layout>;
 }
 
 export default App;
