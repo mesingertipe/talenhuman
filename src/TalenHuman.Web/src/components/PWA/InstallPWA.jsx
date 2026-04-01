@@ -1,84 +1,83 @@
 import React from 'react';
+import { Share, Plus, LogOut, Smartphone } from 'lucide-react';
 
-const InstallPWA = ({ deferredPrompt, onLogout }) => {
+const InstallPWA = ({ onLogout, version }) => {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-  const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response to install prompt: ${outcome}`);
-  };
-
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-6 bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-950 text-white overflow-hidden">
-      {/* Background Decorative Elements */}
-      <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-blue-500 rounded-full blur-[120px] opacity-20 animate-pulse"></div>
-      <div className="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-indigo-500 rounded-full blur-[120px] opacity-20"></div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 animate-in fade-in duration-500">
+      
+      {/* BRANDING RESTORATION - TH LOGO */}
+      <div className="flex flex-col items-center mb-10">
+        <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-3xl shadow-xl shadow-indigo-500/20 mb-4 transition-transform hover:scale-105">
+          TH
+        </div>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">TalenHuman Elite</h1>
+        <div className="bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded text-[10px] font-mono text-indigo-600 dark:text-indigo-400 mt-1 font-bold">
+          {version || 'V12.5.5-FINAL'}
+        </div>
+      </div>
 
-      <div className="relative max-w-md w-full bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl text-center transform transition-all hover:scale-[1.01]">
-        <img src="/icon.png" alt="TalenHuman Logo" className="w-24 h-24 mx-auto rounded-2xl shadow-lg mb-6 ring-4 ring-indigo-500/30" />
+      <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 p-8 text-center space-y-6">
         
-        <h1 className="text-3xl font-extrabold mb-2 bg-gradient-to-r from-blue-200 to-indigo-100 bg-clip-text text-transparent italic">
-          Elite V12 Mobile
-        </h1>
-        <p className="text-blue-100/70 text-lg mb-8 leading-relaxed">
-          Para acceder a tus turnos, biometría y marcaciones, debes instalar la aplicación en tu celular.
-        </p>
+        <div className="space-y-2">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Instalación Necesaria</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-2">
+            Para acceder a sus turnos y biometría, debe instalar esta aplicación en su dispositivo móvil.
+          </p>
+        </div>
 
         {isIOS ? (
-          <div className="space-y-6 text-left animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <h2 className="text-indigo-300 font-semibold mb-2">Pasos para instalar en iOS:</h2>
-            <div className="flex items-center space-x-4 bg-white/5 p-4 rounded-xl border border-white/10">
-              <div className="bg-blue-500 rounded-lg p-2">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                </svg>
+          <div className="space-y-4 text-left">
+            <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest text-center mb-4">Pasos para iPhone:</p>
+            
+            <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+              <div className="bg-white dark:bg-slate-700 p-2 rounded-lg shadow-sm">
+                <Share size={20} className="text-slate-600 dark:text-slate-300" />
               </div>
-              <p className="text-sm">Toca el icono de <strong>Compartir</strong> en la barra inferior.</p>
+              <p className="text-xs text-slate-700 dark:text-slate-300">
+                Toca el botón <strong>"Compartir"</strong> en la barra inferior de Safari.
+              </p>
             </div>
-            <div className="flex items-center space-x-4 bg-white/5 p-4 rounded-xl border border-white/10">
-              <div className="bg-indigo-500 rounded-lg p-2">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
+
+            <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+              <div className="bg-white dark:bg-slate-700 p-2 rounded-lg shadow-sm">
+                <Plus size={20} className="text-slate-600 dark:text-slate-300" />
               </div>
-              <p className="text-sm">Selecciona <strong>"Añadir a pantalla de inicio"</strong>.</p>
+              <p className="text-xs text-slate-700 dark:text-slate-300">
+                Selecciona la opción <strong>"Añadir a pantalla de inicio"</strong>.
+              </p>
             </div>
           </div>
         ) : (
-          <div className="animate-in zoom-in duration-500">
-            <button 
-              onClick={handleInstall}
-              disabled={!deferredPrompt}
-              className={`w-full py-4 px-6 rounded-2xl font-bold text-lg transition-all flex items-center justify-center space-x-3 shadow-xl ${
-                deferredPrompt 
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-95' 
-                : 'bg-white/10 cursor-not-allowed opacity-50'
-              }`}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              <span>Instalar Aplicación</span>
-            </button>
-            {!deferredPrompt && (
-              <p className="text-xs text-blue-200/40 mt-4 italic">Si ya está instalada, ábrela desde tu menú de aplicaciones.</p>
-            )}
+          <div className="space-y-6 flex flex-col items-center">
+             <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center text-indigo-600">
+                <Smartphone size={40} />
+             </div>
+             <p className="text-xs text-slate-500 px-4">
+                En Android, acepte la notificación de "Instalar Aplicación" que aparecerá en pantalla.
+             </p>
           </div>
         )}
 
-        <button 
-          onClick={onLogout}
-          className="mt-8 text-sm text-blue-300/60 hover:text-white underline transition-colors"
-        >
-          Cerrar sesión y salir
-        </button>
+        <div className="pt-4 space-y-4">
+           <button 
+             onClick={onLogout}
+             className="w-full py-4 px-6 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-transform"
+           >
+             <LogOut size={16} />
+             CERRAR SESIÓN Y SALIR
+           </button>
+           
+           <p className="text-[10px] text-slate-400">
+             Si ya instaló la aplicación, ciérrela y ábrala desde el icono en su pantalla de inicio.
+           </p>
+        </div>
       </div>
 
-      <p className="absolute bottom-6 text-xs text-white/20">
-        TalenHuman Elite V12 &copy; 2026 | Powered by Next-Gen Architecture
-      </p>
+      <footer className="mt-10 text-[9px] text-slate-400 font-medium">
+        POWERED BY TALENHUMAN ELITE V12 © 2026
+      </footer>
     </div>
   );
 };
