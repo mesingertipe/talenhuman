@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit, X, Clock, Calendar, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import api from '../../services/api';
 
-const Jornadas = () => {
+const Jornadas = ({ user }) => {
     const [jornadas, setJornadas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);

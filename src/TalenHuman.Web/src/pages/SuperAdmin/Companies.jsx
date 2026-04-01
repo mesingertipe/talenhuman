@@ -32,12 +32,6 @@ const Companies = () => {
     countryCode: 'CO',
     timeZoneId: 'SA Pacific Standard Time',
     // Firebase fields
-    firebaseApiKey: '',
-    firebaseAuthDomain: '',
-    firebaseProjectId: '',
-    firebaseStorageBucket: '',
-    firebaseMessagingSenderId: '',
-    firebaseAppId: '',
     firebaseMeasurementId: '',
     firebaseVapidKey: '',
     privacyPolicyText: ''
@@ -120,7 +114,7 @@ const Companies = () => {
             setFormData({ 
               id: '', name: '', taxId: '', isActive: true, countryCode: 'CO', timeZoneId: 'SA Pacific Standard Time',
               firebaseApiKey: '', firebaseAuthDomain: '', firebaseProjectId: '', firebaseStorageBucket: '',
-              firebaseMessagingSenderId: '', firebaseAppId: '', firebaseMeasurementId: '', firebaseVapidKey: '',
+              firebaseMeasurementId: '', firebaseVapidKey: '',
               privacyPolicyText: ''
             }); 
             setActiveTab('general');
@@ -205,12 +199,6 @@ const Companies = () => {
                       onClick={() => { 
                         setFormData({ 
                           id: c.id, name: c.name, taxId: c.taxId, isActive: c.isActive, countryCode: c.countryCode || 'CO', timeZoneId: c.timeZoneId || 'SA Pacific Standard Time',
-                          firebaseApiKey: c.firebaseApiKey || '', 
-                          firebaseAuthDomain: c.firebaseAuthDomain || '', 
-                          firebaseProjectId: c.firebaseProjectId || '', 
-                          firebaseStorageBucket: c.firebaseStorageBucket || '',
-                          firebaseMessagingSenderId: c.firebaseMessagingSenderId || '', 
-                          firebaseAppId: c.firebaseAppId || '', 
                           firebaseMeasurementId: c.firebaseMeasurementId || '', 
                           firebaseVapidKey: c.firebaseVapidKey || '',
                           privacyPolicyText: c.privacyPolicyText || ''
@@ -264,12 +252,6 @@ const Companies = () => {
                 className={`py-3 px-4 text-xs font-bold uppercase tracking-widest transition-all border-b-2 ${activeTab === 'general' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-400'}`}
               >
                 Información General
-              </button>
-              <button 
-                onClick={() => setActiveTab('firebase')}
-                className={`py-3 px-4 text-xs font-bold uppercase tracking-widest transition-all border-b-2 ${activeTab === 'firebase' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-400'}`}
-              >
-                Configuración Firebase
               </button>
               <button 
                 onClick={() => setActiveTab('legal')}
@@ -362,7 +344,7 @@ const Companies = () => {
                       </div>
                     </div>
                   </>
-                ) : activeTab === 'legal' ? (
+                ) : (
                   <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
                     <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl flex gap-3 text-indigo-700">
                       <Shield size={20} className="shrink-0" />
@@ -378,76 +360,6 @@ const Companies = () => {
                         className="w-full p-3 rounded-xl border-slate-200 bg-slate-50 text-xs min-h-[250px] font-medium leading-relaxed custom-scrollbar" 
                         placeholder="Pegue aquí los términos legales específicos del país..."
                       />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
-                    <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl flex gap-3 text-amber-700">
-                      <AlertCircle size={20} className="shrink-0" />
-                      <p className="text-[10px] font-medium leading-relaxed">
-                        Configura aquí los parámetros técnicos de Firebase para este Tenant. Si se dejan vacíos, el sistema usará el proyecto global por defecto.
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4">
-                      <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">Firebase API Key</label>
-                        <input 
-                          value={formData.firebaseApiKey} 
-                          onChange={(e) => setFormData({ ...formData, firebaseApiKey: e.target.value })} 
-                          className="w-full p-2.5 rounded-lg border-slate-200 bg-slate-50 text-xs font-mono" 
-                          placeholder="AIzaSyA..."
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">Auth Domain</label>
-                          <input 
-                            value={formData.firebaseAuthDomain} 
-                            onChange={(e) => setFormData({ ...formData, firebaseAuthDomain: e.target.value })} 
-                            className="w-full p-2.5 rounded-lg border-slate-200 bg-slate-50 text-xs" 
-                            placeholder="tenant.firebaseapp.com"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">Project ID</label>
-                          <input 
-                            value={formData.firebaseProjectId} 
-                            onChange={(e) => setFormData({ ...formData, firebaseProjectId: e.target.value })} 
-                            className="w-full p-2.5 rounded-lg border-slate-200 bg-slate-50 text-xs" 
-                            placeholder="my-project-id"
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">Messaging Sender ID</label>
-                          <input 
-                            value={formData.firebaseMessagingSenderId} 
-                            onChange={(e) => setFormData({ ...formData, firebaseMessagingSenderId: e.target.value })} 
-                            className="w-full p-2.5 rounded-lg border-slate-200 bg-slate-50 text-xs text-center" 
-                            placeholder="123456789"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">App ID</label>
-                          <input 
-                            value={formData.firebaseAppId} 
-                            onChange={(e) => setFormData({ ...formData, firebaseAppId: e.target.value })} 
-                            className="w-full p-2.5 rounded-lg border-slate-200 bg-slate-50 text-xs text-center" 
-                            placeholder="1:123:web:abc"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">VAPID Key (Public Key for Push)</label>
-                        <input 
-                          value={formData.firebaseVapidKey} 
-                          onChange={(e) => setFormData({ ...formData, firebaseVapidKey: e.target.value })} 
-                          className="w-full p-2.5 rounded-lg border-slate-200 bg-slate-50 text-[10px] font-mono whitespace-nowrap overflow-hidden text-ellipsis" 
-                          placeholder="BEp..."
-                        />
-                      </div>
                     </div>
                   </div>
                 )}

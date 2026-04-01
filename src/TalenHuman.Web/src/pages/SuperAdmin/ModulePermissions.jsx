@@ -3,7 +3,7 @@ import { Shield, Building2, Save, CheckCircle, XCircle, ChevronRight, Activity, 
 import api from '../../services/api';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
 
-const ModulePermissions = () => {
+const ModulePermissions = ({ user }) => {
   const [companies, setCompanies] = useState([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState('');
   const [modules, setModules] = useState([]);

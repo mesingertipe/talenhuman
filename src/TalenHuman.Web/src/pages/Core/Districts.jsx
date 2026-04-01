@@ -8,7 +8,7 @@ import { useTableData } from '../../hooks/useTableData';
 import Pagination from '../../components/Shared/Pagination';
 import { useTheme } from '../../context/ThemeContext';
 
-const Districts = () => {
+const Districts = ({ user }) => {
   const { isDarkMode } = useTheme();
   const activeColors = {
     bg: isDarkMode ? '#0f172a' : '#f8fafc',

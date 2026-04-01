@@ -1,4 +1,5 @@
 import React from 'react';
+import { User } from 'lucide-react';
 import MobileBottomNav from '../Navigation/MobileBottomNav';
 
 const MobileLayout = ({ children, activePage, setPage, user, onLogout }) => {

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using TalenHuman.Application.Common.Interfaces;
 using TalenHuman.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
+using System.Collections.Generic;
 
 namespace TalenHuman.API.Controllers;
 
@@ -24,6 +25,7 @@ public class AuthController : ControllerBase
     private readonly IIdentityService _identityService;
     private readonly IEmailService _emailService;
     private readonly IAuditService _auditService;
+    private readonly ISystemSettingsService _settingsService;
 
     public AuthController(
         UserManager<User> userManager,
@@ -32,7 +34,8 @@ public class AuthController : ControllerBase
         IConfiguration configuration,
         IIdentityService identityService,
         IEmailService emailService,
-        IAuditService auditService)
+        IAuditService auditService,
+        ISystemSettingsService settingsService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -41,6 +44,7 @@ public class AuthController : ControllerBase
         _identityService = identityService;
         _emailService = emailService;
         _auditService = auditService;
+        _settingsService = settingsService;
     }
 
     [HttpPost("login")]
@@ -189,6 +193,9 @@ public class AuthController : ControllerBase
 
         var firstDistrictName = managedDistricts.FirstOrDefault()?.Name;
 
+        // Fetch Global Firebase Config
+        var firebaseConfig = await _settingsService.GetGroupSettingsAsync("Firebase");
+
         return Ok(new
         {
             token = new JwtSecurityTokenHandler().WriteToken(token),
@@ -208,14 +215,15 @@ public class AuthController : ControllerBase
                 storeIds,
                 activeModules,
                 permissions,
-                firebaseApiKey = user.Company?.FirebaseApiKey,
-                firebaseAuthDomain = user.Company?.FirebaseAuthDomain,
-                firebaseProjectId = user.Company?.FirebaseProjectId,
-                firebaseStorageBucket = user.Company?.FirebaseStorageBucket,
-                firebaseMessagingSenderId = user.Company?.FirebaseMessagingSenderId,
-                firebaseAppId = user.Company?.FirebaseAppId,
-                firebaseMeasurementId = user.Company?.FirebaseMeasurementId,
-                firebaseVapidKey = user.Company?.FirebaseVapidKey,
+                // Global Config
+                firebaseApiKey = firebaseConfig.ContainsKey("FIREBASE_API_KEY") ? firebaseConfig["FIREBASE_API_KEY"] : null,
+                firebaseAuthDomain = firebaseConfig.ContainsKey("FIREBASE_AUTH_DOMAIN") ? firebaseConfig["FIREBASE_AUTH_DOMAIN"] : null,
+                firebaseProjectId = firebaseConfig.ContainsKey("FIREBASE_PROJECT_ID") ? firebaseConfig["FIREBASE_PROJECT_ID"] : null,
+                firebaseStorageBucket = firebaseConfig.ContainsKey("FIREBASE_STORAGE_BUCKET") ? firebaseConfig["FIREBASE_STORAGE_BUCKET"] : null,
+                firebaseMessagingSenderId = firebaseConfig.ContainsKey("FIREBASE_MESSAGING_SENDER_ID") ? firebaseConfig["FIREBASE_MESSAGING_SENDER_ID"] : null,
+                firebaseAppId = firebaseConfig.ContainsKey("FIREBASE_APP_ID") ? firebaseConfig["FIREBASE_APP_ID"] : null,
+                firebaseMeasurementId = firebaseConfig.ContainsKey("FIREBASE_MEASUREMENT_ID") ? firebaseConfig["FIREBASE_MEASUREMENT_ID"] : null,
+                firebaseVapidKey = firebaseConfig.ContainsKey("FIREBASE_VAPID_KEY") ? firebaseConfig["FIREBASE_VAPID_KEY"] : null,
                 privacyPolicyText = user.Company?.PrivacyPolicyText,
                 acceptedPrivacyPolicy = user.AcceptedPrivacyPolicy
             }

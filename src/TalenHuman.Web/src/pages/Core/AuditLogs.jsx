@@ -7,7 +7,7 @@ import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 import * as XLSX from 'xlsx';
 
-const AuditLogs = () => {
+const AuditLogs = ({ user }) => {
     const { isDarkMode } = useTheme();
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);

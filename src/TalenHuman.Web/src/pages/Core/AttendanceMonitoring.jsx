@@ -7,7 +7,7 @@ import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 import { formatTenantDate } from '../../utils/localization';
 
-const AttendanceMonitoring = () => {
+const AttendanceMonitoring = ({ user: sessionUser }) => {
     const { isDarkMode } = useTheme();
     const [user, setUser] = useState(null);
     const [company, setCompany] = useState(null);

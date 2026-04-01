@@ -11,7 +11,7 @@ import { useTheme } from '../../context/ThemeContext';
 import HelpIcon from '../../components/Shared/HelpIcon';
 import BulkImportModal from '../../components/Shared/BulkImportModal';
 
-const Users = () => {
+const Users = ({ user: sessionUser }) => {
   const { isDarkMode } = useTheme();
   const activeColors = {
     bg: isDarkMode ? '#0f172a' : '#f8fafc',

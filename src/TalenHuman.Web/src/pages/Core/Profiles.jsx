@@ -7,7 +7,7 @@ import Pagination from '../../components/Shared/Pagination';
 import { Search } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 
-const Profiles = () => {
+const Profiles = ({ user }) => {
   const { isDarkMode } = useTheme();
   const activeColors = {
     bg: isDarkMode ? '#0f172a' : '#f8fafc',

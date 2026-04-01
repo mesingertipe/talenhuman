@@ -65,16 +65,6 @@ public class CompaniesController : ControllerBase
         existing.IsActive = company.IsActive;
         existing.CountryCode = company.CountryCode;
         existing.TimeZoneId = company.TimeZoneId;
-        
-        // Firebase Config
-        existing.FirebaseApiKey = company.FirebaseApiKey;
-        existing.FirebaseAuthDomain = company.FirebaseAuthDomain;
-        existing.FirebaseProjectId = company.FirebaseProjectId;
-        existing.FirebaseStorageBucket = company.FirebaseStorageBucket;
-        existing.FirebaseMessagingSenderId = company.FirebaseMessagingSenderId;
-        existing.FirebaseAppId = company.FirebaseAppId;
-        existing.FirebaseMeasurementId = company.FirebaseMeasurementId;
-        existing.FirebaseVapidKey = company.FirebaseVapidKey;
         existing.PrivacyPolicyText = company.PrivacyPolicyText;
 
         await _context.SaveChangesAsync();

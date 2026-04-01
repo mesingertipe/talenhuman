@@ -110,6 +110,7 @@ const SystemSettings = () => {
     const navItems = [
         { id: 'infrastructure', label: 'Infraestructura', icon: Server, color: 'text-blue-500', bg: 'bg-blue-50' },
         { id: 'email', label: 'Email & Notificaciones', icon: Mail, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+        { id: 'firebase', label: 'Firebase / PWA', icon: Activity, color: 'text-orange-500', bg: 'bg-orange-50' },
         { id: 'security', label: 'Seguridad & Auditoría', icon: Shield, color: 'text-rose-500', bg: 'bg-rose-50' },
         { id: 'integrations', label: 'Integraciones Externas', icon: Globe, color: 'text-indigo-500', bg: 'bg-indigo-50' }
     ];
@@ -263,6 +264,58 @@ const SystemSettings = () => {
                                             >
                                                 <Mail size={40} className="mx-auto mb-4 opacity-30 group-hover:scale-110 transition-transform" />
                                                 + Configurar Canal de Comunicación
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'firebase' && (
+                            <div className="p-10 flex-1 animate-in slide-in-from-right-8 duration-500">
+                                <div className="flex items-center justify-between mb-12">
+                                    <div className="flex items-center gap-5">
+                                        <div className="w-14 h-14 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center shadow-inner">
+                                            <Activity size={28} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-2xl font-black text-slate-800 tracking-tight uppercase">Firebase Infrastructure</h3>
+                                            <p className="text-xs text-slate-400 font-bold">Push Notifications & Biometrics Core</p>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={() => handleSave('Firebase')}
+                                        disabled={saving}
+                                        className="flex items-center gap-3 px-8 py-3.5 bg-indigo-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-100 disabled:opacity-50"
+                                    >
+                                        {saving ? <RefreshCw className="animate-spin" size={16} /> : <><Save size={16} /> Guardar Configuración</>}
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+                                    {settings.filter(s => s.group === 'Firebase').length > 0 ? (
+                                        settings.filter(s => s.group === 'Firebase').map(renderSettingInput)
+                                    ) : (
+                                        <div className="col-span-2">
+                                            <button 
+                                                onClick={async () => {
+                                                    const defaults = [
+                                                        { key: 'FIREBASE_API_KEY', value: '', group: 'Firebase', description: 'API Key de Firebase' },
+                                                        { key: 'FIREBASE_AUTH_DOMAIN', value: '', group: 'Firebase', description: 'Dominio de autenticación' },
+                                                        { key: 'FIREBASE_PROJECT_ID', value: '', group: 'Firebase', description: 'ID del Proyecto' },
+                                                        { key: 'FIREBASE_STORAGE_BUCKET', value: '', group: 'Firebase', description: 'Bucket de Storage' },
+                                                        { key: 'FIREBASE_MESSAGING_SENDER_ID', value: '', group: 'Firebase', description: 'Sender ID para mensajes' },
+                                                        { key: 'FIREBASE_APP_ID', value: '', group: 'Firebase', description: 'App ID (Web)' },
+                                                        { key: 'FIREBASE_MEASUREMENT_ID', value: '', group: 'Firebase', description: 'ID de Analytics' },
+                                                        { key: 'FIREBASE_VAPID_KEY', value: '', group: 'Firebase', description: 'Clave pública VAPID para Push' }
+                                                    ];
+                                                    await api.post('/SystemSettings/batch', defaults);
+                                                    fetchSettings();
+                                                }}
+                                                className="w-full p-12 border-2 border-dashed border-slate-200 rounded-[32px] text-slate-400 font-bold text-sm hover:border-indigo-400 hover:text-indigo-400 hover:bg-orange-50/30 transition-all group"
+                                            >
+                                                <Activity size={40} className="mx-auto mb-4 opacity-30 group-hover:scale-110 transition-transform" />
+                                                + Inicializar parámetros de Firebase Global
                                             </button>
                                         </div>
                                     )}
