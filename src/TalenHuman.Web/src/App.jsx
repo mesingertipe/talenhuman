@@ -31,8 +31,8 @@ import EmployeeDashboard from './pages/Employee/EmployeeDashboard'
 import InstallPWA from './components/PWA/InstallPWA'
 import PrivacyConsentModal from './components/Legal/PrivacyConsentModal'
 
-// CRITICAL CACHE BUSTING VERSION
-const APP_VERSION = "Elite-V12.5.2-STABLE";
+// RADICAL CACHE BUSTING VERSION - V12.5.3-FINAL
+const APP_VERSION = "Elite-V12.5.3-FINAL";
 
 function App() {
   const [user, setUser] = React.useState(null);
@@ -45,6 +45,7 @@ function App() {
   const [isStandalone, setIsStandalone] = React.useState(false);
 
   // Global Role and Device Detection
+  // We use multiple checks to ensure the user is correctly identified as employee
   const isEmployee = user?.roleName === 'Employee' || 
                      user?.roles?.includes('Employee') || 
                      (user?.employeeId && user?.employeeId !== '00000000-0000-0000-0000-000000000000');
@@ -53,22 +54,29 @@ function App() {
                         window.innerWidth < 1024;
 
   React.useEffect(() => {
-    // 1. Force refresh if version mismatch in storage (Bust Cache)
+    // 1. RADICAL CACHE BUST: If no version or different version, wipe EVERYTHING.
     const storedVersion = localStorage.getItem('app_version');
-    if (storedVersion && storedVersion !== APP_VERSION) {
-      console.log("CACHE BUST: New version detected. Clearing storage...");
+    if (!storedVersion || storedVersion !== APP_VERSION) {
+      console.log("CRITICAL UPDATE: Forcing fresh reload...");
       localStorage.clear();
       localStorage.setItem('app_version', APP_VERSION);
-      window.location.reload(true);
+      window.location.replace('/'); // Hard redirect to root
       return;
     }
-    localStorage.setItem('app_version', APP_VERSION);
 
     const savedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('token'); 
     if (savedUser && storedToken) {
       try {
         const userData = JSON.parse(savedUser);
+        
+        // Final sanity check: if it's an employee but has no roles array, force logout to repopulate
+        if (userData?.employeeId && !userData?.roles) {
+          localStorage.clear();
+          window.location.reload();
+          return;
+        }
+
         setUser(userData);
         setToken(storedToken); 
         initializeFirebase(userData);
@@ -112,13 +120,12 @@ function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    localStorage.clear();
     setUser(null);
     setToken(null);
   };
 
-  if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 font-bold">Cargando TalenHuman {APP_VERSION}...</div>;
+  if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 font-bold">Iniciando Elite V12 {APP_VERSION}...</div>;
 
   if (!token) {
     if (authView === 'forgot') return <ForgotPassword onBack={() => setAuthView('login')} onNext={(em) => { setResetEmail(em); setAuthView('reset'); }} />;
