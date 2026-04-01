@@ -368,7 +368,11 @@ const Layout = ({ children, activePage, setPage, user, onLogout }) => {
     const newId = e.target.value;
     setSelectedTenant(newId);
     localStorage.setItem('tenantId', newId);
-    window.location.reload();
+    
+    // Pequeño delay de 500ms para estabilizar estados antes del flash de recarga
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
   };
 
   const effectiveTenantId = selectedTenant || user?.companyId;

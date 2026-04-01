@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt', // CRITICAL: Stop automatic reloads
       injectRegister: 'auto',
       manifestFilename: 'manifest.json', // Ensure it matches what the browser looks for
       workbox: {

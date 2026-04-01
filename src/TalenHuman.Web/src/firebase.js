@@ -20,6 +20,7 @@ let messaging;
 let analytics;
 let performance;
 let currentVapidKey = defaultFirebaseConfig.vapidKey;
+let isRegistering = false; // Bloqueo de sesión para evitar registros duplicados
 
 /**
  * Inicializa Firebase de forma dinámica con la configuración del Tenant
@@ -80,7 +81,8 @@ export const initializeFirebase = async (tenantConfig = {}) => {
         const registrations = await navigator.serviceWorker.getRegistrations();
         const alreadyRegistered = registrations.some(reg => reg.active && reg.active.scriptURL.includes(finalConfig.projectId));
 
-        if (!alreadyRegistered) {
+        if (!alreadyRegistered && !isRegistering) {
+          isRegistering = true;
           navigator.serviceWorker.register(swUrl)
             .then((registration) => {
             // Initialize Analytics/Performance
@@ -94,6 +96,10 @@ export const initializeFirebase = async (tenantConfig = {}) => {
             }
 
             console.log("🔥 Firebase SW registered for tenant:", finalConfig.projectId);
+            isRegistering = false;
+          }).catch((err) => {
+            console.error("Firebase SW registration failed:", err);
+            isRegistering = false;
           });
         }
       } catch (mErr) {
