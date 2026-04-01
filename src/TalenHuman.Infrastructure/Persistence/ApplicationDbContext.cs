@@ -44,8 +44,9 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<SalesData> SalesData => Set<SalesData>();
     public DbSet<BiometricRecord> BiometricRecords => Set<BiometricRecord>();
     public DbSet<District> Districts => Set<District>();
-    public DbSet<SyncLog> SyncLogs => Set<SyncLog>();
-    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<AuditLog> AuditLogs { get; set; } = null!;
+    public DbSet<SyncLog> SyncLogs { get; set; } = null!;
+    public DbSet<UserCredential> UserCredentials { get; set; } = null!;
     public DbSet<TalenHuman.Domain.Entities.Module> Modules => Set<TalenHuman.Domain.Entities.Module>();
     public DbSet<CompanyModule> CompanyModules => Set<CompanyModule>();
     public DbSet<ModulePermission> ModulePermissions => Set<ModulePermission>();
@@ -151,6 +152,35 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
             .WithOne(a => a.Novedad)
             .HasForeignKey(a => a.NovedadId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Performance Indices for Global Scaling
+        builder.Entity<Novedad>().HasIndex(n => new { n.CompanyId, n.FechaInicio });
+        builder.Entity<Novedad>().HasIndex(n => new { n.CompanyId, n.EmpleadoId, n.Status });
+        
+        builder.Entity<Attendance>().HasIndex(a => new { a.CompanyId, a.EmployeeId, a.ClockIn });
+        builder.Entity<Attendance>().HasIndex(a => new { a.CompanyId, a.StoreId, a.ClockIn });
+        
+        builder.Entity<Shift>().HasIndex(s => new { s.CompanyId, s.EmployeeId, s.StartTime });
+        builder.Entity<Shift>().HasIndex(s => new { s.CompanyId, s.StoreId, s.StartTime });
+        
+        builder.Entity<BiometricRecord>().HasIndex(b => new { b.CompanyId, b.RecordDate });
+        builder.Entity<BiometricRecord>().HasIndex(b => new { b.CompanyId, b.DeviceUser });
+        
+        builder.Entity<Employee>().HasIndex(e => new { e.CompanyId, e.IdentificationNumber });
+        builder.Entity<Employee>().HasIndex(e => new { e.CompanyId, e.IsActive });
+        
+        builder.Entity<AuditLog>().HasIndex(a => new { a.CompanyId, a.CreatedAt });
+        builder.Entity<AuditLog>().HasIndex(a => new { a.UserId, a.CreatedAt });
+        
+        builder.Entity<SyncLog>().HasIndex(s => new { s.CompanyId, s.CreatedAt });
+        
+        builder.Entity<SalesData>().HasIndex(s => new { s.CompanyId, s.StoreId, s.Timestamp });
+
+        builder.Entity<NovedadLog>().HasIndex(n => new { n.CompanyId, n.NovedadId, n.CreatedAt });
+        builder.Entity<NovedadAdjunto>().HasIndex(n => new { n.CompanyId, n.NovedadId });
+        builder.Entity<User>().HasIndex(u => u.CompanyId);
+
+        builder.Entity<UserCredential>().HasIndex(u => u.UserId);
 
         // Additional configuration can be added here
     }

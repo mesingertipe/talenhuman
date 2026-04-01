@@ -24,6 +24,12 @@ import ModulePermissions from './pages/SuperAdmin/ModulePermissions';
 import SystemSettings from './pages/SuperAdmin/SystemSettings';
 import NewsTemplateDesigner from './pages/SuperAdmin/NewsTemplateDesigner';
 import AuditLogs from './pages/Core/AuditLogs';
+import { initializeFirebase } from './firebase';
+
+import MobileLayout from './components/Layout/MobileLayout'
+import EmployeeDashboard from './pages/Employee/EmployeeDashboard'
+import InstallPWA from './components/PWA/InstallPWA'
+import PrivacyConsentModal from './components/Legal/PrivacyConsentModal'
 
 function App() {
   const [user, setUser] = React.useState(null);
@@ -31,16 +37,44 @@ function App() {
   const [authLoading, setAuthLoading] = React.useState(true);
   const [authView, setAuthView] = React.useState('login'); // 'login', 'forgot', 'reset'
   const [resetEmail, setResetEmail] = React.useState('');
-  const [token, setToken] = React.useState(null); // Added token state
+  const [token, setToken] = React.useState(null); 
+  const [deferredPrompt, setDeferredPrompt] = React.useState(null);
+  const [isStandalone, setIsStandalone] = React.useState(false);
+
+  const isEmployee = user?.roleName === 'Employee' || user?.roles?.includes('Employee');
 
   React.useEffect(() => {
     const savedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('token'); // Renamed to avoid conflict
     if (savedUser && storedToken) {
-      setUser(JSON.parse(savedUser));
+      const userData = JSON.parse(savedUser);
+      setUser(userData);
       setToken(storedToken); // Set token state
+      
+      // Initialize Firebase with tenant config if available
+      initializeFirebase(userData);
     }
     setAuthLoading(false);
+
+    // PWA detection
+    const checkStandalone = () => {
+      const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      setIsStandalone(!!isStandaloneMode);
+    };
+
+    checkStandalone();
+
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', () => setIsStandalone(true));
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
   }, []);
 
   const handleLogin = (userData, userToken) => { // Modified handleLogin to accept token
@@ -48,6 +82,9 @@ function App() {
     localStorage.setItem('token', userToken);
     setUser(userData);
     setToken(userToken); // Set token state on login
+    
+    // Initialize Firebase with tenant config
+    initializeFirebase(userData);
   };
 
   const handleLogout = () => {
@@ -109,6 +146,16 @@ function App() {
       const actionCode = action.substring(0, 1).toUpperCase();
       return allowedActions.includes(actionCode);
     };
+
+    if (isEmployee) {
+      switch(currentPage) {
+        case 'Turnos': return <ShiftScheduler user={user} isMobile />;
+        case 'Marcaciones': return <Marcaciones user={user} isMobile />;
+        case 'Notificaciones': return <NewsInbox user={user} isMobile />;
+        case 'Perfil': return <EmployeeDashboard user={user} />;
+        default: return <EmployeeDashboard user={user} />;
+      }
+    }
 
     switch(currentPage) {
       case 'Marcas': 
@@ -172,6 +219,26 @@ function App() {
       default: return <Dashboard user={user} />;
     }
   };
+
+  if (isEmployee) {
+    if (!isStandalone) {
+      return <InstallPWA deferredPrompt={deferredPrompt} onLogout={handleLogout} />;
+    }
+    if (!user.acceptedPrivacyPolicy) {
+      return (
+        <PrivacyConsentModal 
+          onAccepted={(updatedUser) => setUser(updatedUser)} 
+          onLogout={handleLogout}
+          policyText={user.privacyPolicyText}
+        />
+      );
+    }
+    return (
+      <MobileLayout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout}>
+        {renderPage()}
+      </MobileLayout>
+    );
+  }
 
   return (
     <Layout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout}>

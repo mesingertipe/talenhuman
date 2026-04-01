@@ -24,6 +24,17 @@ public class Company : BaseEntity
 
     [System.Text.Json.Serialization.JsonPropertyName("timeZoneId")]
     public string TimeZoneId { get; set; } = "SA Pacific Standard Time"; // Default UTC-5
+    
+    // Firebase Config per Tenant
+    public string? FirebaseApiKey { get; set; }
+    public string? FirebaseAuthDomain { get; set; }
+    public string? FirebaseProjectId { get; set; }
+    public string? FirebaseStorageBucket { get; set; }
+    public string? FirebaseMessagingSenderId { get; set; }
+    public string? FirebaseAppId { get; set; }
+    public string? FirebaseMeasurementId { get; set; }
+    public string? FirebaseVapidKey { get; set; }
+    public string? PrivacyPolicyText { get; set; }
 
     // Relationships
     public ICollection<Brand> Brands { get; set; } = new List<Brand>();

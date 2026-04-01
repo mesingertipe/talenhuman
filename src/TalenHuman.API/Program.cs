@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 using Microsoft.AspNetCore.HttpOverrides;
+using Fido2NetLib;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
@@ -33,6 +34,23 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
         builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+});
+
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(5);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.None; // Match your CORS/PWA environment
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+});
+
+builder.Services.AddFido2(options =>
+{
+    options.ServerDomain = builder.Configuration["Fido2:ServerDomain"] ?? "talenhuman.com";
+    options.ServerName = "TalenHuman Elite";
+    options.Origins = new HashSet<string>(builder.Configuration.GetSection("Fido2:Origins").Get<string[]>() ?? new string[] { "https://talenhuman.com" });
+    options.TimestampDriftTolerance = 300000;
 });
 
 builder.Services.AddAuthentication(options =>
@@ -104,6 +122,8 @@ app.UseSwaggerUI(c => {
 app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
+
+app.UseSession();
 
 // Middleware for API Key authentication and Tenant resolution
 app.UseMiddleware<TalenHuman.Infrastructure.Middleware.TenantApiKeyMiddleware>();

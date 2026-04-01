@@ -23,13 +23,24 @@ const Companies = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [currentCompany, setCurrentCompany] = useState(null);
   const [showModulesModal, setShowModulesModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('general'); // 'general' or 'firebase'
   const [formData, setFormData] = useState({ 
     id: '', 
     name: '', 
     taxId: '', 
     isActive: true,
     countryCode: 'CO',
-    timeZoneId: 'SA Pacific Standard Time'
+    timeZoneId: 'SA Pacific Standard Time',
+    // Firebase fields
+    firebaseApiKey: '',
+    firebaseAuthDomain: '',
+    firebaseProjectId: '',
+    firebaseStorageBucket: '',
+    firebaseMessagingSenderId: '',
+    firebaseAppId: '',
+    firebaseMeasurementId: '',
+    firebaseVapidKey: '',
+    privacyPolicyText: ''
   });
 
   const countries = [
@@ -105,7 +116,16 @@ const Companies = () => {
         </div>
 
         <button 
-          onClick={() => { setFormData({ id: '', name: '', taxId: '', isActive: true, countryCode: 'CO', timeZoneId: 'SA Pacific Standard Time' }); setShowModal(true); }}
+          onClick={() => { 
+            setFormData({ 
+              id: '', name: '', taxId: '', isActive: true, countryCode: 'CO', timeZoneId: 'SA Pacific Standard Time',
+              firebaseApiKey: '', firebaseAuthDomain: '', firebaseProjectId: '', firebaseStorageBucket: '',
+              firebaseMessagingSenderId: '', firebaseAppId: '', firebaseMeasurementId: '', firebaseVapidKey: '',
+              privacyPolicyText: ''
+            }); 
+            setActiveTab('general');
+            setShowModal(true); 
+          }}
           className="btn-premium btn-premium-primary"
           style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
         >
@@ -182,7 +202,22 @@ const Companies = () => {
                       <Boxes size={20} />
                     </button>
                     <button 
-                      onClick={() => { setFormData({ id: c.id, name: c.name, taxId: c.taxId, isActive: c.isActive, countryCode: c.countryCode || 'CO', timeZoneId: c.timeZoneId || 'SA Pacific Standard Time' }); setShowModal(true); }}
+                      onClick={() => { 
+                        setFormData({ 
+                          id: c.id, name: c.name, taxId: c.taxId, isActive: c.isActive, countryCode: c.countryCode || 'CO', timeZoneId: c.timeZoneId || 'SA Pacific Standard Time',
+                          firebaseApiKey: c.firebaseApiKey || '', 
+                          firebaseAuthDomain: c.firebaseAuthDomain || '', 
+                          firebaseProjectId: c.firebaseProjectId || '', 
+                          firebaseStorageBucket: c.firebaseStorageBucket || '',
+                          firebaseMessagingSenderId: c.firebaseMessagingSenderId || '', 
+                          firebaseAppId: c.firebaseAppId || '', 
+                          firebaseMeasurementId: c.firebaseMeasurementId || '', 
+                          firebaseVapidKey: c.firebaseVapidKey || '',
+                          privacyPolicyText: c.privacyPolicyText || ''
+                        }); 
+                        setActiveTab('general');
+                        setShowModal(true); 
+                      }}
                       style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', padding: '0.5rem' }}
                       className="hover:scale-110 transition-transform"
                     >
@@ -221,87 +256,201 @@ const Companies = () => {
                 <X size={22} />
               </button>
             </div>
+
+            {/* Tabs Selector */}
+            <div className="flex border-b border-slate-100 px-6">
+              <button 
+                onClick={() => setActiveTab('general')}
+                className={`py-3 px-4 text-xs font-bold uppercase tracking-widest transition-all border-b-2 ${activeTab === 'general' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-400'}`}
+              >
+                Información General
+              </button>
+              <button 
+                onClick={() => setActiveTab('firebase')}
+                className={`py-3 px-4 text-xs font-bold uppercase tracking-widest transition-all border-b-2 ${activeTab === 'firebase' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-400'}`}
+              >
+                Configuración Firebase
+              </button>
+              <button 
+                onClick={() => setActiveTab('legal')}
+                className={`py-3 px-4 text-xs font-bold uppercase tracking-widest transition-all border-b-2 ${activeTab === 'legal' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-400'}`}
+              >
+                Legal / Privacidad
+              </button>
+            </div>
             
             <form onSubmit={handleSave}>
-              <div className="modal-body space-y-6">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre Comercial *</label>
-                  <div className="relative">
-                    <Building2 size={18} className="absolute left-3 top-4 text-slate-400" />
-                    <input 
-                      required 
-                      value={formData.name} 
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-                      className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
-                      placeholder="Ej. TalenHuman Corp"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">NIT / Tax ID</label>
-                  <div className="relative">
-                    <Hash size={18} className="absolute left-3 top-4 text-slate-400" />
-                    <input 
-                      required 
-                      value={formData.taxId} 
-                      onChange={(e) => setFormData({ ...formData, taxId: e.target.value })} 
-                      className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
-                      placeholder="Ej. 900.123.456-7"
-                    />
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100/50">
-                  <div className="flex items-center justify-between">
+              <div className="modal-body space-y-6 max-h-[60vh] overflow-y-auto p-6">
+                {activeTab === 'general' ? (
+                  <>
                     <div>
-                      <p className="font-bold text-slate-800 text-sm">Estado de la Empresa</p>
-                      <p className="text-xs text-slate-500 mt-1">Habilitar o restringir el logueo.</p>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre Comercial *</label>
+                      <div className="relative">
+                        <Building2 size={18} className="absolute left-3 top-4 text-slate-400" />
+                        <input 
+                          required 
+                          value={formData.name} 
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                          className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
+                          placeholder="Ej. TalenHuman Corp"
+                        />
+                      </div>
                     </div>
-                    <label className="premium-switch">
-                      <input 
-                        type="checkbox" 
-                        checked={formData.isActive}
-                        onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                      />
-                      <span className="premium-switch-slider"></span>
-                    </label>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">País de Operación</label>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0 w-10 h-8 bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center overflow-hidden shadow-inner">
-                        <img 
-                          src={`https://flagcdn.com/w40/${formData.countryCode.toLowerCase()}.png`} 
-                          alt="preview"
-                          className="w-full h-auto object-cover" 
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">NIT / Tax ID</label>
+                      <div className="relative">
+                        <Hash size={18} className="absolute left-3 top-4 text-slate-400" />
+                        <input 
+                          required 
+                          value={formData.taxId} 
+                          onChange={(e) => setFormData({ ...formData, taxId: e.target.value })} 
+                          className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
+                          placeholder="Ej. 900.123.456-7"
                         />
                       </div>
-                      <div className="flex-1">
-                        <SearchableSelect
-                            options={countries.map(c => ({ id: c.code, name: c.name }))}
-                            value={formData.countryCode}
-                            onChange={(val) => {
-                                const country = countries.find(c => c.code === val);
-                                setFormData({ ...formData, countryCode: val, timeZoneId: country.zone });
-                            }}
-                            placeholder="Seleccionar País..."
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100/50">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-bold text-slate-800 text-sm">Estado de la Empresa</p>
+                          <p className="text-xs text-slate-500 mt-1">Habilitar o restringir el logueo.</p>
+                        </div>
+                        <label className="premium-switch">
+                          <input 
+                            type="checkbox" 
+                            checked={formData.isActive}
+                            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                          />
+                          <span className="premium-switch-slider"></span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">País de Operación</label>
+                        <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0 w-10 h-8 bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center overflow-hidden shadow-inner">
+                            <img 
+                              src={`https://flagcdn.com/w40/${(formData.countryCode || 'co').toLowerCase()}.png`} 
+                              alt="preview"
+                              className="w-full h-auto object-cover" 
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <SearchableSelect
+                                options={countries.map(c => ({ id: c.code, name: c.name }))}
+                                value={formData.countryCode}
+                                onChange={(val) => {
+                                    const country = countries.find(c => c.code === val);
+                                    setFormData({ ...formData, countryCode: val, timeZoneId: country.zone });
+                                }}
+                                placeholder="Seleccionar País..."
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Zona Horaria (UTC)</label>
+                        <input 
+                          readOnly
+                          value={formData.timeZoneId} 
+                          className="w-full p-3 rounded-xl border-slate-200 bg-slate-100 font-bold text-[10px] text-slate-500 uppercase tracking-tighter" 
+                        />
+                      </div>
+                    </div>
+                  </>
+                ) : activeTab === 'legal' ? (
+                  <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
+                    <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl flex gap-3 text-indigo-700">
+                      <Shield size={20} className="shrink-0" />
+                      <p className="text-[10px] font-medium leading-relaxed">
+                        Configura la Política de Privacidad específica para este Tenant. Si se deja vacía, se usará la política estándar de TalenHuman. Soporta múltiples líneas.
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">Cuerpo de la Política de Privacidad</label>
+                      <textarea 
+                        value={formData.privacyPolicyText} 
+                        onChange={(e) => setFormData({ ...formData, privacyPolicyText: e.target.value })} 
+                        className="w-full p-3 rounded-xl border-slate-200 bg-slate-50 text-xs min-h-[250px] font-medium leading-relaxed custom-scrollbar" 
+                        placeholder="Pegue aquí los términos legales específicos del país..."
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
+                    <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl flex gap-3 text-amber-700">
+                      <AlertCircle size={20} className="shrink-0" />
+                      <p className="text-[10px] font-medium leading-relaxed">
+                        Configura aquí los parámetros técnicos de Firebase para este Tenant. Si se dejan vacíos, el sistema usará el proyecto global por defecto.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">Firebase API Key</label>
+                        <input 
+                          value={formData.firebaseApiKey} 
+                          onChange={(e) => setFormData({ ...formData, firebaseApiKey: e.target.value })} 
+                          className="w-full p-2.5 rounded-lg border-slate-200 bg-slate-50 text-xs font-mono" 
+                          placeholder="AIzaSyA..."
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">Auth Domain</label>
+                          <input 
+                            value={formData.firebaseAuthDomain} 
+                            onChange={(e) => setFormData({ ...formData, firebaseAuthDomain: e.target.value })} 
+                            className="w-full p-2.5 rounded-lg border-slate-200 bg-slate-50 text-xs" 
+                            placeholder="tenant.firebaseapp.com"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">Project ID</label>
+                          <input 
+                            value={formData.firebaseProjectId} 
+                            onChange={(e) => setFormData({ ...formData, firebaseProjectId: e.target.value })} 
+                            className="w-full p-2.5 rounded-lg border-slate-200 bg-slate-50 text-xs" 
+                            placeholder="my-project-id"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">Messaging Sender ID</label>
+                          <input 
+                            value={formData.firebaseMessagingSenderId} 
+                            onChange={(e) => setFormData({ ...formData, firebaseMessagingSenderId: e.target.value })} 
+                            className="w-full p-2.5 rounded-lg border-slate-200 bg-slate-50 text-xs text-center" 
+                            placeholder="123456789"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">App ID</label>
+                          <input 
+                            value={formData.firebaseAppId} 
+                            onChange={(e) => setFormData({ ...formData, firebaseAppId: e.target.value })} 
+                            className="w-full p-2.5 rounded-lg border-slate-200 bg-slate-50 text-xs text-center" 
+                            placeholder="1:123:web:abc"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">VAPID Key (Public Key for Push)</label>
+                        <input 
+                          value={formData.firebaseVapidKey} 
+                          onChange={(e) => setFormData({ ...formData, firebaseVapidKey: e.target.value })} 
+                          className="w-full p-2.5 rounded-lg border-slate-200 bg-slate-50 text-[10px] font-mono whitespace-nowrap overflow-hidden text-ellipsis" 
+                          placeholder="BEp..."
                         />
                       </div>
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Zona Horaria (UTC)</label>
-                    <input 
-                      readOnly
-                      value={formData.timeZoneId} 
-                      className="w-full p-3 rounded-xl border-slate-200 bg-slate-100 font-bold text-[10px] text-slate-500 uppercase tracking-tighter" 
-                    />
-                  </div>
-                </div>
+                )}
               </div>
 
               <div className="modal-footer">

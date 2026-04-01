@@ -207,7 +207,17 @@ public class AuthController : ControllerBase
                 districtName = firstDistrictName,
                 storeIds,
                 activeModules,
-                permissions
+                permissions,
+                firebaseApiKey = user.Company?.FirebaseApiKey,
+                firebaseAuthDomain = user.Company?.FirebaseAuthDomain,
+                firebaseProjectId = user.Company?.FirebaseProjectId,
+                firebaseStorageBucket = user.Company?.FirebaseStorageBucket,
+                firebaseMessagingSenderId = user.Company?.FirebaseMessagingSenderId,
+                firebaseAppId = user.Company?.FirebaseAppId,
+                firebaseMeasurementId = user.Company?.FirebaseMeasurementId,
+                firebaseVapidKey = user.Company?.FirebaseVapidKey,
+                privacyPolicyText = user.Company?.PrivacyPolicyText,
+                acceptedPrivacyPolicy = user.AcceptedPrivacyPolicy
             }
         });
     }

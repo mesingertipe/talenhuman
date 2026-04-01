@@ -17,6 +17,10 @@ public class User : IdentityUser<Guid>, IMultitenant
     public bool IsActive { get; set; } = true;
     public string? ResetCode { get; set; }
     public DateTime? ResetCodeExpiry { get; set; }
+    public string? FirebaseToken { get; set; }
+    public bool AcceptedPrivacyPolicy { get; set; }
+    public DateTime? PrivacyPolicyAcceptedAt { get; set; }
+    public string? AcceptanceIP { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 

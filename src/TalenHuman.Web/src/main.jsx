@@ -3,6 +3,18 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { ThemeProvider } from './context/ThemeContext'
+import { registerSW } from 'virtual:pwa-register'
+
+const updateSW = registerSW({
+  onNeedRefresh() {
+    if (confirm('Nueva versión disponible. ¿Deseas actualizar?')) {
+      updateSW(true)
+    }
+  },
+  onOfflineReady() {
+    console.log('La aplicación está lista para usarse sin conexión.')
+  },
+})
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -11,11 +23,3 @@ createRoot(document.getElementById('root')).render(
     </ThemeProvider>
   </StrictMode>,
 )
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then((registrations) => {
-    for (const registration of registrations) {
-      registration.unregister();
-    }
-  });
-}

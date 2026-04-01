@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TalenHuman.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace TalenHuman.Infrastructure.Migrations
+namespace TalenHuman.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260331224910_AddBiometricAndFirebaseSupport")]
+    partial class AddBiometricAndFirebaseSupport
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -251,15 +254,13 @@ namespace TalenHuman.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CompanyId");
+
                     b.HasIndex("EmployeeId");
 
                     b.HasIndex("ShiftId");
 
                     b.HasIndex("StoreId");
-
-                    b.HasIndex("CompanyId", "EmployeeId", "ClockIn");
-
-                    b.HasIndex("CompanyId", "StoreId", "ClockIn");
 
                     b.ToTable("Attendances");
                 });
@@ -308,9 +309,7 @@ namespace TalenHuman.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId", "CreatedAt");
-
-                    b.HasIndex("UserId", "CreatedAt");
+                    b.HasIndex("CompanyId");
 
                     b.ToTable("AuditLogs");
                 });
@@ -359,9 +358,7 @@ namespace TalenHuman.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId", "DeviceUser");
-
-                    b.HasIndex("CompanyId", "RecordDate");
+                    b.HasIndex("CompanyId");
 
                     b.ToTable("BiometricRecords");
                 });
@@ -470,9 +467,6 @@ namespace TalenHuman.Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PrivacyPolicyText")
                         .HasColumnType("text");
 
                     b.Property<string>("TaxId")
@@ -616,6 +610,8 @@ namespace TalenHuman.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CompanyId");
+
                     b.HasIndex("JornadaId");
 
                     b.HasIndex("ProfileId");
@@ -624,10 +620,6 @@ namespace TalenHuman.Infrastructure.Migrations
 
                     b.HasIndex("UserId")
                         .IsUnique();
-
-                    b.HasIndex("CompanyId", "IdentificationNumber");
-
-                    b.HasIndex("CompanyId", "IsActive");
 
                     b.ToTable("Employees");
                 });
@@ -847,15 +839,13 @@ namespace TalenHuman.Infrastructure.Migrations
 
                     b.HasIndex("BrandId");
 
+                    b.HasIndex("CompanyId");
+
                     b.HasIndex("EmpleadoId");
 
                     b.HasIndex("NovedadTipoId");
 
                     b.HasIndex("StoreId");
-
-                    b.HasIndex("CompanyId", "FechaInicio");
-
-                    b.HasIndex("CompanyId", "EmpleadoId", "Status");
 
                     b.ToTable("Novedades");
                 });
@@ -888,9 +878,9 @@ namespace TalenHuman.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("NovedadId");
+                    b.HasIndex("CompanyId");
 
-                    b.HasIndex("CompanyId", "NovedadId");
+                    b.HasIndex("NovedadId");
 
                     b.ToTable("NovedadAdjuntos");
                 });
@@ -929,11 +919,11 @@ namespace TalenHuman.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CompanyId");
+
                     b.HasIndex("NovedadId");
 
                     b.HasIndex("UsuarioId");
-
-                    b.HasIndex("CompanyId", "NovedadId", "CreatedAt");
 
                     b.ToTable("NovedadLogs");
                 });
@@ -1074,9 +1064,9 @@ namespace TalenHuman.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StoreId");
+                    b.HasIndex("CompanyId");
 
-                    b.HasIndex("CompanyId", "StoreId", "Timestamp");
+                    b.HasIndex("StoreId");
 
                     b.ToTable("SalesData");
                 });
@@ -1122,13 +1112,11 @@ namespace TalenHuman.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CompanyId");
+
                     b.HasIndex("EmployeeId");
 
                     b.HasIndex("StoreId");
-
-                    b.HasIndex("CompanyId", "EmployeeId", "StartTime");
-
-                    b.HasIndex("CompanyId", "StoreId", "StartTime");
 
                     b.ToTable("Shifts");
                 });
@@ -1263,8 +1251,6 @@ namespace TalenHuman.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompanyId", "CreatedAt");
-
                     b.ToTable("SyncLogs");
                 });
 
@@ -1305,12 +1291,6 @@ namespace TalenHuman.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<string>("AcceptanceIP")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("AcceptedPrivacyPolicy")
-                        .HasColumnType("boolean");
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("integer");
@@ -1373,9 +1353,6 @@ namespace TalenHuman.Infrastructure.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("PrivacyPolicyAcceptedAt")
-                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("ResetCode")
                         .HasColumnType("text");
