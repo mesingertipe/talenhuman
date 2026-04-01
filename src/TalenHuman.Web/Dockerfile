@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Install dependencies
 COPY src/TalenHuman.Web/package*.json ./
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Build the app
 COPY src/TalenHuman.Web/ .
