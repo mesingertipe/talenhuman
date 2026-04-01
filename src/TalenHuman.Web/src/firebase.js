@@ -39,42 +39,57 @@ export const initializeFirebase = (tenantConfig = {}) => {
 
     currentVapidKey = tenantConfig.firebaseVapidKey || defaultFirebaseConfig.vapidKey;
 
+    // VALIDACIÓN CRITICA: No inicializar si son valores por defecto (placeholders)
+    if (!finalConfig.apiKey || finalConfig.apiKey.includes('YOUR_') || 
+        !finalConfig.appId || finalConfig.appId.includes('YOUR_')) {
+      console.warn("⚠️ Firebase: Configuración no proporcionada o inválida. Se saltará la inicialización.");
+      return;
+    }
+
     if (!getApps().length) {
       app = initializeApp(finalConfig);
     } else {
       app = getApp();
     }
 
-    if (typeof window !== "undefined") {
-      messaging = getMessaging(app);
+    if (typeof window !== "undefined" && app) {
+      try {
+        messaging = getMessaging(app);
 
-      // Register Service Worker with dynamic config as query params
-      const configParams = new URLSearchParams({
-        apiKey: finalConfig.apiKey,
-        authDomain: finalConfig.authDomain,
-        projectId: finalConfig.projectId,
-        storageBucket: finalConfig.storageBucket,
-        messagingSenderId: finalConfig.messagingSenderId,
-        appId: finalConfig.appId,
-        measurementId: finalConfig.measurementId
-      }).toString();
+        // Register Service Worker with dynamic config as query params
+        const configParams = new URLSearchParams({
+          apiKey: finalConfig.apiKey,
+          authDomain: finalConfig.authDomain,
+          projectId: finalConfig.projectId,
+          storageBucket: finalConfig.storageBucket,
+          messagingSenderId: finalConfig.messagingSenderId,
+          appId: finalConfig.appId,
+          measurementId: finalConfig.measurementId
+        }).toString();
 
-      navigator.serviceWorker.register(`/firebase-messaging-sw.js?${configParams}`)
-        .then((registration) => {
-          // Initialize Analytics/Performance
-          if (typeof window !== "undefined") {
-            analytics = getAnalytics(app);
-            performance = getPerformance(app);
-          }
+        navigator.serviceWorker.register(`/firebase-messaging-sw.js?${configParams}`)
+          .then((registration) => {
+            // Initialize Analytics/Performance
+            try {
+              if (typeof window !== "undefined" && finalConfig.measurementId && !finalConfig.measurementId.includes('YOUR_')) {
+                analytics = getAnalytics(app);
+                performance = getPerformance(app);
+              }
+            } catch (aErr) {
+              console.warn("Firebase Analytics/Performance failed to init:", aErr);
+            }
 
-          console.log("🔥 Firebase SW registered for tenant:", finalConfig.projectId);
-        })
-        .catch((err) => {
-          console.error("Firebase SW registration failed:", err);
-        });
+            console.log("🔥 Firebase SW registered for tenant:", finalConfig.projectId);
+          })
+          .catch((err) => {
+            console.error("Firebase SW registration failed:", err);
+          });
+      } catch (mErr) {
+        console.warn("Firebase Messaging failed to init (may not be supported in this browser):", mErr);
+      }
     }
   } catch (error) {
-    console.error("Fallo al inicializar Firebase:", error);
+    console.error("Fallo crítico al inicializar Firebase:", error);
   }
 };
 
