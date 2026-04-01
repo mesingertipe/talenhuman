@@ -31,8 +31,8 @@ import EmployeeDashboard from './pages/Employee/EmployeeDashboard'
 import InstallPWA from './components/PWA/InstallPWA'
 import PrivacyConsentModal from './components/Legal/PrivacyConsentModal'
 
-// STABLE VERSION - V12.5.4-STABLE (Fixing UI & iOS Bypass)
-const APP_VERSION = "Elite-V12.5.4-STABLE";
+// EMERGENCY FORCE VERSION - V12.5.6-FORCE
+const APP_VERSION = "Elite-V12.5.6-FORCE";
 
 function App() {
   const [user, setUser] = React.useState(null);
