@@ -84,9 +84,25 @@ public class SystemSettingsService : ISystemSettingsService
 
     public async Task<IDictionary<string, string>> GetGroupSettingsAsync(string group)
     {
-        return await _context.SystemSettings
+        var tenantId = _tenantProvider.GetTenantId();
+        var allGroupSettings = await _context.SystemSettings
             .Where(s => s.Group == group)
-            .ToDictionaryAsync(s => s.Key, s => s.Value);
+            .AsNoTracking()
+            .ToListAsync();
+
+        // Follow the same priority logic as GetMergedSettingsAsync
+        var result = allGroupSettings
+            .Where(s => !s.Key.Contains('_') || (tenantId != Guid.Empty && s.Key.StartsWith($"{tenantId}_")))
+            .Select(s => new {
+                CleanKey = s.Key.Contains('_') ? s.Key.Split('_', 2)[1] : s.Key,
+                IsTenantSpecific = s.Key.Contains('_'),
+                Value = s.Value
+            })
+            .GroupBy(x => x.CleanKey)
+            .Select(g => g.OrderByDescending(x => x.IsTenantSpecific).First())
+            .ToDictionary(x => x.CleanKey, x => x.Value);
+
+        return result;
     }
 
     public async Task<IEnumerable<SystemSetting>> GetMergedSettingsAsync()
