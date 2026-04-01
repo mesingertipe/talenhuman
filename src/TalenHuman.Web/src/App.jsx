@@ -58,7 +58,9 @@ function App() {
 
     // PWA detection
     const checkStandalone = () => {
-      const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      const isIOS = /iPad|iPhone|iPod/.test(window.navigator.userAgent) && !window.MSStream;
+      const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || 
+                             (isIOS && window.navigator.standalone);
       setIsStandalone(!!isStandaloneMode);
     };
 
@@ -221,9 +223,7 @@ function App() {
   };
 
   if (isEmployee) {
-    if (!isStandalone) {
-      return <InstallPWA deferredPrompt={deferredPrompt} onLogout={handleLogout} />;
-    }
+    // 1. REGLA DE ORO LEGAL: Aceptar privacidad antes de cualquier otra cosa
     if (!user.acceptedPrivacyPolicy) {
       return (
         <PrivacyConsentModal 
@@ -233,6 +233,12 @@ function App() {
         />
       );
     }
+
+    // 2. REQUISITO OPERATIVO: Instalar PWA después de lo legal
+    if (!isStandalone) {
+      return <InstallPWA deferredPrompt={deferredPrompt} onLogout={handleLogout} />;
+    }
+
     return (
       <MobileLayout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout}>
         {renderPage()}
