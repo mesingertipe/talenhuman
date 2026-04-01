@@ -93,8 +93,8 @@ export const initializeFirebase = (tenantConfig = {}) => {
   }
 };
 
-// Inicialización inicial con defaults
-initializeFirebase();
+// Se ha eliminado la llamada inicial automática initializeFirebase();
+// Ahora solo se inicializará cuando APP lo llame con datos reales en el login.
 
 export const requestForToken = async () => {
   if (!messaging) return null;
