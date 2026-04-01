@@ -31,8 +31,8 @@ import EmployeeDashboard from './pages/Employee/EmployeeDashboard'
 import InstallPWA from './components/PWA/InstallPWA'
 import PrivacyConsentModal from './components/Legal/PrivacyConsentModal'
 
-// EMERGENCY FORCE VERSION - V12.5.6-FORCE
-const APP_VERSION = "Elite-V12.5.6-FORCE";
+// V12.5.7-STABLE - ABSOLUTE ENFORCEMENT & UI RESTORATION
+const APP_VERSION = "Elite-V12.5.7-STABLE";
 
 function App() {
   const [user, setUser] = React.useState(null);
@@ -44,9 +44,9 @@ function App() {
   const [deferredPrompt, setDeferredPrompt] = React.useState(null);
   const [isStandalone, setIsStandalone] = React.useState(false);
 
-  // Global Role and Device Detection
-  const isEmployee = user?.roleName === 'Employee' || 
-                     user?.roles?.includes('Employee') || 
+  // UNIVERSAL EMPLOYEE DETECTION - Case Insensitive & ID Based
+  const isEmployee = user?.roleName?.toLowerCase() === 'employee' || 
+                     user?.roles?.some(r => r.toLowerCase() === 'employee') || 
                      (user?.employeeId && user?.employeeId !== '00000000-0000-0000-0000-000000000000');
 
   const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
@@ -60,9 +60,9 @@ function App() {
   };
 
   React.useEffect(() => {
+    // 1. VERSION CONTROL
     const storedVersion = localStorage.getItem('app_version');
     if (!storedVersion || storedVersion !== APP_VERSION) {
-      console.log("CRITICAL UPDATE: Forcing fresh reload...");
       localStorage.clear();
       localStorage.setItem('app_version', APP_VERSION);
       window.location.replace('/');
@@ -76,9 +76,8 @@ function App() {
       try {
         const userData = JSON.parse(savedUser);
         
-        // FAIL-SAFE FOR iOS/OLD CACHE: If no roles but has token/user, it is an invalid session.
-        if (!userData || !userData.roles || userData.roles.length === 0) {
-          console.warn("INVALID SESSION: Roles missing. Forcing Logout.");
+        // 2. STALE SESSION PREVENTION
+        if (!userData || (!userData.roles && !userData.employeeId)) {
           handleLogout();
           return;
         }
@@ -124,24 +123,25 @@ function App() {
     initializeFirebase(userData);
   };
 
-  if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 font-bold">Iniciando Elite V12 {APP_VERSION}...</div>;
+  if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 font-bold">TalenHuman Elite {APP_VERSION}</div>;
 
   if (!token) {
-    if (authView === 'forgot') return <ForgotPassword onBack={() => setAuthView('login')} onNext={(em) => { setResetEmail(em); setAuthView('reset'); }} />;
-    if (authView === 'reset') return <ResetForgottenPassword email={resetEmail} onBack={() => setAuthView('login')} />;
-    if (authView === 'self-service') return <SelfServiceReset onBack={() => setAuthView('login')} />;
     return <Login onLogin={handleLogin} onForgotPassword={() => setAuthView('forgot')} onSelfServiceReset={() => setAuthView('self-service')} version={APP_VERSION} />;
   }
 
-  if (user.mustChangePassword) {
-    return <ResetPassword user={user} onPasswordChanged={(u) => setUser(u)} />;
-  }
-
   const renderPage = () => {
+    if (isEmployee) {
+      switch(currentPage) {
+        case 'Turnos': return <ShiftScheduler user={user} isMobile />;
+        case 'Marcaciones': return <Marcaciones user={user} isMobile />;
+        case 'Notificaciones': return <NewsInbox user={user} isMobile />;
+        default: return <EmployeeDashboard user={user} />;
+      }
+    }
+
     const isSuperAdmin = user.roles?.includes('SuperAdmin');
     const hasPerm = (module, sub = null, action = 'R') => {
       if (isSuperAdmin) return true;
-      const isModuleActive = user.activeModules?.includes(module);
       const granularKey = sub ? `${module}:${sub}` : module;
       const permItem = user.permissions?.find(p => p.startsWith(`${granularKey}:`));
       if (!permItem) return false;
@@ -149,45 +149,24 @@ function App() {
       return allowedActions.includes(action.substring(0, 1).toUpperCase());
     };
 
-    if (isEmployee) {
-      switch(currentPage) {
-        case 'Turnos': return <ShiftScheduler user={user} isMobile />;
-        case 'Marcaciones': return <Marcaciones user={user} isMobile />;
-        case 'Notificaciones': return <NewsInbox user={user} isMobile />;
-        case 'Perfil': return <EmployeeDashboard user={user} />;
-        default: return <EmployeeDashboard user={user} />;
-      }
-    }
-
     switch(currentPage) {
       case 'Marcas': return hasPerm('CORE', 'BRANDS') ? <Brands user={user} /> : <Dashboard />;
       case 'Tiendas': return hasPerm('CORE', 'STORES') ? <Stores user={user} /> : <Dashboard />;
       case 'Ciudades': return hasPerm('CORE', 'CITIES') ? <Cities user={user} /> : <Dashboard />;
       case 'Distritos': return hasPerm('CORE', 'DISTRICTS') ? <Districts user={user} /> : <Dashboard />;
-      case 'Cargos': return hasPerm('CORE', 'PROFILES') ? <Profiles user={user} /> : <Dashboard />;
       case 'Empleados': return hasPerm('CORE', 'EMPLOYEES') ? <Employees user={user} /> : <Dashboard />;
-      case 'Jornadas': return hasPerm('CORE', 'SCHEDULES') ? <Jornadas user={user} /> : <Dashboard />;
-      case 'Turnos': return hasPerm('OPERATIONS', 'SHIFTS') ? <ShiftScheduler user={user} /> : <Dashboard />;
-      case 'Marcaciones': return hasPerm('OPERATIONS', 'RECORDS') ? <Marcaciones user={user} /> : <Dashboard />;
-      case 'Novedades': return hasPerm('OPERATIONS', 'NOVELTIES') ? <NewsInbox user={user} /> : <Dashboard />;
-      case 'Monitoreo Asistencia': return hasPerm('ADVANCED', 'MONITORING') ? <AttendanceMonitoring user={user} /> : <Dashboard />;
-      case 'Configuración novedades': return hasPerm('ADVANCED', 'NOVELTY_CONFIG') ? <NewsDesigner user={user} /> : <Dashboard />;
-      case 'Diseñador de Plantillas': return hasPerm('ADVANCED', 'TEMPLATES') ? <NewsTemplateDesigner user={user} /> : <Dashboard />;
-      case 'Usuarios': return hasPerm('SYSTEM', 'USERS') ? <Users user={user} /> : <Dashboard />;
-      case 'Empresas': return hasPerm('SYSTEM', 'COMPANIES') ? <Companies user={user} /> : <Dashboard />;
-      case 'Permisos': return hasPerm('SYSTEM', 'PERMISSIONS') ? <ModulePermissions user={user} /> : <Dashboard />;
-      case 'Configuración Sistema': return hasPerm('SYSTEM', 'SYSTEM_CONFIG') ? <SystemSettings user={user} /> : <Dashboard />;
-      case 'Auditoría': return hasPerm('SYSTEM', 'AUDIT') ? <AuditLogs user={user} /> : <Dashboard />;
+      case 'Turnos': return <ShiftScheduler user={user} />;
+      case 'Marcaciones': return <Marcaciones user={user} />;
       default: return <Dashboard user={user} />;
     }
   };
 
-  if (isEmployee) {
+  if (isEmployee || isMobileDevice) {
     if (!user.acceptedPrivacyPolicy) {
-      return <PrivacyConsentModal onAccepted={(updatedUser) => setUser(updatedUser)} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
+      return <PrivacyConsentModal onAccepted={(u) => setUser(u)} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
     }
     if (isMobileDevice && !isStandalone) {
-      return <InstallPWA deferredPrompt={deferredPrompt} onLogout={handleLogout} version={APP_VERSION} />;
+      return <InstallPWA onLogout={handleLogout} version={APP_VERSION} />;
     }
     return <MobileLayout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout} version={APP_VERSION}>{renderPage()}</MobileLayout>;
   }
