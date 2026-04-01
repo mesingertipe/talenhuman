@@ -31,8 +31,8 @@ import EmployeeDashboard from './pages/Employee/EmployeeDashboard'
 import InstallPWA from './components/PWA/InstallPWA'
 import PrivacyConsentModal from './components/Legal/PrivacyConsentModal'
 
-// V12.5.8-FORCE - TOTAL CLEANUP (No Elite, No Logos)
-const APP_VERSION = "V12.5.8-FORCE";
+// V12.5.9-PRO - PREMIUM CLEANUP (No Logo, Pro Aesthetic)
+const APP_VERSION = "V12.5.9-PRO";
 
 function App() {
   const [user, setUser] = React.useState(null);

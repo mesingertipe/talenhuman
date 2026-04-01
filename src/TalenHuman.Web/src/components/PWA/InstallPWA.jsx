@@ -1,58 +1,68 @@
 import React from 'react';
-import { Share, Plus, LogOut, Smartphone } from 'lucide-react';
+import { Share, Plus, LogOut, Smartphone, CheckCircle, ChevronRight } from 'lucide-react';
 
 const InstallPWA = ({ onLogout, version }) => {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 animate-in fade-in duration-500">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 animate-in fade-in duration-700">
       
-      {/* BRANDING RESTORATION - MINIMALIST */}
-      <div className="flex flex-col items-center mb-10">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">TalenHuman Mobile</h1>
-        <div className="bg-slate-50 dark:bg-slate-800/50 px-2 py-0.5 rounded text-[10px] font-mono text-slate-400 dark:text-slate-500 mt-1 font-bold">
-          {version || 'V12.5.8-FORCE'}
+      {/* BRANDING RESTORATION - PRO CLEAN */}
+      <div className="flex flex-col items-center mb-10 translate-y-[-20%]">
+        <div className="px-3 py-1 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-full text-[10px] uppercase font-black tracking-[0.25em] mb-4 border border-indigo-500/20">
+          Mobile App Verified
+        </div>
+        <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">TalenHuman</h1>
+        <div className="mt-2 text-[11px] font-mono font-bold text-slate-400 dark:text-slate-600 tracking-widest uppercase">
+          {version || 'V12.5.9-PRO'}
         </div>
       </div>
 
-      <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 p-8 text-center space-y-6">
+      <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-[3rem] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.15)] dark:shadow-none border border-slate-100 dark:border-white/5 p-10 text-center space-y-8 animate-in zoom-in-95 duration-500">
         
-        <div className="space-y-2">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Instalación Necesaria</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-2">
+        <div className="space-y-3">
+          <div className="w-16 h-1 bg-indigo-500/20 mx-auto rounded-full mb-6" />
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Instalación Necesaria</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
             Para acceder a sus turnos y biometría, debe instalar esta aplicación en su dispositivo móvil.
           </p>
         </div>
 
         {isIOS ? (
           <div className="space-y-4 text-left">
-            <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest text-center mb-4">Pasos para iPhone:</p>
-            
-            <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-              <div className="bg-white dark:bg-slate-700 p-2 rounded-lg shadow-sm">
-                <Share size={20} className="text-slate-600 dark:text-slate-300" />
+            <div className="flex items-center gap-5 p-5 bg-slate-50 dark:bg-white/5 rounded-[2rem] border border-slate-100 dark:border-white/5 transition-all hover:bg-white dark:hover:bg-white/10 hover:shadow-xl hover:shadow-slate-200/50">
+              <div className="bg-indigo-600 p-3 rounded-2xl shadow-lg shadow-indigo-500/20">
+                <Share size={20} className="text-white" />
               </div>
-              <p className="text-xs text-slate-700 dark:text-slate-300">
-                Toca el botón <strong>"Compartir"</strong> en la barra inferior de Safari.
-              </p>
+              <div className="flex-1">
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Paso 1</p>
+                 <p className="text-xs text-slate-700 dark:text-slate-300 font-bold leading-tight">
+                    Toca el botón <strong>"Compartir"</strong> en Safari.
+                 </p>
+              </div>
+              <ChevronRight className="text-slate-300" size={16} />
             </div>
 
-            <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-              <div className="bg-white dark:bg-slate-700 p-2 rounded-lg shadow-sm">
-                <Plus size={20} className="text-slate-600 dark:text-slate-300" />
+            <div className="flex items-center gap-5 p-5 bg-slate-50 dark:bg-white/5 rounded-[2rem] border border-slate-100 dark:border-white/5 transition-all hover:bg-white dark:hover:bg-white/10 hover:shadow-xl hover:shadow-slate-200/50">
+              <div className="bg-indigo-600 p-3 rounded-2xl shadow-lg shadow-indigo-500/20">
+                <Plus size={20} className="text-white" />
               </div>
-              <p className="text-xs text-slate-700 dark:text-slate-300">
-                Selecciona la opción <strong>"Añadir a pantalla de inicio"</strong>.
-              </p>
+              <div className="flex-1">
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Paso 2</p>
+                 <p className="text-xs text-slate-700 dark:text-slate-300 font-bold leading-tight">
+                    Selecciona la opción <strong>"Añadir a pantalla de inicio"</strong>.
+                 </p>
+              </div>
+              <ChevronRight className="text-slate-300" size={16} />
             </div>
           </div>
         ) : (
-          <div className="space-y-6 flex flex-col items-center">
-             <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center text-indigo-600">
-                <Smartphone size={40} />
+          <div className="space-y-6 flex flex-col items-center py-4">
+             <div className="w-24 h-24 bg-indigo-50 dark:bg-indigo-500/10 rounded-[2.5rem] flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-inner">
+                <Smartphone size={48} className="animate-pulse" />
              </div>
-             <p className="text-xs text-slate-500 px-4">
-                En Android, acepte la notificación de "Instalar Aplicación" que aparecerá en pantalla.
+             <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center px-4">
+                Acepte la notificación de instalación en su Android.
              </p>
           </div>
         )}
@@ -60,20 +70,21 @@ const InstallPWA = ({ onLogout, version }) => {
         <div className="pt-4 space-y-4">
            <button 
              onClick={onLogout}
-             className="w-full py-4 px-6 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-transform"
+             className="w-full py-5 px-6 bg-slate-900 dark:bg-white text-white dark:text-slate-950 rounded-[1.75rem] font-bold text-xs flex items-center justify-center gap-3 active:scale-95 transition-all shadow-2xl hover:bg-slate-800 dark:hover:bg-slate-100"
            >
              <LogOut size={16} />
              CERRAR SESIÓN Y SALIR
            </button>
            
-           <p className="text-[10px] text-slate-400">
-             Si ya instaló la aplicación, ciérrela y ábrala desde el icono en su pantalla de inicio.
+           <p className="text-[10px] text-slate-400 font-medium px-4">
+             Si ya instaló la aplicación, ábrela desde su pantalla de inicio.
            </p>
         </div>
       </div>
 
-      <footer className="mt-10 text-[9px] text-slate-400 font-medium lowercase tracking-widest opacity-50">
-        powered by talenhuman v12 © 2026
+      <footer className="absolute bottom-10 flex items-center gap-2 opacity-30 grayscale hover:grayscale-0 transition-all cursor-default">
+         <CheckCircle size={14} className="text-indigo-600" />
+         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Secure Access Verified</span>
       </footer>
     </div>
   );

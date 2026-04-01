@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, FileText, Lock, CheckCircle, LogOut, ChevronDown } from 'lucide-react';
+import { ShieldCheck, FileText, Lock, LogOut, ChevronDown, CheckCircle2 } from 'lucide-react';
 
 const PrivacyConsentModal = ({ onAccepted, onLogout, policyText }) => {
   const [loading, setLoading] = React.useState(false);
@@ -38,95 +38,91 @@ const PrivacyConsentModal = ({ onAccepted, onLogout, policyText }) => {
 
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target;
-    if (scrollTop + clientHeight >= scrollHeight - 20) {
+    if (scrollTop + clientHeight >= scrollHeight - 30) {
       setShowScrollHint(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[5000] flex items-center justify-center bg-slate-950/90 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300 border border-white/10"
-        style={{ maxHeight: '85vh' }}>
-
-        {/* Header - Restauración Logo TH */}
-        <div className="p-6 text-center border-b border-slate-100 dark:border-slate-800 shrink-0">
-          <div className="flex justify-center mb-4">
-            <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-xl shadow-indigo-500/20">
-              TH
-            </div>
+    <div className="fixed inset-0 z-[5000] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2.5rem] shadow-[0_30px_70px_-15px_rgba(0,0,0,0.4)] overflow-hidden flex flex-col animate-in slide-in-from-bottom-8 duration-500 border border-slate-100 dark:border-white/5"
+           style={{ maxHeight: '88vh' }}>
+        
+        {/* Header - Pro Minimalist */}
+        <div className="p-8 pb-6 text-center shrink-0">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4 border border-green-100 dark:border-green-500/20">
+            <CheckCircle2 size={12} />
+            Seguridad Verificada
           </div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Privacidad y Seguridad</h2>
-          <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-semibold opacity-70">Aviso Legal Obligatorio</p>
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">Privacidad y Seguridad</h2>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2 font-medium uppercase tracking-[0.25em]">Consentimiento Legal TalenHuman</p>
         </div>
 
-        {/* Dynamic Content Area with Scroll */}
-        <div
+        {/* Content Area */}
+        <div 
           ref={scrollRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar relative"
+          className="flex-1 overflow-y-auto px-8 py-2 custom-scrollbar relative"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {policyText ? (
-            <div className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed font-medium">
+            <div className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed font-medium bg-slate-50/50 dark:bg-white/5 p-6 rounded-[2rem] border border-slate-100 dark:border-white/5">
               {policyText}
             </div>
           ) : (
-            <div className="space-y-5">
-              <div className="flex gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                <ShieldCheck className="text-indigo-600 shrink-0" size={24} />
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-normal">
-                  Sus datos biométricos y personales serán tratados exclusivamente para control de asistencia y seguridad institucional.
-                </p>
+            <div className="space-y-4">
+              <div className="p-5 bg-indigo-50/50 dark:bg-indigo-500/5 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/20 flex gap-4">
+                 <ShieldCheck className="text-indigo-600 shrink-0" size={24} />
+                 <div>
+                    <p className="font-bold text-slate-900 dark:text-white text-sm mb-1">Protección de Datos</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Sus datos biométricos y personales serán tratados exclusivamente para control de asistencia y seguridad institucional.</p>
+                 </div>
               </div>
-              <div className="flex gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                <Lock className="text-amber-500 shrink-0" size={24} />
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-normal">
-                  Garantizamos que su información NO será cedida a terceros ni utilizada con fines comerciales.
-                </p>
+              <div className="p-5 bg-slate-50/50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/10 flex gap-4">
+                 <Lock className="text-slate-400 shrink-0" size={24} />
+                 <div>
+                    <p className="font-bold text-slate-900 dark:text-white text-sm mb-1">Confidencialidad Garantizada</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Garantizamos que su información NO será cedida a terceros ni utilizada con fines comerciales.</p>
+                 </div>
               </div>
             </div>
           )}
 
-          {/* Spacer to ensure content doesn't end abruptly before buttons */}
-          <div className="h-4"></div>
-
-          {/* Action Buttons - Natural flow (at the end of scroll) */}
-          <div className="space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+          {/* Action Area - Natural flow (at the end of scroll) */}
+          <div className="space-y-4 mt-8 pb-8">
             {error && (
-              <div className="p-3 bg-red-50 text-red-600 text-xs rounded-xl text-center font-bold border border-red-100 mb-2">
+              <div className="p-4 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-xs rounded-2xl text-center font-bold border border-red-100 dark:border-red-500/20">
                 {error}
               </div>
             )}
-
-            <button
+            
+            <button 
               onClick={handleAccept}
               disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-bold shadow-lg shadow-indigo-500/30 transition-all active:scale-[0.98] flex items-center justify-center text-sm"
+              className="group w-full bg-slate-900 dark:bg-white text-white dark:text-slate-950 py-5 rounded-[1.75rem] font-bold shadow-2xl transition-all active:scale-[0.97] hover:bg-slate-800 dark:hover:bg-slate-50 flex items-center justify-center text-sm gap-2"
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-current/30 border-t-current rounded-full animate-spin" />
               ) : (
-                "ACEPTAR TÉRMINOS Y CONDICIONES"
+                <>
+                  ACEPTAR TÉRMINOS Y CONDICIONES
+                  <ChevronDown className="group-hover:translate-x-1 transition-transform rotate-[-90deg]" size={18} />
+                </>
               )}
             </button>
-
-            <button
+            
+            <button 
               onClick={onLogout}
-              className="w-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 py-3 rounded-2xl font-bold text-xs transition-colors hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center gap-2"
+              className="w-full text-slate-400 dark:text-slate-500 py-2 font-bold text-xs transition-colors hover:text-slate-600 dark:hover:text-slate-300 flex items-center justify-center gap-2"
             >
-              <LogOut size={16} />
-              CERRAR SESIÓN (NO ACEPTO)
+              No acepto estos términos, cerrar sesión
             </button>
-          </div>
-
-          <div className="text-[10px] text-center text-slate-400 pb-2">
-            Identificador de Versión: {localStorage.getItem('app_version') || 'v12-Final'}
           </div>
         </div>
 
         {/* Scroll Hint Overlay */}
         {showScrollHint && (
-          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 pointer-events-none animate-bounce bg-indigo-600 text-white p-2 rounded-full shadow-lg">
+          <div className="absolute bottom-24 right-8 pointer-events-none animate-bounce bg-white dark:bg-slate-800 text-slate-900 dark:text-white p-2 rounded-full shadow-xl border border-slate-100 dark:border-white/10">
             <ChevronDown size={20} />
           </div>
         )}
