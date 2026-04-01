@@ -25,7 +25,7 @@ let currentVapidKey = defaultFirebaseConfig.vapidKey;
  * Inicializa Firebase de forma dinámica con la configuración del Tenant
  * @param {Object} tenantConfig Configuración opcional del tenant
  */
-export const initializeFirebase = (tenantConfig = {}) => {
+export const initializeFirebase = async (tenantConfig = {}) => {
   try {
     const finalConfig = {
       apiKey: tenantConfig.firebaseApiKey || defaultFirebaseConfig.apiKey,
@@ -40,11 +40,18 @@ export const initializeFirebase = (tenantConfig = {}) => {
     currentVapidKey = tenantConfig.firebaseVapidKey || defaultFirebaseConfig.vapidKey;
 
     // VALIDACIÓN CRITICA: No inicializar si son valores por defecto (placeholders)
-    if (!finalConfig.apiKey || finalConfig.apiKey.includes('YOUR_') || 
-        !finalConfig.appId || finalConfig.appId.includes('YOUR_')) {
-      console.warn("⚠️ Firebase: Configuración no proporcionada o inválida. Se saltará la inicialización.");
+    const isPlaceholder = !finalConfig.apiKey || finalConfig.apiKey.includes('YOUR_') || 
+                         !finalConfig.appId || finalConfig.appId.includes('YOUR_');
+
+    if (isPlaceholder) {
+      // Solo advertir si nos pasaron un objeto tenantConfig pero las llaves faltan
+      if (Object.keys(tenantConfig).length > 0) {
+        console.warn("⚠️ Firebase: Configuración incompleta o inválida en el perfil del usuario.");
+      }
       return;
     }
+
+    const appName = finalConfig.projectId;
 
     if (!getApps().length) {
       app = initializeApp(finalConfig);
@@ -67,8 +74,15 @@ export const initializeFirebase = (tenantConfig = {}) => {
           measurementId: finalConfig.measurementId
         }).toString();
 
-        navigator.serviceWorker.register(`/firebase-messaging-sw.js?${configParams}`)
-          .then((registration) => {
+        const swUrl = `/firebase-messaging-sw.js?${configParams}`;
+
+        // Verificar si el SW ya está registrado para este mismo proyecto para evitar bucles
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        const alreadyRegistered = registrations.some(reg => reg.active && reg.active.scriptURL.includes(finalConfig.projectId));
+
+        if (!alreadyRegistered) {
+          navigator.serviceWorker.register(swUrl)
+            .then((registration) => {
             // Initialize Analytics/Performance
             try {
               if (typeof window !== "undefined" && finalConfig.measurementId && !finalConfig.measurementId.includes('YOUR_')) {
@@ -80,10 +94,8 @@ export const initializeFirebase = (tenantConfig = {}) => {
             }
 
             console.log("🔥 Firebase SW registered for tenant:", finalConfig.projectId);
-          })
-          .catch((err) => {
-            console.error("Firebase SW registration failed:", err);
           });
+        }
       } catch (mErr) {
         console.warn("Firebase Messaging failed to init (may not be supported in this browser):", mErr);
       }

@@ -9,11 +9,12 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
+      manifestFilename: 'manifest.json', // Ensure it matches what the browser looks for
       workbox: {
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 7000000
       },
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
         name: 'TalenHuman Elite V12',
         short_name: 'TH Elite',
