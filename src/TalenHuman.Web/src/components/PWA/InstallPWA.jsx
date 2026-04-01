@@ -7,14 +7,11 @@ const InstallPWA = ({ onLogout, version }) => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 animate-in fade-in duration-500">
       
-      {/* BRANDING RESTORATION - TH LOGO */}
+      {/* BRANDING RESTORATION - MINIMALIST */}
       <div className="flex flex-col items-center mb-10">
-        <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-3xl shadow-xl shadow-indigo-500/20 mb-4 transition-transform hover:scale-105">
-          TH
-        </div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">TalenHuman Elite</h1>
-        <div className="bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded text-[10px] font-mono text-indigo-600 dark:text-indigo-400 mt-1 font-bold">
-          {version || 'V12.5.5-FINAL'}
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">TalenHuman Mobile</h1>
+        <div className="bg-slate-50 dark:bg-slate-800/50 px-2 py-0.5 rounded text-[10px] font-mono text-slate-400 dark:text-slate-500 mt-1 font-bold">
+          {version || 'V12.5.8-FORCE'}
         </div>
       </div>
 
@@ -75,8 +72,8 @@ const InstallPWA = ({ onLogout, version }) => {
         </div>
       </div>
 
-      <footer className="mt-10 text-[9px] text-slate-400 font-medium">
-        POWERED BY TALENHUMAN ELITE V12 © 2026
+      <footer className="mt-10 text-[9px] text-slate-400 font-medium lowercase tracking-widest opacity-50">
+        powered by talenhuman v12 © 2026
       </footer>
     </div>
   );

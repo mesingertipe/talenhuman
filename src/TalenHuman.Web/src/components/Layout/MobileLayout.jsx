@@ -26,7 +26,7 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout }) => {
             <p className="text-xs font-bold leading-none">{user?.fullName}</p>
             <p className="text-[10px] text-slate-500">{user?.roleName || 'Colaborador'}</p>
           </div>
-          <button 
+          <button
             onClick={onLogout}
             className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300"
           >

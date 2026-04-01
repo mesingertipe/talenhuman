@@ -16,9 +16,9 @@ export default defineConfig({
       },
       includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'TalenHuman Elite V12',
-        short_name: 'TH Elite',
-        description: 'Elite Employee Management PWA',
+        name: 'TalenHuman',
+        short_name: 'TalenHuman',
+        description: 'Employee Management PWA',
         theme_color: '#4f46e5',
         start_url: '/',
         display: 'standalone',

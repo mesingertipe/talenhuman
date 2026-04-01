@@ -46,8 +46,8 @@ const PrivacyConsentModal = ({ onAccepted, onLogout, policyText }) => {
   return (
     <div className="fixed inset-0 z-[5000] flex items-center justify-center bg-slate-950/90 backdrop-blur-sm p-4">
       <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300 border border-white/10"
-           style={{ maxHeight: '85vh' }}>
-        
+        style={{ maxHeight: '85vh' }}>
+
         {/* Header - Restauración Logo TH */}
         <div className="p-6 text-center border-b border-slate-100 dark:border-slate-800 shrink-0">
           <div className="flex justify-center mb-4">
@@ -60,7 +60,7 @@ const PrivacyConsentModal = ({ onAccepted, onLogout, policyText }) => {
         </div>
 
         {/* Dynamic Content Area with Scroll */}
-        <div 
+        <div
           ref={scrollRef}
           onScroll={handleScroll}
           className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar relative"
@@ -97,8 +97,8 @@ const PrivacyConsentModal = ({ onAccepted, onLogout, policyText }) => {
                 {error}
               </div>
             )}
-            
-            <button 
+
+            <button
               onClick={handleAccept}
               disabled={loading}
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-bold shadow-lg shadow-indigo-500/30 transition-all active:scale-[0.98] flex items-center justify-center text-sm"
@@ -109,8 +109,8 @@ const PrivacyConsentModal = ({ onAccepted, onLogout, policyText }) => {
                 "ACEPTAR TÉRMINOS Y CONDICIONES"
               )}
             </button>
-            
-            <button 
+
+            <button
               onClick={onLogout}
               className="w-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 py-3 rounded-2xl font-bold text-xs transition-colors hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center gap-2"
             >

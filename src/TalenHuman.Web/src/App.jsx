@@ -31,8 +31,8 @@ import EmployeeDashboard from './pages/Employee/EmployeeDashboard'
 import InstallPWA from './components/PWA/InstallPWA'
 import PrivacyConsentModal from './components/Legal/PrivacyConsentModal'
 
-// V12.5.7-STABLE - ABSOLUTE ENFORCEMENT & UI RESTORATION
-const APP_VERSION = "Elite-V12.5.7-STABLE";
+// V12.5.8-FORCE - TOTAL CLEANUP (No Elite, No Logos)
+const APP_VERSION = "V12.5.8-FORCE";
 
 function App() {
   const [user, setUser] = React.useState(null);
@@ -123,7 +123,7 @@ function App() {
     initializeFirebase(userData);
   };
 
-  if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 font-bold">TalenHuman Elite {APP_VERSION}</div>;
+  if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 font-bold">TalenHuman {APP_VERSION}</div>;
 
   if (!token) {
     return <Login onLogin={handleLogin} onForgotPassword={() => setAuthView('forgot')} onSelfServiceReset={() => setAuthView('self-service')} version={APP_VERSION} />;
