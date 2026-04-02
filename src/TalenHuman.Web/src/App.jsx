@@ -41,7 +41,7 @@ import MobileNews from './pages/Mobile/MobileNews' // 🚀 FIXED: Added missing 
 import DebugPortal from './components/Shared/DebugPortal'
 
 // V54-FORCE-DOMAIN-REDIRECT
-const APP_VERSION = "V59-UNIFICATION";
+const APP_VERSION = "V62.5-ELITE";
 
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION
@@ -69,10 +69,10 @@ function App() {
      return !!isStand;
   });
 
-  // 🕵️‍♂️ ROBUST ROLE DETECTION (List & Single field)
-  const roleList = user?.roles || [];
+  // 🕵️‍♂️ ULTRA-ROBUST ROLE DETECTION (Handles cases where roles could be string, array, or null)
+  const roleList = Array.isArray(user?.roles) ? user.roles : (typeof user?.roles === 'string' ? [user.roles] : []);
   const rawRoleName = (user?.roleName || user?.role || '').toLowerCase();
-  const isEmployee = roleList.some(r => r.toLowerCase() === 'empleado' || r.toLowerCase() === 'employee') || 
+  const isEmployee = roleList.some(r => r?.toLowerCase() === 'empleado' || r?.toLowerCase() === 'employee') || 
                     rawRoleName === 'empleado' || 
                     rawRoleName === 'employee';
   
@@ -80,11 +80,19 @@ function App() {
   const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && window.innerWidth < 1024;
 
   useEffect(() => {
-    localStorage.setItem('app_version', APP_VERSION);
-    localStorage.setItem('theme', theme);
-    document.documentElement.className = theme; // Force dark class if needed
-    if (user && token) initializeFirebase(user);
-    setTimeout(() => setBooting(false), 500);
+    try {
+      localStorage.setItem('app_version', APP_VERSION);
+      localStorage.setItem('theme', theme);
+      document.documentElement.className = theme; 
+      
+      if (user && token) {
+        initializeFirebase(user).catch(err => console.warn('Firebase Init suppressed:', err));
+      }
+    } catch (e) {
+      console.error('Fatal startup error:', e);
+    } finally {
+      setTimeout(() => setBooting(false), 800);
+    }
   }, [theme]);
 
   const toggleTheme = () => {
