@@ -60,6 +60,7 @@ public class BrandsController : ControllerBase
         if (existing == null) return NotFound();
 
         existing.Name = brand.Name;
+        existing.IsActive = brand.IsActive;
         
         await _context.SaveChangesAsync();
 

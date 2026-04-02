@@ -223,11 +223,13 @@
   justify-content: center;
   gap: 0.5rem;
   background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
-  padding: 1.5rem;
-  margin: -3rem -3rem 1.5rem -3rem; /* Still filling the card top but with less bottom margin */
+  padding: 2.25rem 1.5rem;
+  margin: -3rem -3rem 2rem -3rem; 
   color: white !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 50;
 }
 
 .login-mobile-brand-icon {
