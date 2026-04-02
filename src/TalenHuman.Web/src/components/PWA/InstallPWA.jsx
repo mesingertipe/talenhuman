@@ -64,7 +64,6 @@ const InstallPWA = ({ onLogout, version }) => {
         </div>
       </div>
     </div>
-    </div>
   );
 };
 
