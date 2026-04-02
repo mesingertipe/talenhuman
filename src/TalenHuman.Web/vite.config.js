@@ -16,6 +16,7 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         cacheId: 'v16-elite-pwa', // SHIELD AGAINST OLD CACHE
+        maximumFileSizeToCacheInBytes: 5242880, // 5MB limit to accommodate the main bundle
       },
       includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
