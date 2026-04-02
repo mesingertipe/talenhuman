@@ -158,25 +158,26 @@ function App() {
       }
       
       // 💻 WEB PAGES: Full Navigation Switch restored for Admins/Employees on PC
+      // 🚀 V62.8: PERFECTION SYNC (Matching Sidebar Labels exactly)
       switch(currentPage) {
         case 'Marcaciones': return <Marcaciones user={user} />;
-        case 'Asistencia': return <AttendanceMonitoring user={user} />;
+        case 'Monitoreo Asistencia': return <AttendanceMonitoring user={user} />;
         case 'Tiendas': return <Stores user={user} />;
         case 'Empresas': return <Companies user={user} />;
         case 'Usuarios': return <Users user={user} />;
-        case 'Perfiles': return <Profiles user={user} />;
+        case 'Cargos': return <Profiles user={user} />;
         case 'Empleados': return <Employees user={user} />;
         case 'Marcas': return <Brands user={user} />;
         case 'Ciudades': return <Cities user={user} />;
         case 'Distritos': return <Districts user={user} />;
         case 'Jornadas': return <Jornadas user={user} />;
         case 'Novedades': return <NewsInbox user={user} />;
-        case 'DisenadorNovedades': return <NewsDesigner user={user} />;
-        case 'PlantillasNovedades': return <NewsTemplateDesigner user={user} />;
-        case 'Programacion': return <ShiftScheduler user={user} />;
+        case 'Configuración novedades': return <NewsDesigner user={user} />;
+        case 'Diseñador de Plantillas': return <NewsTemplateDesigner user={user} />;
+        case 'Turnos': return <ShiftScheduler user={user} />;
         case 'Permisos': return <ModulePermissions user={user} />;
-        case 'Configuracion': return <SystemSettings user={user} />;
-        case 'Auditoria': return <AuditLogs user={user} />;
+        case 'Configuración Sistema': return <SystemSettings user={user} />;
+        case 'Auditoría': return <AuditLogs user={user} />;
         case 'Dashboard':
         default:
           return isEmployee ? <EmployeeDashboard user={user} /> : <Dashboard user={user} />;
