@@ -40,7 +40,7 @@ import MobileProfile from './pages/Mobile/MobileProfile'
 import DebugPortal from './components/Shared/DebugPortal'
 
 // V54-FORCE-DOMAIN-REDIRECT
-const APP_VERSION = "V58-STABLE-FIX";
+const APP_VERSION = "V59-UNIFICATION";
 
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION
@@ -59,6 +59,7 @@ function App() {
   const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [currentPage, setCurrentPage] = useState('Dashboard');
   const [booting, setBooting] = useState(true); 
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
   
   const [isStandalone, setIsStandalone] = useState(() => {
      if (typeof window === 'undefined') return false;
@@ -70,14 +71,20 @@ function App() {
   const roleName = user?.roleName?.toLowerCase() || '';
   const isEmployee = roleName === 'employee' || roleName === 'empleado' || user?.employeeId !== '00000000-0000-0000-0000-000000000000';
   
-  // 📱 STRICTOR MOBILE DETECTION (Only real small screens or mobile strings)
+  // 📱 STRICTOR MOBILE DETECTION
   const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && window.innerWidth < 1024;
 
   useEffect(() => {
     localStorage.setItem('app_version', APP_VERSION);
+    localStorage.setItem('theme', theme);
+    document.documentElement.className = theme; // Force dark class if needed
     if (user && token) initializeFirebase(user);
     setTimeout(() => setBooting(false), 500);
-  }, []);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   const handleLogout = () => {
     localStorage.clear();
@@ -95,14 +102,14 @@ function App() {
 
   const renderContent = () => {
     if (booting) return (
-      <div style={{ minHeight: '100dvh', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-         <div style={{ width: '100px', height: '100px', background: 'rgba(255,255,255,0.05)', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ minHeight: '100dvh', background: theme === 'dark' ? '#0f172a' : '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme === 'dark' ? 'white' : '#1e293b' }}>
+         <div style={{ width: '100px', height: '100px', background: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)', borderRadius: '30px', border: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
              <span style={{ fontSize: '42px', fontWeight: '900', color: '#6366f1' }}>TH</span>
          </div>
       </div>
     );
 
-    if (!token) return <Login onLogin={handleLogin} version={APP_VERSION} onForgotPassword={() => {}} onSelfServiceReset={() => {}} />;
+    if (!token) return <Login onLogin={handleLogin} version={APP_VERSION} theme={theme} onForgotPassword={() => {}} onSelfServiceReset={() => {}} />;
 
     // 🔒 RESTORE MANDATORY PWA GATE (ONLY FOR TRUE MOBILE EMPLOYEES)
     if (isEmployee && isMobileDevice && !isStandalone) {
@@ -119,7 +126,8 @@ function App() {
         switch(currentPage) {
           case 'Marcaciones': return <MobileAttendance user={user} isMobile />;
           case 'Perfil': return <MobileProfile user={user} />;
-          default: return <MobileDashboard user={user} />;
+          case 'Novedades': return <MobileNews user={user} />; // Use News page
+          default: return <MobileDashboard user={user} theme={theme} />;
         }
       }
       return <Dashboard user={user} />;
@@ -127,10 +135,34 @@ function App() {
 
     // 👑 SEPARATION: MobileLayout for Mobile, Normal Layout for Desktop
     if (isMobileDevice) {
-      return <MobileLayout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout} version={APP_VERSION}>{renderPage()}</MobileLayout>;
+      return (
+        <MobileLayout 
+          activePage={currentPage} 
+          setPage={setCurrentPage} 
+          user={user} 
+          onLogout={handleLogout} 
+          version={APP_VERSION}
+          theme={theme}
+          toggleTheme={toggleTheme}
+        >
+          {renderPage()}
+        </MobileLayout>
+      );
     }
 
-    return <Layout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout} version={APP_VERSION}>{renderPage()}</Layout>;
+    return (
+      <Layout 
+        activePage={currentPage} 
+        setPage={setCurrentPage} 
+        user={user} 
+        onLogout={handleLogout} 
+        version={APP_VERSION}
+        theme={theme}
+        toggleTheme={toggleTheme}
+      >
+        {renderPage()}
+      </Layout>
+    );
   };
 
   return (

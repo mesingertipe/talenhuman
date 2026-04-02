@@ -41,8 +41,8 @@ public class SecurityController : ControllerBase
 
         var fidoUser = new Fido2User
         {
-            DisplayName = userEmail,
-            Name = userEmail,
+            DisplayName = dbUser.FullName ?? dbUser.UserName,
+            Name = dbUser.UserName,
             Id = userId.ToByteArray()
         };
 

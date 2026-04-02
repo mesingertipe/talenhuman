@@ -1,12 +1,13 @@
 import React from 'react';
-import { Home, Calendar, Clock, User, Bell } from 'lucide-react';
+import { Home, Clock, User, Info } from 'lucide-react';
 
-const MobileBottomNav = ({ activePage, setPage }) => {
+const MobileBottomNav = ({ activePage, setPage, theme }) => {
+  const isDark = theme === 'dark';
+  
   const tabs = [
-    { id: 'Dashboard', icon: Home, label: 'Inicio' },
-    { id: 'Turnos', icon: Calendar, label: 'Turnos' },
+    { id: 'Dashboard', icon: Home, label: 'Turnos' },
+    { id: 'Novedades', icon: Info, label: 'Novedades' },
     { id: 'Marcaciones', icon: Clock, label: 'Marcas' },
-    { id: 'Notificaciones', icon: Bell, label: 'Alertas' },
     { id: 'Perfil', icon: User, label: 'Perfil' },
   ];
 
@@ -18,10 +19,18 @@ const MobileBottomNav = ({ activePage, setPage }) => {
   };
 
   return (
-    <nav style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', width: '100%', height: '100%', padding: '0 8px', position: 'relative', overflow: 'hidden' }} className="no-select">
+    <nav style={{ 
+        display: 'flex', justifyContent: 'space-around', alignItems: 'center', 
+        width: '100%', height: '100%', padding: '0 8px', position: 'relative', overflow: 'hidden' 
+    }} className="no-select">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activePage === tab.id;
+        
+        // Dynamic colors based on theme
+        const activeColor = '#4f46e5'; // Brand Indigo
+        const inactiveColor = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(30, 41, 59, 0.4)';
+
         return (
           <button
             key={tab.id}
@@ -29,35 +38,41 @@ const MobileBottomNav = ({ activePage, setPage }) => {
             style={{ 
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
               width: '100%', height: '100%', border: 'none', background: 'transparent', outline: 'none',
-              transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)', position: 'relative', zIndex: 10,
-              color: isActive ? '#fff' : 'rgba(255,255,255,0.25)',
-              transform: isActive ? 'scale(1.1)' : 'scale(1)'
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', position: 'relative', zIndex: 10,
+              color: isActive ? activeColor : inactiveColor,
+              transform: isActive ? 'scale(1.05)' : 'scale(1)'
             }}
           >
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', borderRadius: '16px' }}>
-              {/* Active Glow Aura */}
               {isActive && (
-                <div style={{ position: 'absolute', inset: 0, background: 'rgba(99, 102, 241, 0.3)', filter: 'blur(15px)', borderRadius: '50%', transform: 'scale(1.4)' }} />
+                <div style={{ 
+                    position: 'absolute', inset: 0, 
+                    background: isDark ? 'rgba(79, 70, 229, 0.15)' : 'rgba(79, 70, 229, 0.08)', 
+                    borderRadius: '50%', transform: 'scale(1.2)' 
+                }} />
               )}
               
               <Icon 
                 size={22} 
-                strokeWidth={isActive ? 2.5 : 1.5} 
-                className={isActive ? 'animate-pulse' : ''}
+                strokeWidth={isActive ? 2.5 : 2} 
                 style={{ position: 'relative', zIndex: 20 }}
               />
             </div>
             
             <span style={{ 
-              fontSize: '8px', marginTop: '4px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.2em',
-              opacity: isActive ? 1 : 0, transition: 'all 0.5s ease', transform: isActive ? 'translateY(0)' : 'translateY(4px)'
+              fontSize: '10px', marginTop: '4px', fontWeight: '700', 
+              opacity: isActive ? 1 : 0.7, transition: 'all 0.4s ease'
             }}>
               {tab.label}
             </span>
 
-            {/* Active Bottom Indicator Dot */}
+            {/* Active Top Bar Indicator */}
             {isActive && (
-              <div style={{ position: 'absolute', bottom: '6px', width: '4px', height: '4px', background: '#fff', borderRadius: '50%', boxShadow: '0 0 10px rgba(255,255,255,1)' }} />
+              <div style={{ 
+                  position: 'absolute', top: '0', width: '24px', height: '3px', 
+                  background: activeColor, borderRadius: '0 0 4px 4px',
+                  boxShadow: `0 2px 8px ${activeColor}44`
+              }} />
             )}
           </button>
         );
