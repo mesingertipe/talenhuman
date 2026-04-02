@@ -35,13 +35,12 @@ import BiometricEnrollModal from './components/Biometrics/BiometricEnrollModal'
 // Mobile Native Views
 import MobileDashboard from './pages/Mobile/MobileDashboard'
 import MobileAttendance from './pages/Mobile/MobileAttendance'
+import MobileProfile from './pages/Mobile/MobileProfile'
 
-// V16.7.6-CONSENSUS-FINAL
-const APP_VERSION = "V16.7.6-FINAL";
+// V16.7.8-NATIVE-STABLE
+const APP_VERSION = "V16.7.8-FINAL";
 
 function App() {
-  // 🚀 BOOTSTRAP: Synchronous state initialization from localStorage
-  // This eliminates the 1-frame flickering between Login and Dashboard
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('user');
     if (!saved) return null;
@@ -50,14 +49,15 @@ function App() {
   
   const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [currentPage, setCurrentPage] = useState('Dashboard');
-  const [booting, setBooting] = useState(true); // Always boot first
-  const [isStandalone, setIsStandalone] = useState(() => {
-    const isIOS = /iPad|iPhone|iPod/.test(window.navigator.userAgent) && !window.MSStream;
-    return !!(window.matchMedia('(display-mode: standalone)').matches || (isIOS && window.navigator.standalone));
+  
+  // 🚀 ANTI-FLICKER BOOTLOADER STATE
+  const [booting, setBooting] = useState(true); 
+  const [isStandalone, setIsStandalone] = useState(false);
+  
+  const [biometricsDismissed, setBiometricsDismissed] = useState(() => {
+     return localStorage.getItem('biometricsDismissed') === 'true';
   });
-  const [biometricsDismissed, setBiometricsDismissed] = useState(false);
 
-  // Derivations
   const isEmployee = user?.roleName?.toLowerCase() === 'employee' || 
                      user?.roles?.some(r => r.toLowerCase() === 'employee') || 
                      (user?.employeeId && user?.employeeId !== '00000000-0000-0000-0000-000000000000');
@@ -71,22 +71,33 @@ function App() {
   };
 
   useEffect(() => {
-    // 1. Silent Version Transition
+    // 1. Version Update
     const storedVersion = localStorage.getItem('app_version');
     if (storedVersion && storedVersion !== APP_VERSION) {
-       // Perform a silent update to avoid the 'Triple Refresh'
        localStorage.setItem('app_version', APP_VERSION);
-       // ONLY reload if we are in a critical state transition, 
-       // but here we let the bootstrap continue to avoid the 'flash loop'
     }
     
-    // 2. Initial Setup Completion
+    // 2. Firebase Init
     if (user && token) {
        initializeFirebase(user);
     }
     
-    // 3. Mark Boot as finished after a smooth pulse
-    setTimeout(() => setBooting(false), 800);
+    // 3. SYNCHRONOUS PWA RESOLUTION (Fixes Flickering on iOS/Android)
+    const resolveDisplayMode = () => {
+      const isIOS = /iPad|iPhone|iPod/.test(window.navigator.userAgent) && !window.MSStream;
+      const standalone = window.matchMedia('(display-mode: standalone)').matches || (isIOS && window.navigator.standalone);
+      setIsStandalone(!!standalone);
+      
+      // Delay lifting the boot screen until we are mathematically certain of the context
+      setTimeout(() => setBooting(false), 500);
+    };
+
+    if (document.readyState === 'complete') {
+        resolveDisplayMode();
+    } else {
+        window.addEventListener('load', resolveDisplayMode);
+        return () => window.removeEventListener('load', resolveDisplayMode);
+    }
   }, []);
 
   const handleLogin = (userData, userToken) => {
@@ -98,23 +109,27 @@ function App() {
     initializeFirebase(userData);
   };
 
-  // 🛡️ ELITE BOOTLOADER: Pre-renders nothing until state is determined
+  const handleDismissBiometrics = () => {
+     localStorage.setItem('biometricsDismissed', 'true');
+     setBiometricsDismissed(true);
+  };
+
+  // 🛡️ CLEAN BOOTLOADER (NO FLICKER, NO JUMPS)
   if (booting) {
     return (
       <div style={{
           minHeight: '100dvh', background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white'
       }}>
-         <div className="elite-pulse-loader" style={{ 
-            width: '80px', height: '80px', background: 'white', borderRadius: '25px', 
+         <div className="clean-pulse-loader" style={{ 
+            width: '70px', height: '70px', background: 'white', borderRadius: '20px', 
             display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' 
          }}>
-             <span style={{ fontSize: '24px', fontWeight: '900', italic: 'true' }}>TH</span>
+             <span style={{ fontSize: '22px', fontWeight: '900', italic: 'true' }}>TH</span>
          </div>
-         <p style={{ marginTop: '20px', fontSize: '10px', fontWeight: '800', letterSpacing: '4px', opacity: 0.6 }}>INITIALIZING ELITE...</p>
          <style>{`
-            .elite-pulse-loader { animation: elite-pulse 1.5s ease-in-out infinite; }
-            @keyframes elite-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } }
+            .clean-pulse-loader { animation: clean-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+            @keyframes clean-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(0.95); } }
          `}</style>
       </div>
     );
@@ -131,6 +146,7 @@ function App() {
         case 'Turnos': return <ShiftScheduler user={user} isMobile />;
         case 'Marcaciones': return <MobileAttendance user={user} isMobile />;
         case 'Notificaciones': return <NewsInbox user={user} isMobile />;
+        case 'Perfil': return <MobileProfile user={user} />;
         default: return <MobileDashboard user={user} />;
       }
     }
@@ -146,15 +162,13 @@ function App() {
     return <Component user={user} isMobile={isEmployee} />;
   };
 
-  // 🛡️ THE GATEKEEPER SEQUENCE (CONSENSUS V16.7.6)
+  // 🛡️ THE GATEKEEPER SEQUENCE 
   // Strict flow: 1. Install (Mobile browser) -> 2. Privacy (Everyone inside App) -> 3. Biometrics
 
-  // 1. GATE: Install the PWA first (if not in app and on mobile)
   if (isMobileDevice && !isStandalone) {
      return <InstallPWA onLogout={handleLogout} version={APP_VERSION} />;
   }
 
-  // 2. GATE: Privacy Consent (Mandatory inside PWA / Desktop)
   const isManager = user?.roleName?.toLowerCase() === 'manager' || user?.roleName?.toLowerCase() === 'gerente';
   const shouldForcePrivacy = !user.acceptedPrivacyPolicy && (isEmployee || (isMobileDevice && !isManager));
 
@@ -162,7 +176,6 @@ function App() {
     return <PrivacyConsentModal onAccepted={(u) => setUser(u)} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
   }
 
-  // 3. GATE: Biometrics Enrollment (Native app only)
   if (isStandalone && !user.biometricsEnrolled && !biometricsDismissed) {
     return (
       <BiometricEnrollModal 
@@ -171,7 +184,7 @@ function App() {
           localStorage.setItem('user', JSON.stringify(newUser));
           setUser(newUser);
         }} 
-        onCancel={() => setBiometricsDismissed(true)} 
+        onCancel={handleDismissBiometrics} 
       />
     );
   }
