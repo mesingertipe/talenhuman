@@ -37,9 +37,10 @@ import MobileDashboard from './pages/Mobile/MobileDashboard'
 import MobileAttendance from './pages/Mobile/MobileAttendance'
 import MobileProfile from './pages/Mobile/MobileProfile'
 
-// V16.7.8-NATIVE-STABLE
-// V42-ULTIMATE-REPAIR-FINAL
-const APP_VERSION = "V42-ULTIMATE-REPAIR";
+import DebugPortal from './components/Shared/DebugPortal'
+
+// V45-FORCE-DEBUG-ON
+const APP_VERSION = "V45-DEBUG";
 
 function App() {
   const [user, setUser] = useState(() => {
