@@ -1,112 +1,139 @@
-import React from 'react';
-import { ShieldCheck, FileText, Lock, LogOut, ChevronDown, CheckCircle2, LucideUsers, ShieldAlert } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ShieldCheck, Lock, CheckCircle2, ChevronDown, ShieldAlert, LogOut } from 'lucide-react';
+import api from '../../services/api';
 
-const PrivacyConsentModal = ({ onAccepted, onLogout, policyText }) => {
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState(null);
-  const scrollRef = React.useRef(null);
-  const [showScrollHint, setShowScrollHint] = React.useState(true);
+const PrivacyConsentModal = ({ onAccept, onLogout }) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [showScrollHint, setShowScrollHint] = useState(true);
+  const scrollRef = useRef(null);
+
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+      if (scrollTop + clientHeight >= scrollHeight - 30) {
+        setShowScrollHint(false);
+      }
+    }
+  };
 
   const handleAccept = async () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/security/privacy-accept', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) throw new Error('Error al procesar la aceptación.');
-
-      const data = await response.json();
-      if (data.success) {
-        const user = JSON.parse(localStorage.getItem('user'));
-        user.acceptedPrivacyPolicy = true;
-        localStorage.setItem('user', JSON.stringify(user));
-        onAccepted(user);
-      }
+      await api.post('/Security/privacy-accept');
+      onAccept();
     } catch (err) {
-      setError(err.message);
+      setError('Error al procesar. Reintenta.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleScroll = (e) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.target;
-    if (scrollTop + clientHeight >= scrollHeight - 30) {
-      setShowScrollHint(false);
-    }
-  };
-
   return (
-    <div className="fixed inset-0 z-[10000] flex flex-col items-center bg-gradient-to-br from-slate-50 to-blue-50 overflow-hidden no-select"
-         style={{ minHeight: '100dvh' }}>
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      zIndex: 10000,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      background: '#f8fafc',
+      fontFamily: "'Outfit', 'Inter', sans-serif",
+      overflow: 'hidden',
+      WebkitUserSelect: 'none',
+      userSelect: 'none'
+    }}>
       
-      {/* 🚀 ELITE BRAND HEADER (Consistent with Login) */}
-      <div className="w-full bg-gradient-to-br from-[#7c3aed] via-[#6366f1] to-[#4f46e5] p-12 flex flex-col items-center justify-center text-white relative shrink-0 shadow-2xl">
-         <div className="absolute top-[-20%] right-[-10%] w-80 h-80 bg-white/10 rounded-full blur-3xl opacity-50"></div>
+      {/* 🚀 ELITE BRAND HEADER */}
+      <div style={{
+        width: '100%',
+        background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
+        padding: '60px 40px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'white',
+        position: 'relative',
+        boxShadow: '0 20px 30px -10px rgba(79, 70, 229, 0.4)',
+        zIndex: 10
+      }}>
+         <div style={{
+           position: 'absolute', top: '-50%', right: '-30%', width: '300px', height: '300px',
+           background: 'rgba(255, 255, 255, 0.1)', borderRadius: '50%', filter: 'blur(100px)'
+         }}></div>
          
-         <div className="relative z-10 flex flex-col items-center gap-3">
-            <div className="bg-white/20 p-4 rounded-[1.5rem] backdrop-blur-md border border-white/30 shadow-lg mb-2">
-               <ShieldCheck size={32} className="text-white drop-shadow-md" />
+         <div style={{ position: 'relative', zIndex: 10, textAlign: 'center' }}>
+            <div style={{ 
+              background: 'rgba(255,255,255,0.2)', padding: '20px', borderRadius: '30px', 
+              backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.3)',
+              display: 'inline-flex', marginBottom: '15px'
+            }}>
+               <ShieldCheck size={40} />
             </div>
-            <h1 className="text-3xl font-black tracking-tighter" style={{ fontFamily: "'Outfit', sans-serif" }}>Tu Privacidad</h1>
-            <span className="text-[10px] font-black tracking-[0.3em] text-blue-100/60 uppercase">Seguridad Certificada</span>
+            <h1 style={{ fontSize: '32px', fontWeight: '900', letterSpacing: '-1.5px', margin: 0 }}>Tu Privacidad</h1>
+            <span style={{ fontSize: '10px', fontWeight: '800', letterSpacing: '4px', opacity: 0.6 }}>SEGURIDAD CERTIFICADA</span>
          </div>
       </div>
 
-      {/* 🎬 MAIN CONTENT (Scrollable Policy) */}
-      <div className="w-full max-w-2xl px-6 py-10 flex-1 flex flex-col overflow-hidden">
-        <div className="text-center mb-8 shrink-0">
-           <h2 className="text-3xl font-black text-slate-800 tracking-tighter leading-tight">
-             Tratamiento de <span className="text-blue-600">Información</span>
+      {/* 🎬 MAIN CONTENT */}
+      <div style={{
+        width: '100%', maxWidth: '500px', padding: '30px 25px 40px 25px',
+        flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden'
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '25px' }}>
+           <h2 style={{ fontSize: '26px', fontWeight: '900', color: '#1e293b', letterSpacing: '-1px' }}>
+             Tus datos están <span style={{ color: '#4f46e5' }}>Protegidos</span>
            </h2>
-           <p className="text-slate-400 font-bold text-xs mt-2">
-             Revisión obligatoria para tu seguridad
+           <p style={{ fontSize: '14px', color: '#64748b', fontWeight: '600', marginTop: '5px' }}>
+             Es obligatorio aceptar para continuar
            </p>
         </div>
 
         <div 
           ref={scrollRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-y-auto px-8 py-8 bg-white rounded-[3rem] border border-slate-100 shadow-2xl shadow-blue-900/5 relative custom-scrollbar"
+          style={{
+            flex: 1, overflowY: 'auto', background: 'white',
+            borderRadius: '40px', padding: '30px', border: '1px solid #f1f5f9',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.05)', position: 'relative'
+          }}
         >
-          {policyText ? (
-            <div className="text-sm text-slate-600 leading-relaxed font-medium whitespace-pre-wrap">
-              {policyText}
-            </div>
-          ) : (
-            <div className="space-y-8 py-4">
-              <div className="flex gap-5 items-start px-2">
-                 <div className="bg-blue-50 p-4 rounded-2xl text-blue-600 shrink-0 border border-blue-100"><ShieldCheck size={24} /></div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+              <div style={{ display: 'flex', gap: '20px' }}>
+                 <div style={{ background: '#eff6ff', color: '#3b82f6', padding: '15px', borderRadius: '20px' }}><ShieldCheck size={24}/></div>
                  <div>
-                    <p className="font-black text-slate-800 text-base tracking-tight mb-1">Privacidad por Diseño</p>
-                    <p className="text-sm text-slate-500 leading-relaxed font-medium">Tus datos biométricos están encriptados y nunca salen de los servidores seguros de TalenHuman. Utilizamos tecnología WebAuthn de última generación.</p>
+                    <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', margin: '0 0 5px 0' }}>Privacidad por Diseño</h3>
+                    <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.6', margin: 0 }}>Tus datos biométricos están encriptados y protegidos bajo estándares internacionales.</p>
                  </div>
               </div>
-              <div className="flex gap-5 items-start px-2">
-                 <div className="bg-indigo-50 p-4 rounded-2xl text-indigo-600 shrink-0 border border-indigo-100"><Lock size={24} /></div>
+              <div style={{ display: 'flex', gap: '20px' }}>
+                 <div style={{ background: '#f5f3ff', color: '#7c3aed', padding: '15px', borderRadius: '20px' }}><Lock size={24}/></div>
                  <div>
-                    <p className="font-black text-slate-800 text-base tracking-tight mb-1">Cumplimiento Legal</p>
-                    <p className="text-sm text-slate-500 leading-relaxed font-medium">Operamos bajo los estándares más estrictos de protección de datos personales. Tu información solo se usa para el registro de asistencia operativa.</p>
+                    <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', margin: '0 0 5px 0' }}>Uso Limitado</h3>
+                    <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.6', margin: 0 }}>Solo usaremos tu información para el control de asistencia y seguridad operativa.</p>
                  </div>
               </div>
-              <div className="p-6 bg-amber-50 border border-amber-100 rounded-[2rem] flex gap-4 items-center animate-in zoom-in-95 duration-700">
-                 <ShieldAlert size={28} className="text-amber-500 shrink-0" />
-                 <p className="text-xs font-bold text-amber-700 leading-tight">Al continuar, aceptas de forma explícita el tratamiento de tus datos personales para el control de asistencia.</p>
+              <div style={{ 
+                background: '#fffbeb', border: '1px solid #fef3c7', padding: '20px', 
+                borderRadius: '30px', display: 'flex', gap: '15px', alignItems: 'center'
+              }}>
+                 <ShieldAlert size={28} style={{ color: '#f59e0b', shrink: 0 }} />
+                 <p style={{ fontSize: '12px', color: '#92400e', fontWeight: '700', margin: 0, lineHeight: '1.4' }}>
+                   Al continuar, aceptas explícitamente el tratamiento de tus datos personales.
+                 </p>
               </div>
-            </div>
-          )}
+          </div>
 
-          {/* Scroll Hint overlay */}
           {showScrollHint && (
-             <div className="sticky bottom-0 left-0 right-0 flex justify-center pb-4 pointer-events-none">
-                <div className="bg-blue-600 text-white p-3 rounded-full shadow-2xl shadow-blue-500/40 animate-bounce">
+             <div style={{
+               position: 'sticky', bottom: '10px', display: 'flex', justifyContent: 'center', pointerEvents: 'none'
+             }}>
+                <div className="elite-bounce" style={{
+                  background: '#4f46e5', color: 'white', padding: '10px', borderRadius: '100px',
+                  boxShadow: '0 10px 15px -3px rgba(79, 70, 229, 0.4)'
+                }}>
                    <ChevronDown size={20} />
                 </div>
              </div>
@@ -114,34 +141,62 @@ const PrivacyConsentModal = ({ onAccepted, onLogout, policyText }) => {
         </div>
 
         {/* 🎬 ACTION BUTTONS */}
-        <div className="pt-10 flex flex-col gap-6 shrink-0">
-          {error && <p className="text-red-500 text-center text-xs font-black animate-pulse">{error}</p>}
+        <div style={{ paddingTop: '30px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          {error && <p style={{ color: '#ef4444', textAlign: 'center', fontSize: '12px', fontWeight: '900' }}>{error}</p>}
           
           <button 
             onClick={handleAccept}
             disabled={loading}
-            className="group w-full bg-blue-600 text-white py-6 rounded-[2.2rem] font-black shadow-2xl shadow-blue-600/30 active:scale-[0.97] transition-all flex items-center justify-center text-sm gap-3 overflow-hidden relative"
+            style={{
+              width: '100%',
+              background: '#4f46e5',
+              color: 'white',
+              padding: '22px',
+              borderRadius: '2.5rem',
+              fontSize: '16px',
+              fontWeight: '900',
+              border: 'none',
+              boxShadow: '0 20px 25px -5px rgba(79, 70, 229, 0.3)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px'
+            }}
           >
-            {loading ? (
-               <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-               <>
-                  <CheckCircle2 size={24} />
-                  <span>Aceptar y Continuar</span>
-                  <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-               </>
+            {loading ? <div className="elite-spinner"></div> : (
+              <>
+                 <CheckCircle2 size={24} />
+                 Aceptar y Continuar
+              </>
             )}
           </button>
 
           <button 
             onClick={onLogout}
-            className="w-full bg-slate-100 text-slate-500 hover:bg-slate-200 py-4 rounded-[2rem] font-bold text-xs transition-colors flex items-center justify-center gap-2 border border-slate-200/50"
+            style={{
+              background: 'none', border: 'none', color: '#94a3b8',
+              padding: '10px', fontSize: '11px', fontWeight: '800',
+              cursor: 'pointer', letterSpacing: '2px'
+            }}
           >
-            <LogOut size={16} />
-            Cancelar y Salir de la App
+            CANCELAR Y CERRAR SESIÓN
           </button>
         </div>
       </div>
+
+      <style>{`
+          @keyframes bounce {
+              0%, 100% { transform: translateY(0); }
+              50% { transform: translateY(-10px); }
+          }
+          .elite-bounce { animation: bounce 2s infinite; }
+          .elite-spinner {
+            width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite;
+          }
+          @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 };

@@ -1,77 +1,96 @@
-import React from 'react';
-import { Fingerprint, X, ShieldCheck, ChevronRight, TabletSmartphone, CheckCircle2, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Fingerprint, CheckCircle2, AlertCircle, ChevronRight, ShieldCheck } from 'lucide-react';
 import SecurityService from '../../services/securityService';
 
 const BiometricEnrollModal = ({ onComplete, onCancel }) => {
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState(null);
-  const [success, setSuccess] = React.useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
 
   const handleActivate = async () => {
     setLoading(true);
     setError(null);
     try {
-      // 🚀 REAL BIOMETRIC ENROLLMENT
       await SecurityService.registerBiometrics();
-      
       setSuccess(true);
-      setTimeout(() => {
-        onComplete();
-      }, 1500);
+      setTimeout(() => onComplete(), 1500);
     } catch (err) {
       console.error('Error biometría:', err);
-      // Detailed error messages for common WebAuthn issues
-      if (err.name === 'NotAllowedError') {
-        setError('Operación cancelada o denegada por el usuario.');
-      } else if (err.name === 'NotSupportedError') {
-        setError('Este dispositivo no soporta biometría o el sitio no es seguro (HTTPS).');
-      } else {
-        setError('Error al configurar biometría. Reintenta.');
-      }
+      if (err.name === 'NotAllowedError') setError('Operación cancelada por el usuario.');
+      else if (err.name === 'NotSupportedError') setError('Este dispositivo no soporta biometría.');
+      else setError('Error al configurar biometría. Reintenta.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[10000] flex flex-col items-center bg-white overflow-y-auto"
-         style={{ minHeight: '100dvh' }}>
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      zIndex: 10000,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      background: '#ffffff',
+      fontFamily: "'Outfit', 'Inter', sans-serif",
+      overflowY: 'auto',
+      WebkitUserSelect: 'none',
+      userSelect: 'none',
+      minHeight: '100dvh'
+    }}>
       
-      {/* 🚀 ELITE BRAND HEADER (Consistent) */}
-      <div className="w-full bg-gradient-to-br from-slate-800 via-slate-900 to-black p-12 flex flex-col items-center justify-center text-white relative shrink-0 shadow-2xl">
-         <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl animate-pulse"></div>
+      {/* 🚀 ELITE BRAND HEADER (Consistent with Login) */}
+      <div style={{
+        width: '100%',
+        background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
+        padding: '70px 40px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'white',
+        position: 'relative',
+        boxShadow: '0 20px 40px -10px rgba(79, 70, 229, 0.4)',
+        zIndex: 10
+      }}>
+         <div style={{
+           position: 'absolute', top: '-50%', right: '-20%', width: '300px', height: '300px',
+           background: 'rgba(255, 255, 255, 0.1)', borderRadius: '50%', filter: 'blur(80px)'
+         }}></div>
          
-         <div className="relative z-10 flex flex-col items-center gap-4">
-            <div className="bg-white/10 p-4 rounded-3xl backdrop-blur-md border border-white/20 shadow-xl mb-2">
-               <Fingerprint size={48} className={`text-white ${loading ? 'animate-pulse' : ''}`} />
+         <div style={{ position: 'relative', zIndex: 10, textAlign: 'center' }}>
+            <div className={loading ? "elite-pulse" : ""} style={{ 
+              background: 'rgba(255,255,255,0.2)', padding: '25px', borderRadius: '35px', 
+              backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.3)',
+              display: 'inline-flex', marginBottom: '20px'
+            }}>
+               <Fingerprint size={56} />
             </div>
-            <h1 className="text-3xl font-black tracking-tighter" style={{ fontFamily: "'Outfit', sans-serif" }}>Acceso Biométrico</h1>
-            <div className="flex items-center gap-2">
-               <div className="h-[1px] w-6 bg-white/20"></div>
-               <span className="text-[9px] uppercase font-bold tracking-[0.4em] text-slate-400">Security Ecosystem</span>
-               <div className="h-[1px] w-6 bg-white/20"></div>
-            </div>
+            <h1 style={{ fontSize: '32px', fontWeight: '900', letterSpacing: '-1.5px', margin: 0 }}>Acceso Biométrico</h1>
+            <p style={{ fontSize: '10px', fontWeight: '800', letterSpacing: '4px', opacity: 0.6, marginTop: '8px' }}>SECURITY ECOSYSTEM</p>
          </div>
       </div>
 
-      <div className="w-full max-w-sm px-10 py-12 flex-1 flex flex-col items-center justify-center">
+      <div style={{ width: '100%', maxWidth: '400px', padding: '40px 30px', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        
         {/* 🎬 STATUS / HEADER TEXT */}
-        <div className="text-center mb-10 w-full animate-in zoom-in-95 duration-500">
+        <div style={{ textAlign: 'center', marginBottom: '40px', width: '100%' }}>
            {success ? (
-              <div className="flex flex-col items-center gap-4">
-                 <div className="bg-green-100 p-3 rounded-full text-green-600">
-                    <CheckCircle2 size={40} />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
+                 <div style={{ background: '#ecfdf5', padding: '20px', borderRadius: '100px', color: '#10b981' }}>
+                    <CheckCircle2 size={42} />
                  </div>
-                 <h2 className="text-2xl font-black text-slate-900">¡Configurado!</h2>
-                 <p className="text-slate-500 text-sm font-medium">Redirigiendo al sistema...</p>
+                 <h2 style={{ fontSize: '28px', fontWeight: '900', color: '#0f172a' }}>¡Configurado!</h2>
+                 <p style={{ fontSize: '15px', color: '#64748b', fontWeight: '600' }}>Sincronizando con el servidor...</p>
               </div>
            ) : (
               <>
-                 <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-tight mb-3">
-                   Tu <span className="text-indigo-600">Huella</span> es la Clave
+                 <h2 style={{ fontSize: '28px', fontWeight: '900', color: '#0f172a', letterSpacing: '-1px', marginBottom: '12px' }}>
+                   Tu <span style={{ color: '#4f46e5' }}>Huella</span> es la Clave
                  </h2>
-                 <p className="text-slate-500 font-medium text-sm px-2">
-                   Usa <strong>FaceID</strong> o <strong>Huella Digital</strong> para entrar de forma segura y veloz sin recordar contraseñas.
+                 <p style={{ fontSize: '15px', color: '#64748b', lineHeight: '1.6', fontWeight: '500' }}>
+                   Usa FaceID o Huella Digital para entrar de forma segura sin recordar contraseñas.
                  </p>
               </>
            )}
@@ -79,44 +98,73 @@ const BiometricEnrollModal = ({ onComplete, onCancel }) => {
 
         {/* 🎬 MAIN ACTIONS */}
         {!success && (
-           <div className="w-full space-y-6 animate-in slide-in-from-bottom-4 duration-700">
+           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {error && (
-                 <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex gap-3 items-center text-red-700">
-                    <AlertCircle size={20} className="shrink-0" />
-                    <p className="text-[11px] font-bold leading-tight">{error}</p>
+                 <div style={{ background: '#fef2f2', border: '1px solid #fee2e2', padding: '15px', borderRadius: '25px', display: 'flex', alignItems: 'center', gap: '12px', color: '#ef4444' }}>
+                    <AlertCircle size={20} />
+                    <p style={{ fontSize: '12px', fontWeight: '800', margin: 0 }}>{error}</p>
                  </div>
               )}
 
               <button 
                 onClick={handleActivate}
                 disabled={loading}
-                className="group relative w-full bg-slate-900 text-white py-6 rounded-[2.2rem] font-bold text-sm uppercase tracking-widest shadow-2xl shadow-slate-900/30 flex items-center justify-center gap-4 active:scale-[0.98] transition-all overflow-hidden"
+                style={{
+                  width: '100%',
+                  background: '#1e293b',
+                  color: 'white',
+                  padding: '22px',
+                  borderRadius: '2.5rem',
+                  fontSize: '16px',
+                  fontWeight: '900',
+                  border: 'none',
+                  boxShadow: '0 20px 35px -10px rgba(30, 41, 59, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '12px',
+                  cursor: 'pointer'
+                }}
               >
-                 {loading ? (
-                    <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-                 ) : (
+                 {loading ? <div className="elite-spinner"></div> : (
                     <>
                        <span>Activar Biometría</span>
-                       <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                       <ChevronRight size={20} />
                     </>
                  )}
-                 <div className="absolute inset-0 bg-white/5 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
               </button>
 
               <button 
                 onClick={onCancel}
-                className="w-full text-slate-400 py-2 font-black text-[10px] uppercase tracking-widest hover:text-slate-600 transition-colors flex items-center justify-center gap-2"
+                style={{
+                  background: 'none', border: 'none', color: '#94a3b8',
+                  padding: '10px', fontSize: '11px', fontWeight: '800',
+                  cursor: 'pointer', letterSpacing: '2px'
+                }}
               >
-                Configurar después
+                CONFIGURAR DESPUÉS
               </button>
            </div>
         )}
 
-        <div className="mt-16 flex flex-col items-center gap-4 opacity-10 pt-8 border-t border-slate-100 w-full">
-           <ShieldCheck size={20} className="text-slate-900" />
-           <span className="text-[8px] font-black uppercase tracking-[0.6em] text-slate-900">Elite V16.3 Security</span>
+        <div style={{ marginTop: '50px', paddingTop: '30px', borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '10px', opacity: 0.3 }}>
+           <ShieldCheck size={18} />
+           <span style={{ fontSize: '9px', fontWeight: '900', letterSpacing: '3px' }}>ELITE SECURITY CORE</span>
         </div>
       </div>
+
+      <style>{`
+          @keyframes elite-pulse {
+              0%, 100% { transform: scale(1); opacity: 1; }
+              50% { transform: scale(1.05); opacity: 0.8; }
+          }
+          .elite-pulse { animation: elite-pulse 2s ease-in-out infinite; }
+          .elite-spinner {
+            width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite;
+          }
+          @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 };
