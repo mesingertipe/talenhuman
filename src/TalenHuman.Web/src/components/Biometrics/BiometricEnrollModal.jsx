@@ -53,25 +53,32 @@ const BiometricEnrollModal = ({ onComplete, onCancel }) => {
     );
 
     try {
+      console.log('Starting Biometric Create...', { rpId: authOptions.rp.id, challenge: !!authOptions.challenge });
       const credentialPromise = create({ publicKey: authOptions });
       const credential = await Promise.race([credentialPromise, timeoutPromise]);
 
+      console.log('Biometric Success! Completing registration...');
       await SecurityService.completeRegistration(credential);
       setSuccess(true);
       setTimeout(() => onComplete(), 1500);
     } catch (err) {
-      console.error('DIAGNOSTIC:', err);
+      console.error('BIOMETRIC_DETAILED_ERROR:', {
+          name: err.name,
+          message: err.message,
+          stack: err.stack,
+          code: err.code
+      });
       const errName = err.name || 'Error';
       const errMsg = err.message || '';
 
       if (errMsg === 'TIMEOUT_EXPIRED') {
           setError('El dispositivo no respondió (Timeout)');
-          setDiagInfo('Asegura que tu huella esté configurada en el sistema.');
+          setDiagInfo('Asegura que tu huella esté configurada y el RP ID coincida.');
       } else if (errName === 'NotAllowedError') {
           setError('Operación cancelada o expirada.');
       } else if (errName === 'SecurityError') {
           setError('Bloqueo de Seguridad (RP ID Mismatch)');
-          setDiagInfo(`Dominio: ${window.location.hostname}`);
+          setDiagInfo(`Dominio Detectado: ${window.location.hostname}`);
       } else if (errName === 'NotSupportedError') {
           setError('Hardware No Compatible (FIDO2)');
           setDiagInfo('Este dispositivo no soporta el estándar de seguridad requerido.');
