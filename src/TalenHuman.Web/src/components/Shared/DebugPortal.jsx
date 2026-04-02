@@ -53,9 +53,9 @@ const DebugPortal = () => {
         return (
             <button 
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-20 left-4 z-[20000] p-3 bg-slate-900/80 text-green-400 rounded-full shadow-lg backdrop-blur-md border border-green-500/30 active:scale-90 transition-transform"
+                className="fixed top-4 right-4 z-[30000] p-3 bg-slate-900 border-2 border-green-500 text-green-500 rounded-full shadow-2xl active:scale-90 transition-transform"
             >
-                <Terminal size={20} />
+                <Terminal size={24} />
             </button>
         );
     }
