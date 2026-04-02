@@ -223,13 +223,20 @@
   justify-content: center;
   gap: 0.5rem;
   background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
-  padding: 2.25rem 1.5rem;
-  margin: -3rem -3rem 2rem -3rem; 
+  padding: 2.5rem 1.5rem !important;
+  margin: -3rem -3rem 2.5rem -3rem !important; 
   color: white !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   position: relative;
   z-index: 50;
+}
+
+.login-header {
+  margin-bottom: 2rem !important;
+  position: relative !important;
+  z-index: 10 !important;
+  text-align: left !important;
 }
 
 .login-mobile-brand-icon {

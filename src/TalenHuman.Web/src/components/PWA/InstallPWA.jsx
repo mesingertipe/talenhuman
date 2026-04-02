@@ -5,65 +5,66 @@ const InstallPWA = ({ onLogout, version }) => {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
   return (
-    <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center p-8 text-center text-white overflow-hidden"
-         style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)' }}>
+    <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-start p-6 text-center text-white overflow-y-auto"
+         style={{ background: 'linear-gradient(135deg, #4c1d95 0%, #1e1b4b 100%)' }}>
       
-      {/* 🚀 TALENHUMAN BRANDING AT TOP (NEW) */}
-      <div className="absolute top-12 left-0 right-0 flex flex-col items-center animate-in fade-in slide-in-from-top-4 duration-1000">
-         <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md border border-white/20 mb-3 shadow-xl">
-            <Smartphone size={32} className="text-white" />
-         </div>
-         <h1 className="text-xl font-bold tracking-tight">TalenHuman</h1>
-         <div className="w-12 h-1 bg-white/20 rounded-full mt-2"></div>
-      </div>
+      {/* 🔮 BACKGROUND GLOWS */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/20 blur-[120px] rounded-full animate-pulse"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }}></div>
 
-      <div className="w-full max-w-sm bg-white/10 backdrop-blur-md p-8 rounded-[2rem] border border-white/20 shadow-2xl animate-in zoom-in-95 duration-500">
-        <h3 className="text-2xl font-black mb-4 leading-tight">¡Instala la Aplicación!</h3>
-        <p className="text-sm text-indigo-50/80 mb-8 leading-relaxed font-semibold">
-          Para usar <strong>TalenHuman</strong> de manera eficiente y recibir notificaciones en tiempo real, debes instalar la aplicación en tu celular.
-        </p>
+      <div className="w-full max-w-sm flex flex-col items-center py-12 relative z-10">
+        {/* 🚀 ELITE HEADER */}
+        <div className="mb-12 flex flex-col items-center animate-in fade-in slide-in-from-top-4 duration-1000">
+           <div className="bg-white/10 p-5 rounded-[2rem] backdrop-blur-2xl border border-white/20 mb-5 shadow-2xl ring-1 ring-white/30">
+              <Smartphone size={48} className="text-white drop-shadow-glow" />
+           </div>
+           <h1 className="text-3xl font-black tracking-tighter mb-1">TalenHuman</h1>
+           <div className="flex items-center gap-2">
+              <div className="h-[2px] w-8 bg-indigo-400 rounded-full"></div>
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-300/80">Premium Access</span>
+              <div className="h-[2px] w-8 bg-indigo-400 rounded-full"></div>
+           </div>
+        </div>
 
-        {isIOS ? (
-          <div className="space-y-6 text-left animate-in slide-in-from-bottom-4 duration-700">
-             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-100/60 border-b border-white/10 pb-2">Instrucciones para iPhone:</p>
-             <ol className="space-y-4">
-                <li className="flex gap-4 items-start">
-                   <span className="bg-white/20 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 border border-white/20">1</span>
-                   <p className="text-xs font-bold leading-relaxed">
-                      Toca el botón <strong>Compartir</strong> <span className="inline-block translate-y-0.5 ml-1 opacity-80 mr-1"><Share size={16}/></span> en tu navegador.
-                   </p>
-                </li>
-                <li className="flex gap-4 items-start">
-                   <span className="bg-white/20 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 border border-white/20">2</span>
-                   <p className="text-xs font-bold leading-relaxed">
-                      Desliza hacia abajo y toca en <strong>Añadir a la pantalla de inicio</strong> <span className="inline-block translate-y-0.5 ml-1 opacity-80 mr-1"><PlusSquare size={16}/></span>.
-                   </p>
-                </li>
-             </ol>
+        <div className="w-full space-y-4 mb-12">
+          {/* STEP 1 */}
+          <div className="bg-white/5 backdrop-blur-xl p-6 rounded-[2rem] border border-white/10 shadow-xl text-left flex gap-5 items-center transition-transform active:scale-[0.98]">
+             <div className="bg-indigo-500/30 w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black border border-white/20 shrink-0">1</div>
+             <div>
+                <p className="text-[10px] font-black uppercase text-indigo-300 mb-1 tracking-widest">Paso Inicial</p>
+                <p className="text-sm font-bold leading-tight">Toca <strong>Compartir</strong> <Share size={16} className="inline ml-1 opacity-70" /> en tu navegador.</p>
+             </div>
           </div>
-        ) : (
-          <div className="py-6 flex flex-col items-center">
-             <button className="w-full bg-white text-indigo-600 py-4 rounded-2xl font-black text-sm shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all">
-                📥 INSTALAR AHORA
-             </button>
-             <p className="text-[10px] font-bold text-white/50 mt-4 uppercase tracking-widest">Añadir a pantalla de inicio</p>
+
+          {/* STEP 2 */}
+          <div className="bg-white/5 backdrop-blur-xl p-6 rounded-[2rem] border border-white/10 shadow-xl text-left flex gap-5 items-center transition-transform active:scale-[0.98]">
+             <div className="bg-purple-500/30 w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black border border-white/20 shrink-0">2</div>
+             <div>
+                <p className="text-[10px] font-black uppercase text-purple-300 mb-1 tracking-widest">Instalación</p>
+                <p className="text-sm font-bold leading-tight">Busca y toca <strong>Añadir a inicio</strong> <PlusSquare size={16} className="inline ml-1 opacity-70" />.</p>
+             </div>
           </div>
+        </div>
+
+        {/* 🎬 ACTIONS */}
+        {!isIOS && (
+           <button className="w-full bg-white text-indigo-600 py-5 rounded-[2rem] font-black text-sm shadow-2xl shadow-indigo-500/20 flex items-center justify-center gap-3 active:scale-95 transition-all mb-8">
+              📥 INSTALAR TALENHUMAN
+           </button>
         )}
 
-        <div className="mt-8 pt-6 border-t border-white/10">
-           <button 
-             onClick={onLogout}
-             className="text-white/50 hover:text-white text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 mx-auto"
-           >
-             <LogOut size={12} />
-             Cerrar Sesión y Salir
-           </button>
-        </div>
-      </div>
+        <button 
+          onClick={onLogout}
+          className="text-white/40 hover:text-white transition-colors text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 py-4 px-8 rounded-full border border-white/5"
+        >
+          <LogOut size={14} />
+          Cerrar Sesión
+        </button>
 
-      <footer className="mt-12 opacity-30 text-[9px] font-black uppercase tracking-[0.3em]">
-         TalenHuman @ {version || 'V12.8.5'}
-      </footer>
+        <footer className="mt-16 opacity-30 text-[9px] font-black uppercase tracking-[0.3em]">
+           TalenHuman Ecosystem &copy; {version || 'V12.8.7'}
+        </footer>
+      </div>
     </div>
   );
 };

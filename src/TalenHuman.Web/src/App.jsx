@@ -32,8 +32,8 @@ import InstallPWA from './components/PWA/InstallPWA'
 import PrivacyConsentModal from './components/Legal/PrivacyConsentModal'
 import BiometricEnrollModal from './components/Biometrics/BiometricEnrollModal'
 
-// V12.8.5-FINAL-STABLE - TOTAL TRANSFORMATION
-const APP_VERSION = "V12.8.6-STABLE";
+// V12.8.7-FINAL-STABLE - TOTAL TRANSFORMATION
+const APP_VERSION = "V12.8.7-STABLE";
 
 function App() {
   const [user, setUser] = React.useState(null);

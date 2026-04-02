@@ -26,7 +26,7 @@ const Brands = ({ user }) => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [currentBrand, setCurrentBrand] = useState(null);
-  const [formData, setFormData] = useState({ name: '', isActive: true });
+  const [formData, setFormData] = useState({ name: '', IsActive: true });
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -129,7 +129,7 @@ const Brands = ({ user }) => {
                 <FileSpreadsheet size={18} /> Importar
               </button>
               <button 
-                onClick={() => { setCurrentBrand(null); setFormData({ name: '', isActive: true }); setShowModal(true); }}
+                onClick={() => { setCurrentBrand(null); setFormData({ name: '', IsActive: true }); setShowModal(true); }}
                 className="btn-premium btn-premium-primary"
                 style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
               >
@@ -188,7 +188,7 @@ const Brands = ({ user }) => {
                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
                     <PermissionGuard module="CORE" action="Update" user={user}>
                       <button 
-                        onClick={() => { setCurrentBrand(brand); setFormData({ name: brand.name, isActive: brand.isActive !== false }); setShowModal(true); }}
+                        onClick={() => { setCurrentBrand(brand); setFormData({ name: brand.name, IsActive: brand.isActive !== false }); setShowModal(true); }}
                         style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', padding: '0.5rem' }}
                         className="hover:scale-110 transition-transform"
                       >
@@ -294,8 +294,8 @@ const Brands = ({ user }) => {
                   <label className="premium-switch">
                     <input 
                       type="checkbox" 
-                      checked={formData.isActive}
-                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                      checked={formData.IsActive}
+                      onChange={(e) => setFormData({ ...formData, IsActive: e.target.checked })}
                     />
                     <span className="premium-switch-slider"></span>
                   </label>
