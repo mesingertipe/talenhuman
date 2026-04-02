@@ -39,8 +39,8 @@ import MobileProfile from './pages/Mobile/MobileProfile'
 
 import DebugPortal from './components/Shared/DebugPortal'
 
-// V45-FORCE-DEBUG-ON
-const APP_VERSION = "V45-DEBUG";
+// V46-FORCE-DEBUG-FINAL
+const APP_VERSION = "V46-DEBUG";
 
 function App() {
   const [user, setUser] = useState(() => {
