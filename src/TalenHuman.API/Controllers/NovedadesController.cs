@@ -274,16 +274,18 @@ public class NovedadesController : ControllerBase
         if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
 
         var userId = Guid.Parse(userIdString);
-        var dbUser = await _context.Users.FindAsync(userId);
-        if (dbUser == null) return NotFound();
+        var employee = await _context.Employees.FirstOrDefaultAsync(e => e.UserId == userId);
+        
+        // If the user is not linked to an employee record, return empty list (e.g. global admins)
+        if (employee == null) return Ok(new List<NovedadDto>());
 
         // Show Approved news for their store OR news they created personally
         var query = _context.Novedades
             .Include(n => n.NovedadTipo)
             .Include(n => n.Empleado)
             .Where(n => 
-                (n.EmpleadoId == userId) || 
-                (n.StoreId == dbUser.StoreId && n.Status == NovedadStatus.Aprobado)
+                (n.EmpleadoId == employee.Id) || 
+                (n.StoreId == employee.StoreId && n.Status == NovedadStatus.Aprobado)
             )
             .OrderByDescending(n => n.FechaInicio)
             .Take(5);

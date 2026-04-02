@@ -125,10 +125,12 @@ public class ShiftsController : ControllerBase
         if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
 
         var userId = Guid.Parse(userIdString);
-        var today = DateTime.UtcNow.Date;
+        var employee = await _context.Employees.FirstOrDefaultAsync(e => e.UserId == userId);
+        
+        if (employee == null) return Ok(new List<ShiftDto>());
 
         var shifts = await _context.Shifts
-            .Where(s => s.EmployeeId == userId)
+            .Where(s => s.EmployeeId == employee.Id)
             .OrderByDescending(s => s.StartTime)
             .Take(10) // Show last 10 relevant shifts
             .Select(s => new ShiftDto
