@@ -9,7 +9,7 @@ export default defineConfig({
     VitePWA({
       disable: false,
       strategies: 'injectManifest',
-      srcDir: 'public',
+      srcDir: 'src',
       filename: 'sw.js',
       registerType: 'autoUpdate', 
       injectRegister: 'auto',
