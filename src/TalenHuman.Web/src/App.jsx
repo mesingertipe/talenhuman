@@ -38,8 +38,17 @@ import MobileAttendance from './pages/Mobile/MobileAttendance'
 import MobileProfile from './pages/Mobile/MobileProfile'
 
 // V16.7.8-NATIVE-STABLE
-// V22-HOTFIX-DEPLOY
-const APP_VERSION = "V22-HOTFIX";
+// V24-FINAL-STABLE
+const APP_VERSION = "V24-FINAL-STABLE";
+
+// 🚀 AGGRESSIVE PWA REGISTRATION FALLBACK
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+      .then(reg => console.log('SW Registered manually V24:', reg.scope))
+      .catch(err => console.error('SW manual registration failed:', err));
+  });
+}
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -54,7 +63,6 @@ function App() {
   // 🚀 ANTI-FLICKER BOOTLOADER STATE
   const [booting, setBooting] = useState(true); 
   const [isStandalone, setIsStandalone] = useState(() => {
-     // 🚀 INSTANT DETECTION: Zero-flicker URL check combined with standard API
      const isIOS = /iPad|iPhone|iPod/.test(window.navigator.userAgent) && !window.MSStream;
      const isStand = window.matchMedia('(display-mode: standalone)').matches || (isIOS && window.navigator.standalone);
      const isUrlPWA = window.location.search.includes('source=pwa');
@@ -62,9 +70,9 @@ function App() {
   });
   
   const [biometricsDismissed, setBiometricsDismissed] = useState(() => {
-     // 🚀 SESSION-WIDE DISMISSAL: Higher authority than pure state
+     // 🚀 V24 HARDENED DISMISSAL: Higher authority than pure state
      return localStorage.getItem('biometricsDismissed') === 'true' || 
-            sessionStorage.getItem('biometricsDismissed_session') === 'true';
+            sessionStorage.getItem('session_biometric_dismissed_v24') === 'true';
   });
 
   const isEmployee = user?.roleName?.toLowerCase() === 'employee' || 
@@ -76,22 +84,19 @@ function App() {
 
   const handleLogout = () => {
     localStorage.clear();
+    sessionStorage.clear();
     window.location.replace('/');
   };
 
   useEffect(() => {
-    // 1. Version Update
-    const storedVersion = localStorage.getItem('app_version');
-    if (storedVersion && storedVersion !== APP_VERSION) {
-       localStorage.setItem('app_version', APP_VERSION);
-    }
+    // 1. Version Update & Cache Busting
+    localStorage.setItem('app_version', APP_VERSION);
     
     // 2. Firebase Init
     if (user && token) {
-       initializeFirebase(user);
+        initializeFirebase(user);
     }
     
-    // 3. SYNCHRONOUS BOOT LIFT (No more delayed display-mode evaluation needed)
     setTimeout(() => setBooting(false), 500);
   }, []);
 
@@ -106,10 +111,11 @@ function App() {
 
   const handleDismissBiometrics = () => {
      localStorage.setItem('biometricsDismissed', 'true');
+     sessionStorage.setItem('session_biometric_dismissed_v24', 'true');
      setBiometricsDismissed(true);
   };
 
-  // 🛡️ CLEAN BOOTLOADER (NO FLICKER, NO JUMPS)
+  // 🛡️ CLEAN BOOTLOADER
   if (booting) {
     return (
       <div style={{
@@ -158,9 +164,7 @@ function App() {
     return <Component user={user} isMobile={isEmployee} />;
   };
 
-  // 🛡️ THE GATEKEEPER SEQUENCE 
-  // Strict flow: 1. Install (Mobile browser) -> 2. Privacy (Everyone inside App) -> 3. Biometrics
-
+  // 🛡️ THE GATEKEEPER SEQUENCE V24
   if (isMobileDevice && !isStandalone) {
      return <InstallPWA onLogout={handleLogout} version={APP_VERSION} />;
   }
@@ -172,6 +176,7 @@ function App() {
     return <PrivacyConsentModal onAccepted={(u) => setUser(u)} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
   }
 
+  // 🚀 BIOMETRIC GATE: Hardened logic to prevent loops
   if (isStandalone && !user.biometricsEnrolled && !biometricsDismissed) {
     return (
       <BiometricEnrollModal 
