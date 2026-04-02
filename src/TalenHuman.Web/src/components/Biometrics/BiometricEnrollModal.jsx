@@ -15,10 +15,17 @@ const BiometricEnrollModal = ({ onComplete, onCancel }) => {
       setSuccess(true);
       setTimeout(() => onComplete(), 1500);
     } catch (err) {
-      console.error('Error biometría:', err);
-      if (err.name === 'NotAllowedError') setError('Operación cancelada por el usuario.');
-      else if (err.name === 'NotSupportedError') setError('Este dispositivo no soporta biometría.');
-      else setError('Error al configurar biometría. Reintenta.');
+      console.error('Error detallado biometría:', err);
+      // 🚀 DETAILED ERROR ANALYSIS
+      if (err.name === 'NotAllowedError') {
+         setError('La operación fue cancelada o el usuario no respondió a tiempo.');
+      } else if (err.name === 'SecurityError' || (err.message && err.message.includes('rp.id'))) {
+         setError(`Error de Dominio (${err.name}): Verifica que estás en talenhuman.com y no en una IP o www.`);
+      } else if (err.name === 'NotSupportedError') {
+         setError('Este dispositivo no es compatible con el acceso biométrico seguro FIDO2.');
+      } else {
+         setError(`Error técnico: ${err.name || 'Fallo'} - ${err.message || 'Intenta de nuevo.'}`);
+      }
     } finally {
       setLoading(false);
     }
