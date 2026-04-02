@@ -39,10 +39,17 @@ import MobileProfile from './pages/Mobile/MobileProfile'
 
 import DebugPortal from './components/Shared/DebugPortal'
 
-// V49-FORCE-DEBUG-FINAL
-const APP_VERSION = "V53-STABLE";
+// V54-FORCE-DOMAIN-REDIRECT
+const APP_VERSION = "V54-FORCE-DOMAIN";
 
 function App() {
+  // 🚀 V54 FORCE DOMAIN UNIFICATION (Fixes WebAuthn RP ID Mismatch)
+  React.useEffect(() => {
+    if (window.location.hostname === 'www.talenhuman.com') {
+      window.location.replace('https://talenhuman.com' + window.location.pathname + window.location.search);
+    }
+  }, []);
+
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('user');
     if (!saved) return null;
