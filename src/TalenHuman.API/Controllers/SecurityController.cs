@@ -55,7 +55,6 @@ public class SecurityController : ControllerBase
         // 🚀 EXTREME COMPATIBILITY: Relaxed for all Android/iOS variants
         {
             RequireResidentKey = false,
-            ResidentKey = ResidentKeyRequirement.Discouraged, 
             UserVerification = UserVerificationRequirement.Required,
             AuthenticatorAttachment = null // Let the device choose the best native method
         };
