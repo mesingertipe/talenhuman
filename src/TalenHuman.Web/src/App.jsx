@@ -38,8 +38,8 @@ import MobileAttendance from './pages/Mobile/MobileAttendance'
 import MobileProfile from './pages/Mobile/MobileProfile'
 
 // V16.7.8-NATIVE-STABLE
-// V28-FORCED-DEPLOY-FINAL
-const APP_VERSION = "V28-FORCED-DEPLOY";
+// V40-RADICAL-FIX-FINAL
+const APP_VERSION = "V40-RADICAL-FIX-FINAL";
 
 function App() {
   const [user, setUser] = useState(() => {
