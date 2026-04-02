@@ -112,8 +112,8 @@ function App() {
   if (booting) {
     return (
       <div style={{
-          minHeight: '100dvh', background: '#ffffff', // 🚀 PREVENT FLICKER WITH NEUTRAL WHITE
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#4f46e5'
+          minHeight: '100dvh', background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white'
       }}>
          <div className="clean-pulse-loader" style={{ 
             width: '100px', height: '100px', background: 'white', borderRadius: '30px', 
