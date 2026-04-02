@@ -5,66 +5,65 @@ const InstallPWA = ({ onLogout, version }) => {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
   return (
-    <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-between p-6 text-center text-white overflow-y-auto"
-         style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)' }}>
+    <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center p-8 text-center text-white overflow-y-auto"
+         style={{ 
+           background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
+           paddingBottom: 'env(safe-area-inset-bottom, 2rem)'
+         }}>
       
-      {/* 🔮 BACKGROUND GLOWS */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/20 blur-[120px] rounded-full animate-pulse"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }}></div>
+      {/* 🔮 BACKGROUND GLOWS EXHIBIT */}
+      <div className="absolute top-[-5%] left-[-10%] w-[60%] h-[40%] bg-white/10 blur-[100px] rounded-full"></div>
+      <div className="absolute bottom-[0%] right-[-10%] w-[60%] h-[40%] bg-indigo-400/20 blur-[100px] rounded-full"></div>
 
-      <div className="w-full max-w-sm flex flex-col items-center py-12 relative z-10">
+      <div className="w-full max-w-md flex flex-col items-center relative z-10 py-10">
         {/* 🚀 ELITE HEADER */}
-        <div className="mb-12 flex flex-col items-center animate-in fade-in slide-in-from-top-4 duration-1000">
-           <div className="bg-white/10 p-5 rounded-[2rem] backdrop-blur-2xl border border-white/20 mb-5 shadow-2xl ring-1 ring-white/30">
-              <Smartphone size={48} className="text-white drop-shadow-glow" />
+        <div className="mb-14 flex flex-col items-center animate-in fade-in zoom-in duration-700">
+           <div className="bg-white/20 p-6 rounded-[2.5rem] backdrop-blur-3xl border border-white/30 mb-6 shadow-[0_20px_50px_rgba(0,0,0,0.2)]">
+              <Smartphone size={56} className="text-white drop-shadow-2xl" />
            </div>
-           <h1 className="text-3xl font-black tracking-tighter mb-1">TalenHuman</h1>
-           <div className="flex items-center gap-2">
-              <div className="h-[2px] w-8 bg-indigo-400 rounded-full"></div>
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-300/80">Premium Access</span>
-              <div className="h-[2px] w-8 bg-indigo-400 rounded-full"></div>
+           <h1 className="text-4xl font-black tracking-tight mb-2 italic">TalenHuman</h1>
+           <div className="flex items-center gap-3">
+              <div className="h-[2px] w-10 bg-white/40 rounded-full"></div>
+              <span className="text-xs font-black uppercase tracking-[0.5em] text-white/80">Premium Access</span>
+              <div className="h-[2px] w-10 bg-white/40 rounded-full"></div>
            </div>
         </div>
 
-        <div className="w-full space-y-4 mb-12">
+        <div className="w-full space-y-6 mb-16 px-2">
           {/* STEP 1 */}
-          <div className="bg-white/5 backdrop-blur-xl p-6 rounded-[2rem] border border-white/10 shadow-xl text-left flex gap-5 items-center transition-transform active:scale-[0.98]">
-             <div className="bg-indigo-500/30 w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black border border-white/20 shrink-0">1</div>
+          <div className="bg-white/10 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-white/20 shadow-2xl text-left flex gap-6 items-center transform transition-all hover:scale-[1.02]">
+             <div className="bg-white text-indigo-600 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black shadow-lg shrink-0">1</div>
              <div>
-                <p className="text-[10px] font-black uppercase text-indigo-300 mb-1 tracking-widest">Paso Inicial</p>
-                <p className="text-sm font-bold leading-tight">Toca <strong>Compartir</strong> <Share size={16} className="inline ml-1 opacity-70" /> en tu navegador.</p>
+                <p className="text-xs font-black uppercase text-white/60 mb-1 tracking-widest">Paso Inicial</p>
+                <p className="text-base font-bold leading-tight">Toca <strong>Compartir</strong> <Share size={18} className="inline ml-1 opacity-80" /> en tu navegador.</p>
              </div>
           </div>
 
           {/* STEP 2 */}
-          <div className="bg-white/5 backdrop-blur-xl p-6 rounded-[2rem] border border-white/10 shadow-xl text-left flex gap-5 items-center transition-transform active:scale-[0.98]">
-             <div className="bg-purple-500/30 w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black border border-white/20 shrink-0">2</div>
+          <div className="bg-white/10 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-white/20 shadow-2xl text-left flex gap-6 items-center transform transition-all hover:scale-[1.02]">
+             <div className="bg-white text-purple-600 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black shadow-lg shrink-0">2</div>
              <div>
-                <p className="text-[10px] font-black uppercase text-purple-300 mb-1 tracking-widest">Instalación</p>
-                <p className="text-sm font-bold leading-tight">Busca y toca <strong>Añadir a inicio</strong> <PlusSquare size={16} className="inline ml-1 opacity-70" />.</p>
+                <p className="text-xs font-black uppercase text-white/60 mb-1 tracking-widest">Instalación</p>
+                <p className="text-base font-bold leading-tight">Busca y toca <strong>Añadir a inicio</strong> <PlusSquare size={18} className="inline ml-1 opacity-80" />.</p>
              </div>
           </div>
         </div>
 
-        {/* 🎬 ACTIONS */}
-        {!isIOS && (
-           <button className="w-full bg-white text-indigo-600 py-5 rounded-[2rem] font-black text-sm shadow-2xl shadow-indigo-500/20 flex items-center justify-center gap-3 active:scale-95 transition-all mb-8">
-              📥 INSTALAR TALENHUMAN
-           </button>
-        )}
+        <div className="flex flex-col items-center gap-6 w-full px-4">
+          <button 
+            onClick={onLogout}
+            className="w-full sm:w-auto bg-black/20 hover:bg-black/40 transition-all text-white py-4 px-10 rounded-full border border-white/20 font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 backdrop-blur-md"
+          >
+            <LogOut size={16} />
+            Cerrar Sesión
+          </button>
 
-        <button 
-          onClick={onLogout}
-          className="text-white/40 hover:text-white transition-colors text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 py-4 px-8 rounded-full border border-white/5"
-        >
-          <LogOut size={14} />
-          Cerrar Sesión
-        </button>
-
-        <footer className="mt-16 opacity-30 text-[9px] font-black uppercase tracking-[0.3em]">
-           TalenHuman Ecosystem &copy; {version || 'V12.8.7'}
-        </footer>
+          <footer className="opacity-40 text-[10px] font-black uppercase tracking-[0.4em] mt-4">
+             {version || 'V14.0.0-PRO'}
+          </footer>
+        </div>
       </div>
+    </div>
     </div>
   );
 };

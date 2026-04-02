@@ -7,6 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      disable: true, // EMERGENCY: DISABLE TO BREAK 404 LOOP
       registerType: 'autoUpdate', // FORCE IMMEDIATE UPDATE ON EVERY DEVICE
       injectRegister: 'auto',
       manifestFilename: 'manifest.json', // Ensure it matches what the browser looks for

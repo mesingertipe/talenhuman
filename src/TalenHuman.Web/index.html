@@ -34,21 +34,24 @@
     }
   </style>
   <script>
-    // EMERGENCY SERVICE WORKER KILLER (V13.0.0 Force Reset)
+    // 🚨 EMERGENCY SERVICE WORKER KILLER (V14.0.0 TOTAL RESET)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        if (registrations.length > 0) {
-          const APP_VERSION = "V13.0.0-RESTORED";
-          const lastKill = localStorage.getItem('sw_kill_v13');
-          if (!lastKill) {
-            for (let registration of registrations) {
-              registration.unregister();
-            }
-            localStorage.setItem('sw_kill_v13', 'true');
-            window.location.reload(true);
-          }
+        for (let registration of registrations) {
+          registration.unregister();
         }
       });
+    }
+    // Clear cache if version is old
+    const CURRENT_VERSION = "V14.0.0";
+    const lastVersion = localStorage.getItem('app_version');
+    if (lastVersion && lastVersion !== CURRENT_VERSION) {
+      localStorage.clear();
+      sessionStorage.clear();
+      caches.keys().then(names => {
+        for (let name of names) caches.delete(name);
+      });
+      console.log("System Reset Performed");
     }
   </script>
   <title>TalenHuman</title>
