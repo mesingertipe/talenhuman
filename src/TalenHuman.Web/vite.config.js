@@ -8,11 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       disable: false,
-      strategies: 'injectManifest',
-      srcDir: 'src',
-      filename: 'sw.js',
       registerType: 'autoUpdate', 
-      injectRegister: 'auto',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
         name: 'TalenHuman',
@@ -37,6 +33,11 @@ export default defineConfig({
             purpose: 'any'
           }
         ]
+      },
+      workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
       }
     })
   ],

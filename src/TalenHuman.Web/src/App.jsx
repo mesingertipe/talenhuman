@@ -38,17 +38,8 @@ import MobileAttendance from './pages/Mobile/MobileAttendance'
 import MobileProfile from './pages/Mobile/MobileProfile'
 
 // V16.7.8-NATIVE-STABLE
-// V24-FINAL-STABLE
-const APP_VERSION = "V24-FINAL-STABLE";
-
-// 🚀 AGGRESSIVE PWA REGISTRATION FALLBACK
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' })
-      .then(reg => console.log('SW Registered manually V24:', reg.scope))
-      .catch(err => console.error('SW manual registration failed:', err));
-  });
-}
+// V25-ULTRA-STABLE
+const APP_VERSION = "V25-ULTRA-STABLE";
 
 function App() {
   const [user, setUser] = useState(() => {
