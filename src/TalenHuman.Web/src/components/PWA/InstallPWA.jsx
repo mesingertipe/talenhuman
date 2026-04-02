@@ -1,22 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { Share, PlusSquare, Smartphone, LogOut, DownloadCloud, ChevronRight, ArrowRight, Chrome } from 'lucide-react';
+import { Share, PlusSquare, Smartphone, LogOut, DownloadCloud, ChevronRight, ArrowRight, Chrome, RefreshCw } from 'lucide-react';
 import TalenHumanLogo from '../Shared/TalenHumanLogo';
 
 const InstallPWA = ({ onLogout, version }) => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
+  
+  // 🚀 STRICT PLATFORM DETECTION
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const isChrome = /Chrome/i.test(navigator.userAgent) && !/Edge|OPR/i.test(navigator.userAgent);
 
   useEffect(() => {
     const handler = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
+      console.log('Fired beforeinstallprompt');
     };
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+        window.location.reload(); // Fallback: Force refresh to catch event
+        return;
+    }
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') setDeferredPrompt(null);
@@ -24,77 +32,35 @@ const InstallPWA = ({ onLogout, version }) => {
 
   return (
     <div style={{
-      position: 'fixed',
-      inset: 0,
-      zIndex: 10000,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
-      fontFamily: "'Outfit', 'Inter', sans-serif",
-      color: '#ffffff',
-      overflowY: 'auto',
-      WebkitUserSelect: 'none',
-      userSelect: 'none'
+      position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', flexDirection: 'column',
+      alignItems: 'center', background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
+      fontFamily: "'Outfit', 'Inter', sans-serif", color: '#ffffff', overflowY: 'auto'
     }}>
       
-      {/* 🚀 GLOW ELEMENTS */}
-      <div style={{
-        position: 'absolute', top: '-10%', right: '-10%', width: '300px', height: '300px',
-        background: 'rgba(255, 255, 255, 0.1)', borderRadius: '50%', filter: 'blur(80px)'
-      }}></div>
-
-      {/* 🎬 LOGO & TITLE */}
-      <div style={{ width: '100%', paddingTop: '60px', paddingBottom: '30px', textAlign: 'center', position: 'relative', zIndex: 10 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
-              <TalenHumanLogo size={70} type="icon" />
-          </div>
+      {/* 🎬 LOGO & VERSION */}
+      <div style={{ width: '100%', paddingTop: '60px', paddingBottom: '30px', textAlign: 'center', zIndex: 10 }}>
+          <TalenHumanLogo size={70} type="icon" />
           <h1 style={{ fontSize: '32px', fontWeight: '900', letterSpacing: '-1.5px', margin: '15px 0 0 0' }}>TalenHuman</h1>
-          <p style={{ fontSize: '10px', fontWeight: '800', letterSpacing: '3px', opacity: 0.6, marginTop: '8px' }}>SMART ENTERPRISE SYSTEM</p>
+          <p style={{ fontSize: '10px', fontWeight: '800', letterSpacing: '4px', opacity: 0.6 }}>ECOSYSTEM {version}</p>
       </div>
 
-      {/* 🎬 CRYSTAL CARD */}
-      <div style={{ width: '100%', maxWidth: '380px', padding: '0 25px 40px 25px', position: 'relative', zIndex: 20 }}>
+      <div style={{ width: '100%', maxWidth: '380px', padding: '0 25px 40px 25px', zIndex: 20 }}>
           <div style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            borderRadius: '45px',
-            padding: '40px 30px',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '30px'
+            background: 'rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.15)',
+            borderRadius: '45px', padding: '40px 30px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            display: 'flex', flexDirection: 'column', gap: '25px'
           }}>
               
               <div style={{ textAlign: 'center' }}>
-                  <h2 style={{ fontSize: '24px', fontWeight: '800', lineHeight: '1.2' }}>¡Instala la aplicación!</h2>
-                  <p style={{ fontSize: '14px', opacity: 0.8, marginTop: '12px', lineHeight: '1.5', fontWeight: '500' }}>
-                    Obtén una experiencia nativa y notificaciones en tiempo real instalando TalenHuman ahora.
+                  <h2 style={{ fontSize: '24px', fontWeight: '800' }}>{isIOS ? 'Añadir a Pantalla' : 'Instalar Aplicación'}</h2>
+                  <p style={{ fontSize: '14px', opacity: 0.8, marginTop: '10px', lineHeight: '1.5', fontWeight: '500' }}>
+                    Para una experiencia fluida y sin flasheos, instala TalenHuman en tu dispositivo.
                   </p>
               </div>
 
-              {/* Steps Illustration Placeholder (Phone) */}
-              <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0' }}>
-                 <div className="elite-floating-phone" style={{
-                    width: '80px', height: '140px', background: '#0f172a', borderRadius: '25px',
-                    border: '3px solid #1e293b', position: 'relative', padding: '5px'
-                 }}>
-                    <div style={{ width: '30px', height: '3px', background: '#1e293b', borderRadius: '10px', margin: '0 auto 8px auto' }}></div>
-                    <div style={{ 
-                      width: '100%', height: '100px', borderRadius: '18px', 
-                      background: 'linear-gradient(to bottom, #4f46e5, #7c3aed)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center'
-                    }}>
-                       <Smartphone size={24} style={{ opacity: 0.5 }} />
-                    </div>
-                 </div>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                   {isIOS ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                           <InstructionStep icon={<Share size={18}/>} text="Toca 'Compartir' en Safari" />
                           <InstructionStep icon={<PlusSquare size={18}/>} text="Busca 'Añadir a pantalla de inicio'" />
                       </div>
@@ -102,69 +68,43 @@ const InstallPWA = ({ onLogout, version }) => {
                       <button 
                           onClick={handleInstallClick}
                           style={{
-                              width: '100%',
-                              background: '#ffffff',
-                              color: '#4f46e5',
-                              padding: '20px',
-                              borderRadius: '2.5rem',
-                              fontSize: '16px',
-                              fontWeight: '900',
-                              border: 'none',
-                              boxShadow: '0 15px 30px -5px rgba(255, 255, 255, 0.2)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: '12px',
-                              cursor: 'pointer',
-                              transition: 'transform 0.2s ease'
+                              width: '100%', background: '#ffffff', color: '#4f46e5', padding: '20px',
+                              borderRadius: '2.5rem', fontSize: '16px', fontWeight: '900', border: 'none',
+                              boxShadow: '0 15px 30px -5px rgba(255, 255, 255, 0.2)', display: 'flex',
+                              alignItems: 'center', justifyContent: 'center', gap: '12px', cursor: 'pointer'
                           }}
-                          onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.96)'}
-                          onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
                       >
                           <DownloadCloud size={22} />
-                          Instalar ahora
+                          Instalar Ahora
                       </button>
                   ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                          <InstructionStep icon={<Chrome size={18}/>} text="Toca los tres puntos de tu navegador" />
-                          <InstructionStep icon={<PlusSquare size={18}/>} text="Selecciona 'Instalar aplicación'" />
+                          <InstructionStep icon={<Chrome size={18}/>} text="Toca los tres puntos de Chrome" />
+                          <InstructionStep icon={<PlusSquare size={18}/>} text="Busca 'Instalar aplicación'" />
+                          <button 
+                            onClick={() => window.location.reload()}
+                            style={{ 
+                                marginTop: '10px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', 
+                                color: 'white', padding: '12px', borderRadius: '100px', fontSize: '11px', fontWeight: '800', 
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                            }}
+                          >
+                             <RefreshCw size={14} /> reintentar botón nativo
+                          </button>
                       </div>
                   )}
               </div>
 
-              <div style={{ textAlign: 'center', marginTop: '10px' }}>
+              <div style={{ textAlign: 'center' }}>
                   <button 
                     onClick={onLogout}
-                    style={{
-                      background: 'rgba(255,255,255,0.05)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      color: 'rgba(255,255,255,0.7)',
-                      padding: '12px 30px',
-                      borderRadius: '100px',
-                      fontSize: '12px',
-                      fontWeight: '700',
-                      cursor: 'pointer'
-                    }}
+                    style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
                   >
-                    Cerrar sesión segura
+                    CERRAR SESIÓN
                   </button>
-                  <p style={{ fontSize: '9px', fontWeight: '800', opacity: 0.3, marginTop: '25px', letterSpacing: '4px' }}>
-                    {version || 'V16.3.0-ELITE'}
-                  </p>
               </div>
           </div>
       </div>
-
-      <style>{`
-          @keyframes float {
-              0%, 100% { transform: translateY(0); }
-              50% { transform: translateY(-10px); }
-          }
-          .elite-floating-phone {
-              animation: float 4s ease-in-out infinite;
-              box-shadow: 0 40px 60px -15px rgba(0, 0, 0, 0.3);
-          }
-      `}</style>
     </div>
   );
 };

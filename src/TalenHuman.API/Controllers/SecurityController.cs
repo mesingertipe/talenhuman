@@ -54,7 +54,7 @@ public class SecurityController : ControllerBase
         var authenticatorSelection = new AuthenticatorSelection
         {
             RequireResidentKey = false,
-            UserVerification = UserVerificationRequirement.Preferred,
+            UserVerification = UserVerificationRequirement.Required, // 🚀 FORCED: Solves Android timeouts
             AuthenticatorAttachment = AuthenticatorAttachment.Platform 
         };
 
