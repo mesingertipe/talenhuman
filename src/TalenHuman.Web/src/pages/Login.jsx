@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Mail, Eye, EyeOff, Users, ArrowRight, ShieldAlert } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff, Users, ArrowRight, ShieldAlert, Bell, Calendar, Fingerprint } from 'lucide-react';
 import api from '../services/api';
 import './Login.css';
 
@@ -61,6 +61,27 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
               Gestiona tu talento <br />
               <span className="text-indigo-200 underline decoration-indigo-400">sin fronteras.</span>
             </h1>
+
+            <div className="login-features">
+              <div className="login-feature-item">
+                <div className="login-feature-icon">
+                  <Bell size={18} />
+                </div>
+                <span>Novedades en tiempo real</span>
+              </div>
+              <div className="login-feature-item">
+                <div className="login-feature-icon">
+                  <Calendar size={18} />
+                </div>
+                <span>Gestión de Horarios</span>
+              </div>
+              <div className="login-feature-item">
+                <div className="login-feature-icon">
+                  <Fingerprint size={18} />
+                </div>
+                <span>Marcaciones Seguras</span>
+              </div>
+            </div>
           </div>
 
           <div className="login-decoration-1"></div>
