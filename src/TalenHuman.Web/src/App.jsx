@@ -38,7 +38,8 @@ import MobileAttendance from './pages/Mobile/MobileAttendance'
 import MobileProfile from './pages/Mobile/MobileProfile'
 
 // V16.7.8-NATIVE-STABLE
-const APP_VERSION = "V16.7.8-FINAL";
+// V22-HOTFIX-DEPLOY
+const APP_VERSION = "V22-HOTFIX";
 
 function App() {
   const [user, setUser] = useState(() => {
