@@ -101,6 +101,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
               </div>
 
               <div className="login-header text-center">
+                <h2 className="login-title-desktop">¡Bienvenido!</h2>
                 <p className="login-subtitle">Ingresa tus credenciales para acceder.</p>
               </div>
 
