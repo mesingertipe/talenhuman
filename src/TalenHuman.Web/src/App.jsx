@@ -69,8 +69,8 @@ function App() {
      return !!isStand;
   });
 
-  const roleName = user?.roleName?.toLowerCase() || '';
-  const isEmployee = (roleName === 'employee' || roleName === 'empleado') && !roleName.includes('admin');
+  const rawRole = (user?.roleName || user?.role || '').toLowerCase();
+  const isEmployee = rawRole === 'empleado' || rawRole === 'employee';
   
   // 📱 STRICTOR MOBILE DETECTION
   const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && window.innerWidth < 1024;
@@ -118,7 +118,7 @@ function App() {
        return <InstallPWA onLogout={handleLogout} version={APP_VERSION} />;
     }
 
-    // 🔒 Mandatory Privacy (Employee ONLY - NEVER for Admins)
+    // 🔒 Mandatory Privacy (Employee ONLY - STRICT)
     if (isEmployee && !user.acceptedPrivacyPolicy) {
        return <PrivacyConsentModal onAccepted={(u) => setUser(prev => ({ ...prev, ...u }))} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
     }
@@ -134,7 +134,13 @@ function App() {
         }
       }
       
-      // 💻 WEB PAGES: Everything else (Admins, Managers on any device, and Employees on Desktop)
+      // 💻 WEB PAGES: 
+      // If Employee on PC -> Show EmployeeDashboard
+      if (isEmployee) {
+        return <EmployeeDashboard user={user} />;
+      }
+
+      // If Admin, RH, Gerente, etc. -> Show Management Dashboard
       return <Dashboard user={user} />;
     };
 
