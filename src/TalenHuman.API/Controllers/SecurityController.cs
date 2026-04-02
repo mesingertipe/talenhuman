@@ -52,10 +52,12 @@ public class SecurityController : ControllerBase
             .ToList();
 
         var authenticatorSelection = new AuthenticatorSelection
+        // 🚀 EXTREME COMPATIBILITY: Relaxed for all Android/iOS variants
         {
             RequireResidentKey = false,
-            UserVerification = UserVerificationRequirement.Required, // 🚀 FORCED: Solves Android timeouts
-            AuthenticatorAttachment = AuthenticatorAttachment.Platform 
+            ResidentKey = ResidentKeyRequirement.Discouraged, 
+            UserVerification = UserVerificationRequirement.Required,
+            AuthenticatorAttachment = null // Let the device choose the best native method
         };
 
         var options = _fido2.RequestNewCredential(fidoUser, existingCredentials, authenticatorSelection, AttestationConveyancePreference.None, null);

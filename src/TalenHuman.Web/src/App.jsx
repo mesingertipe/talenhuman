@@ -71,13 +71,13 @@ function App() {
   };
 
   useEffect(() => {
-    // 1. Version Stability Check
+    // 1. Silent Version Transition
     const storedVersion = localStorage.getItem('app_version');
     if (storedVersion && storedVersion !== APP_VERSION) {
-       localStorage.clear();
+       // Perform a silent update to avoid the 'Triple Refresh'
        localStorage.setItem('app_version', APP_VERSION);
-       window.location.reload();
-       return;
+       // ONLY reload if we are in a critical state transition, 
+       // but here we let the bootstrap continue to avoid the 'flash loop'
     }
     
     // 2. Initial Setup Completion
