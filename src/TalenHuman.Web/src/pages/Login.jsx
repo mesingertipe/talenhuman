@@ -69,118 +69,121 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
 
         {/* Right Side: Login Form */}
         <div className="login-form-side">
-          <div className="login-form-container">
-            <div className="login-mobile-brand">
-               <Users size={20} />
-               <span>TalenHuman</span>
-            </div>
-
-            <div className="login-header text-center">
-              <h2 className="login-title">Bienvenido</h2>
-              <p className="login-subtitle">Ingresa tus credenciales para acceder.</p>
-            </div>
-
-            {error && (
-              <div className="login-error">
-                <ShieldAlert size={18} />
-                <span>{error}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="login-form">
-              <div className="form-group">
-                <label className="form-label">Usuario o Correo Corporativo</label>
-                <div className="input-wrapper">
-                  <Mail className="input-icon" size={18} />
-                  <input 
-                    type="text" 
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="login-input"
-                    placeholder="admin@empresa.com"
-                  />
+            <div className="login-form-container">
+              {/* 🏠 Mobile Brand Header (Restored) */}
+              <div className="login-mobile-brand">
+                <div className="login-mobile-brand-icon">
+                  <Users size={22} />
                 </div>
+                <span className="login-mobile-brand-name">TalenHuman</span>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Contraseña</label>
-                <div className="input-wrapper">
-                  <Lock className="input-icon" size={18} />
-                  <input 
-                    type={showPassword ? "text" : "password"}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="login-input"
-                    placeholder="••••••••"
-                  />
-                  <button 
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="password-toggle"
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+              <div className="login-header text-center">
+                <h2 className="login-title">Bienvenido</h2>
+                <p className="login-subtitle">Ingresa tus credenciales para acceder.</p>
+              </div>
+
+              {error && (
+                <div className="login-error">
+                  <ShieldAlert size={18} />
+                  <span>{error}</span>
                 </div>
-              </div>
+              )}
 
-              <div className="form-options flex flex-col gap-5 mt-4">
-                <div className="flex items-center justify-between w-full">
-                  <label className="remember-me flex items-center gap-2 cursor-pointer">
+              <form onSubmit={handleSubmit} className="login-form">
+                <div className="form-group">
+                  <label className="form-label">Usuario o Correo Corporativo</label>
+                  <div className="input-wrapper">
+                    <Mail className="input-icon" size={18} />
                     <input 
-                      type="checkbox" 
-                      className="w-4 h-4 rounded border-slate-300 accent-indigo-600"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
+                      type="text" 
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="login-input"
+                      placeholder="admin@empresa.com"
                     />
-                    <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Recordarme</span>
-                  </label>
-                  <button 
-                    type="button" 
-                    className="text-xs font-black text-indigo-600 hover:underline uppercase tracking-wider"
-                    onClick={onForgotPassword}
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </button>
+                  </div>
                 </div>
 
-                <div className="text-center pt-2 border-t border-slate-100">
-                  <button 
-                    type="button" 
-                    className="text-[11px] font-black text-slate-400 hover:text-indigo-600 uppercase tracking-[0.15em] transition-colors"
-                    onClick={onSelfServiceReset}
-                  >
-                    No tengo correo corporativo
-                  </button>
+                <div className="form-group">
+                  <label className="form-label">Contraseña</label>
+                  <div className="input-wrapper">
+                    <Lock className="input-icon" size={18} />
+                    <input 
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="login-input"
+                      placeholder="••••••••"
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="password-toggle"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
+
+                <div className="form-options flex flex-col gap-5 mt-4">
+                  <div className="flex items-center justify-between w-full">
+                    <label className="remember-me flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="w-4 h-4 rounded border-slate-300 accent-indigo-600"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                      />
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Recordarme</span>
+                    </label>
+                    <button 
+                      type="button" 
+                      className="forgot-password text-[10px] uppercase tracking-widest"
+                      onClick={onForgotPassword}
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </button>
+                  </div>
+
+                  <div className="text-center pt-2">
+                    <button 
+                      type="button" 
+                      className="link-sutil text-[10px] uppercase tracking-[0.15em]"
+                      onClick={onSelfServiceReset}
+                    >
+                      No tengo correo corporativo
+                    </button>
+                  </div>
+                </div>
+
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className="login-submit"
+                >
+                  {loading ? (
+                    <div className="loader"></div>
+                  ) : (
+                    <>
+                      <span>Ingresar al Sistema</span>
+                      <ArrowRight size={20} />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <div className="login-footer">
+                 <p className="text-slate-600 font-bold">
+                   ¿Necesitas ayuda? <a href="#" className="ml-1">Soporte</a>
+                 </p>
+                 <div className="version-tag">
+                    v12.8.5
+                 </div>
               </div>
-
-              <button 
-                type="submit" 
-                disabled={loading}
-                className="login-submit"
-              >
-                {loading ? (
-                  <div className="loader"></div>
-                ) : (
-                  <>
-                    <span>Ingresar al Sistema</span>
-                    <ArrowRight size={20} />
-                  </>
-                )}
-              </button>
-            </form>
-
-            <div className="login-footer">
-               <p>
-                 ¿Necesitas ayuda? <a href="#">Soporte</a>
-               </p>
-               <div className="mt-4 text-[10px] opacity-20 font-mono tracking-widest text-center">
-                 {version || 'V12.8.5-STABLE'}
-               </div>
             </div>
-          </div>
         </div>
       </div>
     </div>

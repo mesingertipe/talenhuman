@@ -162,20 +162,34 @@
 }
 
 .login-mobile-brand {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 3rem;
+  color: #1e293b;
+}
+
+.login-mobile-brand-icon {
+  background: #4f46e5;
+  color: white;
+  padding: 0.5rem;
+  border-radius: 10px;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 2.5rem;
-  color: var(--primary);
-  font-weight: 800;
+  justify-content: center;
+}
+
+.login-mobile-brand-name {
+  font-size: 1.25rem;
+  font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 2px;
-  font-size: 0.9rem;
+  letter-spacing: -1px;
 }
 
 @media (min-width: 1024px) {
   .login-mobile-brand {
-    display: none;
+    display: none !important;
   }
 }
 
@@ -327,10 +341,26 @@
 }
 
 .login-footer {
-  margin-bottom: 2rem;
+  margin-top: 2rem;
   text-align: center;
   font-size: 0.9rem;
-  color: var(--text-muted);
+  color: #475569 !important; /* Darker for legibility */
+}
+
+.login-footer a {
+  color: #4f46e5 !important;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.version-tag {
+  margin-top: 1.5rem;
+  font-size: 8px !important;
+  font-weight: 900;
+  opacity: 0.15 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #000;
 }
 
 .form-options {
@@ -362,17 +392,21 @@
   cursor: pointer;
 }
 
-.forgot-password {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--primary);
-  text-decoration: none;
-  transition: all 0.2s;
+.forgot-password, .link-sutil {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  color: #4f46e5 !important;
+  font-weight: 700 !important;
+  text-decoration: none !important;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  outline: none !important;
 }
 
-.forgot-password:hover {
-  color: var(--primary-hover);
-  text-decoration: underline;
+.forgot-password:hover, .link-sutil:hover {
+  opacity: 0.6;
 }
 
 .login-footer a {
