@@ -47,9 +47,9 @@ const BiometricEnrollModal = ({ onComplete, onCancel }) => {
     setError(null);
     setDiagInfo(null);
     
-    // Safety timeout for mobile (15 seconds)
+    // Safety timeout for mobile (60 seconds) - Increased for V53 to prevent Android timeouts
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('TIMEOUT_EXPIRED')), 15000)
+      setTimeout(() => reject(new Error('TIMEOUT_EXPIRED')), 60000)
     );
 
     try {
