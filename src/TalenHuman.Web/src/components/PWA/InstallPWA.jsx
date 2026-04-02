@@ -20,14 +20,25 @@ const InstallPWA = ({ onLogout, version }) => {
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
-  const handleInstallClick = async () => {
+  const handleInstallClick = async (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     if (!deferredPrompt) {
-        window.location.reload(); // Fallback: Force refresh to catch event
+        console.log('No prompt available - showing manual guide');
+        // We will show the manual guide below
         return;
     }
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') setDeferredPrompt(null);
+    
+    try {
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') setDeferredPrompt(null);
+    } catch (err) {
+      console.error('Install failed:', err);
+    }
   };
 
   return (
