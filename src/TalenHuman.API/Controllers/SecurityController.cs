@@ -53,7 +53,7 @@ public class SecurityController : ControllerBase
 
         var authenticatorSelection = new AuthenticatorSelection
         {
-            RequireResidentKey = false,
+            RequireResidentKey = true, // 🚀 SAFARI FIX: Mandatory for iOS 17+ signature validity
             UserVerification = UserVerificationRequirement.Preferred,
             AuthenticatorAttachment = AuthenticatorAttachment.Platform 
         };
