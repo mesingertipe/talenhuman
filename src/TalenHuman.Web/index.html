@@ -34,24 +34,27 @@
     }
   </style>
   <script>
-    // 🚨 EMERGENCY SERVICE WORKER KILLER (V14.0.0 TOTAL RESET)
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        for (let registration of registrations) {
-          registration.unregister();
-        }
-      });
-    }
-    // Clear cache if version is old
-    const CURRENT_VERSION = "V14.0.0";
+    // 🚨 STABILITY RESET (V15.0.0 SAFE MODE)
+    const CURRENT_VERSION = "V15.0.0";
     const lastVersion = localStorage.getItem('app_version');
-    if (lastVersion && lastVersion !== CURRENT_VERSION) {
+    
+    if (lastVersion !== CURRENT_VERSION) {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for (let registration of registrations) {
+            registration.unregister();
+          }
+        });
+      }
       localStorage.clear();
       sessionStorage.clear();
       caches.keys().then(names => {
         for (let name of names) caches.delete(name);
       });
-      console.log("System Reset Performed");
+      // CRITICAL: SET VERSION TO STOP THE LOOP
+      localStorage.setItem('app_version', CURRENT_VERSION);
+      console.log("System Reset Performed - V15.0.0");
+      window.location.reload();
     }
   </script>
   <title>TalenHuman</title>

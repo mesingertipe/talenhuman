@@ -7,14 +7,15 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      disable: true, // EMERGENCY: DISABLE TO BREAK 404 LOOP
-      registerType: 'autoUpdate', // FORCE IMMEDIATE UPDATE ON EVERY DEVICE
+      disable: false, // RESTORED PWA
+      registerType: 'autoUpdate', 
       injectRegister: 'auto',
-      manifestFilename: 'manifest.json', // Ensure it matches what the browser looks for
+      manifestFilename: 'manifest.json', 
       workbox: {
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
+        cacheId: 'talenhuman-v15', // UNIQUE CACHE ID TO BREAK RECACHE LOOP
         maximumFileSizeToCacheInBytes: 7000000
       },
       includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'mask-icon.svg'],
