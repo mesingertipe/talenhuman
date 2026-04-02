@@ -5,8 +5,8 @@ const InstallPWA = ({ onLogout, version }) => {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
   return (
-    <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-start p-6 text-center text-white overflow-y-auto"
-         style={{ background: 'linear-gradient(135deg, #4c1d95 0%, #1e1b4b 100%)' }}>
+    <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-between p-6 text-center text-white overflow-y-auto"
+         style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)' }}>
       
       {/* 🔮 BACKGROUND GLOWS */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/20 blur-[120px] rounded-full animate-pulse"></div>

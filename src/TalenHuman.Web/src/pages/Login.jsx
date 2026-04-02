@@ -201,7 +201,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                    ¿Necesitas ayuda? <a href="#" className="ml-1">Soporte</a>
                  </p>
                  <div className="version-tag">
-                    v12.8.5
+                    {version || 'V13.0.0-RESTORED'}
                  </div>
               </div>
             </div>

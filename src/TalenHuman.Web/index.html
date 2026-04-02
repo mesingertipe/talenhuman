@@ -7,6 +7,50 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#4f46e5" />
   <link rel="manifest" href="/manifest.json" />
+  <style>
+    .login-mobile-brand {
+      display: flex !important;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%) !important;
+      padding: 3rem 1.5rem !important; /* Total filling top space */
+      margin: -3rem -3rem 1.5rem -3rem !important; 
+      color: white !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      position: relative;
+      z-index: 50;
+    }
+
+    .login-header {
+      margin-top: 1rem !important;
+      margin-bottom: 2rem !important;
+      position: relative !important;
+      z-index: 10 !important;
+      text-align: left !important;
+      padding-left: 0.25rem;
+    }
+  </style>
+  <script>
+    // EMERGENCY SERVICE WORKER KILLER (V13.0.0 Force Reset)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        if (registrations.length > 0) {
+          const APP_VERSION = "V13.0.0-RESTORED";
+          const lastKill = localStorage.getItem('sw_kill_v13');
+          if (!lastKill) {
+            for (let registration of registrations) {
+              registration.unregister();
+            }
+            localStorage.setItem('sw_kill_v13', 'true');
+            window.location.reload(true);
+          }
+        }
+      });
+    }
+  </script>
   <title>TalenHuman</title>
 </head>
 
