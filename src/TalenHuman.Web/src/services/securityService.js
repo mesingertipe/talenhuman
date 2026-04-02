@@ -3,20 +3,39 @@ import api from './api';
 
 const SecurityService = {
   /**
-   * Registra una nueva credencial biométrica (FaceID/Huella)
+   * Obtiene las opciones de registro del servidor
+   */
+  async getRegistrationOptions() {
+    try {
+      const response = await api.post('/Security/register/options');
+      return response.data;
+    } catch (error) {
+      console.error('Error obteniendo opciones biometría:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Completa el proceso de registro enviando la credencial al servidor
+   */
+  async completeRegistration(credential) {
+    try {
+      const result = await api.post('/Security/register/complete', credential);
+      return result.data;
+    } catch (error) {
+      console.error('Error completando biometría:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Proceso legacy / simplificado (mantenemos compatibilidad)
    */
   async registerBiometrics() {
     try {
-      // 1. Obtener opciones del servidor
-      const response = await api.post('/Security/register/options');
-      const options = response.data;
-      
-      // 🚀 CRITICAL FIX: WebAuthn-JSON expects options wrapped in { publicKey: ... }
+      const options = await this.getRegistrationOptions();
       const credential = await create({ publicKey: options });
-
-      // 3. Enviar respuesta al servidor para validar y guardar
-      const result = await api.post('/Security/register/complete', credential);
-      return result.data;
+      return await this.completeRegistration(credential);
     } catch (error) {
       console.error('Error en registro biométrico:', error);
       throw error;

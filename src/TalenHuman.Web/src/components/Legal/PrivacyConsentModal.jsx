@@ -22,7 +22,11 @@ const PrivacyConsentModal = ({ onAccepted, onLogout, policyText }) => {
     setError(null);
     try {
       await api.post('/Security/privacy-accept');
-      onAccepted();
+      // Create fresh user object with accepted flag
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const updatedUser = { ...storedUser, acceptedPrivacyPolicy: true };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      onAccepted(updatedUser);
     } catch (err) {
       setError('Error al procesar. Reintenta.');
     } finally {
@@ -48,7 +52,7 @@ const PrivacyConsentModal = ({ onAccepted, onLogout, policyText }) => {
       {/* 🚀 ELITE BRAND HEADER */}
       <div style={{
         width: '100%',
-        background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
+        background: "linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)",
         padding: '60px 40px',
         display: 'flex',
         flexDirection: 'column',

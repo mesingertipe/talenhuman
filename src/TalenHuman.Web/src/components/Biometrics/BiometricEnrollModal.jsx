@@ -1,28 +1,67 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Fingerprint, CheckCircle2, AlertCircle, ChevronRight, ShieldCheck } from 'lucide-react';
-import SecurityService from '../../services/securityService';
+import { create } from '@github/webauthn-json';
+import SecurityService from '../../services/SecurityService';
 
 const BiometricEnrollModal = ({ onComplete, onCancel }) => {
   const [loading, setLoading] = useState(false);
+  const [preLoading, setPreLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [authOptions, setAuthOptions] = useState(null);
+
+  // 🚀 PRE-FETCH OPTIONS ON MOUNT (Android Gesture Prep)
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const options = await SecurityService.getRegistrationOptions();
+        setAuthOptions(options);
+      } catch (err) {
+        console.error('Error pre-fetching options:', err);
+        setError('No pudimos conectar con el servidor de seguridad. Reintenta.');
+      } finally {
+        setPreLoading(false);
+      }
+    };
+    fetchOptions();
+  }, []);
 
   const handleActivate = async () => {
+    if (!authOptions) {
+      setError('Las opciones de seguridad aún no están listas. Espera un segundo.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
+    
+    // Safety timeout for Android (12 seconds)
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('TIMEOUT')), 12000)
+    );
+
     try {
-      await SecurityService.registerBiometrics();
+      // 🚀 IMMEDIATE CALL TO CREATE (Gesture Valid)
+      const credentialPromise = create({ publicKey: authOptions });
+      
+      const credential = await Promise.race([
+        credentialPromise,
+        timeoutPromise
+      ]);
+
+      // 3. Complete in backend
+      await SecurityService.completeRegistration(credential);
+      
       setSuccess(true);
       setTimeout(() => onComplete(), 1500);
     } catch (err) {
       console.error('Error detallado biometría:', err);
-      // 🚀 DETAILED ERROR ANALYSIS
-      if (err.name === 'NotAllowedError') {
-         setError('La operación fue cancelada o el usuario no respondió a tiempo.');
+      if (err.message === 'TIMEOUT') {
+         setError('El dispositivo no respondió. Intenta cerrar y abrir la app, o usa Chrome.');
+      } else if (err.name === 'NotAllowedError') {
+         setError('Operación cancelada o tiempo de espera agotado.');
       } else if (err.name === 'SecurityError' || (err.message && err.message.includes('rp.id'))) {
-         setError(`Error de Dominio (${err.name}): Verifica que estás en talenhuman.com y no en una IP o www.`);
-      } else if (err.name === 'NotSupportedError') {
-         setError('Este dispositivo no es compatible con el acceso biométrico seguro FIDO2.');
+         setError(`Error de Dominio: El servidor espera talenhuman.com (FIDO2).`);
       } else {
          setError(`Error técnico: ${err.name || 'Fallo'} - ${err.message || 'Intenta de nuevo.'}`);
       }
@@ -47,7 +86,7 @@ const BiometricEnrollModal = ({ onComplete, onCancel }) => {
       minHeight: '100dvh'
     }}>
       
-      {/* 🚀 ELITE BRAND HEADER (Consistent with Login) */}
+      {/* 🚀 ELITE BRAND HEADER (High Intensity Indigo) */}
       <div style={{
         width: '100%',
         background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
@@ -58,30 +97,25 @@ const BiometricEnrollModal = ({ onComplete, onCancel }) => {
         justifyContent: 'center',
         color: 'white',
         position: 'relative',
-        boxShadow: '0 20px 40px -10px rgba(79, 70, 229, 0.4)',
-        zIndex: 10
+        boxShadow: '0 20px 50px -10px rgba(124, 58, 237, 0.4)',
+        zIndex: 10,
+        borderRadius: '0 0 3rem 3rem'
       }}>
-         <div style={{
-           position: 'absolute', top: '-50%', right: '-20%', width: '300px', height: '300px',
-           background: 'rgba(255, 255, 255, 0.1)', borderRadius: '50%', filter: 'blur(80px)'
-         }}></div>
-         
          <div style={{ position: 'relative', zIndex: 10, textAlign: 'center' }}>
-            <div className={loading ? "elite-pulse" : ""} style={{ 
+            <div className={(loading || preLoading) ? "elite-pulse" : ""} style={{ 
               background: 'rgba(255,255,255,0.2)', padding: '25px', borderRadius: '35px', 
               backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.3)',
               display: 'inline-flex', marginBottom: '20px'
             }}>
                <Fingerprint size={56} />
             </div>
-            <h1 style={{ fontSize: '32px', fontWeight: '900', letterSpacing: '-1.5px', margin: 0 }}>Acceso Biométrico</h1>
+            <h1 style={{ fontSize: '32px', fontWeight: '900', letterSpacing: '-1.5px', margin: 0 }}>Acceso Elite</h1>
             <p style={{ fontSize: '10px', fontWeight: '800', letterSpacing: '4px', opacity: 0.6, marginTop: '8px' }}>SECURITY ECOSYSTEM</p>
          </div>
       </div>
 
       <div style={{ width: '100%', maxWidth: '400px', padding: '40px 30px', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         
-        {/* 🎬 STATUS / HEADER TEXT */}
         <div style={{ textAlign: 'center', marginBottom: '40px', width: '100%' }}>
            {success ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
@@ -89,21 +123,19 @@ const BiometricEnrollModal = ({ onComplete, onCancel }) => {
                     <CheckCircle2 size={42} />
                  </div>
                  <h2 style={{ fontSize: '28px', fontWeight: '900', color: '#0f172a' }}>¡Configurado!</h2>
-                 <p style={{ fontSize: '15px', color: '#64748b', fontWeight: '600' }}>Sincronizando con el servidor...</p>
               </div>
            ) : (
               <>
                  <h2 style={{ fontSize: '28px', fontWeight: '900', color: '#0f172a', letterSpacing: '-1px', marginBottom: '12px' }}>
-                   Tu <span style={{ color: '#4f46e5' }}>Huella</span> es la Clave
+                    Identidad <span style={{ color: '#4f46e5' }}>Segura</span>
                  </h2>
                  <p style={{ fontSize: '15px', color: '#64748b', lineHeight: '1.6', fontWeight: '500' }}>
-                   Usa FaceID o Huella Digital para entrar de forma segura sin recordar contraseñas.
+                    Usa biometría nativa para entrar de forma instantánea y segura.
                  </p>
               </>
            )}
         </div>
 
-        {/* 🎬 MAIN ACTIONS */}
         {!success && (
            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {error && (
@@ -115,27 +147,27 @@ const BiometricEnrollModal = ({ onComplete, onCancel }) => {
 
               <button 
                 onClick={handleActivate}
-                disabled={loading}
+                disabled={loading || preLoading}
                 style={{
                   width: '100%',
-                  background: 'linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)',
+                  background: (loading || preLoading) ? '#e2e8f0' : 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
                   color: 'white',
                   padding: '22px',
                   borderRadius: '2.5rem',
                   fontSize: '16px',
                   fontWeight: '900',
                   border: 'none',
-                  boxShadow: '0 20px 35px -10px rgba(79, 70, 229, 0.4)',
+                  boxShadow: (loading || preLoading) ? 'none' : '0 20px 35px -10px rgba(124, 58, 237, 0.4)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '12px',
-                  cursor: 'pointer'
+                  cursor: (loading || preLoading) ? 'default' : 'pointer'
                 }}
               >
                  {loading ? <div className="elite-spinner"></div> : (
                     <>
-                       <span>Activar Biometría</span>
+                       <span>{preLoading ? 'Preparando...' : 'Activar Biometría'}</span>
                        <ChevronRight size={20} />
                     </>
                  )}

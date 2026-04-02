@@ -37,7 +37,7 @@ import MobileDashboard from './pages/Mobile/MobileDashboard'
 import MobileAttendance from './pages/Mobile/MobileAttendance'
 
 // V12.8.7-FINAL-STABLE - TOTAL TRANSFORMATION
-const APP_VERSION = "V16.7.2-ELITE";
+const APP_VERSION = "V16.7.4-FINAL";
 
 function App() {
   const [user, setUser] = React.useState(null);
@@ -45,7 +45,10 @@ function App() {
   const [authLoading, setAuthLoading] = React.useState(true);
   const [authView, setAuthView] = React.useState('login'); 
   const [token, setToken] = React.useState(null); 
-  const [isStandalone, setIsStandalone] = React.useState(false);
+  const [isStandalone, setIsStandalone] = React.useState(() => {
+    const isIOS = /iPad|iPhone|iPod/.test(window.navigator.userAgent) && !window.MSStream;
+    return !!(window.matchMedia('(display-mode: standalone)').matches || (isIOS && window.navigator.standalone));
+  });
   const [biometricsDismissed, setBiometricsDismissed] = React.useState(false);
 
   const isEmployee = user?.roleName?.toLowerCase() === 'employee' || 
@@ -159,19 +162,21 @@ function App() {
     }
   };
 
-  // ✅ FINAL STABLE SEQUENTIAL FLOW
+  // 🛡️ UNIVERSAL SECURITY SEQUENCE (MANDATORY FOR ALL)
+  
+  // 1. Enforce Privacy for everyone, everywhere
+  if (!user.acceptedPrivacyPolicy) {
+    return <PrivacyConsentModal onAccepted={(u) => setUser(u)} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
+  }
+
+  // 📱 MOBILE/PWA SPECIFIC FLOW
   if (isEmployee || isMobileDevice) {
-    // 1. Force Install first
+    // 2. Force PWA Installation
     if (isMobileDevice && !isStandalone) {
       return <InstallPWA onLogout={handleLogout} version={APP_VERSION} />;
     }
 
-    // 2. Once in PWA, enforce Privacy
-    if (!user.acceptedPrivacyPolicy) {
-      return <PrivacyConsentModal onAccepted={(u) => setUser(u)} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
-    }
-
-    // 3. Once Privacy is done, suggest Biometrics inside PWA
+    // 3. Suggest Biometrics (Inside PWA only)
     if (isStandalone && !user.biometricsEnrolled && !biometricsDismissed) {
       return (
         <BiometricEnrollModal 
@@ -188,6 +193,7 @@ function App() {
     return <MobileLayout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout} version={APP_VERSION}>{renderPage()}</MobileLayout>;
   }
 
+  // 💻 DESKTOP FLOW
   return <Layout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout} version={APP_VERSION}>{renderPage()}</Layout>;
 }
 
