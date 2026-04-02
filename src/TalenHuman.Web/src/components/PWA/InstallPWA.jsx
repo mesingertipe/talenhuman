@@ -64,27 +64,31 @@ const InstallPWA = ({ onLogout, version }) => {
                           <InstructionStep icon={<Share size={18}/>} text="Toca 'Compartir' en Safari" />
                           <InstructionStep icon={<PlusSquare size={18}/>} text="Busca 'Añadir a pantalla de inicio'" />
                       </div>
-                  ) : deferredPrompt ? (
-                      <button 
-                          onClick={handleInstallClick}
-                          style={{
-                              width: '100%', background: '#ffffff', color: '#4f46e5', padding: '20px',
-                              borderRadius: '2.5rem', fontSize: '16px', fontWeight: '900', border: 'none',
-                              boxShadow: '0 15px 30px -5px rgba(255, 255, 255, 0.2)', display: 'flex',
-                              alignItems: 'center', justifyContent: 'center', gap: '12px', cursor: 'pointer'
-                          }}
-                      >
-                          <DownloadCloud size={22} />
-                          Instalar Ahora
-                      </button>
                   ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                          <div style={{ padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '25px', display: 'flex', gap: '15px', alignItems: 'center' }}>
-                             <div style={{ width: '40px', height: '40px', borderRadius: '15px', background: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                 <PlusSquare size={18} />
+                          <button 
+                              onClick={handleInstallClick}
+                              style={{
+                                  width: '100%', background: '#ffffff', color: '#4f46e5', padding: '20px',
+                                  borderRadius: '2.5rem', fontSize: '16px', fontWeight: '900', border: 'none',
+                                  boxShadow: '0 15px 30px -5px rgba(255, 255, 255, 0.2)', display: 'flex',
+                                  alignItems: 'center', justifyContent: 'center', gap: '12px', cursor: 'pointer'
+                              }}
+                          >
+                              <DownloadCloud size={22} />
+                              {deferredPrompt ? 'Instalar Ahora' : 'Forzar Instalación'}
+                          </button>
+                          
+                          {!deferredPrompt && (
+                             <div style={{ padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '25px', display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                <div style={{ width: '40px', height: '40px', borderRadius: '15px', background: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <PlusSquare size={18} />
+                                </div>
+                                <span style={{ fontSize: '12px', fontWeight: '600', flex: 1, opacity: 0.8 }}>
+                                  Si el botón no abre el menú, usa **⋮ (Opciones)** e **Instalar aplicación**.
+                                </span>
                              </div>
-                             <span style={{ fontSize: '13px', fontWeight: '600', flex: 1 }}>Si el botón no aparece, usa las opciones del navegador para <b>Instalar Aplicación</b>.</span>
-                          </div>
+                          )}
                       </div>
                   )}
               </div>
