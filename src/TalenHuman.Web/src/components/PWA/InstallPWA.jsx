@@ -1,97 +1,94 @@
 import React from 'react';
-import { Share, Plus, LogOut, Smartphone, CheckCircle, ChevronRight, UserCheck } from 'lucide-react';
+import { Share, Plus, LogOut, Smartphone, ArrowBigRightDash } from 'lucide-react';
 
 const InstallPWA = ({ onLogout, version }) => {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col p-8 overflow-y-auto">
+    <div className="min-h-screen bg-blue-600 flex flex-col items-center p-6 relative overflow-hidden">
       
-      {/* BRANDING - CLEAN PRO */}
-      <div className="flex flex-col items-center mb-6 pt-4 shrink-0">
-        <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">TalenHuman</h1>
-        <div className="mt-2 text-[11px] font-bold text-slate-400 dark:text-slate-600 tracking-widest uppercase">
-          {version || 'V12.6.0-STABLE'}
+      {/* Background Shapes for 'Pro' look */}
+      <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-blue-500 rounded-full blur-3xl opacity-50" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-80 h-80 bg-blue-700 rounded-full blur-3xl opacity-50" />
+
+      {/* Animated Phone Icon - DomiCare style */}
+      <div className="mt-12 mb-10 relative animate-in fade-in slide-in-from-top-12 duration-1000">
+        <div className="absolute top-[-40px] left-[-60px] animate-bounce-horizontal">
+           <ArrowBigRightDash size={48} className="text-blue-300 fill-blue-300" />
+        </div>
+        <div className="w-24 h-44 bg-slate-900 rounded-[2.5rem] border-[6px] border-slate-800 shadow-2xl relative overflow-hidden flex flex-col justify-center gap-2 px-3">
+           <div className="grid grid-cols-3 gap-1 opcity-50">
+              {[...Array(12)].map((_, i) => (
+                <div key={i} className="w-full aspect-square bg-slate-700 rounded-sm" />
+              ))}
+           </div>
+           <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-4 bg-slate-800 rounded-full" />
         </div>
       </div>
 
-      {/* PROGRESS INDICATOR - CLARIFYING PRIVACY ORDER */}
-      <div className="flex justify-center mb-8 shrink-0">
-        <div className="flex items-center gap-3 px-4 py-2 bg-green-50 dark:bg-green-900/10 rounded-2xl border border-green-100 dark:border-green-800/20 shadow-sm animate-in zoom-in duration-500">
-           <UserCheck size={14} className="text-green-600" />
-           <span className="text-[10px] font-black uppercase text-green-600 tracking-widest">Aviso de Privacidad: Completado ✓</span>
-        </div>
-      </div>
+      <div className="w-full max-w-sm bg-white/10 backdrop-blur-2xl rounded-[2.5rem] border border-white/20 p-10 text-center space-y-6 shadow-2xl animate-in zoom-in-95 duration-500 relative z-10">
+        
+        <h2 className="text-3xl font-black text-white leading-tight">
+          ¡Instala la Aplicación!
+        </h2>
+        
+        <p className="text-sm text-blue-100/80 leading-relaxed font-medium px-2">
+          Para usar <strong>TalenHuman</strong> de manera eficiente y recibir notificaciones en tiempo real, debes instalar la aplicación en tu celular.
+        </p>
 
-      {/* MAIN CARD - MORE COMPACT & STABLE */}
-      <div className="flex-1 flex flex-col justify-center items-center">
-        <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.1)] dark:shadow-none border border-slate-100 dark:border-white/5 p-8 text-center animate-in slide-in-from-bottom-8 duration-500">
-          
-          <div className="space-y-2 mb-8">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">Instalación Necesaria</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium px-2">
-              Para continuar hacia su portal personal, instale la aplicación siguiendo estos pasos:
-            </p>
-          </div>
-
-          {isIOS ? (
-            <div className="space-y-3 pb-4">
-              {/* Step 1 */}
-              <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 transition-all">
-                <div className="bg-indigo-600 p-2.5 rounded-xl shadow-lg shadow-indigo-500/20">
-                  <Share size={18} className="text-white" />
-                </div>
-                <div className="text-left">
-                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Paso 1</p>
-                   <p className="text-xs text-slate-700 dark:text-slate-300 font-bold">Tocar botón "Compartir"</p>
-                </div>
-              </div>
-
-              {/* Step 2 */}
-              <div className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 transition-all">
-                <div className="bg-indigo-600 p-2.5 rounded-xl shadow-lg shadow-indigo-500/20">
-                  <Plus size={18} className="text-white" />
-                </div>
-                <div className="text-left">
-                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Paso 2</p>
-                   <p className="text-xs text-slate-700 dark:text-slate-300 font-bold">"Añadir a pantalla de inicio"</p>
-                </div>
-              </div>
+        {isIOS ? (
+          <div className="space-y-6 pt-4 text-left text-white">
+            <p className="text-sm font-bold border-b border-white/10 pb-2">Instrucciones para iPhone:</p>
+            
+            <div className="flex gap-4">
+              <span className="text-blue-200 font-bold shrink-0">1.</span>
+              <p className="text-xs font-medium leading-relaxed">
+                 Toca el botón <strong>Compartir <Share size={14} className="inline mb-1" /></strong> en tu navegador.
+              </p>
             </div>
-          ) : (
-            <div className="py-6 flex flex-col items-center">
-               <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-inner">
-                  <Smartphone size={32} className="animate-pulse" />
-               </div>
-               <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-4">
-                  Acepte la notificación en Android
-               </p>
-            </div>
-          )}
 
-          <div className="pt-4 border-t border-slate-100 dark:border-white/5 space-y-4">
-            <button 
-              onClick={onLogout}
-              className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-950 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all shadow-xl"
-            >
-              <LogOut size={14} />
-              CERRAR SESIÓN Y SALIR
-            </button>
-            <p className="text-[10px] text-slate-400 px-4 leading-tight">
-              Si ya instaló la aplicación, ábrala desde su pantalla de inicio.
-            </p>
+            <div className="flex gap-4">
+              <span className="text-blue-200 font-bold shrink-0">2.</span>
+              <p className="text-xs font-medium leading-relaxed">
+                 Desliza hacia abajo y toca en <strong>Añadir a la pantalla de inicio <Plus size={14} className="inline mb-1" /></strong>.
+              </p>
+            </div>
           </div>
+        ) : (
+          <div className="space-y-6 flex flex-col items-center py-4">
+             <div className="w-20 h-20 bg-white/10 rounded-[2.5rem] flex items-center justify-center text-white border border-white/20 shadow-inner">
+                <Smartphone size={40} className="animate-pulse" />
+             </div>
+             <p className="text-xs text-white/70 font-bold uppercase tracking-widest text-center px-4">
+                Acepte la notificación en Android
+             </p>
+          </div>
+        )}
+
+        <div className="pt-6">
+           <button 
+             onClick={onLogout}
+             className="w-full py-4 px-6 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-all border border-white/20 active:scale-95"
+           >
+             <LogOut size={16} />
+             CERRAR SESIÓN Y SALIR
+           </button>
         </div>
       </div>
 
-      {/* FOOTER - NATURAL FLOW (NO ABSOLUTE) */}
-      <footer className="mt-auto py-8 flex flex-col items-center gap-2 opacity-50">
-         <div className="flex items-center gap-2">
-            <CheckCircle size={12} className="text-indigo-600" />
-            <span className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500">Secure Access Verified</span>
-         </div>
-         <p className="text-[8px] text-slate-400 italic">© 2026 Powered by TalenHuman V12</p>
+      <footer className="mt-auto pb-10 text-[10px] text-blue-200/40 font-bold uppercase tracking-[0.3em]">
+        TalenHuman v12.7.0
       </footer>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes bounce-horizontal {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(20px); }
+        }
+        .animate-bounce-horizontal {
+          animation: bounce-horizontal 2s infinite ease-in-out;
+        }
+      `}} />
     </div>
   );
 };

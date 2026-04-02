@@ -30,21 +30,20 @@ import MobileLayout from './components/Layout/MobileLayout'
 import EmployeeDashboard from './pages/Employee/EmployeeDashboard'
 import InstallPWA from './components/PWA/InstallPWA'
 import PrivacyConsentModal from './components/Legal/PrivacyConsentModal'
+import BiometricEnrollModal from './components/Biometrics/BiometricEnrollModal'
 
-// V12.6.0-STABLE - FINAL STABILIZATION (No Logo, Pro Aesthetic, Fixed Layout)
-const APP_VERSION = "V12.6.0-STABLE";
+// V12.7.0-STABLE-DOMICARE - PRO NEW FLOW
+const APP_VERSION = "V12.7.0-DOMICARE";
 
 function App() {
   const [user, setUser] = React.useState(null);
   const [currentPage, setCurrentPage] = React.useState('Dashboard');
   const [authLoading, setAuthLoading] = React.useState(true);
   const [authView, setAuthView] = React.useState('login'); 
-  const [resetEmail, setResetEmail] = React.useState('');
   const [token, setToken] = React.useState(null); 
-  const [deferredPrompt, setDeferredPrompt] = React.useState(null);
   const [isStandalone, setIsStandalone] = React.useState(false);
+  const [biometricsDismissed, setBiometricsDismissed] = React.useState(false);
 
-  // UNIVERSAL EMPLOYEE DETECTION - Case Insensitive & ID Based
   const isEmployee = user?.roleName?.toLowerCase() === 'employee' || 
                      user?.roles?.some(r => r.toLowerCase() === 'employee') || 
                      (user?.employeeId && user?.employeeId !== '00000000-0000-0000-0000-000000000000');
@@ -60,7 +59,6 @@ function App() {
   };
 
   React.useEffect(() => {
-    // 1. VERSION CONTROL
     const storedVersion = localStorage.getItem('app_version');
     if (!storedVersion || storedVersion !== APP_VERSION) {
       localStorage.clear();
@@ -75,13 +73,10 @@ function App() {
     if (savedUser && storedToken) {
       try {
         const userData = JSON.parse(savedUser);
-        
-        // 2. STALE SESSION PREVENTION
         if (!userData || (!userData.roles && !userData.employeeId)) {
           handleLogout();
           return;
         }
-
         setUser(userData);
         setToken(storedToken); 
         initializeFirebase(userData);
@@ -100,18 +95,6 @@ function App() {
     };
 
     checkStandalone();
-
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', () => setIsStandalone(true));
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
   }, []);
 
   const handleLogin = (userData, userToken) => {
@@ -123,10 +106,10 @@ function App() {
     initializeFirebase(userData);
   };
 
-  if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 font-bold">TalenHuman {APP_VERSION}</div>;
+  if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-blue-600 font-bold text-white">TalenHuman {APP_VERSION}</div>;
 
   if (!token) {
-    return <Login onLogin={handleLogin} onForgotPassword={() => setAuthView('forgot')} onSelfServiceReset={() => setAuthView('self-service')} version={APP_VERSION} />;
+    return <Login onLogin={handleLogin} version={APP_VERSION} />;
   }
 
   const renderPage = () => {
@@ -139,35 +122,41 @@ function App() {
       }
     }
 
-    const isSuperAdmin = user.roles?.includes('SuperAdmin');
-    const hasPerm = (module, sub = null, action = 'R') => {
-      if (isSuperAdmin) return true;
-      const granularKey = sub ? `${module}:${sub}` : module;
-      const permItem = user.permissions?.find(p => p.startsWith(`${granularKey}:`));
-      if (!permItem) return false;
-      const allowedActions = permItem.split(':').pop();
-      return allowedActions.includes(action.substring(0, 1).toUpperCase());
-    };
-
     switch(currentPage) {
-      case 'Marcas': return hasPerm('CORE', 'BRANDS') ? <Brands user={user} /> : <Dashboard />;
-      case 'Tiendas': return hasPerm('CORE', 'STORES') ? <Stores user={user} /> : <Dashboard />;
-      case 'Ciudades': return hasPerm('CORE', 'CITIES') ? <Cities user={user} /> : <Dashboard />;
-      case 'Distritos': return hasPerm('CORE', 'DISTRICTS') ? <Districts user={user} /> : <Dashboard />;
-      case 'Empleados': return hasPerm('CORE', 'EMPLOYEES') ? <Employees user={user} /> : <Dashboard />;
+      case 'Marcas': return <Brands user={user} />;
+      case 'Tiendas': return <Stores user={user} />;
+      case 'Empleados': return <Employees user={user} />;
       case 'Turnos': return <ShiftScheduler user={user} />;
-      case 'Marcaciones': return <Marcaciones user={user} />;
       default: return <Dashboard user={user} />;
     }
   };
 
+  // NEW PRO DOMICARE FLOW
   if (isEmployee || isMobileDevice) {
-    if (!user.acceptedPrivacyPolicy) {
-      return <PrivacyConsentModal onAccepted={(u) => setUser(u)} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
-    }
+    // 1. Force Install first if NOT standalone
     if (isMobileDevice && !isStandalone) {
       return <InstallPWA onLogout={handleLogout} version={APP_VERSION} />;
     }
+
+    // 2. Once standalone, check Privacy
+    if (!user.acceptedPrivacyPolicy) {
+      return <PrivacyConsentModal onAccepted={(u) => setUser(u)} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
+    }
+
+    // 3. Once privacy is done, suggest Biometrics inside PWA
+    if (isStandalone && !user.biometricsEnrolled && !biometricsDismissed) {
+      return (
+        <BiometricEnrollModal 
+          onComplete={() => {
+            const newUser = { ...user, biometricsEnrolled: true };
+            localStorage.setItem('user', JSON.stringify(newUser));
+            setUser(newUser);
+          }} 
+          onCancel={() => setBiometricsDismissed(true)} 
+        />
+      );
+    }
+
     return <MobileLayout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout} version={APP_VERSION}>{renderPage()}</MobileLayout>;
   }
 
