@@ -11,15 +11,14 @@ const MobileBottomNav = ({ activePage, setPage }) => {
   ];
 
   const handleTabClick = (tabId) => {
-    // 📳 NATIVE HAPTIC FEEDBACK
     if (window.navigator && window.navigator.vibrate) {
-      window.navigator.vibrate(15); 
+      window.navigator.vibrate([15]); 
     }
     setPage(tabId);
   };
 
   return (
-    <nav className="flex justify-around items-center w-full h-full px-2 no-select relative overflow-hidden">
+    <nav style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', width: '100%', height: '100%', padding: '0 8px', position: 'relative', overflow: 'hidden' }} className="no-select">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activePage === tab.id;
@@ -27,34 +26,38 @@ const MobileBottomNav = ({ activePage, setPage }) => {
           <button
             key={tab.id}
             onClick={() => handleTabClick(tab.id)}
-            className={`flex flex-col items-center justify-center w-full h-full transition-all duration-500 relative z-10 ${
-              isActive 
-                ? 'text-white' 
-                : 'text-white/30 active:scale-90 hover:text-white/50'
-            }`}
+            style={{ 
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
+              width: '100%', height: '100%', border: 'none', background: 'transparent', outline: 'none',
+              transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)', position: 'relative', zIndex: 10,
+              color: isActive ? '#fff' : 'rgba(255,255,255,0.25)',
+              transform: isActive ? 'scale(1.1)' : 'scale(1)'
+            }}
           >
-            <div className="relative flex items-center justify-center p-2 rounded-2xl">
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', borderRadius: '16px' }}>
               {/* Active Glow Aura */}
               {isActive && (
-                <div className="absolute inset-0 bg-indigo-500/40 blur-xl rounded-full scale-150 animate-pulse" />
+                <div style={{ position: 'absolute', inset: 0, background: 'rgba(99, 102, 241, 0.3)', filter: 'blur(15px)', borderRadius: '50%', transform: 'scale(1.4)' }} />
               )}
               
               <Icon 
                 size={22} 
                 strokeWidth={isActive ? 2.5 : 1.5} 
-                className={`relative z-10 transition-transform duration-500 ${isActive ? 'scale-110' : 'scale-100'}`} 
+                className={isActive ? 'animate-pulse' : ''}
+                style={{ position: 'relative', zIndex: 20 }}
               />
             </div>
             
-            <span className={`text-[8px] mt-1 font-black uppercase tracking-[0.2em] transition-all duration-500 ${
-              isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'
-            }`}>
+            <span style={{ 
+              fontSize: '8px', marginTop: '4px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.2em',
+              opacity: isActive ? 1 : 0, transition: 'all 0.5s ease', transform: isActive ? 'translateY(0)' : 'translateY(4px)'
+            }}>
               {tab.label}
             </span>
 
             {/* Active Bottom Indicator Dot */}
             {isActive && (
-              <div className="absolute bottom-1 w-1 h-1 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,1)]" />
+              <div style={{ position: 'absolute', bottom: '6px', width: '4px', height: '4px', background: '#fff', borderRadius: '50%', boxShadow: '0 0 10px rgba(255,255,255,1)' }} />
             )}
           </button>
         );
