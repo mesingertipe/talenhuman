@@ -10,12 +10,12 @@ export default defineConfig({
       disable: false, // RESTORED FOR ANDROID SUPPORT
       registerType: 'prompt', // 🚀 PREVENTS INFINITE RELOAD LOOPS
       injectRegister: 'auto',
-      filename: 'sw-v17.js',
-      manifestFilename: 'manifest-v17.json', 
+      filename: 'sw-v18.js',
+      manifestFilename: 'manifest-v18.json', 
       workbox: {
         cleanupOutdatedCaches: true,
         // 🚀 REMOVED skipWaiting and clientsClaim to prevent mid-session crashes
-        cacheId: 'v17-pwa', 
+        cacheId: 'v18-pwa', 
         maximumFileSizeToCacheInBytes: 5242880,
       },
       includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'mask-icon.svg'],
@@ -29,12 +29,12 @@ export default defineConfig({
         background_color: '#020617',
         icons: [
           {
-            src: 'icon-192-v17.png',
+            src: 'icon-192-v18.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'icon-512-v17.png',
+            src: 'icon-512-v18.png',
             sizes: '512x512',
             type: 'image/png'
           }

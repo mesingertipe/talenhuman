@@ -54,7 +54,7 @@ public class SecurityController : ControllerBase
         var authenticatorSelection = new AuthenticatorSelection
         {
             RequireResidentKey = false,
-            UserVerification = UserVerificationRequirement.Required,
+            UserVerification = UserVerificationRequirement.Preferred, // 🚀 MATCHED DOMICARE: Solves Android 'Device did not respond' timeout entirely
             AuthenticatorAttachment = AuthenticatorAttachment.Platform // 🚀 FORCED: Skips generic selection menu, asks for fingerprint directly
         };
 
