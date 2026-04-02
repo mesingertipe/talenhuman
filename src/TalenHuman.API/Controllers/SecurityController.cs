@@ -64,7 +64,7 @@ public class SecurityController : ControllerBase
         dbUser.PendingFidoOptions = options.ToJson();
         await _context.SaveChangesAsync();
 
-        return Ok(options);
+        return Content(options.ToJson(), "application/json");
     }
 
     [HttpPost("register/complete")]
