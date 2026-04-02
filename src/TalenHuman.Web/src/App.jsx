@@ -164,8 +164,8 @@ function App() {
 
   // 🛡️ UNIVERSAL SECURITY SEQUENCE (MANDATORY FOR ALL)
   
-  // 1. Enforce Privacy for everyone, everywhere
-  if (!user.acceptedPrivacyPolicy) {
+  // 1. Enforce Privacy ONLY for Employees (Mandatory for non-administrative staff)
+  if (isEmployee && !user.acceptedPrivacyPolicy) {
     return <PrivacyConsentModal onAccepted={(u) => setUser(u)} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
   }
 
