@@ -12,6 +12,8 @@ export default defineConfig({
       manifestFilename: 'manifest.json', // Ensure it matches what the browser looks for
       workbox: {
         cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
         maximumFileSizeToCacheInBytes: 7000000
       },
       includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'mask-icon.svg'],
