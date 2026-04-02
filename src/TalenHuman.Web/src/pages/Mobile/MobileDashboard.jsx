@@ -121,7 +121,13 @@ const MobileDashboard = ({ user, theme }) => {
                  <div>
                     <p style={{ fontSize: '10px', fontWeight: '800', color: mutedText, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '2px' }}>Entrada Programada</p>
                     <h3 style={{ fontSize: '32px', fontWeight: '800', color: primaryText, letterSpacing: '-1px' }}>
-                       {new Date(todayShift.startTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                       {(() => {
+                          try {
+                            if (!todayShift?.startTime) return '--:--';
+                            const d = new Date(todayShift.startTime);
+                            return isNaN(d.getTime()) ? '--:--' : d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                          } catch (e) { return '--:--'; }
+                       })()}
                     </h3>
                  </div>
               </div>
@@ -132,7 +138,7 @@ const MobileDashboard = ({ user, theme }) => {
                   display: 'flex', alignItems: 'center', gap: '12px' 
               }}>
                  <MapPin size={16} style={{ color: '#4f46e5' }} />
-                 <span style={{ fontSize: '13px', fontWeight: '700', color: primaryText }}>{todayShift.storeName || 'Sede Central'}</span>
+                 <span style={{ fontSize: '13px', fontWeight: '700', color: primaryText }}>{todayShift?.storeName || 'Sede Central'}</span>
               </div>
            </div>
          ) : (

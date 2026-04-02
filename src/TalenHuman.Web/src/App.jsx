@@ -132,7 +132,18 @@ function App() {
 
     // 🔒 Mandatory Privacy (Employee ONLY - STRICT)
     if (isEmployee && !user.acceptedPrivacyPolicy) {
-       return <PrivacyConsentModal onAccepted={(u) => setUser(prev => ({ ...prev, ...u }))} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
+       return <PrivacyConsentModal 
+          onAccepted={(u) => setUser(prev => {
+             const merged = { ...prev, ...u };
+             // 🛡️ Safety: Never lose critical identity data if API sends partial object
+             if (!merged.roles && prev.roles) merged.roles = prev.roles;
+             if (!merged.id && prev.id) merged.id = prev.id;
+             localStorage.setItem('user', JSON.stringify(merged));
+             return merged;
+          })} 
+          onLogout={handleLogout} 
+          policyText={user.privacyPolicyText} 
+       />;
     }
 
     const renderPage = () => {
