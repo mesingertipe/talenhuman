@@ -9,19 +9,25 @@ const EmployeeDashboard = ({ user }) => {
 
   React.useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
-        const [shiftsRes, newsRes] = await Promise.all([
-          api.get('/scheduling/my-shifts'),
-          api.get('/news/my-news')
-        ]);
-        
-        // Find today's shift
-        const today = new Date().toISOString().split('T')[0];
-        const currentShift = shiftsRes.data.find(s => s.startTime.startsWith(today));
-        setTodayShift(currentShift);
-        setNews(newsRes.data.filter(n => n.isUrgent)); // Only high importance for dashboard
-      } catch (err) {
-        console.error("Dashboard fetch error", err);
+        // Individual Safe Fetches
+        try {
+          const shiftsRes = await api.get('/scheduling/my-shifts');
+          const today = new Date().toISOString().split('T')[0];
+          const currentShift = shiftsRes.data.find(s => s.startTime.startsWith(today));
+          setTodayShift(currentShift);
+        } catch (e) {
+          console.error("Dashboard Shifts Error", e);
+        }
+
+        try {
+          const newsRes = await api.get('/news/my-news');
+          setNews(newsRes.data.filter(n => n.isUrgent));
+        } catch (e) {
+          console.warn("News Service Offline (404 Expected)", e);
+          setNews([]);
+        }
       } finally {
         setLoading(false);
       }

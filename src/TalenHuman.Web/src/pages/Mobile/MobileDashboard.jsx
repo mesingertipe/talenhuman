@@ -9,18 +9,25 @@ const MobileDashboard = ({ user }) => {
 
   React.useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
-        const [shiftsRes, newsRes] = await Promise.all([
-          api.get('/scheduling/my-shifts'),
-          api.get('/news/my-news')
-        ]);
-        
-        const today = new Date().toISOString().split('T')[0];
-        const currentShift = shiftsRes.data.find(s => s.startTime.startsWith(today));
-        setTodayShift(currentShift);
-        setNews(newsRes.data.filter(n => n.isUrgent)); 
-      } catch (err) {
-        console.error("Mobile Dashboard fetch error", err);
+        // Safe Individual Fetches
+        try {
+          const shiftsRes = await api.get('/scheduling/my-shifts');
+          const today = new Date().toISOString().split('T')[0];
+          const currentShift = shiftsRes.data.find(s => s.startTime.startsWith(today));
+          setTodayShift(currentShift);
+        } catch (e) {
+          console.error("Dashboard Shifts Error", e);
+        }
+
+        try {
+          const newsRes = await api.get('/news/my-news');
+          setNews(newsRes.data.filter(n => n.isUrgent));
+        } catch (e) {
+          console.warn("News service offline (404)", e);
+          setNews([]);
+        }
       } finally {
         setLoading(false);
       }
