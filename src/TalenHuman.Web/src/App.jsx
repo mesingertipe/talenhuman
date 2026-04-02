@@ -155,8 +155,8 @@ function App() {
     return <Component user={user} isMobile={isEmployee} />;
   };
 
-  // 🛡️ THE GATEKEEPER SEQUENCE V24
-  if (isMobileDevice && !isStandalone) {
+  // 🛡️ THE GATEKEEPER SEQUENCE V25 - ONLY FOR EMPLOYEES
+  if (isEmployee && isMobileDevice && !isStandalone) {
      return <InstallPWA onLogout={handleLogout} version={APP_VERSION} />;
   }
 
