@@ -116,5 +116,3 @@ const InstallPWA = ({ onLogout, version }) => {
 };
 
 export default InstallPWA;
-
-export default InstallPWA;
