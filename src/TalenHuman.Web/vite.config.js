@@ -10,7 +10,8 @@ export default defineConfig({
       disable: false, // RESTORED FOR ANDROID SUPPORT
       registerType: 'autoUpdate', 
       injectRegister: 'auto',
-      manifestFilename: 'manifest.json', 
+      filename: 'sw-v16.js',
+      manifestFilename: 'manifest-v16.json', 
       workbox: {
         cleanupOutdatedCaches: true,
         skipWaiting: true,
