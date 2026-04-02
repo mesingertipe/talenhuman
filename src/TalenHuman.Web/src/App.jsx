@@ -124,9 +124,23 @@ function App() {
 
     switch(currentPage) {
       case 'Marcas': return <Brands user={user} />;
+      case 'Ciudades': return <Cities user={user} />;
+      case 'Cargos': return <Profiles user={user} />;
+      case 'Distritos': return <Districts user={user} />;
       case 'Tiendas': return <Stores user={user} />;
+      case 'Jornadas': return <Jornadas user={user} />;
       case 'Empleados': return <Employees user={user} />;
       case 'Turnos': return <ShiftScheduler user={user} />;
+      case 'Marcaciones': return <Marcaciones user={user} />;
+      case 'Novedades': return <NewsInbox user={user} />;
+      case 'Configuración novedades': return <NewsTemplateDesigner user={user} />;
+      case 'Diseñador de Plantillas': return <NewsDesigner user={user} />;
+      case 'Monitoreo Asistencia': return <AttendanceMonitoring user={user} />;
+      case 'Usuarios': return <Users user={user} />;
+      case 'Permisos': return <ModulePermissions user={user} />;
+      case 'Auditoría': return <AuditLogs user={user} />;
+      case 'Empresas': return <Companies user={user} />;
+      case 'Configuración Sistema': return <SystemSettings user={user} />;
       default: return <Dashboard user={user} />;
     }
   };
