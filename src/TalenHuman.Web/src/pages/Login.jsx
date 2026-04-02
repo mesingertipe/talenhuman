@@ -158,11 +158,11 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
                       />
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Recordarme</span>
+                      <span className="text-[10px] font-bold text-slate-400 tracking-widest">Recordarme</span>
                     </label>
                     <button 
                       type="button" 
-                      className="forgot-password text-[10px] uppercase tracking-widest"
+                      className="forgot-password text-[10px] font-bold text-indigo-600 tracking-widest"
                       onClick={onForgotPassword}
                     >
                       ¿Olvidaste tu contraseña?
@@ -172,7 +172,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                   <div className="text-center pt-2">
                     <button 
                       type="button" 
-                      className="link-sutil text-[10px] uppercase tracking-[0.15em]"
+                      className="link-sutil text-[10px] font-bold text-indigo-600 tracking-[0.15em]"
                       onClick={onSelfServiceReset}
                     >
                       No tengo correo corporativo
