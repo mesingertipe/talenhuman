@@ -61,7 +61,9 @@ function App() {
   });
   
   const [biometricsDismissed, setBiometricsDismissed] = useState(() => {
-     return localStorage.getItem('biometricsDismissed') === 'true';
+     // 🚀 SESSION-WIDE DISMISSAL: Higher authority than pure state
+     return localStorage.getItem('biometricsDismissed') === 'true' || 
+            sessionStorage.getItem('biometricsDismissed_session') === 'true';
   });
 
   const isEmployee = user?.roleName?.toLowerCase() === 'employee' || 
@@ -110,18 +112,19 @@ function App() {
   if (booting) {
     return (
       <div style={{
-          minHeight: '100dvh', background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white'
+          minHeight: '100dvh', background: '#ffffff', // 🚀 PREVENT FLICKER WITH NEUTRAL WHITE
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#4f46e5'
       }}>
          <div className="clean-pulse-loader" style={{ 
-            width: '70px', height: '70px', background: 'white', borderRadius: '20px', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' 
+            width: '100px', height: '100px', background: 'white', borderRadius: '30px', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.05)'
          }}>
-             <span style={{ fontSize: '22px', fontWeight: '900', italic: 'true' }}>TH</span>
+             <img src="/icon.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
          </div>
          <style>{`
             .clean-pulse-loader { animation: clean-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-            @keyframes clean-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(0.95); } }
+            @keyframes clean-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .7; transform: scale(0.95); } }
          `}</style>
       </div>
     );

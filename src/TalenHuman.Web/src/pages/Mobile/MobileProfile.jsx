@@ -55,7 +55,8 @@ const MobileProfile = ({ user }) => {
                   if (hasBiometrics) {
                      const newUser = { ...user, biometricsEnrolled: false };
                      localStorage.setItem('user', JSON.stringify(newUser));
-                     localStorage.setItem('biometricsDismissed', 'true'); // 🚀 CRITICAL: Prevents immediate popup
+                     localStorage.setItem('biometricsDismissed', 'true'); 
+                     sessionStorage.setItem('biometricsDismissed_session', 'true'); // 🚀 SESSION FORCING
                      window.location.reload(); 
                   } else {
                      setShowBiometricSetup(true);
