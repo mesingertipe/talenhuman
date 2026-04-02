@@ -52,7 +52,13 @@ function App() {
   
   // 🚀 ANTI-FLICKER BOOTLOADER STATE
   const [booting, setBooting] = useState(true); 
-  const [isStandalone, setIsStandalone] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(() => {
+     // 🚀 INSTANT DETECTION: Zero-flicker URL check combined with standard API
+     const isIOS = /iPad|iPhone|iPod/.test(window.navigator.userAgent) && !window.MSStream;
+     const isStand = window.matchMedia('(display-mode: standalone)').matches || (isIOS && window.navigator.standalone);
+     const isUrlPWA = window.location.search.includes('source=pwa');
+     return !!(isStand || isUrlPWA);
+  });
   
   const [biometricsDismissed, setBiometricsDismissed] = useState(() => {
      return localStorage.getItem('biometricsDismissed') === 'true';
@@ -82,22 +88,8 @@ function App() {
        initializeFirebase(user);
     }
     
-    // 3. SYNCHRONOUS PWA RESOLUTION (Fixes Flickering on iOS/Android)
-    const resolveDisplayMode = () => {
-      const isIOS = /iPad|iPhone|iPod/.test(window.navigator.userAgent) && !window.MSStream;
-      const standalone = window.matchMedia('(display-mode: standalone)').matches || (isIOS && window.navigator.standalone);
-      setIsStandalone(!!standalone);
-      
-      // Delay lifting the boot screen until we are mathematically certain of the context
-      setTimeout(() => setBooting(false), 500);
-    };
-
-    if (document.readyState === 'complete') {
-        resolveDisplayMode();
-    } else {
-        window.addEventListener('load', resolveDisplayMode);
-        return () => window.removeEventListener('load', resolveDisplayMode);
-    }
+    // 3. SYNCHRONOUS BOOT LIFT (No more delayed display-mode evaluation needed)
+    setTimeout(() => setBooting(false), 500);
   }, []);
 
   const handleLogin = (userData, userToken) => {

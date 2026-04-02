@@ -8,15 +8,14 @@ export default defineConfig({
     react(),
     VitePWA({
       disable: false, // RESTORED FOR ANDROID SUPPORT
-      registerType: 'autoUpdate', 
+      registerType: 'prompt', // 🚀 PREVENTS INFINITE RELOAD LOOPS
       injectRegister: 'auto',
       filename: 'sw-v17.js',
       manifestFilename: 'manifest-v17.json', 
       workbox: {
         cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true,
-        cacheId: 'v17-pwa', // BUST THE CACHE
+        // 🚀 REMOVED skipWaiting and clientsClaim to prevent mid-session crashes
+        cacheId: 'v17-pwa', 
         maximumFileSizeToCacheInBytes: 5242880,
       },
       includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'mask-icon.svg'],
@@ -25,7 +24,7 @@ export default defineConfig({
         short_name: 'TalenHuman',
         description: 'Gestión de Capital Humano',
         theme_color: '#4f46e5',
-        start_url: '/',
+        start_url: '/?source=pwa', // 🚀 INSTANT BULLETPROOF PWA DETECTION
         display: 'standalone',
         background_color: '#020617',
         icons: [
