@@ -38,6 +38,7 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
+        maximumFileSizeToCacheInBytes: 5242880, // 🚀 AUMENTADO A 5MB para permitir el bundle de 2.51MB
       }
     })
   ],
