@@ -1,185 +1,138 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Shield, 
-  Clock, 
-  MapPin, 
-  Calendar, 
-  Fingerprint, 
-  Key, 
-  Bell, 
-  ArrowRight,
-  CheckCircle2,
-  AlertCircle
-} from 'lucide-react';
-
-import SecurityService from '../../services/securityService';
-import { requestForToken } from '../../firebase';
+import React from 'react';
+import { Calendar, MapPin, Clock, Bell, ChevronRight, CheckCircle2, AlertCircle, Info } from 'lucide-react';
+import api from '../../services/api';
 
 const EmployeeDashboard = ({ user }) => {
-  const [biometricsEnabled, setBiometricsEnabled] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = React.useState(true);
+  const [todayShift, setTodayShift] = React.useState(null);
+  const [news, setNews] = React.useState([]);
 
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    
-    // Al cargar el dashboard, intentar sincronizar token de Firebase para notificaciones
-    const syncPushToken = async () => {
+  React.useEffect(() => {
+    const fetchData = async () => {
       try {
-        const token = await requestForToken();
-        if (token) {
-          await SecurityService.updateFirebaseToken(token);
-        }
+        const [shiftsRes, newsRes] = await Promise.all([
+          api.get('/scheduling/my-shifts'),
+          api.get('/news/my-news')
+        ]);
+        
+        // Find today's shift
+        const today = new Date().toISOString().split('T')[0];
+        const currentShift = shiftsRes.data.find(s => s.startTime.startsWith(today));
+        setTodayShift(currentShift);
+        setNews(newsRes.data.filter(n => n.isUrgent)); // Only high importance for dashboard
       } catch (err) {
-        console.warn("Fallo al sincronizar push token:", err);
+        console.error("Dashboard fetch error", err);
+      } finally {
+        setLoading(false);
       }
     };
-    
-    syncPushToken();
-    
-    return () => clearInterval(timer);
+    fetchData();
   }, []);
 
-  const handleEnrollBiometrics = async () => {
-    setIsLoading(true);
-    try {
-      await SecurityService.registerBiometrics();
-      setBiometricsEnabled(true);
-      alert("¡Biometría registrada con éxito! Ahora puedes usarla para acciones seguras.");
-    } catch (err) {
-      alert("No se pudo completar el registro biométrico. Asegúrate de estar en un entorno seguro (HTTPS).");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const formatDate = (date) => {
-    return new Intl.DateTimeFormat('es-CO', { 
-      weekday: 'long', 
-      day: 'numeric', 
-      month: 'long' 
-    }).format(date);
-  };
+  if (loading) return <div className="flex justify-center py-20 p-8"><div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" /></div>;
 
   return (
-    <div className="space-y-6 pb-4 animate-in fade-in duration-500">
-      {/* Welcome Section */}
-      <section className="relative overflow-hidden rounded-3xl bg-indigo-600 p-6 text-white shadow-2xl shadow-indigo-500/20">
-        <div className="relative z-10">
-          <p className="text-indigo-100 text-sm font-medium">{formatDate(currentTime)}</p>
-          <h2 className="text-2xl font-bold mt-1">¡Hola, {user?.fullName.split(' ')[0]}! 👋</h2>
-          <p className="text-indigo-100 text-xs mt-1">Tienda: {user?.storeName || 'Punto Principal'}</p>
-        </div>
-        {/* Decorative elements */}
-        <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-        <div className="absolute bottom-[-20%] left-[-10%] w-24 h-24 bg-indigo-400/20 rounded-full blur-xl"></div>
-      </section>
-
-      {/* Main Action / Status Card */}
-      <section className="bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-sm border border-slate-100 dark:border-slate-800">
+    <div className="space-y-8 animate-in fade-in duration-700">
+      
+      {/* 🗓️ HERO SECTION: TURNO DE HOY (DomiCare Style) */}
+      <section>
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Turno de hoy</span>
-          </div>
-          <span className="text-[10px] bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-2 py-1 rounded-full font-bold">
-            PROGRAMADO
-          </span>
+           <h3 className="text-lg font-black tracking-tight text-slate-800 dark:text-white">Turno de Hoy</h3>
+           <span className="text-[10px] uppercase font-black tracking-widest text-indigo-500 bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/10">
+              {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+           </span>
         </div>
-        
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
-              <Clock size={16} className="text-indigo-500" />
-              <span className="text-lg font-bold">08:00 AM - 05:00 PM</span>
-            </div>
-            <div className="flex items-center gap-2 text-slate-500 text-xs">
-              <MapPin size={14} />
-              <span>Sede Central - Bogotá</span>
-            </div>
+
+        {todayShift ? (
+          <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 to-blue-700 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-indigo-500/30 group active:scale-[0.98] transition-transform">
+             {/* Decorative Background Elements */}
+             <div className="absolute top-[-20%] right-[-10%] w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+             <div className="absolute bottom-[-10%] left-[-10%] w-32 h-32 bg-blue-400/20 rounded-full blur-xl" />
+             
+             <div className="relative z-10 flex flex-col gap-6">
+                <div className="flex items-center justify-between">
+                   <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-lg border border-white/20 flex items-center gap-2">
+                      <Clock size={14} className="text-white" />
+                      <span className="text-[10px] font-black uppercase tracking-widest tracking-tighter">En Curso</span>
+                   </div>
+                   <CheckCircle2 size={24} className="text-white/40" />
+                </div>
+
+                <div className="space-y-1">
+                   <h2 className="text-3xl font-black tracking-tighter leading-none mb-1">
+                      {new Date(todayShift.startTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} - {new Date(todayShift.endTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                   </h2>
+                   <p className="text-blue-100 font-bold opacity-80 uppercase tracking-widest text-[11px]">Horario de Operación</p>
+                </div>
+
+                <div className="flex items-center gap-4 bg-black/10 backdrop-blur-sm p-4 rounded-3xl border border-white/10">
+                   <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/20">
+                      <MapPin size={20} className="text-white" />
+                   </div>
+                   <div className="flex-1">
+                      <p className="text-xs font-black tracking-tight leading-none mb-1">{todayShift.storeName || 'Tienda Asignada'}</p>
+                      <p className="text-[10px] font-bold text-blue-100/60 uppercase tracking-widest leading-none">Punto de Marcación</p>
+                   </div>
+                </div>
+             </div>
           </div>
-          <button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl px-4 py-3 flex items-center gap-2 font-bold transition-all shadow-lg shadow-indigo-500/25 active:scale-95">
-            Marcar Entrada
-          </button>
-        </div>
+        ) : (
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 p-10 rounded-[2.5rem] text-center space-y-4 shadow-xl">
+             <div className="w-16 h-16 bg-slate-50 dark:bg-white/5 rounded-3xl mx-auto flex items-center justify-center text-slate-300">
+                <Calendar size={32} />
+             </div>
+             <div className="space-y-1">
+                <p className="text-sm font-black text-slate-800 dark:text-white">Sin turno programado</p>
+                <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">Hoy es tu día libre</p>
+             </div>
+          </div>
+        )}
       </section>
 
-      {/* PWA / Security Section */}
-      <section className="grid grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm transition-all active:scale-95 hover:border-indigo-200">
-          <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600 mb-3">
-            <Shield size={20} />
-          </div>
-          <h3 className="text-sm font-bold leading-tight">Seguridad Biométrica</h3>
-          <p className="text-[10px] text-slate-500 mt-1">Activa FaceID o Huella</p>
-          <div 
-            onClick={!isLoading ? handleEnrollBiometrics : null}
-            className={`mt-4 w-10 h-5 rounded-full relative transition-colors duration-300 cursor-pointer ${biometricsEnabled ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'} ${isLoading ? 'opacity-50' : ''}`}
-          >
-            <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all duration-300 ${biometricsEnabled ? 'left-6' : 'left-1'}`}>
-              {isLoading && <div className="absolute inset-0 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>}
-            </div>
-          </div>
-        </div>
+      {/* 📢 URGENT NEWS / NOVEDADES */}
+      {news.length > 0 && (
+        <section className="animate-in slide-in-from-right-8 duration-700 delay-200">
+           <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-black tracking-tight text-slate-800 dark:text-white">Avisos Importantes</h3>
+              <span className="bg-red-500 w-2 h-2 rounded-full animate-ping" />
+           </div>
+           
+           <div className="space-y-4">
+              {news.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-4 p-5 bg-white dark:bg-slate-900 rounded-[2rem] border-l-4 border-l-red-500 shadow-xl shadow-slate-200/40 relative group overflow-hidden active:scale-95 transition-all">
+                   <div className="bg-red-50 dark:bg-red-500/10 p-3 rounded-2xl flex items-center justify-center text-red-500">
+                      <AlertCircle size={20} />
+                   </div>
+                   <div className="flex-1">
+                      <p className="text-xs font-black text-slate-800 dark:text-white leading-tight mb-0.5">{item.title}</p>
+                      <p className="text-[10px] text-slate-500 font-medium uppercase tracking-widest">Atención Requerida</p>
+                   </div>
+                   <ChevronRight className="text-slate-300 group-hover:translate-x-1 transition-transform" size={18} />
+                </div>
+              ))}
+           </div>
+        </section>
+      )}
 
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm transition-all active:scale-95 hover:border-indigo-200">
-          <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 mb-3">
-            <Key size={20} />
-          </div>
-          <h3 className="text-sm font-bold leading-tight">Cambiar Contraseña</h3>
-          <p className="text-[10px] text-slate-500 mt-1">Último cambio: Hace 20 días</p>
-          <ArrowRight size={14} className="mt-4 text-slate-400" />
-        </div>
+      {/* 📊 ACCESO RÁPIDO / OPERACIONES */}
+      <section className="animate-in slide-in-from-bottom-8 duration-700 delay-300">
+         <h3 className="text-lg font-black tracking-tight text-slate-800 dark:text-white mb-4">Operaciones</h3>
+         <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-white/5 flex flex-col items-center gap-3 shadow-xl active:scale-95 transition-all group">
+               <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-600 transition-colors group-hover:bg-indigo-600 group-hover:text-white">
+                  <CheckCircle2 size={24} />
+               </div>
+               <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Marcación</span>
+            </div>
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-white/5 flex flex-col items-center gap-3 shadow-xl active:scale-95 transition-all group">
+               <div className="w-12 h-12 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-600 transition-colors group-hover:bg-blue-600 group-hover:text-white">
+                  <Info size={24} />
+               </div>
+               <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Novedades</span>
+            </div>
+         </div>
       </section>
 
-      {/* Notifications / Alerts Panel */}
-      <section className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold flex items-center gap-2">
-            <Bell size={16} className="text-indigo-500" />
-            Notificaciones Recientes
-          </h3>
-          <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-tighter">Ver todas</span>
-        </div>
-        
-        <div className="space-y-4">
-          <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-green-600 shrink-0">
-              <CheckCircle2 size={16} />
-            </div>
-            <div>
-              <p className="text-xs font-bold leading-none">Turno aprobado</p>
-              <p className="text-[10px] text-slate-500 mt-1">Tu solicitud de cambio de turno para el viernes fue aceptada.</p>
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-600 shrink-0">
-              <AlertCircle size={16} />
-            </div>
-            <div>
-              <p className="text-xs font-bold leading-none">Nueva Novedad Laboral</p>
-              <p className="text-[10px] text-slate-500 mt-1">Se ha publicado una nueva circular informativa importante.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Install Prompt Footer (Only show if not in PWA mode) */}
-      <div className="bg-slate-900 rounded-3xl p-4 flex items-center justify-between transition-all duration-500 hover:scale-[1.02]">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white">
-            <ArrowRight size={20} className="rotate-[-45deg]" />
-          </div>
-          <div>
-            <p className="text-white text-xs font-bold">Instalar TalenHuman</p>
-            <p className="text-slate-400 text-[10px]">Acceso rápido desde tu pantalla</p>
-          </div>
-        </div>
-        <button className="bg-white text-slate-900 px-3 py-2 rounded-xl text-xs font-bold">
-          Instalar
-        </button>
-      </div>
     </div>
   );
 };

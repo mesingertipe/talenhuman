@@ -32,8 +32,8 @@ import InstallPWA from './components/PWA/InstallPWA'
 import PrivacyConsentModal from './components/Legal/PrivacyConsentModal'
 import BiometricEnrollModal from './components/Biometrics/BiometricEnrollModal'
 
-// V12.7.0-STABLE-DOMICARE - PRO NEW FLOW
-const APP_VERSION = "V12.7.0-DOMICARE";
+// V12.8.5-FINAL-STABLE - TOTAL TRANSFORMATION
+const APP_VERSION = "V12.8.5-STABLE";
 
 function App() {
   const [user, setUser] = React.useState(null);
@@ -109,7 +109,7 @@ function App() {
   if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-blue-600 font-bold text-white">TalenHuman {APP_VERSION}</div>;
 
   if (!token) {
-    return <Login onLogin={handleLogin} version={APP_VERSION} />;
+    return <Login onLogin={handleLogin} version={APP_VERSION} onForgotPassword={() => {}} onSelfServiceReset={() => {}} />;
   }
 
   const renderPage = () => {
@@ -131,19 +131,19 @@ function App() {
     }
   };
 
-  // NEW PRO DOMICARE FLOW
+  // ✅ FINAL STABLE SEQUENTIAL FLOW
   if (isEmployee || isMobileDevice) {
-    // 1. Force Install first if NOT standalone
+    // 1. Force Install first
     if (isMobileDevice && !isStandalone) {
       return <InstallPWA onLogout={handleLogout} version={APP_VERSION} />;
     }
 
-    // 2. Once standalone, check Privacy
+    // 2. Once in PWA, enforce Privacy
     if (!user.acceptedPrivacyPolicy) {
       return <PrivacyConsentModal onAccepted={(u) => setUser(u)} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
     }
 
-    // 3. Once privacy is done, suggest Biometrics inside PWA
+    // 3. Once Privacy is done, suggest Biometrics inside PWA
     if (isStandalone && !user.biometricsEnrolled && !biometricsDismissed) {
       return (
         <BiometricEnrollModal 

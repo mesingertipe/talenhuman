@@ -3,7 +3,7 @@ import { Lock, Mail, Eye, EyeOff, Users, ArrowRight, ShieldAlert } from 'lucide-
 import api from '../services/api';
 import './Login.css';
 
-const Login = ({ onLogin, onForgotPassword, onSelfServiceReset }) => {
+const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -11,14 +11,11 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Load remembered email on mount
   React.useEffect(() => {
     const savedEmail = localStorage.getItem('rememberedEmail');
     if (savedEmail) {
       setEmail(savedEmail);
       setRememberMe(true);
-    } else {
-        setEmail('admin@talenhuman.com');
     }
   }, []);
 
@@ -27,16 +24,10 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset }) => {
     setLoading(true);
     setError('');
     try {
-      // Handle "Remember Me" persistence
       if (rememberMe) {
         localStorage.setItem('rememberedEmail', email);
       } else {
         localStorage.removeItem('rememberedEmail');
-      }
-
-      // Clear potentially stale session data before login attempt
-      if (email === 'admin@talenhuman.com') {
-        localStorage.setItem('tenantId', '11111111-1111-1111-1111-111111111111');
       }
 
       const res = await api.post('/auth/login', { email, password });
@@ -56,10 +47,10 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset }) => {
     <div className="login-container">
       <div className="login-card">
         
-        {/* Left Side: Sidebar */}
+        {/* Left Side: Professional Sidebar */}
         <div className="login-sidebar">
-          <div className="login-sidebar-content">
-            <div className="login-brand">
+          <div className="login-sidebar-content text-center xs:text-left">
+            <div className="login-brand mb-12">
               <div className="login-brand-icon">
                 <Users size={28} />
               </div>
@@ -68,22 +59,8 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset }) => {
             
             <h1 className="login-hero-title">
               Gestiona tu talento <br />
-              <span style={{ color: '#c7d2fe', textDecoration: 'underline', textDecorationColor: '#818cf8' }}>sin fronteras.</span>
+              <span className="text-indigo-200 underline decoration-indigo-400">sin fronteras.</span>
             </h1>
-            <p className="login-hero-subtitle">
-              La plataforma multitenant más avanzada para la gestión de personal y capital humano en tiempo real.
-            </p>
-          </div>
-
-          <div className="login-stats">
-             <div className="login-stat-item">
-                <p className="login-stat-value">+1,200</p>
-                <p className="login-stat-label">Usuarios activos</p>
-             </div>
-             <div className="login-stat-item">
-                <p className="login-stat-value">99.9%</p>
-                <p className="login-stat-label">Uptime Garantizado</p>
-             </div>
           </div>
 
           <div className="login-decoration-1"></div>
@@ -98,7 +75,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset }) => {
                <span>TalenHuman</span>
             </div>
 
-            <div className="login-header">
+            <div className="login-header text-center">
               <h2 className="login-title">Bienvenido</h2>
               <p className="login-subtitle">Ingresa tus credenciales para acceder.</p>
             </div>
@@ -121,7 +98,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset }) => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="login-input"
-                    placeholder="Ej: 1016... o admin@empresa.com"
+                    placeholder="admin@empresa.com"
                   />
                 </div>
               </div>
@@ -149,32 +126,32 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset }) => {
               </div>
 
               <div className="form-options">
-              <label className="remember-me">
-                <input 
-                  type="checkbox" 
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                />
-                <span>Recordarme</span>
-              </label>
-              <button 
-                type="button" 
-                className="forgot-password"
-                onClick={onForgotPassword}
-              >
-                ¿Olvidaste tu contraseña?
-              </button>
-            </div>
+                <label className="remember-me">
+                  <input 
+                    type="checkbox" 
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                  />
+                  <span>Recordarme</span>
+                </label>
+                <button 
+                  type="button" 
+                  className="forgot-password"
+                  onClick={onForgotPassword}
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
 
-            <div className="text-center mt-4">
-              <button 
-                type="button" 
-                className="text-indigo-600 font-bold text-sm hover:underline"
-                onClick={onSelfServiceReset}
-              >
-                No tengo correo corporativo
-              </button>
-            </div>
+              <div className="text-center mt-4">
+                <button 
+                  type="button" 
+                  className="text-indigo-600 font-bold text-sm hover:underline"
+                  onClick={onSelfServiceReset}
+                >
+                  No tengo correo corporativo
+                </button>
+              </div>
 
               <button 
                 type="submit" 
@@ -194,11 +171,11 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset }) => {
 
             <div className="login-footer">
                <p>
-                 ¿Necesitas ayuda? <a href="#">Contactar a Soporte</a>
+                 ¿Necesitas ayuda? <a href="#">Soporte</a>
                </p>
-               <p className="mt-2 text-[10px] font-mono text-slate-400 opacity-50">
-                 {window.localStorage.getItem('app_version') || 'v12-stable'}
-               </p>
+               <div className="mt-4 text-[10px] opacity-20 font-mono tracking-widest text-center">
+                 {version || 'V12.8.5-STABLE'}
+               </div>
             </div>
           </div>
         </div>
