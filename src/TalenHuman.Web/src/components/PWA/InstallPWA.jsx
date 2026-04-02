@@ -79,18 +79,12 @@ const InstallPWA = ({ onLogout, version }) => {
                       </button>
                   ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                          <InstructionStep icon={<Chrome size={18}/>} text="Toca los tres puntos de Chrome" />
-                          <InstructionStep icon={<PlusSquare size={18}/>} text="Busca 'Instalar aplicación'" />
-                          <button 
-                            onClick={() => window.location.reload()}
-                            style={{ 
-                                marginTop: '10px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', 
-                                color: 'white', padding: '12px', borderRadius: '100px', fontSize: '11px', fontWeight: '800', 
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-                            }}
-                          >
-                             <RefreshCw size={14} /> reintentar botón nativo
-                          </button>
+                          <div style={{ padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '25px', display: 'flex', gap: '15px', alignItems: 'center' }}>
+                             <div style={{ width: '40px', height: '40px', borderRadius: '15px', background: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                 <PlusSquare size={18} />
+                             </div>
+                             <span style={{ fontSize: '13px', fontWeight: '600', flex: 1 }}>Si el botón no aparece, usa las opciones del navegador para <b>Instalar Aplicación</b>.</span>
+                          </div>
                       </div>
                   )}
               </div>

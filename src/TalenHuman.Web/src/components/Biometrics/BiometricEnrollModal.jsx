@@ -91,7 +91,7 @@ const BiometricEnrollModal = ({ onComplete, onCancel }) => {
       overflowY: 'auto', minHeight: '100dvh'
     }}>
       
-      {/* 🚀 CLEAN BRAND HEADER (NO ELITE) */}
+      {/* 🚀 CLEAN BRAND HEADER (SOLID PURPLE, NO ELITE) */}
       <div style={{
         width: '100%', background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
         padding: '70px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -99,10 +99,11 @@ const BiometricEnrollModal = ({ onComplete, onCancel }) => {
         boxShadow: '0 20px 25px -5px rgba(124, 58, 237, 0.3)'
       }}>
          <Fingerprint size={64} strokeWidth={1.5} style={{ marginBottom: '20px', opacity: loading ? 0.5 : 1, filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.2))' }} />
-         <h1 style={{ fontSize: '32px', fontWeight: '900', letterSpacing: '-1.5px', margin: 0 }}>Acceso Biométrico</h1>
+         <h1 style={{ fontSize: '32px', fontWeight: '900', letterSpacing: '-1.5px', margin: 0, textAlign: 'center' }}>Acceso Biométrico</h1>
       </div>
 
       <div style={{ width: '100%', maxWidth: '400px', padding: '40px 30px', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+
         
         <div style={{ textAlign: 'center', marginBottom: '40px', width: '100%' }}>
            {success ? (
@@ -113,7 +114,7 @@ const BiometricEnrollModal = ({ onComplete, onCancel }) => {
               </div>
            ) : (
               <>
-                 <h2 style={{ fontSize: '28px', fontWeight: '900', color: '#0f172a', letterSpacing: '-1px' }}>Tu Huella es la Clave</h2>
+                 <h2 style={{ fontSize: '28px', fontWeight: '900', color: '#0f172a', letterSpacing: '-1px' }}>Tu <span style={{ color: '#7c3aed' }}>Huella</span> es la Clave</h2>
                  <p style={{ fontSize: '15px', color: '#64748b', marginTop: '12px', lineHeight: '1.6' }}>Olvida las contraseñas. Accede a tu cuenta de manera instantánea y segura usando tu huella dactilar o rostro nativo.</p>
               </>
            )}

@@ -53,11 +53,10 @@ const MobileProfile = ({ user }) => {
             <button 
                 onClick={() => {
                   if (hasBiometrics) {
-                     // Optimistic UI for toggling off
                      const newUser = { ...user, biometricsEnrolled: false };
                      localStorage.setItem('user', JSON.stringify(newUser));
+                     localStorage.setItem('biometricsDismissed', 'true'); // 🚀 CRITICAL: Prevents immediate popup
                      window.location.reload(); 
-                     // Real system would call backend endpoint to delete credentials
                   } else {
                      setShowBiometricSetup(true);
                   }

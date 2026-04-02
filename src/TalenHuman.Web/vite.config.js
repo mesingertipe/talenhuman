@@ -10,32 +10,32 @@ export default defineConfig({
       disable: false, // RESTORED FOR ANDROID SUPPORT
       registerType: 'autoUpdate', 
       injectRegister: 'auto',
-      filename: 'sw-v16.js',
-      manifestFilename: 'manifest-v16.json', 
+      filename: 'sw-v17.js',
+      manifestFilename: 'manifest-v17.json', 
       workbox: {
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
-        cacheId: 'v16-elite-pwa', // SHIELD AGAINST OLD CACHE
-        maximumFileSizeToCacheInBytes: 5242880, // 5MB limit to accommodate the main bundle
+        cacheId: 'v17-pwa', // BUST THE CACHE
+        maximumFileSizeToCacheInBytes: 5242880,
       },
       includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
         name: 'TalenHuman',
         short_name: 'TalenHuman',
-        description: 'Employee Management PWA',
+        description: 'Gestión de Capital Humano',
         theme_color: '#4f46e5',
         start_url: '/',
         display: 'standalone',
         background_color: '#020617',
         icons: [
           {
-            src: 'icon-192-v16.png',
+            src: 'icon-192-v17.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'icon-512-v16.png',
+            src: 'icon-512-v17.png',
             sizes: '512x512',
             type: 'image/png'
           }
