@@ -125,32 +125,35 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                 </div>
               </div>
 
-              <div className="form-options">
-                <label className="remember-me">
-                  <input 
-                    type="checkbox" 
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                  />
-                  <span>Recordarme</span>
-                </label>
-                <button 
-                  type="button" 
-                  className="forgot-password"
-                  onClick={onForgotPassword}
-                >
-                  ¿Olvidaste tu contraseña?
-                </button>
-              </div>
+              <div className="form-options flex flex-col gap-5 mt-4">
+                <div className="flex items-center justify-between w-full">
+                  <label className="remember-me flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 rounded border-slate-300 accent-indigo-600"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                    />
+                    <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Recordarme</span>
+                  </label>
+                  <button 
+                    type="button" 
+                    className="text-xs font-black text-indigo-600 hover:underline uppercase tracking-wider"
+                    onClick={onForgotPassword}
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </button>
+                </div>
 
-              <div className="text-center mt-4">
-                <button 
-                  type="button" 
-                  className="text-indigo-600 font-bold text-sm hover:underline"
-                  onClick={onSelfServiceReset}
-                >
-                  No tengo correo corporativo
-                </button>
+                <div className="text-center pt-2 border-t border-slate-100">
+                  <button 
+                    type="button" 
+                    className="text-[11px] font-black text-slate-400 hover:text-indigo-600 uppercase tracking-[0.15em] transition-colors"
+                    onClick={onSelfServiceReset}
+                  >
+                    No tengo correo corporativo
+                  </button>
+                </div>
               </div>
 
               <button 
