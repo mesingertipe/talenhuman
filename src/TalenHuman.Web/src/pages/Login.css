@@ -195,7 +195,13 @@
   padding: 3rem;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start; /* Better for mobile when keyboard opens */
+}
+
+@media (min-width: 1024px) {
+  .login-form-side {
+    justify-content: center; /* keep centered on desktop */
+  }
 }
 
 @media (min-width: 1024px) {
@@ -219,9 +225,10 @@
   margin-bottom: 2rem;
   background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
   padding: 1.5rem;
-  margin: -3rem -3rem 2.5rem -3rem; /* Negative margin to fill the top of the form side */
+  margin: -3rem -3rem 2rem -3rem; /* Still using negative margins but with careful spacing */
   color: white !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); /* Soft shadow for better separation */
 }
 
 .login-mobile-brand-icon {
@@ -324,7 +331,7 @@
   border: 1px solid #e2e8f0 !important;
   border-radius: 16px;
   font-size: 1rem;
-  color: #1e293b !important;
+  color: #1e293b !important; /* Force dark text color regardless of dark mode */
   outline: none;
   transition: all 0.2s;
 }
