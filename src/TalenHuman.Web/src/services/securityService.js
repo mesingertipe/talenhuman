@@ -10,9 +10,9 @@ const SecurityService = {
       // 1. Obtener opciones del servidor
       const response = await api.post('/Security/register/options');
       const options = response.data;
-
-      // 2. Crear credencial en el dispositivo
-      const credential = await create(options);
+      
+      // 🚀 CRITICAL FIX: WebAuthn-JSON expects options wrapped in { publicKey: ... }
+      const credential = await create({ publicKey: options });
 
       // 3. Enviar respuesta al servidor para validar y guardar
       const result = await api.post('/Security/register/complete', credential);

@@ -37,7 +37,7 @@ import MobileDashboard from './pages/Mobile/MobileDashboard'
 import MobileAttendance from './pages/Mobile/MobileAttendance'
 
 // V12.8.7-FINAL-STABLE - TOTAL TRANSFORMATION
-const APP_VERSION = "V16.3.0-ELITE";
+const APP_VERSION = "V16.7.2-ELITE";
 
 function App() {
   const [user, setUser] = React.useState(null);

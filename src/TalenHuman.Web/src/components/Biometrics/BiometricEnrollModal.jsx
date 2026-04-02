@@ -118,14 +118,14 @@ const BiometricEnrollModal = ({ onComplete, onCancel }) => {
                 disabled={loading}
                 style={{
                   width: '100%',
-                  background: '#1e293b',
+                  background: 'linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)',
                   color: 'white',
                   padding: '22px',
                   borderRadius: '2.5rem',
                   fontSize: '16px',
                   fontWeight: '900',
                   border: 'none',
-                  boxShadow: '0 20px 35px -10px rgba(30, 41, 59, 0.4)',
+                  boxShadow: '0 20px 35px -10px rgba(79, 70, 229, 0.4)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',

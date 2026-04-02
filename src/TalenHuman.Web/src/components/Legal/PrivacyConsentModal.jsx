@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ShieldCheck, Lock, CheckCircle2, ChevronDown, ShieldAlert, LogOut } from 'lucide-react';
 import api from '../../services/api';
 
-const PrivacyConsentModal = ({ onAccept, onLogout }) => {
+const PrivacyConsentModal = ({ onAccepted, onLogout, policyText }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showScrollHint, setShowScrollHint] = useState(true);
@@ -22,7 +22,7 @@ const PrivacyConsentModal = ({ onAccept, onLogout }) => {
     setError(null);
     try {
       await api.post('/Security/privacy-accept');
-      onAccept();
+      onAccepted();
     } catch (err) {
       setError('Error al procesar. Reintenta.');
     } finally {
@@ -101,20 +101,46 @@ const PrivacyConsentModal = ({ onAccept, onLogout }) => {
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
-              <div style={{ display: 'flex', gap: '20px' }}>
-                 <div style={{ background: '#eff6ff', color: '#3b82f6', padding: '15px', borderRadius: '20px' }}><ShieldCheck size={24}/></div>
-                 <div>
-                    <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', margin: '0 0 5px 0' }}>Privacidad por Diseño</h3>
-                    <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.6', margin: 0 }}>Tus datos biométricos están encriptados y protegidos bajo estándares internacionales.</p>
-                 </div>
-              </div>
-              <div style={{ display: 'flex', gap: '20px' }}>
-                 <div style={{ background: '#f5f3ff', color: '#7c3aed', padding: '15px', borderRadius: '20px' }}><Lock size={24}/></div>
-                 <div>
-                    <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', margin: '0 0 5px 0' }}>Uso Limitado</h3>
-                    <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.6', margin: 0 }}>Solo usaremos tu información para el control de asistencia y seguridad operativa.</p>
-                 </div>
-              </div>
+              {policyText ? (
+                <div style={{ 
+                  background: 'rgba(255,255,255,0.8)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: '35px',
+                  padding: '35px',
+                  border: '1px solid #f1f5f9',
+                  boxShadow: '0 20px 40px -15px rgba(0,0,0,0.05)'
+                }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px', opacity: 0.8 }}>
+                      <div style={{ background: '#eff6ff', color: '#3b82f6', padding: '10px', borderRadius: '15px' }}><ShieldCheck size={20}/></div>
+                      <span style={{ fontSize: '11px', fontWeight: '900', letterSpacing: '2px', color: '#64748b' }}>TEXTO OFICIAL CONFIGURADO</span>
+                   </div>
+                   <div style={{ 
+                      fontSize: '15px', color: '#1e293b', lineHeight: '1.9', 
+                      whiteSpace: 'pre-wrap', fontWeight: '500',
+                      fontFamily: "'Inter', sans-serif"
+                   }}>
+                      {policyText}
+                   </div>
+                </div>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', gap: '20px' }}>
+                    <div style={{ background: '#eff6ff', color: '#3b82f6', padding: '15px', borderRadius: '20px' }}><ShieldCheck size={24}/></div>
+                    <div>
+                        <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', margin: '0 0 5px 0' }}>Privacidad por Diseño</h3>
+                        <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.6', margin: 0 }}>Tus datos biométricos están encriptados y protegidos bajo estándares internacionales.</p>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '20px' }}>
+                    <div style={{ background: '#f5f3ff', color: '#7c3aed', padding: '15px', borderRadius: '20px' }}><Lock size={24}/></div>
+                    <div>
+                        <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#1e293b', margin: '0 0 5px 0' }}>Uso Limitado</h3>
+                        <p style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.6', margin: 0 }}>Solo usaremos tu información para el control de asistencia y seguridad operativa.</p>
+                    </div>
+                  </div>
+                </>
+              )}
+              
               <div style={{ 
                 background: '#fffbeb', border: '1px solid #fef3c7', padding: '20px', 
                 borderRadius: '30px', display: 'flex', gap: '15px', alignItems: 'center'

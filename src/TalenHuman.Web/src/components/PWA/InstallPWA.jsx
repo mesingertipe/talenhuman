@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Share, PlusSquare, Smartphone, LogOut, DownloadCloud, ChevronRight, ArrowRight, Chrome } from 'lucide-react';
+import TalenHumanLogo from '../Shared/TalenHumanLogo';
 
 const InstallPWA = ({ onLogout, version }) => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -46,15 +47,9 @@ const InstallPWA = ({ onLogout, version }) => {
       {/* 🎬 LOGO & TITLE */}
       <div style={{ width: '100%', paddingTop: '60px', paddingBottom: '30px', textAlign: 'center', position: 'relative', zIndex: 10 }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
-              <div style={{ 
-                width: '70px', height: '70px', background: 'rgba(255,255,255,0.15)', 
-                borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                border: '1px solid rgba(255,255,255,0.3)', backdropFilter: 'blur(10px)'
-              }}>
-                  <span style={{ fontSize: '28px', fontWeight: '900', fontStyle: 'italic', letterSpacing: '-2px' }}>TH</span>
-              </div>
+              <TalenHumanLogo size={70} type="icon" />
           </div>
-          <h1 style={{ fontSize: '32px', fontWeight: '900', letterSpacing: '-1.5px', margin: 0 }}>TalenHuman</h1>
+          <h1 style={{ fontSize: '32px', fontWeight: '900', letterSpacing: '-1.5px', margin: '15px 0 0 0' }}>TalenHuman</h1>
           <p style={{ fontSize: '10px', fontWeight: '800', letterSpacing: '3px', opacity: 0.6, marginTop: '8px' }}>SMART ENTERPRISE SYSTEM</p>
       </div>
 

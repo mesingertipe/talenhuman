@@ -1,6 +1,7 @@
 import React from 'react';
 import { User, Bell, Settings, ShieldCheck } from 'lucide-react';
 import MobileBottomNav from '../Navigation/MobileBottomNav';
+import TalenHumanLogo from '../Shared/TalenHumanLogo';
 
 const MobileLayout = ({ children, activePage, setPage, user, onLogout, version }) => {
   const [showNotifications, setShowNotifications] = React.useState(false);

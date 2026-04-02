@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Lock, Mail, Eye, EyeOff, Users, ArrowRight, ShieldAlert, Bell, Calendar, Fingerprint } from 'lucide-react';
 import api from '../services/api';
+import TalenHumanLogo from '../components/Shared/TalenHumanLogo';
 import './Login.css';
 
 const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
@@ -51,10 +52,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
         <div className="login-sidebar">
           <div className="login-sidebar-content text-center xs:text-left">
             <div className="login-brand mb-12">
-              <div className="login-brand-icon">
-                <Users size={28} />
-              </div>
-              <span className="login-brand-name">TalenHuman</span>
+              <TalenHumanLogo size={48} />
             </div>
             
             <h1 className="login-hero-title">
@@ -93,10 +91,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
             <div className="login-form-container">
               {/* 🏠 Mobile Brand Header (Clean Elite Version) */}
               <div className="login-mobile-brand">
-                <div className="login-mobile-brand-icon">
-                  <Users size={22} />
-                </div>
-                <span className="login-mobile-brand-name">TalenHuman</span>
+                <TalenHumanLogo size={36} />
               </div>
 
               <div className="login-header text-center">

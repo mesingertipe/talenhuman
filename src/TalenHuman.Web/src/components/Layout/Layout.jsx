@@ -7,6 +7,7 @@ import {
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 import SearchableSelect from '../Shared/SearchableSelect';
+import TalenHumanLogo from '../Shared/TalenHumanLogo';
 
 const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePage, setPage, onLogout, user, companies, selectedTenant, onTenantChange, tenantSettings }) => {
   const isSuperAdmin = user?.roles?.includes('SuperAdmin');
@@ -117,14 +118,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
       onMouseLeave={() => !isPinned && setIsCollapsed(true)}
     >
       <div className="brand" style={{ padding: '1.5rem 1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: isCollapsed ? 'center' : 'flex-start' }}>
-        <div style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)', padding: '0.6rem', borderRadius: '12px', minWidth: '42px', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)' }}>
-          <Users size={22} color="white" />
-        </div>
-        {!isCollapsed && (
-          <div className="flex flex-col justify-center">
-            <span style={{ fontSize: '1.25rem', fontWeight: '800', letterSpacing: '-0.02em', color: 'white' }}>TalenHuman</span>
-          </div>
-        )}
+        <TalenHumanLogo size={isCollapsed ? 42 : 42} type={isCollapsed ? 'icon' : 'full'} />
       </div>
       
       <nav style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '0 0' }}>
