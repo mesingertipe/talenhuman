@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, FileText, Lock, LogOut, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, FileText, Lock, LogOut, ChevronDown, CheckCircle2, LucideUsers, ShieldAlert } from 'lucide-react';
 
 const PrivacyConsentModal = ({ onAccepted, onLogout, policyText }) => {
   const [loading, setLoading] = React.useState(false);
@@ -44,76 +44,103 @@ const PrivacyConsentModal = ({ onAccepted, onLogout, policyText }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[5000] flex items-center justify-center bg-blue-600/30 backdrop-blur-md p-4 overflow-hidden">
+    <div className="fixed inset-0 z-[10000] flex flex-col items-center bg-white overflow-hidden"
+         style={{ minHeight: '100dvh' }}>
       
-      {/* Background Shapes for 'Pro' look */}
-      <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-blue-500 rounded-full blur-3xl opacity-30" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-80 h-80 bg-blue-700 rounded-full blur-3xl opacity-30" />
+      {/* 🚀 ELITE BRAND HEADER (Consistent with Install/Login) */}
+      <div className="w-full bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 p-10 flex flex-col items-center justify-center text-white relative shrink-0 shadow-lg">
+         <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-white/10 rounded-full blur-3xl opacity-50"></div>
+         
+         <div className="relative z-10 flex flex-col items-center gap-3">
+            <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md border border-white/30 shadow-md">
+               <ShieldCheck size={28} className="text-white" />
+            </div>
+            <h1 className="text-2xl font-black tracking-tighter" style={{ fontFamily: "'Outfit', sans-serif" }}>Privacidad de Datos</h1>
+            <span className="text-[9px] uppercase font-bold tracking-[0.3em] text-blue-100 opacity-80">TalenHuman Security Core</span>
+         </div>
+      </div>
 
-      <div className="bg-white/95 dark:bg-slate-900/95 w-full max-w-lg rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col animate-in slide-in-from-bottom-8 duration-500 border border-white/20 relative z-10"
-           style={{ maxHeight: '88vh' }}>
-        
-        {/* Header - Pro Minimalist */}
-        <div className="p-8 pb-6 text-center shrink-0 border-b border-slate-100 dark:border-white/5">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4 border border-blue-100 dark:border-blue-500/20">
-            <ShieldCheck size={12} />
-            Privacidad TalenHuman
-          </div>
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">Privacidad y Seguridad</h2>
+      {/* 🎬 MAIN CONTENT (Scrollable Policy) */}
+      <div className="w-full max-w-2xl px-6 py-8 flex-1 flex flex-col overflow-hidden">
+        <div className="text-center mb-6 shrink-0">
+           <h2 className="text-2xl font-black text-slate-800 tracking-tight leading-tight">
+             Tratamiento de <span className="text-blue-600">Información</span>
+           </h2>
+           <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-1">
+             Revisión Obligatoria para continuar
+           </p>
         </div>
 
-        {/* Content Area */}
         <div 
           ref={scrollRef}
           onScroll={handleScroll}
-          className="flex-1 overflow-y-auto px-8 py-6 custom-scrollbar relative"
-          style={{ WebkitOverflowScrolling: 'touch' }}
+          className="flex-1 overflow-y-auto px-6 py-6 bg-slate-50 rounded-[2rem] border border-slate-100 shadow-inner relative custom-scrollbar"
         >
           {policyText ? (
-            <div className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed font-medium bg-slate-50/50 dark:bg-white/5 p-8 rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-inner">
+            <div className="text-sm text-slate-600 leading-relaxed font-medium whitespace-pre-wrap">
               {policyText}
             </div>
           ) : (
-            <div className="space-y-4">
-              <div className="p-6 bg-blue-50/50 dark:bg-blue-500/5 rounded-3xl border border-blue-100/50 dark:border-blue-500/20 flex gap-4">
-                 <ShieldCheck className="text-blue-600 shrink-0" size={24} />
+            <div className="space-y-6">
+              <div className="flex gap-4 items-start">
+                 <div className="bg-blue-100 p-2 rounded-lg text-blue-600 shrink-0"><ShieldCheck size={20} /></div>
                  <div>
-                    <p className="font-bold text-slate-900 dark:text-white text-sm mb-1">Protección de Datos</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">Sus datos biométricos y personales serán tratados exclusivamente para control de asistencia.</p>
+                    <p className="font-bold text-slate-800 text-sm">Privacidad por Diseño</p>
+                    <p className="text-xs text-slate-500 leading-relaxed">Tus datos biométricos están encriptados y nunca salen de los servidores seguros de TalenHuman.</p>
                  </div>
+              </div>
+              <div className="flex gap-4 items-start">
+                 <div className="bg-indigo-100 p-2 rounded-lg text-indigo-600 shrink-0"><Lock size={20} /></div>
+                 <div>
+                    <p className="font-bold text-slate-800 text-sm">Cumplimiento Legal</p>
+                    <p className="text-xs text-slate-500 leading-relaxed">Operamos bajo los estándares más estrictos de protección de datos personales.</p>
+                 </div>
+              </div>
+              <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex gap-3 items-center">
+                 <ShieldAlert size={20} className="text-amber-500" />
+                 <p className="text-[10px] font-bold text-amber-700 leading-tight">Al continuar, aceptas de forma explícita el tratamiento de tus datos para el control de asistencia.</p>
               </div>
             </div>
           )}
 
-          {/* Action Area */}
-          <div className="space-y-4 mt-8 pb-8">
-            <button 
-              onClick={handleAccept}
-              disabled={loading}
-              className="group w-full bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-[1.75rem] font-bold shadow-2xl shadow-blue-500/30 transition-all active:scale-[0.97] flex items-center justify-center text-sm gap-2"
-            >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                'ACEPTAR Y CONTINUAR'
-              )}
-            </button>
-            
-            <button 
-              onClick={onLogout}
-              className="w-full text-slate-400 dark:text-slate-500 py-2 font-bold text-xs transition-colors hover:text-slate-600 dark:hover:text-slate-300 flex items-center justify-center gap-2"
-            >
-              Cerrar sesión
-            </button>
-          </div>
+          {/* Scroll Hint overlay */}
+          {showScrollHint && (
+             <div className="sticky bottom-0 left-0 right-0 flex justify-center pb-2 pointer-events-none">
+                <div className="bg-blue-600 text-white p-2 rounded-full shadow-lg animate-bounce">
+                   <ChevronDown size={16} />
+                </div>
+             </div>
+          )}
         </div>
 
-        {/* Scroll Hint */}
-        {showScrollHint && (
-          <div className="absolute bottom-24 right-8 pointer-events-none animate-bounce bg-blue-600 text-white p-2 rounded-full shadow-2xl">
-            <ChevronDown size={20} />
-          </div>
-        )}
+        {/* 🎬 ACTION BUTTONS */}
+        <div className="pt-8 flex flex-col gap-4 shrink-0">
+          {error && <p className="text-red-500 text-center text-xs font-bold animate-pulse">{error}</p>}
+          
+          <button 
+            onClick={handleAccept}
+            disabled={loading}
+            className="group w-full bg-blue-600 text-white py-5 rounded-[1.8rem] font-bold shadow-xl shadow-blue-600/30 active:scale-[0.97] transition-all flex items-center justify-center text-sm gap-3 overflow-hidden relative"
+          >
+            {loading ? (
+               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+               <>
+                  <CheckCircle2 size={20} />
+                  <span>Aceptar y Continuar</span>
+                  <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+               </>
+            )}
+          </button>
+
+          <button 
+            onClick={onLogout}
+            className="w-full text-slate-400 py-2 font-black text-[10px] uppercase tracking-widest hover:text-slate-600 transition-colors flex items-center justify-center gap-2"
+          >
+            <LogOut size={14} />
+            Cancelar y Salir
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -10,25 +10,42 @@ const MobileBottomNav = ({ activePage, setPage }) => {
     { id: 'Perfil', icon: User, label: 'Mi Perfil' },
   ];
 
+  const handleTabClick = (tabId) => {
+    // 📳 NATIVE HAPTIC FEEDBACK (If supported)
+    if (window.navigator && window.navigator.vibrate) {
+      window.navigator.vibrate(10); 
+    }
+    setPage(tabId);
+  };
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-2 py-2 z-50 flex justify-around items-center pb-safe">
+    <nav className="flex justify-around items-center px-2 py-3 bg-white dark:bg-slate-950 no-select pb-safe translate-y-0 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activePage === tab.id;
         return (
           <button
             key={tab.id}
-            onClick={() => setPage(tab.id)}
-            className={`flex flex-col items-center justify-center w-full py-1 transition-all duration-200 ${
+            onClick={() => handleTabClick(tab.id)}
+            className={`flex flex-col items-center justify-center w-full transition-all duration-300 active:scale-90 ${
               isActive 
-                ? 'text-indigo-600 dark:text-indigo-400 scale-110' 
-                : 'text-slate-500 dark:text-slate-400'
+                ? 'text-indigo-600 dark:text-indigo-400' 
+                : 'text-slate-400 dark:text-slate-600'
             }`}
           >
-            <div className={`p-1 rounded-xl ${isActive ? 'bg-indigo-50 dark:bg-indigo-900/30' : ''}`}>
-              <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+            <div className={`relative flex items-center justify-center p-2 rounded-2xl transition-all duration-500 ${
+              isActive ? 'bg-indigo-50 dark:bg-indigo-500/10' : ''
+            }`}>
+              <Icon size={22} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'animate-pulse' : ''} />
+              {isActive && (
+                <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-indigo-500 rounded-full shadow-lg shadow-indigo-500/50" />
+              )}
             </div>
-            <span className="text-[10px] mt-1 font-medium">{tab.label}</span>
+            <span className={`text-[9px] mt-1 font-black uppercase tracking-widest ${
+              isActive ? 'opacity-100' : 'opacity-40'
+            }`}>
+              {tab.label}
+            </span>
           </button>
         );
       })}

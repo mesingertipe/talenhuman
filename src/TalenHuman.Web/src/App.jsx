@@ -32,6 +32,10 @@ import InstallPWA from './components/PWA/InstallPWA'
 import PrivacyConsentModal from './components/Legal/PrivacyConsentModal'
 import BiometricEnrollModal from './components/Biometrics/BiometricEnrollModal'
 
+// Mobile Native Views
+import MobileDashboard from './pages/Mobile/MobileDashboard'
+import MobileAttendance from './pages/Mobile/MobileAttendance'
+
 // V12.8.7-FINAL-STABLE - TOTAL TRANSFORMATION
 const APP_VERSION = "V16.3.0-ELITE";
 
@@ -113,6 +117,16 @@ function App() {
   }
 
   const renderPage = () => {
+    // 📱 NATIVE MOBILE ROUTING (PWA / Mobile)
+    if (isMobileDevice) {
+      switch(currentPage) {
+        case 'Turnos': return <ShiftScheduler user={user} isMobile />;
+        case 'Marcaciones': return <MobileAttendance user={user} isMobile />;
+        case 'Notificaciones': return <NewsInbox user={user} isMobile />;
+        default: return <MobileDashboard user={user} />;
+      }
+    }
+
     if (isEmployee) {
       switch(currentPage) {
         case 'Turnos': return <ShiftScheduler user={user} isMobile />;

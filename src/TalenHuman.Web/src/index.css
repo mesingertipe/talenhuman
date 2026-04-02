@@ -48,7 +48,29 @@ body {
   background-color: var(--bg-main);
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
+  
+  /* 📱 NATIVE APP FEEL OVERRIDES */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  overscroll-behavior-y: none;
+  scroll-behavior: smooth;
 }
+
+/* Disable text selection for UI elements to feel like a native app */
+.no-select, 
+nav, 
+button, 
+.header,
+.mobile-nav {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Native Safe Area Utilities */
+.pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.mt-safe { margin-top: env(safe-area-inset-top, 0px); }
+.mb-safe { margin-bottom: env(safe-area-inset-bottom, 0px); }
 
 h1, h2, h3, .brand-logo {
   font-family: 'Outfit', sans-serif;
