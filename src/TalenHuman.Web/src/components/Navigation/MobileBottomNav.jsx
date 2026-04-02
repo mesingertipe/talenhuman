@@ -1,7 +1,7 @@
 import React from 'react';
 import { Home, Clock, User, Info } from 'lucide-react';
 
-const MobileBottomNav = ({ activePage, setPage, theme }) => {
+const MobileBottomNav = ({ activePage, setPage, theme, isBranded = false }) => {
   const isDark = theme === 'dark';
   
   const tabs = [
@@ -38,7 +38,7 @@ const MobileBottomNav = ({ activePage, setPage, theme }) => {
             style={{ 
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
               width: '100%', height: '100%', border: 'none', background: 'transparent', outline: 'none',
-              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', position: 'relative', zIz: 10,
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', position: 'relative', zIndex: 10,
               color: isActive ? activeColor : inactiveColor,
               transform: isActive ? 'scale(1.05)' : 'scale(1)'
             }}
