@@ -49,7 +49,11 @@ builder.Services.AddFido2(options =>
 {
     options.ServerDomain = builder.Configuration["Fido2:ServerDomain"] ?? "talenhuman.com";
     options.ServerName = "TalenHuman Elite";
-    options.Origins = new HashSet<string>(builder.Configuration.GetSection("Fido2:Origins").Get<string[]>() ?? new string[] { "https://talenhuman.com" });
+    options.Origins = new HashSet<string>(builder.Configuration.GetSection("Fido2:Origins").Get<string[]>() ?? new string[] { 
+        "https://talenhuman.com", 
+        "https://www.talenhuman.com",
+        "https://talenhuman.com:5001" 
+    });
     options.TimestampDriftTolerance = 300000;
 });
 

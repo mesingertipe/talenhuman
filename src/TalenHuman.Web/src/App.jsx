@@ -36,15 +36,19 @@ import BiometricEnrollModal from './components/Biometrics/BiometricEnrollModal'
 import MobileDashboard from './pages/Mobile/MobileDashboard'
 import MobileAttendance from './pages/Mobile/MobileAttendance'
 
-// V12.8.7-FINAL-STABLE - TOTAL TRANSFORMATION
-const APP_VERSION = "V16.7.4-FINAL";
+// V16.7.5-STABLE-ELITE
+const APP_VERSION = "V16.7.5-FINAL";
 
 function App() {
-  const [user, setUser] = React.useState(null);
+  const [user, setUser] = React.useState(() => {
+    const saved = localStorage.getItem('user');
+    if (!saved) return null;
+    try { return JSON.parse(saved); } catch { return null; }
+  });
+  const [token, setToken] = React.useState(() => localStorage.getItem('token'));
   const [currentPage, setCurrentPage] = React.useState('Dashboard');
-  const [authLoading, setAuthLoading] = React.useState(true);
+  const [authLoading, setAuthLoading] = React.useState(false); // Initialized synchronously
   const [authView, setAuthView] = React.useState('login'); 
-  const [token, setToken] = React.useState(null); 
   const [isStandalone, setIsStandalone] = React.useState(() => {
     const isIOS = /iPad|iPhone|iPod/.test(window.navigator.userAgent) && !window.MSStream;
     return !!(window.matchMedia('(display-mode: standalone)').matches || (isIOS && window.navigator.standalone));
@@ -164,8 +168,15 @@ function App() {
 
   // 🛡️ UNIVERSAL SECURITY SEQUENCE (MANDATORY FOR ALL)
   
-  // 1. Enforce Privacy ONLY for Employees (Mandatory for non-administrative staff)
-  if (isEmployee && !user.acceptedPrivacyPolicy) {
+  // 1. Enforce Privacy (Mandatory for Employees or EVERYONE on Android/Mobile to avoid skips)
+  // But strictly excluded for administrative users (unless on mobile where we force it to ensure compliance)
+  const isManager = user?.roleName?.toLowerCase() === 'manager' || user?.roleName?.toLowerCase() === 'gerente';
+  
+  // Rule: Show if (isEmployee OR on Mobile) AND NOT a Manager on a non-mobile browser.
+  // This ensures Android users always see it, but PC Managers don't.
+  const shouldForcePrivacy = !user.acceptedPrivacyPolicy && (isEmployee || (isMobileDevice && !isManager));
+
+  if (shouldForcePrivacy) {
     return <PrivacyConsentModal onAccepted={(u) => setUser(u)} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
   }
 
