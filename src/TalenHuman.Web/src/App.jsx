@@ -69,8 +69,12 @@ function App() {
      return !!isStand;
   });
 
-  const rawRole = (user?.roleName || user?.role || '').toLowerCase();
-  const isEmployee = rawRole === 'empleado' || rawRole === 'employee';
+  // 🕵️‍♂️ ROBUST ROLE DETECTION (List & Single field)
+  const roleList = user?.roles || [];
+  const rawRoleName = (user?.roleName || user?.role || '').toLowerCase();
+  const isEmployee = roleList.some(r => r.toLowerCase() === 'empleado' || r.toLowerCase() === 'employee') || 
+                    rawRoleName === 'empleado' || 
+                    rawRoleName === 'employee';
   
   // 📱 STRICTOR MOBILE DETECTION
   const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && window.innerWidth < 1024;
