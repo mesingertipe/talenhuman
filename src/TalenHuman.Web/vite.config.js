@@ -30,12 +30,12 @@ export default defineConfig({
         background_color: '#020617',
         icons: [
           {
-            src: 'icon-192.png',
+            src: 'icon-192-v16.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'icon-512.png',
+            src: 'icon-512-v16.png',
             sizes: '512x512',
             type: 'image/png'
           }

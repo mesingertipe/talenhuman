@@ -28,12 +28,18 @@ public class SecurityController : ControllerBase
 
 
     [HttpPost("register/options")]
-    public IActionResult RegisterOptions()
+    public async Task<IActionResult> RegisterOptions()
     {
-        var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
-        var userEmail = User.Identity?.Name ?? "user@talenhuman.com";
+        var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
 
-        var user = new Fido2User
+        var userId = Guid.Parse(userIdString);
+        var dbUser = await _context.Users.FindAsync(userId);
+        if (dbUser == null) return NotFound();
+
+        var userEmail = dbUser.Email ?? "user@talenhuman.com";
+
+        var fidoUser = new Fido2User
         {
             DisplayName = userEmail,
             Name = userEmail,
@@ -52,9 +58,11 @@ public class SecurityController : ControllerBase
             AuthenticatorAttachment = AuthenticatorAttachment.Platform 
         };
 
-        var options = _fido2.RequestNewCredential(user, existingCredentials, authenticatorSelection, AttestationConveyancePreference.None, null);
+        var options = _fido2.RequestNewCredential(fidoUser, existingCredentials, authenticatorSelection, AttestationConveyancePreference.None, null);
 
-        HttpContext.Session.SetString("fido2.registrationOptions", options.ToJson());
+        // 🚀 PERSISTENT STORAGE IN DB (Bypass Session instability)
+        dbUser.PendingFidoOptions = options.ToJson();
+        await _context.SaveChangesAsync();
 
         return Ok(options);
     }
@@ -64,8 +72,14 @@ public class SecurityController : ControllerBase
     {
         try
         {
-            var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
-            var jsonOptions = HttpContext.Session.GetString("fido2.registrationOptions");
+            var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
+
+            var userId = Guid.Parse(userIdString);
+            var dbUser = await _context.Users.FindAsync(userId);
+            if (dbUser == null) return NotFound();
+
+            var jsonOptions = dbUser.PendingFidoOptions;
             if (string.IsNullOrEmpty(jsonOptions)) return BadRequest("Sesión de registro expirada.");
 
             var options = CredentialCreateOptions.FromJson(jsonOptions);
@@ -86,6 +100,9 @@ public class SecurityController : ControllerBase
                 DeviceName = Request.Headers["User-Agent"].ToString()
             };
 
+            // 🚀 CLEAR PENDING OPTIONS
+            dbUser.PendingFidoOptions = null;
+            
             _context.UserCredentials.Add(newCredential);
             await _context.SaveChangesAsync();
 

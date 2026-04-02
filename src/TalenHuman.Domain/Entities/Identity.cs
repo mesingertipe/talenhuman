@@ -21,6 +21,7 @@ public class User : IdentityUser<Guid>, IMultitenant
     public bool AcceptedPrivacyPolicy { get; set; }
     public DateTime? PrivacyPolicyAcceptedAt { get; set; }
     public string? AcceptanceIP { get; set; }
+    public string? PendingFidoOptions { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
