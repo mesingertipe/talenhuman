@@ -7,44 +7,24 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version }
   const [showNotifications, setShowNotifications] = React.useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col text-slate-900 dark:text-slate-100 overscroll-none overflow-hidden">
+    <div className="min-h-[100dvh] bg-slate-950 flex flex-col text-white overscroll-none overflow-hidden relative">
       
-      {/* 📱 NATIVE APP SHELL (SAFE AREA AWARE) */}
-      <header 
-        className="fixed top-0 left-0 right-0 z-[100] text-white pt-safe pb-6 px-6 rounded-b-[2.5rem] shadow-2xl shadow-indigo-500/30"
-        style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)' }}
-      >
-        {/* Sub-header for branding info */}
-        <div className="flex items-center justify-between pt-4">
-           <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20">
-                 <span className="font-black text-xl italic tracking-tighter text-white">TH</span>
-              </div>
-              <div>
-                 <h1 className="text-sm font-black tracking-widest leading-tight uppercase text-white transition-all">TalenHuman</h1>
-              </div>
-           </div>
+      {/* 🔮 DYNAMIC BACKGROUND ORBS (NATIVE ELITE FEEL) */}
+      <div className="absolute top-[-10%] left-[-20%] w-[100%] h-[40%] bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none opacity-50" />
+      <div className="absolute bottom-[20%] right-[-30%] w-[100%] h-[30%] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none opacity-40" />
 
-           <div className="flex items-center gap-4">
-              {/* Quick Setting / Alert Indicator */}
-              <div className="p-2 bg-white/10 rounded-xl relative active:scale-90 transition-all">
-                <Bell size={20} className="text-white/80" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-400 rounded-full animate-pulse" />
-              </div>
-           </div>
-        </div>
-      </header>
-
-      {/* Main Content Area - Native Padding & Smooth Scroll */}
-      <main className="flex-1 mt-[100px] mb-20 overflow-y-auto custom-scrollbar pt-4 pb-12 animate-in fade-in slide-in-from-bottom-10 duration-1000">
-        <div className="px-5 pb-safe">
+      {/* Main Content Area - Native Immersive Scrolling */}
+      <main className="flex-1 overflow-y-auto mt-0 pb-[110px] animate-in fade-in slide-in-from-bottom-10 duration-1000 no-scrollbar relative z-10 pt-safe">
+        <div className="px-5">
            {children}
         </div>
       </main>
 
-      {/* Bottom Navigation (Safe Area Aware) */}
-      <footer className="fixed bottom-0 left-0 right-0 z-[100] bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-white/5 pb-safe">
-         <MobileBottomNav activePage={activePage} setPage={setPage} />
+      {/* 🏝️ FLOATING NATIVE ISLAND NAVIGATION (V56 ELITE) */}
+      <footer className="fixed bottom-6 left-5 right-5 z-[100] h-20 rounded-[2.5rem] bg-white/10 backdrop-blur-3xl border border-white/20 shadow-2xl shadow-black/60 flex items-center justify-center p-1">
+         <div className="w-full h-full rounded-[2.2rem] bg-indigo-500/5 overflow-hidden flex items-center">
+            <MobileBottomNav activePage={activePage} setPage={setPage} />
+         </div>
       </footer>
 
     </div>

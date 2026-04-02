@@ -266,6 +266,42 @@ public class NovedadesController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpGet("my-news")]
+    public async Task<ActionResult<IEnumerable<NovedadDto>>> GetMyNews()
+    {
+        var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
+
+        var userId = Guid.Parse(userIdString);
+        var dbUser = await _context.Users.FindAsync(userId);
+        if (dbUser == null) return NotFound();
+
+        // Show Approved news for their store OR news they created personally
+        var query = _context.Novedades
+            .Include(n => n.NovedadTipo)
+            .Include(n => n.Empleado)
+            .Where(n => 
+                (n.EmpleadoId == userId) || 
+                (n.StoreId == dbUser.StoreId && n.Status == NovedadStatus.Aprobado)
+            )
+            .OrderByDescending(n => n.FechaInicio)
+            .Take(5);
+
+        return await query
+            .Select(n => new NovedadDto
+            {
+                Id = n.Id,
+                EmpleadoNombre = n.Empleado != null ? $"{n.Empleado.FirstName} {n.Empleado.LastName}" : null,
+                NovedadTipoNombre = n.NovedadTipo.Nombre,
+                NovedadCategoria = n.NovedadTipo.Categoria.ToString(),
+                FechaInicio = n.FechaInicio,
+                FechaFin = n.FechaFin,
+                Status = n.Status,
+                Observaciones = n.Observaciones
+            })
+            .ToListAsync();
+    }
 }
 
 public class NovedadDto

@@ -117,6 +117,35 @@ public class ShiftsController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpGet("my-shifts")]
+    public async Task<ActionResult<IEnumerable<ShiftDto>>> GetMyShifts()
+    {
+        var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
+
+        var userId = Guid.Parse(userIdString);
+        var today = DateTime.UtcNow.Date;
+
+        var shifts = await _context.Shifts
+            .Where(s => s.EmployeeId == userId)
+            .OrderByDescending(s => s.StartTime)
+            .Take(10) // Show last 10 relevant shifts
+            .Select(s => new ShiftDto
+            {
+                Id = s.Id,
+                EmployeeId = s.EmployeeId,
+                StartTime = s.StartTime,
+                EndTime = s.EndTime,
+                Status = s.Status,
+                IsDescanso = s.IsDescanso,
+                IsFuera = s.IsFuera,
+                Observation = s.Observation
+            })
+            .ToListAsync();
+
+        return Ok(shifts);
+    }
 }
 
 public class ShiftDto

@@ -40,7 +40,7 @@ import MobileProfile from './pages/Mobile/MobileProfile'
 import DebugPortal from './components/Shared/DebugPortal'
 
 // V54-FORCE-DOMAIN-REDIRECT
-const APP_VERSION = "V54-FORCE-DOMAIN";
+const APP_VERSION = "V55-STABLE";
 
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION (Fixes WebAuthn RP ID Mismatch)
@@ -59,17 +59,7 @@ function App() {
   const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [currentPage, setCurrentPage] = useState('Dashboard');
   const [booting, setBooting] = useState(true); 
-  const [isStandalone, setIsStandalone] = useState(() => {
-     const isIOS = /iPad|iPhone|iPod/.test(window.navigator.userAgent) && !window.MSStream;
-     const isStand = window.matchMedia('(display-mode: standalone)').matches || (isIOS && window.navigator.standalone);
-     return !!isStand;
-  });
   
-  const [biometricsDismissed, setBiometricsDismissed] = useState(() => {
-     return localStorage.getItem('biometricsDismissed') === 'true' || 
-            sessionStorage.getItem('session_biometric_dismissed_v24') === 'true';
-  });
-
   const roleName = user?.roleName?.toLowerCase() || '';
   const isEmployee = roleName === 'employee' || roleName === 'empleado' || user?.employeeId !== '00000000-0000-0000-0000-000000000000';
   const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 1024;
@@ -94,12 +84,6 @@ function App() {
     initializeFirebase(userData);
   };
 
-  const handleDismissBiometrics = () => {
-     localStorage.setItem('biometricsDismissed', 'true');
-     sessionStorage.setItem('session_biometric_dismissed_v24', 'true');
-     setBiometricsDismissed(true);
-  };
-
   const renderContent = () => {
     if (booting) return (
       <div style={{ minHeight: '100dvh', background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
@@ -111,16 +95,10 @@ function App() {
 
     if (!token) return <Login onLogin={handleLogin} version={APP_VERSION} onForgotPassword={() => {}} onSelfServiceReset={() => {}} />;
 
-    if (isEmployee && isMobileDevice && !isStandalone) {
-       return <InstallPWA onLogout={handleLogout} version={APP_VERSION} />;
-    }
-
+    // 🚀 NEW V55 FLOW: DASHBOARD FIRST, BIOMETRICS OPTIONAL
+    // 1. Mandatory Privacy Acceptance (Legal Requirement)
     if (!user.acceptedPrivacyPolicy && (isEmployee || (isMobileDevice && roleName !== 'manager'))) {
-      return <PrivacyConsentModal onAccepted={(u) => setUser(u)} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
-    }
-
-    if (isStandalone && !user.biometricsEnrolled && !biometricsDismissed) {
-      return <BiometricEnrollModal onComplete={() => { const newUser = { ...user, biometricsEnrolled: true }; setUser(newUser); }} onCancel={handleDismissBiometrics} />;
+       return <PrivacyConsentModal onAccepted={(u) => setUser(u)} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
     }
 
     const renderPage = () => {
@@ -143,7 +121,6 @@ function App() {
 
   return (
     <>
-      <DebugPortal />
       {renderContent()}
     </>
   );
