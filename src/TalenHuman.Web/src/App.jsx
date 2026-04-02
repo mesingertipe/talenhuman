@@ -70,7 +70,7 @@ function App() {
   });
 
   const roleName = user?.roleName?.toLowerCase() || '';
-  const isEmployee = roleName === 'employee' || roleName === 'empleado' || user?.employeeId !== '00000000-0000-0000-0000-000000000000';
+  const isEmployee = (roleName === 'employee' || roleName === 'empleado') && !roleName.includes('admin');
   
   // 📱 STRICTOR MOBILE DETECTION
   const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && window.innerWidth < 1024;
@@ -118,9 +118,9 @@ function App() {
        return <InstallPWA onLogout={handleLogout} version={APP_VERSION} />;
     }
 
-    // 🔒 Mandatory Privacy (Employee ONLY)
+    // 🔒 Mandatory Privacy (Employee ONLY - NEVER for Admins)
     if (isEmployee && !user.acceptedPrivacyPolicy) {
-       return <PrivacyConsentModal onAccepted={(u) => setUser(u)} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
+       return <PrivacyConsentModal onAccepted={(u) => setUser(prev => ({ ...prev, ...u }))} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
     }
 
     const renderPage = () => {
