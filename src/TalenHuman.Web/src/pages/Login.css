@@ -36,7 +36,7 @@
 
 .login-sidebar {
   display: none;
-  background: linear-gradient(135deg, #4f46e5 0%, #1e1b4b 100%); /* Pro Indigo Gradient */
+  background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); /* Vibrant Purple to Indigo */
   padding: 4rem;
   color: white;
   position: relative;
@@ -212,22 +212,27 @@
 
 .login-mobile-brand {
   display: flex !important;
-  flex-direction: column; /* Stacked looks more premium on mobile */
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  margin-bottom: 2.5rem;
-  color: #1e293b !important; /* Force visibility */
+  margin-bottom: 2rem;
+  background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+  padding: 1.5rem;
+  margin: -3rem -3rem 2.5rem -3rem; /* Negative margin to fill the top of the form side */
+  color: white !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .login-mobile-brand-icon {
-  background: #4f46e5;
+  background: rgba(255, 255, 255, 0.2);
   color: white;
   padding: 0.5rem;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
+  backdrop-filter: blur(5px);
 }
 
 .login-mobile-brand-name {
@@ -236,7 +241,8 @@
   text-transform: uppercase;
   letter-spacing: -1px;
   font-family: 'Outfit', sans-serif;
-  color: #1e293b !important;
+  color: white !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 @media (min-width: 1024px) {
