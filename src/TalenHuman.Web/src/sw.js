@@ -1,5 +1,7 @@
-/* TalenHuman Static Service Worker V24 */
-const CACHE_NAME = 'talenhuman-v24';
+/* TalenHuman Static Service Worker V24.1 */
+// 🚀 REQUIRED FOR VITE PWA INJECTMANIFEST
+// @ts-ignore
+const manifest = self.__WB_MANIFEST;
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -10,6 +12,6 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // 🚀 PASS-THROUGH: Solo queremos que Chrome vea un SW activo para habilitar la instalación
+  // 🚀 PASS-THROUGH
   event.respondWith(fetch(event.request));
 });
