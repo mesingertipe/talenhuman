@@ -39,8 +39,8 @@ import MobileProfile from './pages/Mobile/MobileProfile'
 
 import DebugPortal from './components/Shared/DebugPortal'
 
-// V46-FORCE-DEBUG-FINAL
-const APP_VERSION = "V46-DEBUG";
+// V49-FORCE-DEBUG-FINAL
+const APP_VERSION = "V49-DEBUG";
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -51,28 +51,27 @@ function App() {
   
   const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [currentPage, setCurrentPage] = useState('Dashboard');
-  
-  // 🚀 ANTI-FLICKER BOOTLOADER STATE
   const [booting, setBooting] = useState(true); 
   const [isStandalone, setIsStandalone] = useState(() => {
      const isIOS = /iPad|iPhone|iPod/.test(window.navigator.userAgent) && !window.MSStream;
      const isStand = window.matchMedia('(display-mode: standalone)').matches || (isIOS && window.navigator.standalone);
-     const isUrlPWA = window.location.search.includes('source=pwa');
-     return !!(isStand || isUrlPWA);
+     return !!isStand;
   });
   
   const [biometricsDismissed, setBiometricsDismissed] = useState(() => {
-     // 🚀 V24 HARDENED DISMISSAL: Higher authority than pure state
      return localStorage.getItem('biometricsDismissed') === 'true' || 
             sessionStorage.getItem('session_biometric_dismissed_v24') === 'true';
   });
 
-  const isEmployee = user?.roleName?.toLowerCase() === 'employee' || 
-                     user?.roles?.some(r => r.toLowerCase() === 'employee') || 
-                     (user?.employeeId && user?.employeeId !== '00000000-0000-0000-0000-000000000000');
+  const roleName = user?.roleName?.toLowerCase() || '';
+  const isEmployee = roleName === 'employee' || roleName === 'empleado' || user?.employeeId !== '00000000-0000-0000-0000-000000000000';
+  const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 1024;
 
-  const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                        window.innerWidth < 1024;
+  useEffect(() => {
+    localStorage.setItem('app_version', APP_VERSION);
+    if (user && token) initializeFirebase(user);
+    setTimeout(() => setBooting(false), 500);
+  }, []);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -80,22 +79,9 @@ function App() {
     window.location.replace('/');
   };
 
-  useEffect(() => {
-    // 1. Version Update & Cache Busting
-    localStorage.setItem('app_version', APP_VERSION);
-    
-    // 2. Firebase Init
-    if (user && token) {
-        initializeFirebase(user);
-    }
-    
-    setTimeout(() => setBooting(false), 500);
-  }, []);
-
   const handleLogin = (userData, userToken) => {
     localStorage.setItem('user', JSON.stringify(userData));
     localStorage.setItem('token', userToken);
-    localStorage.setItem('app_version', APP_VERSION);
     setUser(userData);
     setToken(userToken);
     initializeFirebase(userData);
@@ -107,87 +93,53 @@ function App() {
      setBiometricsDismissed(true);
   };
 
-  // 🛡️ CLEAN BOOTLOADER
-  if (booting) {
-    return (
-      <div style={{
-          minHeight: '100dvh', background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white'
-      }}>
-         <div className="clean-pulse-loader" style={{ 
-            width: '100px', height: '100px', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)', 
-            borderRadius: '30px', border: '1px solid rgba(255,255,255,0.2)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-         }}>
-             <span style={{ fontSize: '42px', fontWeight: '900', fontStyle: 'italic', letterSpacing: '-3px' }}>TH</span>
+  const renderContent = () => {
+    if (booting) return (
+      <div style={{ minHeight: '100dvh', background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+         <div className="clean-pulse-loader" style={{ width: '100px', height: '100px', background: 'rgba(255,255,255,0.15)', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+             <span style={{ fontSize: '42px', fontWeight: '900' }}>TH</span>
          </div>
-         <style>{`
-            .clean-pulse-loader { animation: clean-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-            @keyframes clean-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .7; transform: scale(0.95); } }
-         `}</style>
       </div>
     );
-  }
 
-  // 4. Auth Gate
-  if (!token) {
-    return <Login onLogin={handleLogin} version={APP_VERSION} onForgotPassword={() => {}} onSelfServiceReset={() => {}} />;
-  }
+    if (!token) return <Login onLogin={handleLogin} version={APP_VERSION} onForgotPassword={() => {}} onSelfServiceReset={() => {}} />;
 
-  const renderPage = () => {
-    if (isMobileDevice) {
-      switch(currentPage) {
-        case 'Turnos': return <ShiftScheduler user={user} isMobile />;
-        case 'Marcaciones': return <MobileAttendance user={user} isMobile />;
-        case 'Notificaciones': return <NewsInbox user={user} isMobile />;
-        case 'Perfil': return <MobileProfile user={user} />;
-        default: return <MobileDashboard user={user} />;
-      }
+    if (isEmployee && isMobileDevice && !isStandalone) {
+       return <InstallPWA onLogout={handleLogout} version={APP_VERSION} />;
     }
-    const pages = {
-        'Marcas': Brands, 'Ciudades': Cities, 'Cargos': Profiles, 'Distritos': Districts,
-        'Tiendas': Stores, 'Jornadas': Jornadas, 'Empleados': Employees, 'Turnos': ShiftScheduler,
-        'Marcaciones': Marcaciones, 'Novedades': NewsInbox, 'Configuración novedades': NewsTemplateDesigner,
-        'Diseñador de Plantillas': NewsDesigner, 'Monitoreo Asistencia': AttendanceMonitoring,
-        'Usuarios': Users, 'Permisos': ModulePermissions, 'Auditoría': AuditLogs,
-        'Empresas': Companies, 'Configuración Sistema': SystemSettings
+
+    if (!user.acceptedPrivacyPolicy && (isEmployee || (isMobileDevice && roleName !== 'manager'))) {
+      return <PrivacyConsentModal onAccepted={(u) => setUser(u)} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
+    }
+
+    if (isStandalone && !user.biometricsEnrolled && !biometricsDismissed) {
+      return <BiometricEnrollModal onComplete={() => { const newUser = { ...user, biometricsEnrolled: true }; setUser(newUser); }} onCancel={handleDismissBiometrics} />;
+    }
+
+    const renderPage = () => {
+      if (isMobileDevice) {
+        switch(currentPage) {
+          case 'Marcaciones': return <MobileAttendance user={user} isMobile />;
+          case 'Perfil': return <MobileProfile user={user} />;
+          default: return <MobileDashboard user={user} />;
+        }
+      }
+      return <Dashboard user={user} />;
     };
-    const Component = pages[currentPage] || Dashboard;
-    return <Component user={user} isMobile={isEmployee} />;
+
+    if (isEmployee || isMobileDevice) {
+      return <MobileLayout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout} version={APP_VERSION}>{renderPage()}</MobileLayout>;
+    }
+
+    return <Layout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout} version={APP_VERSION}>{renderPage()}</Layout>;
   };
 
-  // 🛡️ THE GATEKEEPER SEQUENCE V25 - ONLY FOR EMPLOYEES
-  if (isEmployee && isMobileDevice && !isStandalone) {
-     return <InstallPWA onLogout={handleLogout} version={APP_VERSION} />;
-  }
-
-  const isManager = user?.roleName?.toLowerCase() === 'manager' || user?.roleName?.toLowerCase() === 'gerente';
-  const shouldForcePrivacy = !user.acceptedPrivacyPolicy && (isEmployee || (isMobileDevice && !isManager));
-
-  if (shouldForcePrivacy) {
-    return <PrivacyConsentModal onAccepted={(u) => setUser(u)} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
-  }
-
-  // 🚀 BIOMETRIC GATE: Hardened logic to prevent loops
-  if (isStandalone && !user.biometricsEnrolled && !biometricsDismissed) {
-    return (
-      <BiometricEnrollModal 
-        onComplete={() => {
-          const newUser = { ...user, biometricsEnrolled: true };
-          localStorage.setItem('user', JSON.stringify(newUser));
-          setUser(newUser);
-        }} 
-        onCancel={handleDismissBiometrics} 
-      />
-    );
-  }
-
-  // Final Native Application Shell
-  if (isEmployee || isMobileDevice) {
-    return <MobileLayout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout} version={APP_VERSION}>{renderPage()}</MobileLayout>;
-  }
-
-  return <Layout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout} version={APP_VERSION}>{renderPage()}</Layout>;
+  return (
+    <>
+      <DebugPortal />
+      {renderContent()}
+    </>
+  );
 }
 
 export default App;
