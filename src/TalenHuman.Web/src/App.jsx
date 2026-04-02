@@ -116,11 +116,11 @@ function App() {
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white'
       }}>
          <div className="clean-pulse-loader" style={{ 
-            width: '100px', height: '100px', background: 'white', borderRadius: '30px', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.05)'
+            width: '100px', height: '100px', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)', 
+            borderRadius: '30px', border: '1px solid rgba(255,255,255,0.2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
          }}>
-             <img src="/icon.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+             <span style={{ fontSize: '42px', fontWeight: '900', fontStyle: 'italic', letterSpacing: '-3px' }}>TH</span>
          </div>
          <style>{`
             .clean-pulse-loader { animation: clean-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }

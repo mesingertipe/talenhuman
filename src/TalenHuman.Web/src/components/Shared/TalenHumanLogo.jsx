@@ -7,21 +7,26 @@ const TalenHumanLogo = ({ size = 32, type = 'full' }) => {
     <div style={{ 
       width: `${size}px`, 
       height: `${size}px`, 
-      background: 'white', // 🚀 CLEAN LOGO BACKDROP
-      borderRadius: isSmall ? '10px' : '18px', 
+      background: 'rgba(255, 255, 255, 0.15)', // 🚀 SOFT SEMI-TRANSPARENT BACKDROP
+      backdropFilter: 'blur(8px)',
+      borderRadius: isSmall ? '12px' : '22px', 
       display: 'flex', 
       alignItems: 'center', 
       justifyContent: 'center',
-      border: '1px solid rgba(0,0,0,0.05)',
-      boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
-      flexShrink: 0,
-      overflow: 'hidden'
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+      flexShrink: 0
     }}>
-       <img 
-         src="/icon.png" 
-         alt="Logo" 
-         style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-       />
+      <span style={{ 
+        color: 'white', 
+        fontSize: `${size * 0.45}px`, 
+        fontWeight: '900', 
+        fontStyle: 'italic', 
+        letterSpacing: '-1.5px',
+        fontFamily: "'Outfit', sans-serif",
+        textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+      }}>
+        TH
+      </span>
     </div>
   );
 
