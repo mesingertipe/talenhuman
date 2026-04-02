@@ -84,19 +84,34 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
         </div>
       </main>
 
-      {/* 🏝️ FLOATING NATIVE ISLAND NAVIGATION (THEME-AWARE) */}
+      {/* 🏝️ BRANDED NAVIGATION ZONE (PURPLE CORPORATE) */}
       <footer style={{ 
-        position: 'fixed', bottom: '24px', left: '20px', right: '20px', 
-        zIndex: 1000, height: '80px', borderRadius: '40px', 
-        background: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)', 
-        backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', 
-        border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)'}`, 
-        boxShadow: isDark ? '0 25px 50px -12px rgba(0, 0, 0, 0.8)' : '0 20px 40px -10px rgba(0, 0, 0, 0.15)', 
-        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px',
+        position: 'fixed', bottom: 0, left: 0, right: 0, 
+        zIndex: 1000, 
+        background: '#4f46e5', 
+        borderTopLeftRadius: '32px', borderTopRightRadius: '32px',
+        padding: '12px 20px env(safe-area-inset-bottom, 20px)',
+        boxShadow: '0 -10px 30px rgba(79, 70, 229, 0.2)',
+        display: 'flex', flexDirection: 'column', gap: '16px',
         transition: 'all 0.5s ease'
       }}>
-         <div style={{ width: '100%', height: '100%', borderRadius: '36px', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
-            <MobileBottomNav activePage={activePage} setPage={setPage} theme={theme} />
+         {/* Navigation Tabs */}
+         <div style={{ width: '100%', height: '60px' }}>
+            <MobileBottomNav activePage={activePage} setPage={setPage} theme={theme} isBranded={true} />
+         </div>
+
+         {/* Corporate Logo & Tenant Branding */}
+         <div style={{ 
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+            paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.1)' 
+         }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'white' }}>
+                <TalenHumanLogo size={18} white={true} />
+                <span style={{ fontSize: '15px', fontWeight: '900', letterSpacing: '0.05em' }}>TALENHUMAN</span>
+            </div>
+            <span style={{ fontSize: '10px', fontWeight: '700', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+               {user?.tenantName || 'Global Management'}
+            </span>
          </div>
       </footer>
 

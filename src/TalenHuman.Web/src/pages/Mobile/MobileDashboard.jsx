@@ -65,11 +65,19 @@ const MobileDashboard = ({ user, theme }) => {
       {/* 🏔️ CLEAN NATIVE HEADER */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <h2 style={{ fontSize: '30px', fontWeight: '800', letterSpacing: '-0.8px', color: primaryText, margin: 0 }}>
-               Hola, <span style={{ color: '#4f46e5' }}>{user?.fullName?.split(' ')[0] || 'Edna'}</span>
+            <h2 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-0.8px', color: primaryText, margin: 0 }}>
+               Hola, <span style={{ color: '#4f46e5' }}>{user?.fullName?.split(' ')[0] || 'Usuario'}</span>
             </h2>
-            <div style={{ marginTop: '4px' }}>
-               <span style={{ fontSize: '11px', fontWeight: '600', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{user?.tenantName || 'TalenHuman Global'}</span>
+            <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+               <span style={{ fontSize: '12px', fontWeight: '800', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  {user?.roleName || 'Colaborador'}
+               </span>
+               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: mutedText }}>
+                  <MapPin size={10} />
+                  <span style={{ fontSize: '11px', fontWeight: '600' }}>
+                     {user?.storeName || todayShift?.storeName || 'Sede Principal'}
+                  </span>
+               </div>
             </div>
          </div>
          

@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
-import { User, ShieldCheck, LogOut, ChevronRight, Fingerprint } from 'lucide-react';
+import { 
+  User, ShieldCheck, LogOut, ChevronRight, 
+  Fingerprint, MapPin, Calendar, CreditCard,
+  Key, Settings, Bell, Shield
+} from 'lucide-react';
 import BiometricEnrollModal from '../../components/Biometrics/BiometricEnrollModal';
 
-const MobileProfile = ({ user }) => {
+const MobileProfile = ({ user, theme }) => {
   const [showBiometricSetup, setShowBiometricSetup] = useState(false);
+  const isDark = theme === 'dark';
 
   const handleLogout = () => {
     localStorage.clear();
@@ -12,82 +17,163 @@ const MobileProfile = ({ user }) => {
 
   const hasBiometrics = user?.biometricsEnrolled || false;
 
+  // Visual Tokens
+  const cardBg = isDark ? 'rgba(30, 41, 59, 0.5)' : '#ffffff';
+  const cardBorder = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)';
+  const primaryText = isDark ? '#ffffff' : '#0f172a';
+  const mutedText = isDark ? 'rgba(255, 255, 255, 0.4)' : '#64748b';
+  const accentColor = '#4f46e5';
+
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
+    <div className="animate-in fade-in slide-in-from-bottom-5 duration-700 pb-32">
       
-      {/* Profile Header */}
-      <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-slate-100 dark:border-slate-800 flex items-center gap-5 mt-4">
-        <div className="w-16 h-16 rounded-[1.5rem] bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
-          <User size={32} strokeWidth={2.5} />
-        </div>
-        <div className="flex-1 overflow-hidden">
-          <h2 className="text-xl font-black text-slate-800 dark:text-white truncate">
-            {user?.name || user?.email || 'Usuario'}
-          </h2>
-          <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">
+      {/* 💎 PREMIUM IDENTITY CARD */}
+      <div style={{
+        background: isDark ? 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' : 'linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%)',
+        borderRadius: '35px', padding: '32px 24px', marginBottom: '24px',
+        border: `1px solid ${cardBorder}`, boxShadow: '0 20px 40px rgba(0,0,0,0.04)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'
+      }}>
+         <div style={{
+            width: '100px', height: '100px', borderRadius: '40px',
+            background: accentColor, marginBottom: '20px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'white', fontSize: '42px', fontWeight: '900',
+            boxShadow: '0 15px 30px rgba(79, 70, 229, 0.3)'
+         }}>
+            {user?.fullName?.charAt(0) || 'U'}
+         </div>
+         
+         <h2 style={{ fontSize: '26px', fontWeight: '800', color: primaryText, margin: 0, letterSpacing: '-0.5px' }}>
+            {user?.fullName || 'Colaborador'}
+         </h2>
+         <span style={{ 
+            fontSize: '12px', fontWeight: '800', color: accentColor, 
+            background: 'rgba(79, 70, 229, 0.1)', padding: '4px 16px', 
+            borderRadius: '20px', marginTop: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' 
+         }}>
             {user?.roleName || 'Empleado'}
-          </p>
-        </div>
-      </div>
+         </span>
 
-      {/* Settings Group */}
-      <div className="flex flex-col gap-3">
-        <h3 className="px-4 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Seguridad y Acceso</h3>
-        
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col">
-          
-          {/* Biometrics Toggle */}
-          <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
-            <div className="flex items-center gap-4">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${hasBiometrics ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
-                <Fingerprint size={20} strokeWidth={2.5} />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-slate-800 dark:text-slate-200">Acceso Biométrico</span>
-                <span className="text-xs text-slate-500 font-medium">
-                  {hasBiometrics ? 'Activo y configurado' : 'Pulsa para configurar'}
-                </span>
-              </div>
-            </div>
+         <div style={{ width: '100%', height: '1px', background: cardBorder, margin: '24px 0' }} />
 
-            <button 
-                onClick={() => {
-                  if (hasBiometrics) {
-                     const newUser = { ...user, biometricsEnrolled: false };
-                     localStorage.setItem('user', JSON.stringify(newUser));
-                      localStorage.setItem('biometricsDismissed', 'true'); 
-                      sessionStorage.setItem('session_biometric_dismissed_v24', 'true'); // 🚀 MATCHED V24
-                      window.location.reload(); 
-                  } else {
-                     setShowBiometricSetup(true);
-                  }
-                }}
-                className={`w-12 h-7 rounded-full p-1 transition-colors duration-300 ${hasBiometrics ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}
-            >
-                <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-300 ${hasBiometrics ? 'translate-x-5' : 'translate-x-0'}`} />
-            </button>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Danger Zone */}
-      <div className="flex flex-col gap-3 mt-4">
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 overflow-hidden">
-          <button 
-             onClick={handleLogout}
-             className="w-full flex items-center justify-between p-5 active:bg-slate-50 dark:active:bg-slate-800/50 transition-colors"
-          >
-             <div className="flex items-center gap-4 text-red-500">
-                <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
-                   <LogOut size={20} strokeWidth={2.5} />
+         {/* Grid Info Details */}
+         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', width: '100%' }}>
+            <div style={{ textAlign: 'left' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: mutedText, marginBottom: '4px' }}>
+                    <MapPin size={12} />
+                    <span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase' }}>Tienda</span>
                 </div>
-                <span className="font-bold">Cerrar Sesión</span>
-             </div>
-             <ChevronRight size={20} className="text-slate-300" />
-          </button>
-        </div>
+                <p style={{ fontSize: '13px', fontWeight: '700', color: primaryText }}>{user?.storeName || 'Sede Central'}</p>
+            </div>
+            <div style={{ textAlign: 'left' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: mutedText, marginBottom: '4px' }}>
+                    <Calendar size={12} />
+                    <span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase' }}>Ingreso</span>
+                </div>
+                <p style={{ fontSize: '13px', fontWeight: '700', color: primaryText }}>{user?.joinDate ? new Date(user.joinDate).toLocaleDateString() : 'N/A'}</p>
+            </div>
+            <div style={{ textAlign: 'left' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: mutedText, marginBottom: '4px' }}>
+                    <CreditCard size={12} />
+                    <span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase' }}>Identificación</span>
+                </div>
+                <p style={{ fontSize: '13px', fontWeight: '700', color: primaryText }}>{user?.userName || '00000000'}</p>
+            </div>
+            <div style={{ textAlign: 'left' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: mutedText, marginBottom: '4px' }}>
+                    <Shield size={12} />
+                    <span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase' }}>Estado</span>
+                </div>
+                <p style={{ fontSize: '13px', fontWeight: '700', color: '#10b981' }}>Activo</p>
+            </div>
+         </div>
       </div>
+
+      {/* 🔐 SECURITY SETTINGS SEGMENT */}
+      <div style={{ marginBottom: '16px', padding: '0 8px' }}>
+         <span style={{ fontSize: '10px', fontWeight: '800', color: mutedText, textTransform: 'uppercase', letterSpacing: '0.2em' }}>Seguridad y Configuración</span>
+      </div>
+
+      <div style={{ 
+          background: cardBg, borderRadius: '30px', border: `1px solid ${cardBorder}`, 
+          overflow: 'hidden', display: 'flex', flexDirection: 'column' 
+      }}>
+         {/* Biometric Toggle Switch */}
+         <div style={{ 
+             display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
+             padding: '24px', borderBottom: `1px solid ${cardBorder}` 
+         }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+               <div style={{ 
+                   width: '48px', height: '48px', borderRadius: '14px', 
+                   background: hasBiometrics ? 'rgba(16, 185, 129, 0.1)' : 'rgba(79, 70, 229, 0.05)', 
+                   display: 'flex', alignItems: 'center', justifyContent: 'center',
+                   color: hasBiometrics ? '#10b981' : accentColor 
+               }}>
+                  <Fingerprint size={24} />
+               </div>
+               <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '15px', fontWeight: '800', color: primaryText }}>Acceso Biométrico</span>
+                  <span style={{ fontSize: '11px', color: mutedText }}>{hasBiometrics ? 'Rostro / Huella Activo' : 'Protege tu cuenta'}</span>
+               </div>
+            </div>
+            <button 
+                onClick={() => hasBiometrics ? window.location.reload() : setShowBiometricSetup(true)}
+                style={{
+                    width: '52px', height: '30px', borderRadius: '20px', padding: '3px',
+                    background: hasBiometrics ? '#10b981' : (isDark ? '#334155' : '#e2e8f0'),
+                    border: 'none', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', position: 'relative'
+                }}
+            >
+                <div style={{ 
+                    width: '24px', height: '24px', borderRadius: '50%', background: 'white',
+                    transform: hasBiometrics ? 'translateX(22px)' : 'translateX(0)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }} />
+            </button>
+         </div>
+
+         {/* Change Password Action */}
+         <button style={{ 
+             display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
+             padding: '24px', border: 'none', background: 'none', width: '100%', textAlign: 'left'
+         }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+               <div style={{ 
+                   width: '48px', height: '48px', borderRadius: '14px', 
+                   background: 'rgba(245, 158, 11, 0.05)', 
+                   display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f59e0b' 
+               }}>
+                  <Key size={24} />
+               </div>
+               <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '15px', fontWeight: '800', color: primaryText }}>Cambiar Contraseña</span>
+                  <span style={{ fontSize: '11px', color: mutedText }}>Último cambio hace 3 meses</span>
+               </div>
+            </div>
+            <ChevronRight size={20} color={mutedText} />
+         </button>
+      </div>
+
+      {/* 🚪 LOGOUT ACTION */}
+      <button 
+        onClick={handleLogout}
+        style={{ 
+            marginTop: '32px', width: '100%', padding: '24px', borderRadius: '30px',
+            background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.1)',
+            display: 'flex', alignItems: 'center', gap: '16px', color: '#ef4444'
+        }}
+      >
+         <div style={{ 
+             width: '44px', height: '44px', borderRadius: '12px', 
+             background: 'rgba(239, 68, 68, 0.1)', display: 'flex', 
+             alignItems: 'center', justifyContent: 'center' 
+         }}>
+            <LogOut size={20} />
+         </div>
+         <span style={{ fontSize: '16px', fontWeight: '800' }}>Cerrar Sesión</span>
+      </button>
 
       {showBiometricSetup && (
         <BiometricEnrollModal 
@@ -97,6 +183,7 @@ const MobileProfile = ({ user }) => {
             window.location.reload();
           }} 
           onCancel={() => setShowBiometricSetup(false)} 
+          theme={theme}
         />
       )}
 

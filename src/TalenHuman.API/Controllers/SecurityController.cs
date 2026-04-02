@@ -54,8 +54,8 @@ public class SecurityController : ControllerBase
         var authenticatorSelection = new AuthenticatorSelection
         {
             RequireResidentKey = false,
-            UserVerification = UserVerificationRequirement.Preferred, // 🚀 MATCHED DOMICARE: Solves Android 'Device did not respond' timeout entirely
-            AuthenticatorAttachment = AuthenticatorAttachment.Platform // 🚀 FORCED: Skips generic selection menu, asks for fingerprint directly
+            UserVerification = UserVerificationRequirement.Preferred,
+            AuthenticatorAttachment = AuthenticatorAttachment.Platform 
         };
 
         var options = _fido2.RequestNewCredential(fidoUser, existingCredentials, authenticatorSelection, AttestationConveyancePreference.None, null);

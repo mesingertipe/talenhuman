@@ -12,10 +12,10 @@ export default defineConfig({
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
         name: 'TalenHuman',
-        short_name: 'TH',
+        short_name: 'TalenHuman',
         description: 'TalenHuman Gestión de Personal',
         theme_color: '#4f46e5',
-        background_color: '#020617',
+        background_color: '#f8fafc',
         display: 'standalone',
         scope: '/',
         start_url: '/',

@@ -27,9 +27,9 @@ const MobileBottomNav = ({ activePage, setPage, theme }) => {
         const Icon = tab.icon;
         const isActive = activePage === tab.id;
         
-        // Dynamic colors based on theme
-        const activeColor = '#4f46e5'; // Brand Indigo
-        const inactiveColor = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(30, 41, 59, 0.4)';
+        // Dynamic colors based on theme/branding
+        const activeColor = isBranded ? '#ffffff' : '#4f46e5'; 
+        const inactiveColor = isBranded ? 'rgba(255, 255, 255, 0.4)' : (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(30, 41, 59, 0.4)');
 
         return (
           <button
@@ -38,7 +38,7 @@ const MobileBottomNav = ({ activePage, setPage, theme }) => {
             style={{ 
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
               width: '100%', height: '100%', border: 'none', background: 'transparent', outline: 'none',
-              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', position: 'relative', zIndex: 10,
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', position: 'relative', zIz: 10,
               color: isActive ? activeColor : inactiveColor,
               transform: isActive ? 'scale(1.05)' : 'scale(1)'
             }}
@@ -47,7 +47,7 @@ const MobileBottomNav = ({ activePage, setPage, theme }) => {
               {isActive && (
                 <div style={{ 
                     position: 'absolute', inset: 0, 
-                    background: isDark ? 'rgba(79, 70, 229, 0.15)' : 'rgba(79, 70, 229, 0.08)', 
+                    background: isBranded ? 'rgba(255, 255, 255, 0.12)' : (isDark ? 'rgba(79, 70, 229, 0.15)' : 'rgba(79, 70, 229, 0.08)'), 
                     borderRadius: '50%', transform: 'scale(1.2)' 
                 }} />
               )}
@@ -67,7 +67,7 @@ const MobileBottomNav = ({ activePage, setPage, theme }) => {
             </span>
 
             {/* Active Top Bar Indicator */}
-            {isActive && (
+            {isActive && !isBranded && (
               <div style={{ 
                   position: 'absolute', top: '0', width: '24px', height: '3px', 
                   background: activeColor, borderRadius: '0 0 4px 4px',

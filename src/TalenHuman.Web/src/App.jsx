@@ -36,6 +36,7 @@ import BiometricEnrollModal from './components/Biometrics/BiometricEnrollModal'
 import MobileDashboard from './pages/Mobile/MobileDashboard'
 import MobileAttendance from './pages/Mobile/MobileAttendance'
 import MobileProfile from './pages/Mobile/MobileProfile'
+import MobileNews from './pages/Mobile/MobileNews' // 🚀 FIXED: Added missing import to prevent white screen
 
 import DebugPortal from './components/Shared/DebugPortal'
 
@@ -103,38 +104,42 @@ function App() {
   const renderContent = () => {
     if (booting) return (
       <div style={{ minHeight: '100dvh', background: theme === 'dark' ? '#0f172a' : '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme === 'dark' ? 'white' : '#1e293b' }}>
-         <div style={{ width: '100px', height: '100px', background: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)', borderRadius: '30px', border: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-             <span style={{ fontSize: '42px', fontWeight: '900', color: '#6366f1' }}>TH</span>
+         <div style={{ padding: '40px', background: theme === 'dark' ? 'rgba(255,255,255,0.02)' : '#ffffff', borderRadius: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', boxShadow: '0 20px 50px rgba(0,0,0,0.05)' }}>
+             <div style={{ width: '60px', height: '60px', border: '4px solid rgba(79, 70, 229, 0.1)', borderTopColor: '#4f46e5', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+             <span style={{ fontSize: '14px', fontWeight: '800', color: '#4f46e5', letterSpacing: '0.1em' }}>TALENHUMAN</span>
          </div>
       </div>
     );
 
     if (!token) return <Login onLogin={handleLogin} version={APP_VERSION} theme={theme} onForgotPassword={() => {}} onSelfServiceReset={() => {}} />;
 
-    // 🔒 RESTORE MANDATORY PWA GATE (ONLY FOR TRUE MOBILE EMPLOYEES)
+    // 🔒 STRICTOR Gating: Only Employee profiles see Mobile experience/modals
     if (isEmployee && isMobileDevice && !isStandalone) {
        return <InstallPWA onLogout={handleLogout} version={APP_VERSION} />;
     }
 
-    // 🔒 Mandatory Privacy Acceptance
-    if (!user.acceptedPrivacyPolicy && (isEmployee || (isMobileDevice && roleName !== 'manager'))) {
+    // 🔒 Mandatory Privacy (Employee ONLY)
+    if (isEmployee && !user.acceptedPrivacyPolicy) {
        return <PrivacyConsentModal onAccepted={(u) => setUser(u)} onLogout={handleLogout} policyText={user.privacyPolicyText} />;
     }
 
     const renderPage = () => {
-      if (isMobileDevice) {
+      // 📱 MOBILE PAGES: Only for Employees on Mobile
+      if (isMobileDevice && isEmployee) {
         switch(currentPage) {
-          case 'Marcaciones': return <MobileAttendance user={user} isMobile />;
-          case 'Perfil': return <MobileProfile user={user} />;
-          case 'Novedades': return <MobileNews user={user} />; // Use News page
+          case 'Marcaciones': return <MobileAttendance user={user} isMobile theme={theme} />;
+          case 'Perfil': return <MobileProfile user={user} theme={theme} />;
+          case 'Novedades': return <MobileNews user={user} theme={theme} />;
           default: return <MobileDashboard user={user} theme={theme} />;
         }
       }
+      
+      // 💻 WEB PAGES: Everything else (Admins, Managers on any device, and Employees on Desktop)
       return <Dashboard user={user} />;
     };
 
-    // 👑 SEPARATION: MobileLayout for Mobile, Normal Layout for Desktop
-    if (isMobileDevice) {
+    // 👑 SEPARATION: MobileLayout ONLY for Employees on Mobile, Web Layout for everyone else
+    if (isMobileDevice && isEmployee) {
       return (
         <MobileLayout 
           activePage={currentPage} 
