@@ -40,12 +40,12 @@ import MobileProfile from './pages/Mobile/MobileProfile'
 import DebugPortal from './components/Shared/DebugPortal'
 
 // V54-FORCE-DOMAIN-REDIRECT
-const APP_VERSION = "V57-ELITE-FORCE";
+const APP_VERSION = "V58-STABLE-FIX";
 
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION
   React.useEffect(() => {
-    if (window.location.hostname === 'www.talenhuman.com') {
+    if (typeof window !== 'undefined' && window.location.hostname === 'www.talenhuman.com') {
       window.location.replace('https://talenhuman.com' + window.location.pathname + window.location.search);
     }
   }, []);
@@ -61,6 +61,7 @@ function App() {
   const [booting, setBooting] = useState(true); 
   
   const [isStandalone, setIsStandalone] = useState(() => {
+     if (typeof window === 'undefined') return false;
      const isIOS = /iPad|iPhone|iPod/.test(window.navigator.userAgent) && !window.MSStream;
      const isStand = window.matchMedia('(display-mode: standalone)').matches || (isIOS && window.navigator.standalone);
      return !!isStand;
@@ -68,7 +69,9 @@ function App() {
 
   const roleName = user?.roleName?.toLowerCase() || '';
   const isEmployee = roleName === 'employee' || roleName === 'empleado' || user?.employeeId !== '00000000-0000-0000-0000-000000000000';
-  const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 1024;
+  
+  // 📱 STRICTOR MOBILE DETECTION (Only real small screens or mobile strings)
+  const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && window.innerWidth < 1024;
 
   useEffect(() => {
     localStorage.setItem('app_version', APP_VERSION);
@@ -85,15 +88,15 @@ function App() {
   const handleLogin = (userData, userToken) => {
     localStorage.setItem('user', JSON.stringify(userData));
     localStorage.setItem('token', userToken);
-    setUser(userData);
     setToken(userToken);
+    setUser(userData);
     initializeFirebase(userData);
   };
 
   const renderContent = () => {
     if (booting) return (
       <div style={{ minHeight: '100dvh', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-         <div className="clean-pulse-loader" style={{ width: '100px', height: '100px', background: 'rgba(255,255,255,0.05)', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+         <div style={{ width: '100px', height: '100px', background: 'rgba(255,255,255,0.05)', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
              <span style={{ fontSize: '42px', fontWeight: '900', color: '#6366f1' }}>TH</span>
          </div>
       </div>
@@ -101,7 +104,7 @@ function App() {
 
     if (!token) return <Login onLogin={handleLogin} version={APP_VERSION} onForgotPassword={() => {}} onSelfServiceReset={() => {}} />;
 
-    // 🔒 RESTORE MANDATORY PWA GATE (Requested by User)
+    // 🔒 RESTORE MANDATORY PWA GATE (ONLY FOR TRUE MOBILE EMPLOYEES)
     if (isEmployee && isMobileDevice && !isStandalone) {
        return <InstallPWA onLogout={handleLogout} version={APP_VERSION} />;
     }
@@ -122,7 +125,8 @@ function App() {
       return <Dashboard user={user} />;
     };
 
-    if (isEmployee || isMobileDevice) {
+    // 👑 SEPARATION: MobileLayout for Mobile, Normal Layout for Desktop
+    if (isMobileDevice) {
       return <MobileLayout activePage={currentPage} setPage={setCurrentPage} user={user} onLogout={handleLogout} version={APP_VERSION}>{renderPage()}</MobileLayout>;
     }
 
