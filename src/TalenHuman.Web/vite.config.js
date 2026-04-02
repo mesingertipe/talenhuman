@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      disable: true, // NUCLEAR DISABLE
+      disable: false, // RESTORED FOR ANDROID SUPPORT
       registerType: 'autoUpdate', 
       injectRegister: 'auto',
       manifestFilename: 'manifest.json', 
@@ -15,6 +15,7 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
+        cacheId: 'v16-elite-pwa', // SHIELD AGAINST OLD CACHE
       },
       includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {

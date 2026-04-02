@@ -232,38 +232,20 @@
   z-index: 50;
 }
 
-/* 💠 Mobile Title Styles */
-.login-title-mobile {
-  font-size: 2.2rem !important;
-  font-weight: 900 !important;
-  color: white !important;
-  margin-top: 1rem !important;
-  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  letter-spacing: -0.04em !important;
-  display: block !important;
-}
-
-/* 💠 Desktop Title Styles */
-.login-title-desktop {
-  font-size: 2.25rem;
-  font-weight: 800;
+.login-title {
+  font-size: 2.75rem !important;
+  font-weight: 800 !important;
   color: #1e293b !important;
-  margin-bottom: 0.5rem;
-  letter-spacing: -0.75px;
+  margin-bottom: 0.25rem !important;
+  letter-spacing: -1px !important;
   display: block !important;
+  line-height: 1.1 !important;
 }
 
-/* Hide desktop title on small screens */
-@media (max-width: 1024px) {
-  .login-title-desktop {
-    display: none !important;
-  }
-}
-
-/* Hide mobile title on large screens */
-@media (min-width: 1025px) {
-  .login-title-mobile {
-    display: none !important;
+@media (max-width: 640px) {
+  .login-title {
+    font-size: 2.2rem !important;
+    margin-top: 0.5rem !important;
   }
 }
 

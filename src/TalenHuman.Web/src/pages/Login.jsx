@@ -91,17 +91,16 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
         {/* Right Side: Login Form */}
         <div className="login-form-side">
             <div className="login-form-container">
-              {/* 🏠 Mobile Brand Header (Restored with Title) */}
+              {/* 🏠 Mobile Brand Header (Clean Elite Version) */}
               <div className="login-mobile-brand">
                 <div className="login-mobile-brand-icon">
                   <Users size={22} />
                 </div>
                 <span className="login-mobile-brand-name">TalenHuman</span>
-                <h2 className="login-title-mobile">¡Bienvenido!</h2>
               </div>
 
               <div className="login-header text-center">
-                <h2 className="login-title-desktop">¡Bienvenido!</h2>
+                <h2 className="login-title">¡Bienvenido!</h2>
                 <p className="login-subtitle">Ingresa tus credenciales para acceder.</p>
               </div>
 
