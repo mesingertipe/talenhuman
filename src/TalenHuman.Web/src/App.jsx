@@ -33,7 +33,7 @@ import PrivacyConsentModal from './components/Legal/PrivacyConsentModal'
 import BiometricEnrollModal from './components/Biometrics/BiometricEnrollModal'
 
 // V12.8.7-FINAL-STABLE - TOTAL TRANSFORMATION
-const APP_VERSION = "V15.0.0-STABLE";
+const APP_VERSION = "V16.0.0-RECOVERY";
 
 function App() {
   const [user, setUser] = React.useState(null);

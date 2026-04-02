@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      disable: false, // RESTORED PWA
+      disable: true, // NUCLEAR DISABLE
       registerType: 'autoUpdate', 
       injectRegister: 'auto',
       manifestFilename: 'manifest.json', 
@@ -15,8 +15,6 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
-        cacheId: 'talenhuman-v15', // UNIQUE CACHE ID TO BREAK RECACHE LOOP
-        maximumFileSizeToCacheInBytes: 7000000
       },
       includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
