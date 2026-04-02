@@ -38,8 +38,8 @@ import MobileAttendance from './pages/Mobile/MobileAttendance'
 import MobileProfile from './pages/Mobile/MobileProfile'
 
 // V16.7.8-NATIVE-STABLE
-// V26-SLEDGEHAMMER-CACHE-BUSTER
-const APP_VERSION = "V26-SLEDGEHAMMER";
+// V28-FORCED-DEPLOY-FINAL
+const APP_VERSION = "V28-FORCED-DEPLOY";
 
 function App() {
   const [user, setUser] = useState(() => {
