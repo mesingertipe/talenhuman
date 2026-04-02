@@ -93,19 +93,19 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
     <button 
       key={item.label} 
       onClick={() => setPage(item.label)}
-      className={`nav-link-btn group ${activePage === item.label ? 'active bg-indigo-600/10 dark:bg-indigo-500/10 border-l-4 border-l-indigo-600 dark:border-l-indigo-400' : 'hover:bg-slate-800/50'}`}
+      className={`nav-link-btn group ${activePage === item.label ? 'active bg-white/20 border-l-4 border-l-white' : 'hover:bg-white/10'}`}
       title={isCollapsed ? item.label : ''}
       style={{ 
         background: 'none', border: 'none', width: '100%', 
         display: 'flex', alignItems: 'center', gap: '0.75rem', 
         padding: isSubItem ? '0.6rem 1rem 0.6rem 2rem' : '0.85rem 1.25rem', 
-        color: activePage === item.label ? '#fff' : '#94a3b8', cursor: 'pointer',
+        color: activePage === item.label ? '#fff' : 'rgba(255, 255, 255, 0.7)', cursor: 'pointer',
         borderRadius: '0 12px 12px 0', marginBottom: '0.25rem', textAlign: 'left',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         marginRight: '0.75rem'
       }}
     >
-      <span className={`${activePage === item.label ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300'}`}>{item.icon}</span>
+      <span className={`${activePage === item.label ? 'text-white' : 'text-white/50 group-hover:text-white/80'}`}>{item.icon}</span>
       {!isCollapsed && <span style={{ fontWeight: activePage === item.label ? '700' : '500', fontSize: '0.875rem' }}>{item.label}</span>}
     </button>
   );
@@ -113,7 +113,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
   return (
     <div 
       className={`sidebar border-r dark:border-slate-800 ${isCollapsed ? 'collapsed' : ''}`}
-      style={{ background: '#0f172a' }}
+      style={{ background: 'linear-gradient(180deg, #7c3aed 0%, #4f46e5 100%)' }}
       onMouseEnter={() => !isPinned && setIsCollapsed(false)}
       onMouseLeave={() => !isPinned && setIsCollapsed(true)}
     >
@@ -130,7 +130,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
               <div 
                 onClick={() => toggleHeader(section.label)}
                 style={{ 
-                  fontSize: '0.65rem', textTransform: 'uppercase', color: '#475569', 
+                  fontSize: '0.65rem', textTransform: 'uppercase', color: 'rgba(255, 255, 255, 0.5)', 
                   margin: '1.5rem 1.25rem 0.5rem 1.25rem', fontWeight: '800', trackingWidest: '0.1em',
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   cursor: 'pointer', userSelect: 'none'
