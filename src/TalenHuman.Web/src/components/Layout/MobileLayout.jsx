@@ -207,13 +207,12 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
                 style={{ 
                     display: 'flex', alignItems: 'center', gap: '10px', 
                     position: 'relative', cursor: 'pointer',
-                    padding: '10px 20px 10px 0', // Massive hit area for tapping logo
+                    padding: '10px 20px 10px 0', 
                     WebkitTapHighlightColor: 'transparent'
                 }}
              >
                 <TalenHumanLogo type="header" />
              </div>
- toxicology: 
              
              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', paddingLeft: '4px' }}>
                 <span style={{ 
