@@ -114,29 +114,27 @@ const MobileDashboard = ({ user, theme }) => {
              </h2>
              <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 <span style={{ fontSize: '12px', fontWeight: '800', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                   {user?.roles?.[0] || 'Gerente General'}
+                   {user?.jobTitle || user?.roles?.[0] || 'Gerente General'}
                 </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: mutedText }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: mutedText }}>
                    <MapPin size={10} />
                    <span style={{ fontSize: '11px', fontWeight: '600' }}>
                       {user?.companyName || user?.storeName || 'Sede Principal'}
+                   </span>
+                   <span style={{ fontSize: '14px' }}>
+                      {user?.countryCode === 'CO' ? '🇨🇴' : (user?.countryCode === 'MX' ? '🇲🇽' : '📍')}
                    </span>
                 </div>
              </div>
           </div>
           
-          {/* 🕒 DYNAMIC IDENTITY WIDGET (Tenant Sourced - V63.3 IMMUNE) */}
+          {/* 🕒 MINIMALIST TIME WIDGET (V63.5) */}
           <div style={{ 
               display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px',
               padding: '12px 16px', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(79, 70, 229, 0.03)',
               borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(79, 70, 229, 0.1)'}`,
               boxShadow: isDark ? 'none' : '0 10px 20px rgba(79, 70, 229, 0.05)'
           }}>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#4f46e5' }}>
-                <span style={{ fontSize: '12px', fontWeight: '800', letterSpacing: '0.05em' }}>
-                   {user?.countryCode === 'CO' ? '🇨🇴 COLOMBIA' : (user?.countryCode === 'MX' ? '🇲🇽 MÉXICO' : `📍 ${user?.countryCode || 'PAÍS'}`)}
-                </span>
-             </div>
              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: primaryText }}>
                 <Clock size={12} strokeWidth={2.5} />
                 <span style={{ fontSize: '13px', fontWeight: '900' }}>

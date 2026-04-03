@@ -6,6 +6,12 @@ import TalenHumanLogo from '../Shared/TalenHumanLogo';
 const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, theme, toggleTheme }) => {
   const isDark = theme === 'dark';
 
+  const getFlag = (code) => {
+    if (!code) return '🌍';
+    const flags = { 'CO': '🇨🇴', 'MX': '🇲🇽', 'US': '🇺🇸', 'ES': '🇪🇸' };
+    return flags[code] || '📍';
+  };
+
   return (
     <div 
       style={{ 
@@ -22,9 +28,9 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
       className="overscroll-none no-select"
     >
       
-      {/* 🏔️ CORPORATE PURPLE HEADER (ELITE FEEL) */}
+      {/* 🏔️ CORPORATE PURPLE HEADER (V63.5 ELITE - ENLARGED) */}
       <header style={{
-        padding: 'env(safe-area-inset-top, 20px) 24px 20px',
+        padding: 'env(safe-area-inset-top, 30px) 24px 34px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -35,7 +41,7 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
         zIndex: 100,
         position: 'sticky',
         top: 0,
-        boxShadow: '0 4px 20px rgba(79, 70, 229, 0.2)'
+        boxShadow: '0 10px 40px rgba(79, 70, 229, 0.25)'
       }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
              <div style={{ marginBottom: '-2px' }}>
@@ -47,9 +53,13 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
                  color: 'rgba(255,255,255,0.8)', 
                  textTransform: 'uppercase', 
                  letterSpacing: '0.05em',
-                 paddingLeft: '34px'
+                 paddingLeft: '34px',
+                 display: 'flex',
+                 alignItems: 'center',
+                 gap: '6px'
              }}>
                 {user?.companyName || 'Global Management'}
+                <span style={{ fontSize: '13px' }}>{getFlag(user?.countryCode)}</span>
              </span>
           </div>
           

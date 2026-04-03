@@ -131,6 +131,7 @@ public class AuthController : ControllerBase
         var employee = await _context.Employees
             .IgnoreQueryFilters()
             .Include(e => e.Store)
+            .Include(e => e.Profile)
             .FirstOrDefaultAsync(e => e.Id == user.EmployeeId);
 
         if (employee?.Store != null)
@@ -214,6 +215,8 @@ public class AuthController : ControllerBase
                 districtName = firstDistrictName,
                 storeIds,
                 employeeId = user.EmployeeId,
+                joinDate = employee?.DateOfEntry,
+                jobTitle = employee?.Profile?.Name,
                 activeModules,
                 permissions,
                 // Global Config

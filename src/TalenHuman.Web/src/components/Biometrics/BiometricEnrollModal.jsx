@@ -1,50 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { Fingerprint, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { Fingerprint, ShieldCheck, X, AlertCircle, Sparkles } from 'lucide-react';
 import { create } from '@github/webauthn-json';
-import SecurityService from '../../services/securityService';
+import SecurityService from '../../services/security.service';
 
 const BiometricEnrollModal = ({ onComplete, onCancel, theme }) => {
   const [loading, setLoading] = useState(false);
-  const [preLoading, setPreLoading] = useState(true);
+  const [preLoading, setPreLoading] = useState(false); // For "Preparing" state
   const [error, setError] = useState(null);
   const [diagInfo, setDiagInfo] = useState(null);
   const [success, setSuccess] = useState(false);
-  const [authOptions, setAuthOptions] = useState(null);
-
   const isDark = theme === 'dark';
 
-  // 🚀 ENVIRONMENT AUDIT
-  useEffect(() => {
-    const checkEnvironment = () => {
-        if (!window.isSecureContext) return "Entorno Inseguro (HTTPS requerido)";
-        if (!window.PublicKeyCredential) return "Biometría no soportada en este navegador";
-        return null;
-    };
-
-    const fetchOptions = async () => {
-      const envError = checkEnvironment();
-      if (envError) {
-          setError(envError);
-          setPreLoading(false);
-          return;
-      }
-
-      try {
-        const options = await SecurityService.getRegistrationOptions();
-        setAuthOptions(options);
-      } catch (err) {
-        setError('Servidor no disponible. Reintenta.');
-        setDiagInfo(err.message?.substring(0, 50));
-      } finally {
-        setPreLoading(false);
-      }
-    };
-    fetchOptions();
-  }, []);
-
   const handleActivate = async () => {
-    if (!authOptions) return;
-
+    // 🛡️ ANTI-DEBOUNCE PROTECTION (V63.5)
+    if (loading || preLoading) return;
+    
     setLoading(true);
     setError(null);
     setDiagInfo(null);
@@ -54,6 +24,9 @@ const BiometricEnrollModal = ({ onComplete, onCancel, theme }) => {
     );
 
     try {
+      // 🚀 USER GESTURE SYNC: Direct call within the click handler
+      const authOptions = await SecurityService.getRegistrationOptions();
+      
       const credentialPromise = create({ publicKey: authOptions });
       const credential = await Promise.race([credentialPromise, timeoutPromise]);
 
@@ -98,91 +71,96 @@ const BiometricEnrollModal = ({ onComplete, onCancel, theme }) => {
             style={{ 
                 position: 'absolute', top: 'env(safe-area-inset-top, 20px)', right: '20px',
                 width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)',
-                border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)', cursor: 'pointer', zIndex: 100
+                border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'white', cursor: 'pointer', backdropFilter: 'blur(10px)'
             }}
          >
-            <div style={{ fontSize: '24px', fontWeight: '300' }}>×</div>
+            <X size={20} />
          </button>
 
          <div style={{ 
-            width: '80px', height: '80px', borderRadius: '24px', background: 'rgba(255,255,255,0.12)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px',
-            backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)'
+            width: '80px', height: '80px', borderRadius: '28px', 
+            background: 'rgba(255,255,255,0.2)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', marginBottom: '24px',
+            boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+            animation: 'scaleIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)'
          }}>
-             <Fingerprint size={44} strokeWidth={1.5} style={{ opacity: loading ? 0.5 : 1 }} />
+            {success ? <ShieldCheck size={42} /> : <Fingerprint size={42} />}
          </div>
-         <h1 style={{ fontSize: '28px', fontWeight: '900', letterSpacing: '-1px', margin: 0, textAlign: 'center' }}>Elite Identity</h1>
-         <span style={{ fontSize: '11px', fontWeight: '800', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.7 }}>Secure Biometrics</span>
+         <h2 style={{ fontSize: '28px', fontWeight: '900', margin: '0 0 8px', letterSpacing: '-0.5px' }}>
+            {success ? '¡Acceso Vinculado!' : 'Biometría Elite'}
+         </h2>
+         <p style={{ opacity: 0.8, fontSize: '15px', fontWeight: '500', margin: 0 }}>V16.3.0 Elite Security</p>
       </div>
 
-      <div style={{ width: '100%', maxWidth: '400px', padding: '32px 24px', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start' }}>
+      <div style={{ padding: '40px 32px', width: '100%', maxWidth: '400px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+        {success ? (
+            <div style={{ textAlign: 'center', animation: 'scaleIn 0.5s ease' }}>
+                <div style={{ color: '#10b981', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                   <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '20px', borderRadius: '30px' }}>
+                      <Sparkles size={40} />
+                   </div>
+                   <h3 style={{ fontSize: '20px', fontWeight: '800', color: isDark ? '#ffffff' : '#1e293b' }}>Registro Completado</h3>
+                   <p style={{ color: isDark ? 'rgba(255,255,255,0.4)' : '#64748b', fontSize: '14px', lineHeight: '1.6' }}>
+                      Tu huella ha sido vinculada correctamente. <br/>Ahora podrás entrar mucho más rápido.
+                   </p>
+                </div>
+            </div>
+        ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', flex: 1 }}>
+               <div>
+                  <h3 style={{ fontSize: '18px', fontWeight: '800', color: isDark ? '#ffffff' : '#1e293b', marginBottom: '12px' }}>Protege tu Acceso</h3>
+                  <p style={{ fontSize: '14px', color: isDark ? 'rgba(255,255,255,0.4)' : '#64748b', lineHeight: '1.6', margin: 0 }}>
+                    Vincula tu huella o reconocimiento facial para una experiencia más rápida y segura. 
+                    Tus datos biométricos nunca salen de este dispositivo.
+                  </p>
+               </div>
 
-        <div style={{ textAlign: 'center', marginBottom: '32px', width: '100%' }}>
-           {success ? (
-              <div style={{ color: '#10b981', animation: 'scaleIn 0.5s ease-out' }}>
-                 <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                    <CheckCircle2 size={36} />
-                 </div>
-                 <h2 style={{ fontSize: '24px', fontWeight: '900', letterSpacing: '-0.5px', color: isDark ? '#ffffff' : '#1e293b' }}>¡Activado!</h2>
-                 <p style={{ fontSize: '14px', color: isDark ? 'rgba(255,255,255,0.5)' : '#64748b', marginTop: '8px' }}>Tu huella ahora es tu llave maestra.</p>
-              </div>
-           ) : (
-              <>
-                 <h2 style={{ fontSize: '26px', fontWeight: '900', color: isDark ? '#ffffff' : '#1e293b', letterSpacing: '-0.8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                    <ShieldCheck size={28} style={{ color: '#4f46e5' }} /> Tu <span style={{ color: '#4f46e5' }}>Huella</span>
-                 </h2>
-                 <p style={{ fontSize: '15px', color: isDark ? 'rgba(255,255,255,0.5)' : '#64748b', marginTop: '12px', lineHeight: '1.6' }}>Olvida las claves. Accede de forma instantánea usando el sensor biométrico.</p>
-              </>
-           )}
-        </div>
-
-        {!success && (
-           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {error && (
-                 <div style={{ 
-                    background: isDark ? 'rgba(239, 68, 68, 0.08)' : '#fef2f2', 
-                    borderLeft: `4px solid #ef4444`, 
-                    padding: '16px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '4px' 
-                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ef4444' }}>
+               {error && (
+                  <div style={{ 
+                      background: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fef2f2', 
+                      padding: '16px', borderRadius: '20px', 
+                      border: `1px solid ${isDark ? 'rgba(239, 68, 68, 0.2)' : '#fee2e2'}`,
+                      animation: 'scaleIn 0.3s ease'
+                  }}>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#ef4444', marginBottom: diagInfo ? '8px' : 0 }}>
                         <AlertCircle size={18} />
                         <span style={{ fontSize: '13px', fontWeight: '800' }}>{error}</span>
-                    </div>
-                    {diagInfo && <p style={{ fontSize: '11px', color: isDark ? 'rgba(239, 68, 68, 0.6)' : '#991b1b', margin: 0, fontWeight: '600' }}>{diagInfo}</p>}
-                 </div>
-              )}
+                     </div>
+                     {diagInfo && <p style={{ fontSize: '11px', color: isDark ? 'rgba(239, 68, 68, 0.6)' : '#991b1b', margin: 0, fontWeight: '600' }}>{diagInfo}</p>}
+                  </div>
+               )}
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
-                 <button 
-                   onClick={handleActivate}
-                   disabled={loading || preLoading}
-                   className="no-select"
-                   style={{
-                     width: '100%', background: (loading || preLoading) ? (isDark ? '#1e293b' : '#e2e8f0') : 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-                     color: 'white', padding: '22px', borderRadius: '24px', fontSize: '16px',
-                     fontWeight: '900', border: 'none', boxShadow: (loading || preLoading) ? 'none' : '0 12px 24px rgba(79, 70, 229, 0.3)',
-                     cursor: (loading || preLoading) ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
-                     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', transform: loading ? 'scale(0.98)' : 'scale(1)'
-                   }}
-                 >
-                    {loading ? <div className="loading-spinner"></div> : <><Fingerprint size={20} /> <span>{preLoading ? 'Preparando...' : 'Vincular Huella'}</span></>}
-                 </button>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', marginTop: 'auto' }}>
+                  <button 
+                    onClick={handleActivate}
+                    disabled={loading || preLoading}
+                    className="no-select"
+                    style={{
+                      width: '100%', background: (loading || preLoading) ? (isDark ? '#1e293b' : '#e2e8f0') : 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                      color: 'white', padding: '22px', borderRadius: '24px', fontSize: '16px',
+                      fontWeight: '900', border: 'none', boxShadow: (loading || preLoading) ? 'none' : '0 12px 24px rgba(79, 70, 229, 0.3)',
+                      cursor: (loading || preLoading) ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
+                      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', transform: loading ? 'scale(0.98)' : 'scale(1)'
+                    }}
+                  >
+                     {loading ? <div className="loading-spinner"></div> : <><Fingerprint size={20} /> <span>{preLoading ? 'Preparando...' : 'Vincular Huella'}</span></>}
+                  </button>
 
-                 <button 
-                   onClick={onCancel} 
-                   className="no-select"
-                   style={{ 
-                     background: 'transparent', border: `1.5px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`, 
-                     color: isDark ? 'rgba(255,255,255,0.5)' : '#64748b', 
-                     padding: '18px', borderRadius: '24px', fontSize: '14px', fontWeight: '700', 
-                     cursor: 'pointer', width: '100%', transition: 'all 0.3s ease'
-                   }}
-                 >
-                   Configurar más tarde
-                 </button>
-              </div>
-           </div>
+                  <button 
+                    onClick={onCancel} 
+                    className="no-select"
+                    style={{ 
+                      background: 'transparent', border: `1.5px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`, 
+                      color: isDark ? 'rgba(255,255,255,0.5)' : '#64748b', 
+                      padding: '18px', borderRadius: '24px', fontSize: '14px', fontWeight: '700', 
+                      cursor: 'pointer', width: '100%', transition: 'all 0.3s ease'
+                    }}
+                  >
+                    Configurar más tarde
+                  </button>
+               </div>
+            </div>
         )}
       </div>
       <style>{`
