@@ -129,19 +129,21 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
       )}
       
       {/* 🏔️ DUAL-LEVEL HEADER (V64.1) */}
-      <header style={{
-        padding: 'env(safe-area-inset-top, 20px) 24px 20px',
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '180px', 
-        background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-        zIndex: 100,
-        position: 'sticky',
-        top: 0,
-        boxShadow: '0 15px 40px rgba(79, 70, 229, 0.3)',
-        borderBottomLeftRadius: '2.5rem',
-        borderBottomRightRadius: '2.5rem',
-        overflow: 'hidden'
+      <header 
+        id="mobile-header"
+        style={{
+          padding: 'env(safe-area-inset-top, 20px) 24px 20px',
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '180px', 
+          background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+          zIndex: 100,
+          position: 'sticky',
+          top: 0,
+          boxShadow: '0 15px 40px rgba(79, 70, 229, 0.3)',
+          borderBottomLeftRadius: '2.5rem',
+          borderBottomRightRadius: '2.5rem',
+          overflow: 'hidden'
       }}>
           {/* TOP ACTION LAYER (Fixed to top of padding) */}
           <div style={{ 

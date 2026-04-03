@@ -51,17 +51,16 @@ const BiometricEnrollModal = ({ onComplete, onCancel, theme }) => {
     }
   };
 
-  // 🛡️ UI PERSISTENCE: Hide global footer to prevent overlap (Elite Fix V63.6.7)
+  // 🛡️ UI PERSISTENCE: Hide global header/footer to prevent overlap (Elite Fix V63.6.7)
   React.useEffect(() => {
     const footer = document.getElementById('mobile-footer');
-    if (footer) {
-      footer.style.display = 'none';
-      // Also hide header if z-index is still a problem (V63.6.7)
-    }
+    const header = document.getElementById('mobile-header');
+    if (footer) footer.style.display = 'none';
+    if (header) header.style.display = 'none';
+    
     return () => {
-      if (footer) {
-        footer.style.display = 'block';
-      }
+      if (footer) footer.style.display = 'block';
+      if (header) header.style.display = 'flex';
     };
   }, []);
 

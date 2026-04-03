@@ -42,6 +42,7 @@ import MobileNews from './pages/Mobile/MobileNews'
 import MobileShifts from './pages/Mobile/MobileShifts'
 import { useTheme } from './context/ThemeContext'
 import DebugPortal from './components/Shared/DebugPortal'
+import MobileCommunicationModal from './components/Mobile/MobileCommunicationModal'
 
 // V63.6 PROD UNIFIED
 const APP_VERSION = "V63.6.0";
@@ -65,6 +66,11 @@ function App() {
   const [booting, setBooting] = useState(true); 
   const { isDarkMode, toggleTheme } = useTheme();
   const theme = isDarkMode ? 'dark' : 'light';
+
+  // 📢 Communication Stats (V63.7)
+  const [activeCommunication, setActiveCommunication] = useState(null);
+  const [showPRModal, setShowPRModal] = useState(false);
+  const [notification, setNotification] = useState({ show: false, title: '', body: '' });
 
   // 🔐 IDENTITY SYNC (V65.0)
   useEffect(() => {
@@ -102,6 +108,49 @@ function App() {
   
   // 📱 STRICTOR MOBILE DETECTION
   const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && window.innerWidth < 1024;
+
+  // 📢 Active Communication Sync (V63.7)
+  useEffect(() => {
+    if (isEmployee && isMobileDevice && user) {
+        checkActiveCommunication();
+    }
+  }, [user]);
+
+  const checkActiveCommunication = async () => {
+    try {
+        const res = await api.get('/comunicados/active');
+        const lastSeen = localStorage.getItem('last_seen_pr');
+        
+        // 🛡️ Visibilidad Única: Only show if Id is different from last seen
+        if (res.data && res.data.id !== lastSeen) {
+            setActiveCommunication(res.data);
+            setShowPRModal(true);
+        }
+    } catch (err) {
+        // Silently fail if no active PR
+    }
+  };
+
+  const handleDismissPR = () => {
+    if (activeCommunication) {
+        localStorage.setItem('last_seen_pr', activeCommunication.id);
+    }
+    setShowPRModal(false);
+  };
+
+  // 🔔 Real-Time Notification Bridge
+  useEffect(() => {
+    onMessageListener().then(payload => {
+        if (payload.data?.type === 'broadcast') {
+            setNotification({
+                show: true,
+                title: payload.notification.title,
+                body: payload.notification.body
+            });
+            setTimeout(() => setNotification({ show: false, title: '', body: '' }), 6000);
+        }
+    }).catch(err => console.error('FCM Registry Error:', err));
+  }, []);
 
   useEffect(() => {
     try {
@@ -243,6 +292,30 @@ function App() {
   return (
     <>
       {renderContent()}
+      
+      {/* 📺 MOBILE PR MODAL (V63.7) */}
+      {showPRModal && activeCommunication && (
+        <MobileCommunicationModal 
+          communication={activeCommunication} 
+          onDismiss={handleDismissPR} 
+        />
+      )}
+
+      {/* 🔔 REAL-TIME BROADCAST TOAST */}
+      {notification.show && (
+        <div style={{
+          position: 'fixed', top: '100px', left: '20px', right: '20px',
+          zIndex: 20000, background: '#4f46e5', color: 'white',
+          padding: '20px', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+          display: 'flex', alignItems: 'center', gap: '15px', animation: 'slideDown 0.5s ease'
+        }}>
+          <Megaphone size={24} />
+          <div>
+            <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '900' }}>{notification.title}</h4>
+            <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.9 }}>{notification.body}</p>
+          </div>
+        </div>
+      )}
     </>
   );
 }
