@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Layout from './components/Layout/Layout'
+import api from './services/api'
 import Dashboard from './pages/Dashboard'
 import Brands from './pages/Core/Brands'
 import Stores from './pages/Core/Stores'
