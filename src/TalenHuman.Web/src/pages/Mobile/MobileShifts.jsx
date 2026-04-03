@@ -32,7 +32,9 @@ const MobileShifts = ({ user }) => {
         end = new Date(d_day.setHours(23,59,59,999)).toISOString();
       } else if (view === 'week') {
         const startOfWeek = new Date(d);
-        startOfWeek.setDate(d.getDate() - d.getDay());
+        const day = d.getDay();
+        const offset = day === 0 ? 6 : day - 1; // 🟢 MON=0, SUN=6
+        startOfWeek.setDate(d.getDate() - offset);
         startOfWeek.setHours(0,0,0,0);
         start = startOfWeek.toISOString();
 
@@ -74,7 +76,9 @@ const MobileShifts = ({ user }) => {
     if (view === 'day') return currentDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
     if (view === 'week') {
       const startOfWeek = new Date(currentDate);
-      startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+      const day = currentDate.getDay();
+      const offset = day === 0 ? 6 : day - 1; 
+      startOfWeek.setDate(currentDate.getDate() - offset);
       const endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(startOfWeek.getDate() + 6);
       
@@ -284,12 +288,7 @@ const ShiftCard = ({ shift, isDark, primaryText, mutedText, cardBg, glassEffect,
             </div>
          )}
 
-         {shift.observation && (
-            <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', gap: '10px', color: mutedText, padding: '0 8px' }}>
-               <Filter size={14} />
-               <p style={{ fontSize: '11px', fontWeight: '600', fontStyle: 'italic', margin: 0 }}>"{shift.observation}"</p>
-            </div>
-         )}
+         {/* 🧹 Observation block removed by user request (CLEAN V63.6.4) */}
       </div>
    );
 };

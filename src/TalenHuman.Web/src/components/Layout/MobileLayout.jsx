@@ -287,8 +287,7 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
           flex: 1, 
           overflowY: 'auto', 
           paddingBottom: '120px', 
-          position: 'relative', 
-          zIndex: 10 
+          position: 'relative'
         }}
         className="animate-in fade-in slide-in-from-bottom-10 duration-700 no-scrollbar"
       >
