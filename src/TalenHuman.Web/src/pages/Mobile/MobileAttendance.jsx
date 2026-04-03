@@ -1,11 +1,13 @@
 import React from 'react';
 import { Clock, ArrowUpRight, ArrowDownLeft, MapPin, Calendar, ListTodo, Sparkles } from 'lucide-react';
 import api from '../../services/api';
+import { useTheme } from '../../context/ThemeContext';
 
 const MobileAttendance = ({ user }) => {
   const [data, setData] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
-  const isDark = window.document.documentElement.classList.contains('dark');
+  const { isDarkMode } = useTheme();
+  const isDark = isDarkMode;
 
   React.useEffect(() => {
     const fetchAttendance = async () => {
@@ -22,12 +24,12 @@ const MobileAttendance = ({ user }) => {
   }, []);
 
   // Premium Visual Tokens
+  const primaryText = isDark ? '#ffffff' : '#1e293b';
+  const mutedText = isDark ? 'rgba(255, 255, 255, 0.45)' : '#64748b';
   const cardBg = isDark ? 'rgba(30, 41, 59, 0.4)' : 'rgba(255, 255, 255, 0.8)';
-  const cardBorder = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)';
+  const cardBorder = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
   const glassEffect = { backdropFilter: 'blur(20px)', border: `1px solid ${cardBorder}` };
   const shadow = isDark ? '0 25px 50px -12px rgba(0, 0, 0, 0.5)' : '0 20px 40px rgba(0, 0, 0, 0.06)';
-  const primaryText = isDark ? '#ffffff' : '#1e293b';
-  const mutedText = isDark ? 'rgba(255, 255, 255, 0.5)' : '#64748b';
 
   if (loading) {
     return (
@@ -58,7 +60,7 @@ const MobileAttendance = ({ user }) => {
       </div>
 
       {/* 📜 ACTIVITY LIST */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '0 8px' }}>
         {data.length > 0 ? (
           data.map((item, idx) => (
             <div key={idx} style={{ 
@@ -98,21 +100,21 @@ const MobileAttendance = ({ user }) => {
                <div style={{ 
                    display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', 
                    background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', 
-                   padding: '20px', borderRadius: '28px', border: `1px solid ${cardBorder}`
+                   padding: '24px', borderRadius: '32px', border: `1px solid ${cardBorder}`
                }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981' }}>
                         <ArrowUpRight size={16} strokeWidth={3} />
                         <span style={{ fontSize: '18px', fontWeight: '950', letterSpacing: '-0.5px' }}>{item.clockIn ? new Date(item.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
                      </div>
-                     <p style={{ fontSize: '9px', fontWeight: '800', color: mutedText, textTransform: 'uppercase', letterSpacing: '0.1em', marginLeft: '24px' }}>Entrada</p>
+                     <p style={{ fontSize: '9px', fontWeight: '800', color: mutedText, textTransform: 'uppercase', letterSpacing: '0.1em', marginLeft: '24px', margin: 0 }}>Entrada</p>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#4f46e5' }}>
                         <ArrowDownLeft size={16} strokeWidth={3} />
                         <span style={{ fontSize: '18px', fontWeight: '950', letterSpacing: '-0.5px' }}>{item.clockOut ? new Date(item.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
                      </div>
-                     <p style={{ fontSize: '9px', fontWeight: '800', color: mutedText, textTransform: 'uppercase', letterSpacing: '0.1em', marginLeft: '24px' }}>Salida</p>
+                     <p style={{ fontSize: '9px', fontWeight: '800', color: mutedText, textTransform: 'uppercase', letterSpacing: '0.1em', marginLeft: '24px', margin: 0 }}>Salida</p>
                   </div>
                </div>
 

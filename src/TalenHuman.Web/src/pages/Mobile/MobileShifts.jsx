@@ -6,9 +6,11 @@ import {
   LayoutGrid, List, Sparkles, Filter
 } from 'lucide-react';
 import api from '../../services/api';
+import { useTheme } from '../../context/ThemeContext';
 
-const MobileShifts = ({ user, theme }) => {
-  const isDark = theme === 'dark';
+const MobileShifts = ({ user }) => {
+  const { isDarkMode } = useTheme();
+  const isDark = isDarkMode;
   const [view, setView] = useState('day'); // 'day', 'week', 'month'
   const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,13 +27,16 @@ const MobileShifts = ({ user, theme }) => {
       const d = new Date(currentDate);
       
       if (view === 'day') {
-        start = new Date(d.setHours(0,0,0,0)).toISOString();
-        end = new Date(d.setHours(23,59,59,999)).toISOString();
+        const d_day = new Date(d);
+        start = new Date(d_day.setHours(0,0,0,0)).toISOString();
+        end = new Date(d_day.setHours(23,59,59,999)).toISOString();
       } else if (view === 'week') {
-        const first = d.getDate() - d.getDay();
+        const d_week = new Date(d);
+        const first = d_week.getDate() - d_week.getDay();
         const last = first + 6;
-        start = new Date(new Date(d.setDate(first)).setHours(0,0,0,0)).toISOString();
-        end = new Date(new Date(d.setDate(last)).setHours(23,59,59,999)).toISOString();
+        start = new Date(new Date(d_week.setDate(first)).setHours(0,0,0,0)).toISOString();
+        const d_last = new Date(d_week);
+        end = new Date(new Date(d_last.setDate(last)).setHours(23,59,59,999)).toISOString();
       } else {
         start = new Date(d.getFullYear(), d.getMonth(), 1).toISOString();
         end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59).toISOString();
@@ -65,7 +70,8 @@ const MobileShifts = ({ user, theme }) => {
   const formatDateLabel = () => {
     if (view === 'day') return currentDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
     if (view === 'week') {
-      const first = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay()));
+      const d = new Date(currentDate);
+      const first = new Date(d.setDate(d.getDate() - d.getDay()));
       const last = new Date(first);
       last.setDate(first.getDate() + 6);
       return `${first.getDate()} - ${last.getDate()} ${last.toLocaleDateString('es-ES', { month: 'short' })}`;
@@ -73,60 +79,106 @@ const MobileShifts = ({ user, theme }) => {
     return currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
   };
 
-  const cardBg = isDark ? 'rgba(30, 41, 59, 0.4)' : '#ffffff';
-  const borderColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0,0,0,0.04)';
+  // Premium Visual Tokens
+  const primaryText = isDark ? '#ffffff' : '#1e293b';
+  const mutedText = isDark ? 'rgba(255, 255, 255, 0.45)' : '#64748b';
+  const cardBg = isDark ? 'rgba(30, 41, 59, 0.4)' : 'rgba(255, 255, 255, 0.8)';
+  const cardBorder = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
+  const glassEffect = { backdropFilter: 'blur(20px)', border: `1px solid ${cardBorder}` };
+  const shadow = isDark ? '0 25px 50px -12px rgba(0, 0, 0, 0.5)' : '0 20px 40px rgba(0, 0, 0, 0.04)';
 
   return (
-    <div className="animate-in fade-in slide-in-from-right-10 duration-700 pb-20 no-select">
+    <div style={{ paddingBottom: '100px' }} className="animate-in fade-in slide-in-from-right-10 duration-700 no-select">
       
-      {/* 🏔️ HEADER & TABS */}
-      <div className="pt-4 px-2 mb-8">
-         <h2 className="text-3xl font-black tracking-tighter text-slate-800 dark:text-white leading-tight">Mis Turnos</h2>
-         <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-1">Programación Semanal</p>
-         
-         <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-2xl mt-6 gap-1">
+      {/* 🏔️ PREMIUM HEADER */}
+      <div style={{ padding: '24px 8px 32px' }}>
+         <h2 style={{ fontSize: '32px', fontWeight: '950', letterSpacing: '-1.5px', color: primaryText, margin: 0 }}>Mis Turnos</h2>
+         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+            <Sparkles size={12} color="#4f46e5" />
+            <p style={{ color: mutedText, fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: '10px', margin: 0 }}>Programación Operativa</p>
+         </div>
+
+         {/* 📅 VIEW SWITCHER (ULTRA-MODERN) */}
+         <div style={{ 
+            display: 'flex', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', 
+            padding: '6px', borderRadius: '24px', marginTop: '24px', gap: '4px' 
+         }}>
             <TabButton active={view === 'day'} onClick={() => setView('day')} label="Día" isDark={isDark} />
             <TabButton active={view === 'week'} onClick={() => setView('week')} label="Semana" isDark={isDark} />
             <TabButton active={view === 'month'} onClick={() => setView('month')} label="Mes" isDark={isDark} />
          </div>
       </div>
 
-      {/* 📅 DATE SELECTOR */}
-      <div className="flex items-center justify-between px-4 mb-8 bg-white dark:bg-slate-900 py-4 rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-xl shadow-slate-200/20">
-         <button onClick={handlePrev} className="p-3 text-slate-400 hover:text-[#4f46e5] active:scale-90 transition-transform">
+      {/* 📅 FLOATING DATE SELECTOR */}
+      <div style={{ 
+          margin: '0 8px 32px', padding: '20px 24px', borderRadius: '32px',
+          background: cardBg, ...glassEffect, boxShadow: shadow,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+      }}>
+         <button 
+           onClick={handlePrev} 
+           style={{ 
+             width: '44px', height: '44px', borderRadius: '14px', border: 'none',
+             background: 'rgba(79, 70, 229, 0.05)', color: '#4f46e5',
+             display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+           }}
+         >
             <ChevronLeft size={24} strokeWidth={2.5} />
          </button>
-         <div className="text-center">
-            <p className="text-[14px] font-black tracking-tight text-slate-800 dark:text-white capitalize">{formatDateLabel()}</p>
+         
+         <div style={{ textAlign: 'center' }}>
+            <p style={{ fontSize: '15px', fontWeight: '900', color: primaryText, margin: 0, textTransform: 'capitalize', letterSpacing: '-0.3px' }}>
+              {formatDateLabel()}
+            </p>
          </div>
-         <button onClick={handleNext} className="p-3 text-slate-400 hover:text-[#4f46e5] active:scale-90 transition-transform">
+
+         <button 
+           onClick={handleNext} 
+           style={{ 
+             width: '44px', height: '44px', borderRadius: '14px', border: 'none',
+             background: 'rgba(79, 70, 229, 0.1)', color: '#4f46e5',
+             display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+           }}
+         >
             <ChevronRight size={24} strokeWidth={2.5} />
          </button>
       </div>
 
       {/* 📜 SHIFT LIST */}
-      <div className="space-y-4 px-1">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '0 8px' }}>
          {loading ? (
-            <div className="py-20 flex flex-col items-center gap-4">
-               <div className="w-10 h-10 border-4 border-[#4f46e5] border-t-transparent rounded-full animate-spin" />
-               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sincronizando Turnos...</p>
+            <div style={{ py: '60px', textAlign: 'center' }}>
+               <div style={{ width: '40px', height: '40px', border: '4px solid #4f46e5', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+               <p style={{ fontSize: '10px', fontWeight: '900', color: mutedText, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Sincronizando...</p>
             </div>
          ) : shifts.length > 0 ? (
             shifts.map((shift, idx) => (
-               <ShiftCard key={idx} shift={shift} isDark={isDark} />
+               <ShiftCard 
+                  key={idx} 
+                  shift={shift} 
+                  isDark={isDark} 
+                  primaryText={primaryText}
+                  mutedText={mutedText}
+                  cardBg={cardBg}
+                  glassEffect={glassEffect}
+                  shadow={shadow}
+                  cardBorder={cardBorder}
+               />
             ))
          ) : (
-            <div className="bg-slate-50 dark:bg-white/5 rounded-[3rem] p-16 border border-dashed border-slate-200 dark:border-white/10 text-center space-y-4">
-               <div className="w-16 h-16 bg-white dark:bg-slate-900 rounded-3xl mx-auto flex items-center justify-center text-slate-300 shadow-sm">
-                  <CalendarDays size={32} strokeWidth={1.5} />
+            <div style={{ 
+               background: cardBg, borderRadius: '40px', padding: '64px 32px', 
+               ...glassEffect, boxShadow: shadow, textAlign: 'center', opacity: 0.8 
+            }}>
+               <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)', margin: '0 auto 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: mutedText }}>
+                  <CalendarDays size={32} />
                </div>
-               <div className="space-y-1">
-                  <p className="text-sm font-black text-slate-500">Sin turnos asignados</p>
-                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">No hay programación para este periodo</p>
-               </div>
+               <p style={{ fontSize: '16px', fontWeight: '900', color: primaryText, margin: '0 0 8px' }}>Sin turnos asignados</p>
+               <p style={{ fontSize: '11px', color: mutedText, fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Consulta con tu supervisor</p>
             </div>
          )}
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 };
@@ -134,85 +186,100 @@ const MobileShifts = ({ user, theme }) => {
 const TabButton = ({ active, onClick, label, isDark }) => (
    <button 
       onClick={onClick}
-      className={`flex-1 py-3 text-[11px] font-black uppercase tracking-widest rounded-xl transition-all ${
-         active 
-            ? 'bg-white dark:bg-white/10 text-[#4f46e5] shadow-sm' 
-            : 'text-slate-400'
-      }`}
+      style={{
+        flex: 1, padding: '12px 10px', borderRadius: '18px', border: 'none',
+        background: active ? (isDark ? 'rgba(255,255,255,0.1)' : '#ffffff') : 'transparent',
+        boxShadow: active ? '0 4px 12px rgba(0,0,0,0.05)' : 'none',
+        color: active ? '#4f46e5' : (isDark ? 'rgba(255,255,255,0.4)' : '#64748b'),
+        fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.1em',
+        cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+      }}
    >
       {label}
    </button>
 );
 
-const ShiftCard = ({ shift, isDark }) => {
+const ShiftCard = ({ shift, isDark, primaryText, mutedText, cardBg, glassEffect, shadow, cardBorder }) => {
    const isDescanso = shift.isDescanso;
    const startTime = new Date(shift.startTime);
    const endTime = new Date(shift.endTime);
 
    return (
-      <div 
-        className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 border border-slate-100 dark:border-white/5 shadow-xl shadow-slate-200/20 active:scale-[0.98] transition-transform overflow-hidden relative"
-      >
+      <div style={{ 
+          background: cardBg, borderRadius: '40px', padding: '32px', 
+          ...glassEffect, boxShadow: shadow, overflow: 'hidden', position: 'relative'
+      }}>
          {isDescanso && (
-            <div className="absolute top-0 right-0 p-4 opacity-5">
-               <Sparkles size={100} />
+            <div style={{ position: 'absolute', top: '-20px', right: '-20px', color: '#f59e0b', opacity: 0.05 }}>
+               <Sparkles size={160} />
             </div>
          )}
 
-         <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                  isDescanso 
-                     ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 border border-amber-100' 
-                     : 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 border border-indigo-100'
-               }`}>
+         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+               <div style={{ 
+                  width: '52px', height: '52px', borderRadius: '18px', 
+                  background: isDescanso ? 'rgba(245, 158, 11, 0.1)' : 'rgba(79, 70, 229, 0.1)', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                  color: isDescanso ? '#f59e0b' : '#4f46e5'
+               }}>
                   {isDescanso ? <Sparkles size={24} /> : <Clock size={24} />}
                </div>
                <div>
-                  <p className="text-sm font-black text-slate-800 dark:text-white">
-                     {isDescanso ? 'Descanso' : 'Turno Operativo'}
+                  <p style={{ fontSize: '15px', fontWeight: '900', color: primaryText, margin: 0, letterSpacing: '-0.3px' }}>
+                     {isDescanso ? 'Día de Descanso' : 'Turno Operativo'}
                   </p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  <p style={{ fontSize: '10px', color: mutedText, fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '2px 0 0' }}>
                      {startTime.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric' })}
                   </p>
                </div>
             </div>
+            
             {!isDescanso && (
-               <div className="px-3 py-1 bg-indigo-50 dark:bg-indigo-500/10 rounded-full">
-                  <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Programado</span>
+               <div style={{ 
+                  padding: '6px 14px', borderRadius: '30px', 
+                  background: 'rgba(79, 70, 229, 0.1)', color: '#4f46e5', 
+                  fontSize: '9px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.1em' 
+               }}>
+                  Programado
                </div>
             )}
          </div>
 
          {!isDescanso ? (
-            <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-white/5 p-5 rounded-[2rem] border border-slate-100 dark:border-white/5">
-               <div className="space-y-1">
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Entrada</p>
-                  <div className="flex items-center gap-2 text-slate-800 dark:text-white">
-                     <span className="text-xl font-black tracking-tighter">
-                        {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                     </span>
-                  </div>
+            <div style={{ 
+                display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', 
+                background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', 
+                padding: '24px', borderRadius: '30px', border: `1px solid ${cardBorder}`
+            }}>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <p style={{ fontSize: '9px', fontWeight: '800', color: mutedText, textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>Entrada</p>
+                  <span style={{ fontSize: '20px', fontWeight: '950', color: primaryText, letterSpacing: '-0.5px' }}>
+                     {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
                </div>
-               <div className="space-y-1">
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Salida</p>
-                  <div className="flex items-center gap-2 text-slate-800 dark:text-white">
-                     <span className="text-xl font-black tracking-tighter">
-                        {endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                     </span>
-                  </div>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <p style={{ fontSize: '9px', fontWeight: '800', color: mutedText, textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>Salida</p>
+                  <span style={{ fontSize: '20px', fontWeight: '950', color: primaryText, letterSpacing: '-0.5px' }}>
+                     {endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
                </div>
             </div>
          ) : (
-            <div className="bg-amber-50 dark:bg-amber-500/10 p-5 rounded-[2rem] border border-amber-100 dark:border-amber-500/10 text-center">
-               <p className="text-[13px] font-black text-amber-600 uppercase tracking-widest">¡Disfruta tu día libre! ✨</p>
+            <div style={{ 
+               background: 'rgba(245, 158, 11, 0.08)', padding: '24px', 
+               borderRadius: '30px', textAlign: 'center', border: '1px solid rgba(245, 158, 11, 0.1)' 
+            }}>
+               <p style={{ fontSize: '13px', fontWeight: '900', color: '#f59e0b', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  ¡Disfruta tu día libre! ✨
+               </p>
             </div>
          )}
 
          {shift.observation && (
-            <div className="mt-4 flex items-center gap-2 opacity-60 px-2">
-               <Filter size={12} />
-               <p className="text-[11px] font-bold text-slate-500 italic">"{shift.observation}"</p>
+            <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', gap: '10px', color: mutedText, padding: '0 8px' }}>
+               <Filter size={14} />
+               <p style={{ fontSize: '11px', fontWeight: '600', fontStyle: 'italic', margin: 0 }}>"{shift.observation}"</p>
             </div>
          )}
       </div>
