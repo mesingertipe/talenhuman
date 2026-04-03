@@ -14,12 +14,12 @@ const MobileDashboard = ({ user, theme, setPage }) => {
   const [loading, setLoading] = useState(true);
   const [shiftData, setShiftData] = useState(null);
   const [lastMarking, setLastMarking] = useState(null);
+  const [proactiveAlert, setProactiveAlert] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // 1. Fetch Today's Shift
         const now = new Date();
         const start = new Date(now.setHours(0,0,0,0)).toISOString();
         const end = new Date(now.setHours(23,59,59,999)).toISOString();
@@ -29,12 +29,27 @@ const MobileDashboard = ({ user, theme, setPage }) => {
           api.get('/attendance/my-attendance')
         ]);
 
-        if (shiftRes.data?.length > 0) {
-          setShiftData(shiftRes.data[0]);
-        }
-        
-        if (attRes.data?.length > 0) {
-          setLastMarking(attRes.data[0]);
+        const todayShift = shiftRes.data?.length > 0 ? shiftRes.data[0] : null;
+        const marking = attRes.data?.length > 0 ? attRes.data[0] : null;
+
+        setShiftData(todayShift);
+        setLastMarking(marking);
+
+        // 🔔 PROACTIVE ALERT LOGIC (V65.1)
+        if (todayShift && !todayShift.isDescanso && !marking) {
+           const shiftStart = new Date(todayShift.startTime);
+           const diffMins = (shiftStart - new Date()) / (1000 * 60);
+           
+           if (diffMins > 0 && diffMins <= 20) {
+              const alertKey = `shift_alert_${todayShift.id}`;
+              if (!localStorage.getItem(alertKey)) {
+                 setProactiveAlert({
+                    title: "⏳ Turno por iniciar",
+                    message: `Tu turno comienza a las ${shiftStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}. ¡Prepárate!`
+                 });
+                 localStorage.setItem(alertKey, 'true');
+              }
+           }
         }
       } catch (err) {
         console.error("Dashboard data fetch error", err);
@@ -44,6 +59,26 @@ const MobileDashboard = ({ user, theme, setPage }) => {
     };
     fetchData();
   }, []);
+
+  // 🧠 DYNAMIC SHIFT STATUS (V65.1)
+  const getShiftStatus = () => {
+    if (!shiftData || shiftData.isDescanso) return { label: 'Descanso', color: '#10b981', gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' };
+    
+    const now = new Date();
+    const start = new Date(shiftData.startTime);
+    const hasMarking = lastMarking && new Date(lastMarking.clockIn).toDateString() === now.toDateString();
+
+    if (hasMarking) return { label: 'En Turno', color: '#10b981', gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', sub: 'Excelente jornada' };
+    
+    const diffMins = (start - now) / (1000 * 60);
+    
+    if (diffMins < 0) return { label: 'Atrasado', color: '#ef4444', gradient: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)', sub: 'Registra tu entrada' };
+    if (diffMins <= 30) return { label: 'Próximo', color: '#f59e0b', gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', sub: 'Inicia muy pronto' };
+    
+    return { label: 'Programado', color: '#4f46e5', gradient: accentGradient, sub: 'Tu turno de hoy' };
+  };
+
+  const status = getShiftStatus();
 
   // Premium Visual Tokens (V65.0)
   const cardBg = isDark ? 'rgba(30, 41, 59, 0.4)' : 'rgba(255, 255, 255, 0.8)';
@@ -99,47 +134,73 @@ const MobileDashboard = ({ user, theme, setPage }) => {
        </div>
 
        {/* 📅 DYNAMIC SHIFT CARD (PREMIUM GLASS) */}
-       <div 
-          onClick={() => setPage('Turnos')}
-          style={{ 
-             background: accentGradient,
-             borderRadius: '40px', padding: '48px 32px', color: 'white',
-             boxShadow: '0 30px 60px rgba(79, 70, 229, 0.4)',
-             marginBottom: '32px', position: 'relative', overflow: 'hidden',
-             cursor: 'pointer',
-             border: '1px solid rgba(255,255,255,0.1)'
-          }}
-       >
-          <div style={{ position: 'absolute', top: '-15%', right: '-15%', opacity: 0.15, transform: 'rotate(-15deg)' }}>
-             <CalendarDays size={240} />
-          </div>
-          
-          {/* Inner Glow Effect */}
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at top left, rgba(255,255,255,0.2) 0%, transparent 70%)' }} />
-          
-          <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-             <div style={{ width: '60px', height: '60px', borderRadius: '20px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
-                {shiftData?.isDescanso ? <Sparkles size={32} /> : <CalendarDays size={32} />}
-             </div>
-             
-             {loading ? (
-                <div style={{ height: '40px', width: '120px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px', animation: 'pulse 1.5s infinite' }} />
-             ) : (
-                <>
-                   <h3 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 8px' }}>
-                      {shiftData?.isDescanso ? 'Día de Descanso' : 
-                       shiftData ? `${new Date(shiftData.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 
-                       'Sin Turno Hoy'}
-                   </h3>
-                   <p style={{ fontSize: '15px', fontWeight: '600', opacity: 0.8, margin: 0, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                      {shiftData?.isDescanso ? 'Disfruta tu jornada ✨' : 
-                       shiftData ? 'Tu próximo turno comienza pronto' : 
-                       'Valida con tu gerente'}
-                   </p>
-                </>
-             )}
-          </div>
-       </div>
+        <div 
+           onClick={() => setPage('Turnos')}
+           style={{ 
+              background: status.gradient,
+              borderRadius: '40px', padding: '48px 32px', color: 'white',
+              boxShadow: isDark ? '0 20px 40px rgba(0,0,0,0.4)' : `0 30px 60px ${status.color}33`,
+              marginBottom: '32px', position: 'relative', overflow: 'hidden',
+              cursor: 'pointer',
+              border: '1px solid rgba(255,255,255,0.1)',
+              transition: 'all 0.5s ease'
+           }}
+        >
+           <div style={{ position: 'absolute', top: '-15%', right: '-15%', opacity: 0.15, transform: 'rotate(-15deg)' }}>
+              <CalendarDays size={240} />
+           </div>
+           
+           <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+              <div style={{ width: '60px', height: '60px', borderRadius: '20px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
+                 {shiftData?.isDescanso ? <Sparkles size={32} /> : <Clock size={32} />}
+              </div>
+              
+              {loading ? (
+                 <div style={{ height: '40px', width: '120px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px', animation: 'pulse 1.5s infinite' }} />
+              ) : (
+                 <>
+                    <h3 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 8px' }}>
+                       {shiftData?.isDescanso ? 'Día de Descanso' : 
+                        shiftData ? `${new Date(shiftData.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 
+                        'Sin Turno Hoy'}
+                    </h3>
+                    <p style={{ fontSize: '15px', fontWeight: '600', opacity: 0.8, margin: 0, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                       {status.sub || (shiftData?.isDescanso ? 'Disfruta tu jornada ✨' : 'Valida con tu gerente')}
+                    </p>
+                    
+                    <div style={{ 
+                       marginTop: '20px', padding: '6px 16px', borderRadius: '100px', 
+                       background: 'rgba(255,255,255,0.2)', fontSize: '11px', fontWeight: '900',
+                       textTransform: 'uppercase', letterSpacing: '0.05em'
+                    }}>
+                       {status.label}
+                    </div>
+                 </>
+              )}
+           </div>
+        </div>
+
+        {/* 🍿 PROACTIVE PREMIUM ALERT */}
+        {proactiveAlert && (
+           <div className="animate-in slide-in-from-top-10 fade-in duration-500" style={{ 
+              marginBottom: '32px', padding: '24px', borderRadius: '32px', 
+              background: 'rgba(79, 70, 229, 0.9)', backdropFilter: 'blur(10px)',
+              display: 'flex', alignItems: 'center', gap: '16px', color: 'white',
+              boxShadow: '0 20px 40px rgba(79, 70, 229, 0.3)', position: 'relative',
+              overflow: 'hidden'
+           }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Bell className="animate-bounce" size={20} />
+              </div>
+              <div style={{ flex: 1 }}>
+                 <p style={{ fontSize: '14px', fontWeight: '800', margin: '0 0 2px' }}>{proactiveAlert.title}</p>
+                 <p style={{ fontSize: '12px', opacity: 0.9, margin: 0 }}>{proactiveAlert.message}</p>
+              </div>
+              <button onClick={() => setProactiveAlert(null)} style={{ background: 'none', border: 'none', color: 'white', opacity: 0.6 }}>
+                 <Plus size={20} style={{ transform: 'rotate(45deg)' }} />
+              </button>
+           </div>
+        )}
 
        {lastMarking && (
           <div style={{ 

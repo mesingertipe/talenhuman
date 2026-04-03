@@ -13,6 +13,7 @@ public class AttendanceSchedulerService : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<AttendanceSchedulerService> _logger;
+    private static readonly HashSet<Guid> _notifiedShifts = new HashSet<Guid>();
     private DateTime? _lastRunDate;
 
     public AttendanceSchedulerService(IServiceProvider serviceProvider, ILogger<AttendanceSchedulerService> logger)
@@ -94,6 +95,9 @@ public class AttendanceSchedulerService : BackgroundService
                                     _lastRunDatesByCompany[company.Id] = companyNow;
                                     _logger.LogInformation("Scheduled cycle for {Name} completed.", company.Name);
                                 }
+
+                                // 🟢 ELITE V65.1: Proactive Shift Reminders (Check every minute)
+                                await CheckAndSendShiftRemindersAsync(context, company.Id, companyNow);
                             }
                         }
                         catch (Exception ex)
@@ -110,6 +114,52 @@ public class AttendanceSchedulerService : BackgroundService
  
             // Check every 1 minute
             await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+        }
+    }
+
+    private async Task CheckAndSendShiftRemindersAsync(IApplicationDbContext context, Guid companyId, DateTime companyNow)
+    {
+        try 
+        {
+            var notificationService = _serviceProvider.GetRequiredService<NotificationService>();
+            
+            // Look for shifts starting in 14-16 minutes (window to catch 15 min mark)
+            var targetTimeStart = companyNow.AddMinutes(14);
+            var targetTimeEnd = companyNow.AddMinutes(16);
+
+            var upcomingShifts = await context.Shifts
+                .Where(s => s.CompanyId == companyId && s.StartTime >= targetTimeStart && s.StartTime <= targetTimeEnd)
+                .Where(s => !s.IsDescanso)
+                .Include(s => s.Employee)
+                .ThenInclude(e => e.User)
+                .ToListAsync();
+
+            foreach (var shift in upcomingShifts)
+            {
+                if (_notifiedShifts.Contains(shift.Id)) continue;
+
+                var user = shift.Employee?.User;
+                if (user != null && !string.IsNullOrEmpty(user.FirebaseToken))
+                {
+                    await notificationService.SendNotificationAsync(new NotificationRequest
+                    {
+                        To = user.FirebaseToken,
+                        Type = NotificationType.Push,
+                        Subject = "⏳ Turno por iniciar",
+                        Message = $"Hola {user.FullName}, tu turno está programado para iniciar a las {shift.StartTime:HH:mm}. ¡Prepárate!"
+                    });
+
+                    _notifiedShifts.Add(shift.Id);
+                    _logger.LogInformation("Shift reminder sent for {Employee} (Shift: {Id})", user.FullName, shift.Id);
+                }
+            }
+
+            // Cleanup old notified shifts once a day
+            if (_notifiedShifts.Count > 1000) _notifiedShifts.Clear();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in CheckAndSendShiftRemindersAsync");
         }
     }
 }

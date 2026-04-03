@@ -117,7 +117,7 @@ const SystemSettings = () => {
 
     return (
         <div className="page-container animate-in fade-in duration-700" style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto' }}>
-            {/* Elite Header */}
+            {/* TalenHuman Header */}
             <div className="flex flex-wrap items-center justify-between mb-12 gap-8">
                 <div className="space-y-2">
                     <div className="flex items-center gap-3 mb-1">

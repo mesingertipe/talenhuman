@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Text;
 using Microsoft.AspNetCore.HttpOverrides;
 using Fido2NetLib;
+using TalenHuman.Application.Common.Interfaces;
+using TalenHuman.Application.Services;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
@@ -48,7 +50,7 @@ builder.Services.AddSession(options =>
 builder.Services.AddFido2(options =>
 {
     options.ServerDomain = builder.Configuration["Fido2:ServerDomain"] ?? "talenhuman.com";
-    options.ServerName = "TalenHuman Elite";
+    options.ServerName = "TalenHuman";
     options.Origins = new HashSet<string>(builder.Configuration.GetSection("Fido2:Origins").Get<string[]>() ?? new string[] { 
         "https://talenhuman.com", 
         "https://www.talenhuman.com",
@@ -166,6 +168,24 @@ using (var scope = app.Services.CreateScope())
             
             await TalenHuman.Infrastructure.Persistence.DbInitializer.SeedAsync(context, userManager, roleManager);
             logger.LogInformation("Database seed check completed.");
+
+            // 🚀 ELITE V65.1: Proactive Firebase Admin Initialization
+            try {
+                var settings = services.GetRequiredService<ISystemSettingsService>();
+                var projectId = await settings.GetSettingAsync("FIREBASE_PROJECT_ID");
+                if (!string.IsNullOrEmpty(projectId) && FirebaseAdmin.FirebaseApp.DefaultInstance == null)
+                {
+                    FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions()
+                    {
+                        Credential = Google.Apis.Auth.OAuth2.GoogleCredential.GetApplicationDefault(), // Or custom from settings
+                        ProjectId = projectId
+                    });
+                    logger.LogInformation("Firebase Admin SDK Initialized ✅");
+                }
+            } catch (Exception ex) {
+                logger.LogWarning("Firebase Admin SDK Initialization skipped: {Message}", ex.Message);
+            }
+
             break;
         }
         catch (Exception ex)
