@@ -26,7 +26,7 @@ import SystemSettings from './pages/SuperAdmin/SystemSettings';
 import NewsTemplateDesigner from './pages/SuperAdmin/NewsTemplateDesigner';
 import AuditLogs from './pages/Core/AuditLogs';
 import CommunicationsCenter from './pages/Admin/CommunicationsCenter';
-import { initializeFirebase, requestForToken } from './firebase';
+import { initializeFirebase, requestForToken, onMessageListener } from './firebase';
 
 import MobileLayout from './components/Layout/MobileLayout'
 import EmployeeDashboard from './pages/Employee/EmployeeDashboard'
