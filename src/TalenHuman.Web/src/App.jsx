@@ -153,6 +153,7 @@ function App() {
           case 'Marcaciones': return <MobileAttendance user={user} isMobile theme={theme} />;
           case 'Perfil': return <MobileProfile user={user} theme={theme} setPage={setCurrentPage} onLogout={handleLogout} />;
           case 'Novedades': return <MobileNews user={user} theme={theme} />;
+          case 'ResetPassword': return <ResetPassword user={user} theme={theme} setPage={setCurrentPage} />;
           default: return <MobileDashboard user={user} theme={theme} />;
         }
       }

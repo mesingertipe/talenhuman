@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Sun, Moon, LogOut, Clock, Calendar } from 'lucide-react';
+import { Sun, Moon, LogOut, Clock, Calendar, Bell, X, Info, AlertCircle, CheckCircle2 } from 'lucide-react';
 import MobileBottomNav from '../Navigation/MobileBottomNav';
 import TalenHumanLogo from '../Shared/TalenHumanLogo';
 
 const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, theme, toggleTheme }) => {
   const isDark = theme === 'dark';
   const [time, setTime] = useState(new Date());
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifCount, setNotifCount] = useState(3); // Mock counter
 
   // 🕒 REAL-TIME COMMAND CENTER CLOCK (V63.6)
   useEffect(() => {
@@ -70,12 +72,13 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
       className="overscroll-none no-select"
     >
       
-      {/* 🏔️ ELITE COMMAND CENTER HEADER (V63.9) */}
+      {/* 🏔️ ELITE GROUNDED HEADER (V64.0) */}
       <header style={{
-        padding: 'env(safe-area-inset-top, 74px) 24px 28px',
+        padding: 'env(safe-area-inset-top, 54px) 24px 24px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '4px', // 🚀 V63.8: Compact brand gap
+        justifyContent: 'flex-end', // 🚀 V64.0: Grounded Content
+        minHeight: '200px', // Extra height to allow bottom alignment
         background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
         zIndex: 100,
         position: 'sticky',
@@ -85,9 +88,32 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
         borderBottomRightRadius: '2.5rem'
       }}>
           {/* L1: BRAND & ACTIONS */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: '16px' }}>
              <TalenHumanLogo type="header" />
-             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {/* 🔔 ELITE NOTIFICATION BELL */}
+                <button 
+                    onClick={() => setShowNotifications(true)}
+                    style={{
+                        width: '40px', height: '40px', borderRadius: '12px',
+                        background: 'rgba(255,255,255,0.15)', border: 'none', 
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white',
+                        position: 'relative'
+                    }}
+                >
+                    <Bell size={18} />
+                    {notifCount > 0 && (
+                        <div style={{
+                            position: 'absolute', top: '8px', right: '8px',
+                            width: '14px', height: '14px', borderRadius: '50%',
+                            background: '#ef4444', border: '2px solid #5d4aea',
+                            fontSize: '8px', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}>
+                            {notifCount}
+                        </div>
+                    )}
+                </button>
+
                 <button 
                     onClick={toggleTheme}
                     style={{
@@ -139,6 +165,59 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
           </div>
       </header>
 
+      {/* 🔔 ELITE NOTIFICATION DRAWER (Right-to-Left) */}
+      {showNotifications && (
+        <div style={{
+            position: 'fixed', top: 0, right: 0, bottom: 0, left: 0,
+            zIndex: 2000, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)',
+            display: 'flex', justifyContent: 'flex-end'
+        }} onClick={() => setShowNotifications(false)}>
+            <div 
+                style={{
+                    width: '85%', height: '100%', background: isDark ? '#0f172a' : '#ffffff',
+                    boxShadow: '-10px 0 30px rgba(0,0,0,0.2)',
+                    display: 'flex', flexDirection: 'column',
+                    animation: 'slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+                }}
+                onClick={e => e.stopPropagation()}
+            >
+                <div style={{ padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : '#e2e8f0'}` }}>
+                    <h3 style={{ fontSize: '20px', fontWeight: '800', color: isDark ? 'white' : '#1e293b', margin: 0 }}>Notificaciones</h3>
+                    <button 
+                        onClick={() => setShowNotifications(false)}
+                        style={{ width: '36px', height: '36px', borderRadius: '10px', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                        <X size={18} />
+                    </button>
+                </div>
+
+                <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <NotifItem 
+                        icon={<Info size={18} color="#4f46e5" />} 
+                        title="Nueva Novedad" 
+                        desc="Se ha aprobado tu solicitud de permiso." 
+                        time="Hace 5 min" 
+                        isDark={isDark} 
+                    />
+                    <NotifItem 
+                        icon={<CheckCircle2 size={18} color="#10b981" />} 
+                        title="Asistencia Exitosa" 
+                        desc="Tu marcación de entrada fue registrada correctamente." 
+                        time="Hoy, 08:00 AM" 
+                        isDark={isDark} 
+                    />
+                    <NotifItem 
+                        icon={<AlertCircle size={18} color="#f59e0b" />} 
+                        title="Recordatorio" 
+                        desc="No olvides subir el reporte de cierre hoy." 
+                        time="Ayer" 
+                        isDark={isDark} 
+                    />
+                </div>
+            </div>
+        </div>
+      )}
+
       {/* Main Content Area */}
       <main 
         style={{ 
@@ -168,8 +247,33 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
          <MobileBottomNav activePage={activePage} setPage={setPage} theme={theme} isBranded={true} />
       </footer>
 
+      <style>{`
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+      `}</style>
+
     </div>
   );
 };
+
+const NotifItem = ({ icon, title, desc, time, isDark }) => (
+    <div style={{
+       padding: '16px', borderRadius: '20px', 
+       background: isDark ? 'rgba(255,255,255,0.02)' : '#f8fafc',
+       border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : '#e2e8f0'}`,
+       display: 'flex', gap: '12px'
+    }}>
+       <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: isDark ? 'rgba(255,255,255,0.05)' : '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {icon}
+       </div>
+       <div style={{ flex: 1 }}>
+          <p style={{ fontSize: '14px', fontWeight: '800', margin: '0 0 2px', color: isDark ? 'white' : '#1e293b' }}>{title}</p>
+          <p style={{ fontSize: '12px', color: isDark ? 'rgba(255,255,255,0.5)' : '#64748b', margin: '0 0 4px' }}>{desc}</p>
+          <p style={{ fontSize: '10px', color: '#4f46e5', fontWeight: '700', margin: 0 }}>{time}</p>
+       </div>
+    </div>
+);
 
 export default MobileLayout;
