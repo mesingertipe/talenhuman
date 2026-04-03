@@ -198,17 +198,23 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
 
           {/* BRAND POSITIONING (Elevated in center-bottom) */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '4px' }}>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', position: 'relative', zIndex: 1000 }}>
                 <TalenHumanLogo type="header" />
                 <div 
-                    onClick={() => setShowDebug(!showDebug)} 
+                    onClick={() => {
+                        console.log('🐞 Debug Dot Tapped');
+                        setShowDebug(!showDebug);
+                    }} 
                     style={{ 
-                        width: '24px', height: '24px', borderRadius: '50%', 
+                        width: '32px', height: '32px', borderRadius: '50%', 
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer' 
+                        cursor: 'pointer',
+                        background: 'transparent',
+                        position: 'relative',
+                        zIndex: 1001
                     }} 
                 >
-                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'rgba(255,255,255,0.12)' }} />
                 </div>
              </div>
              

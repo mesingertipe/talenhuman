@@ -30,13 +30,14 @@ const MobileCommunicationModal = ({ communication, onDismiss }) => {
             style={{
                 position: 'fixed',
                 inset: 0,
-                zIndex: 999999, // Absolute priority
-                background: 'rgba(7, 10, 25, 0.92)',
-                backdropFilter: 'blur(15px)',
+                zIndex: 2000000, // Absolute priority
+                background: 'rgba(7, 10, 25, 0.94)',
+                backdropFilter: 'blur(20px)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 padding: '20px',
+                paddingTop: '60px', // Prevent header overlap
                 animation: isClosing ? 'fadeOut-v12 0.3s forwards' : 'fadeIn-v12 0.4s ease-out'
             }}
         >

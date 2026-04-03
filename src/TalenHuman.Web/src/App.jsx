@@ -176,6 +176,7 @@ function App() {
   const handleLogin = (userData, userToken) => {
     localStorage.setItem('user', JSON.stringify(userData));
     localStorage.setItem('token', userToken);
+    if (userData.hasBiometrics) localStorage.setItem('hasBiometrics', 'true');
     setToken(userToken);
     setUser(userData);
     initializeFirebase(userData);
