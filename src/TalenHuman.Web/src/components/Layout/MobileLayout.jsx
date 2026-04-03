@@ -198,33 +198,20 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
 
           {/* BRAND POSITIONING (Elevated in center-bottom) */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '4px' }}>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', position: 'relative' }}>
+             <div 
+                onClick={(e) => {
+                    e.preventDefault(); e.stopPropagation();
+                    console.log('🐞 LOGO TAPPED - TOGGLING DEBUG');
+                    setShowDebug(prev => !prev);
+                }}
+                style={{ 
+                    display: 'flex', alignItems: 'center', gap: '10px', 
+                    position: 'relative', cursor: 'pointer',
+                    padding: '10px 20px 10px 0', // Massive hit area for tapping logo
+                    WebkitTapHighlightColor: 'transparent'
+                }}
+             >
                 <TalenHumanLogo type="header" />
-                <div 
-                    onClick={(e) => {
-                        e.preventDefault(); e.stopPropagation();
-                        setShowDebug(prev => !prev);
-                    }} 
-                    onTouchStart={(e) => {
-                        e.stopPropagation();
-                        // Optional: only trigger once per touch cycle
-                    }}
-                    style={{ 
-                        width: '50px', height: '50px', 
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer',
-                        background: 'rgba(255,255,255,0.1)',
-                        borderRadius: '50%',
-                        position: 'absolute',
-                        right: '-55px', 
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        zIndex: 999999999, // 🚀 TOPMOST Z-INDEX
-                        WebkitTapHighlightColor: 'transparent'
-                    }} 
-                >
-                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 15px rgba(239, 68, 68, 0.8)' }} />
-                </div>
              </div>
  toxicology: 
              
