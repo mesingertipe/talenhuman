@@ -27,7 +27,6 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
           title: payload.notification?.title || 'Notificación Talenhuman',
           body: payload.notification?.body || 'Tienes un nuevo mensaje.',
           type: payload.data?.type || 'info', // 'shift_update', 'broadcast', etc
-          time: 'Ahora',
           read: false,
           date: new Date().toISOString()
         };
@@ -297,15 +296,18 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
       </main>
 
       {/* Modern Fixed Navigation */}
-      <footer style={{ 
-        position: 'fixed', bottom: 0, left: 0, right: 0, 
-        zIndex: 1000, 
-        background: '#4f46e5', 
-        borderTopLeftRadius: '32px', borderTopRightRadius: '32px',
-        padding: '12px 20px env(safe-area-inset-bottom, 20px)',
-        boxShadow: '0 -15px 40px rgba(79, 70, 229, 0.25)',
-        transition: 'all 0.5s ease'
-      }}>
+      <footer 
+        id="mobile-footer"
+        style={{ 
+          position: 'fixed', bottom: 0, left: 0, right: 0, 
+          zIndex: 1000, 
+          background: '#4f46e5', 
+          borderTopLeftRadius: '32px', borderTopRightRadius: '32px',
+          padding: '12px 20px env(safe-area-inset-bottom, 20px)',
+          boxShadow: '0 -15px 40px rgba(79, 70, 229, 0.25)',
+          transition: 'all 0.5s ease'
+        }}
+      >
          <MobileBottomNav activePage={activePage} setPage={setPage} theme={theme} isBranded={true} />
       </footer>
 
