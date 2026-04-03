@@ -49,6 +49,44 @@ const MobileDashboard = ({ user, theme }) => {
     );
   }
 
+  // 🕒 TIMEZONE IMMUNITY HELPERS (V63.3)
+  const mapTimeZone = (tzId) => {
+    if (!tzId) return undefined;
+    const map = {
+      'SA Pacific Standard Time': 'America/Bogota',
+      'Central Standard Time (Mexico)': 'America/Mexico_City',
+      'Mountain Standard Time (Mexico)': 'America/Chihuahua',
+      'Pacific Standard Time (Mexico)': 'America/Tijuana',
+      'Central Standard Time': 'America/Chicago',
+      'Eastern Standard Time': 'America/New_York',
+      'Pacific Standard Time': 'America/Los_Angeles'
+    };
+    return map[tzId] || tzId;
+  };
+
+  const getSafeTime = () => {
+    try {
+      return new Date().toLocaleTimeString('es-ES', { 
+         hour: '2-digit', minute: '2-digit', 
+         timeZone: mapTimeZone(user?.timeZoneId) 
+      });
+    } catch (e) {
+      console.warn("TimeZone Error, falling back to local time", e);
+      return new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    }
+  };
+
+  const getSafeDate = () => {
+    try {
+      return new Date().toLocaleDateString('es-ES', { 
+         weekday: 'short', day: '2-digit', month: 'short',
+         timeZone: mapTimeZone(user?.timeZoneId)
+      });
+    } catch (e) {
+      return new Date().toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' });
+    }
+  };
+
   // Common styles
   const cardBg = isDark ? 'rgba(15, 23, 42, 0.6)' : '#ffffff';
   const cardBorder = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)';
@@ -87,7 +125,7 @@ const MobileDashboard = ({ user, theme }) => {
              </div>
           </div>
           
-          {/* 🕒 DYNAMIC IDENTITY WIDGET (Tenant Sourced) */}
+          {/* 🕒 DYNAMIC IDENTITY WIDGET (Tenant Sourced - V63.3 IMMUNE) */}
           <div style={{ 
               display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px',
               padding: '12px 16px', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(79, 70, 229, 0.03)',
@@ -102,22 +140,13 @@ const MobileDashboard = ({ user, theme }) => {
              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: primaryText }}>
                 <Clock size={12} strokeWidth={2.5} />
                 <span style={{ fontSize: '13px', fontWeight: '900' }}>
-                   {new Date().toLocaleTimeString('es-ES', { 
-                       hour: '2-digit', 
-                       minute: '2-digit',
-                       timeZone: user?.timeZoneId || undefined 
-                   })}
+                   {getSafeTime()}
                 </span>
              </div>
              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: mutedText }}>
                 <Calendar size={10} />
                 <span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase' }}>
-                   {new Date().toLocaleDateString('es-ES', { 
-                       weekday: 'short', 
-                       day: '2-digit', 
-                       month: 'short',
-                       timeZone: user?.timeZoneId || undefined
-                   })}
+                   {getSafeDate()}
                 </span>
              </div>
           </div>
