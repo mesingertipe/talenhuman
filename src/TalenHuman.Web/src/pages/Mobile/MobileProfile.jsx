@@ -16,6 +16,7 @@ const MobileProfile = ({ user, setPage, theme, onLogout }) => {
   const cardBg = isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff';
   const cardBorder = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)';
   const accentColor = '#4f46e5';
+  const shadow = isDark ? '0 20px 40px rgba(0,0,0,0.4)' : '0 10px 25px rgba(0,0,0,0.04)';
 
   const handleToggleBiometrics = () => {
     if (!biometricsEnabled) {

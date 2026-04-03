@@ -70,9 +70,9 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
       className="overscroll-none no-select"
     >
       
-      {/* 🏔️ ELITE COMMAND CENTER HEADER (V63.6) */}
+      {/* 🏔️ ELITE COMMAND CENTER HEADER (V63.9) */}
       <header style={{
-        padding: 'env(safe-area-inset-top, 54px) 24px 28px',
+        padding: 'env(safe-area-inset-top, 74px) 24px 28px',
         display: 'flex',
         flexDirection: 'column',
         gap: '4px', // 🚀 V63.8: Compact brand gap
