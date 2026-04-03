@@ -39,6 +39,7 @@ public class FilesController : ControllerBase
         }
     }
 
+    [AllowAnonymous]
     [HttpGet("raw/{*path}")]
     public async Task<IActionResult> ViewFileRaw(string path)
     {
