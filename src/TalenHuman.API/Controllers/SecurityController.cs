@@ -18,12 +18,14 @@ public class SecurityController : ControllerBase
     private readonly IFido2 _fido2;
     private readonly ApplicationDbContext _context;
     private readonly IConfiguration _config;
+    private readonly IAuditService _auditService;
 
-    public SecurityController(IFido2 fido2, ApplicationDbContext context, IConfiguration config)
+    public SecurityController(IFido2 fido2, ApplicationDbContext context, IConfiguration config, IAuditService auditService)
     {
         _fido2 = fido2;
         _context = context;
         _config = config;
+        _auditService = auditService;
     }
 
 
@@ -125,6 +127,8 @@ public class SecurityController : ControllerBase
 
         user.FirebaseToken = dto.Token;
         await _context.SaveChangesAsync();
+
+        await _auditService.LogAsync("FCM_SYNC", "User", userId.ToString(), $"Token actualizado para {user.UserName}: {dto.Token.Substring(0, Math.Min(10, dto.Token.Length))}...");
 
         return Ok(new { status = "success" });
     }

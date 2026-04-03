@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import MobileCommunicationModal from '../../components/Mobile/MobileCommunicationModal';
 import { 
   Info, Calendar, Clock, ChevronRight, 
   Search, Filter, Plus, Inbox 
@@ -8,6 +9,7 @@ import api from '../../services/api';
 const MobileNews = ({ user, theme }) => {
   const [loading, setLoading] = React.useState(true);
   const [news, setNews] = React.useState([]);
+  const [selectedNews, setSelectedNews] = useState(null);
   const isDark = theme === 'dark';
 
   React.useEffect(() => {
@@ -87,10 +89,17 @@ const MobileNews = ({ user, theme }) => {
             {news.map((item, idx) => (
                <div 
                  key={idx} 
+                 onClick={() => setSelectedNews({
+                     id: item.id,
+                     titulo: item.novedadTipoNombre || 'Comunicado',
+                     contenido: item.observaciones,
+                     imagenUrl: null // We could fetch this if needed, but for now we use the HTML content
+                 })}
                  style={{ 
                     background: cardBg, borderRadius: '24px', padding: '20px', 
                     border: `1px solid ${cardBorder}`, display: 'flex', alignItems: 'center', gap: '16px',
-                    position: 'relative', transition: 'transform 0.2s', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' 
+                    position: 'relative', transition: 'transform 0.2s', boxShadow: '0 4px 6px rgba(0,0,0,0.02)',
+                    cursor: 'pointer'
                  }}
                >
                   <div style={{ 
@@ -162,6 +171,13 @@ const MobileNews = ({ user, theme }) => {
          <Plus size={32} strokeWidth={2.5} />
       </button>
 
+       {/* 📢 NEWS DETAIL MODAL (V63.8) */}
+       {selectedNews && (
+         <MobileCommunicationModal 
+            communication={selectedNews} 
+            onDismiss={() => setSelectedNews(null)} 
+         />
+       )}
     </div>
   );
 };

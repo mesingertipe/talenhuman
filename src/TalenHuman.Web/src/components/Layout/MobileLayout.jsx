@@ -4,10 +4,12 @@ import MobileBottomNav from '../Navigation/MobileBottomNav';
 import TalenHumanLogo from '../Shared/TalenHumanLogo';
 import { onMessageListener } from '../../firebase';
 import TalenHumanToast from '../Shared/ElitePremiumToast';
+import DebugPortal from '../Shared/DebugPortal';
 
 const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, theme, toggleTheme }) => {
   const isDark = theme === 'dark';
   const [time, setTime] = useState(new Date());
+  const [showDebug, setShowDebug] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState(() => {
     const saved = localStorage.getItem(`notifs_${user?.id}`);
@@ -196,7 +198,13 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
 
           {/* BRAND POSITIONING (Elevated in center-bottom) */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '4px' }}>
-             <TalenHumanLogo type="header" />
+             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <TalenHumanLogo type="header" />
+                <div 
+                    onClick={() => setShowDebug(!showDebug)} 
+                    style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'rgba(255,255,255,0.01)', cursor: 'pointer' }} 
+                />
+             </div>
              
              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', paddingLeft: '4px' }}>
                 <span style={{ 
@@ -312,6 +320,8 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
       >
          <MobileBottomNav activePage={activePage} setPage={setPage} theme={theme} isBranded={true} />
       </footer>
+
+      <DebugPortal isOpen={showDebug} onClose={() => setShowDebug(false)} />
 
       <style>{`
         @keyframes slideInRight {
