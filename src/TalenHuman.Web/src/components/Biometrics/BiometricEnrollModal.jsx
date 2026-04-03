@@ -42,6 +42,15 @@ const BiometricEnrollModal = ({ onComplete, onCancel, theme }) => {
           setDiagInfo('Asegura que tu biometría esté configurada.');
       } else if (errName === 'NotAllowedError') {
           setError('Operación cancelada o expirada.');
+      } else if (errName === 'InvalidStateError') {
+          // 🛡️ WebAuthn Duplicate Key Protection (V63.9)
+          setError('Dispositivo ya vinculado');
+          setDiagInfo('Este celular ya tiene biometría activa para TalenHuman.');
+          // Auto-resolution: If it's already there, consider it a success and proceed
+          setTimeout(() => {
+              setSuccess(true);
+              setTimeout(() => onComplete(), 1000);
+          }, 1500);
       } else {
           setError(`Error: ${errName}`);
           setDiagInfo(errMsg.substring(0, 45));

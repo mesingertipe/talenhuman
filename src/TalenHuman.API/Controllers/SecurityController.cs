@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Text;
 using TalenHuman.Domain.Entities;
 using TalenHuman.Infrastructure.Persistence;
+using TalenHuman.Application.Common.Interfaces;
 
 namespace TalenHuman.API.Controllers;
 

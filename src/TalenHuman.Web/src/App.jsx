@@ -204,9 +204,10 @@ function App() {
           onAccepted={(u) => setUser(prev => {
              const merged = { ...prev, ...u };
              // 🛡️ Safety: Never lose critical identity data if API sends partial object
-             if (!merged.roles && prev.roles) merged.roles = prev.roles;
-             if (!merged.id && prev.id) merged.id = prev.id;
-             localStorage.setItem('user', JSON.stringify(merged));
+              if (!merged.roles && prev.roles) merged.roles = prev.roles;
+              if (!merged.id && prev.id) merged.id = prev.id;
+              if (merged.hasBiometrics === undefined && prev.hasBiometrics !== undefined) merged.hasBiometrics = prev.hasBiometrics;
+              localStorage.setItem('user', JSON.stringify(merged));
              return merged;
           })} 
           onLogout={handleLogout} 

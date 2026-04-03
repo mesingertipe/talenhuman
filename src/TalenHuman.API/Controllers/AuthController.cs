@@ -229,7 +229,8 @@ public class AuthController : ControllerBase
                 firebaseMeasurementId = firebaseConfig.ContainsKey("FIREBASE_MEASUREMENT_ID") ? firebaseConfig["FIREBASE_MEASUREMENT_ID"] : null,
                 firebaseVapidKey = firebaseConfig.ContainsKey("FIREBASE_VAPID_KEY") ? firebaseConfig["FIREBASE_VAPID_KEY"] : null,
                 privacyPolicyText = user.Company?.PrivacyPolicyText,
-                acceptedPrivacyPolicy = user.AcceptedPrivacyPolicy
+                acceptedPrivacyPolicy = user.AcceptedPrivacyPolicy,
+                hasBiometrics = await _context.UserCredentials.AnyAsync(c => c.UserId == user.Id)
             }
         });
     }
