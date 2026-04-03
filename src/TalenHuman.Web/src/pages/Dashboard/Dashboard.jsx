@@ -23,7 +23,7 @@ const Dashboard = () => {
 
     return (
         <div className="page-container animate-in fade-in duration-500" style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto' }}>
-            {/* Elite Header */}
+            {/* Dashboard Header */}
             <div style={{ marginBottom: '4rem' }}>
                 <h1 style={{ fontSize: '2.2rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.03em' }}>Hola, Tito 👋</h1>
                 <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginTop: '6px' }}>Bienvenido al centro de mando de TalenHuman</p>

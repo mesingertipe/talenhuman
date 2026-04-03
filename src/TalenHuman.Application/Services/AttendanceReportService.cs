@@ -93,10 +93,11 @@ public class AttendanceReportService
 
         var allContextStores = await storeQuery.ToListAsync();
 
-        // 2. Fetch Attendance Data for the same day
+        // 2. Fetch Attendance Data for the same day (Only Active Employees)
         var attendanceQuery = _context.Attendances
             .Include(a => a.Store)
-            .Where(a => a.CompanyId == companyId && a.ClockIn.Date == date.Date);
+            .Include(a => a.Employee)
+            .Where(a => a.CompanyId == companyId && a.ClockIn.Date == date.Date && a.Employee.IsActive);
 
         if (districtId.HasValue)
         {
@@ -147,8 +148,8 @@ public class AttendanceReportService
                 {
                     row.RelativeItem().Column(col =>
                     {
-                        col.Item().Text("TALENHUMAN").FontSize(20).SemiBold().FontColor(Colors.Indigo.Medium);
-                        col.Item().Text("Elite V12 - Reporte Consolidado").FontSize(12).FontColor(Colors.Grey.Medium);
+                        col.Item().Text("Talenhuman").FontSize(20).SemiBold().FontColor(Colors.Indigo.Medium);
+                        col.Item().Text("Reporte Consolidado de Asistencia").FontSize(12).FontColor(Colors.Grey.Medium);
                     });
 
                     row.RelativeItem().AlignRight().Column(col =>

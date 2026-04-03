@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, Bell, Calendar, Sparkles, MessageSquare, CheckCircle2, AlertCircle } from 'lucide-react';
 
-const ElitePremiumToast = ({ title, body, type = 'info', onClose, theme }) => {
+const TalenHumanToast = ({ title, body, type = 'info', onClose, theme }) => {
   const isDark = theme === 'dark';
   const [isVisible, setIsVisible] = useState(false);
 
@@ -138,4 +138,4 @@ const ElitePremiumToast = ({ title, body, type = 'info', onClose, theme }) => {
   );
 };
 
-export default ElitePremiumToast;
+export default TalenHumanToast;

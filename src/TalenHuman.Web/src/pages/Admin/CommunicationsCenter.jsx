@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+// TalenHuman Communications Center (V63.6)
 import { 
     AlertCircle, CheckCircle, Send, History, 
     X, Plus, Megaphone, Clock, User as UserIcon,

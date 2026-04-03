@@ -3,7 +3,7 @@ import { Sun, Moon, LogOut, Clock, Calendar, Bell, X, Info, AlertCircle, CheckCi
 import MobileBottomNav from '../Navigation/MobileBottomNav';
 import TalenHumanLogo from '../Shared/TalenHumanLogo';
 import { onMessageListener } from '../../firebase';
-import ElitePremiumToast from '../Shared/ElitePremiumToast';
+import TalenHumanToast from '../Shared/ElitePremiumToast';
 
 const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, theme, toggleTheme }) => {
   const isDark = theme === 'dark';
@@ -18,13 +18,13 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
   });
   const [toast, setToast] = useState(null);
 
-  // 🔔 FIREBASE REAL-TIME TOAST & HISTORY LISTENER
+  // 🔔 REAL-TIME TOAST & HISTORY LISTENER
   useEffect(() => {
     const unsubscribe = onMessageListener()
       .then((payload) => {
         const newNotif = {
           id: Date.now(),
-          title: payload.notification?.title || 'Notificación Elite',
+          title: payload.notification?.title || 'Notificación Talenhuman',
           body: payload.notification?.body || 'Tienes un nuevo mensaje.',
           type: payload.data?.type || 'info', // 'shift_update', 'broadcast', etc
           time: 'Ahora',
@@ -118,9 +118,9 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
         fontFamily: "'Inter', sans-serif"
       }}
     >
-      {/* 🔔 ELITE REAL-TIME TOAST (V65.1 PREMIUM) */}
+      {/* 🔔 REAL-TIME TOAST (V65.1 PREMIUM) */}
       {toast && (
-        <ElitePremiumToast 
+        <TalenHumanToast 
           title={toast.title}
           body={toast.body}
           type={toast.type}
@@ -129,7 +129,7 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
         />
       )}
       
-      {/* 🏔️ ELITE DUAL-LEVEL HEADER (V64.1) */}
+      {/* 🏔️ DUAL-LEVEL HEADER (V64.1) */}
       <header style={{
         padding: 'env(safe-area-inset-top, 24px) 24px 28px',
         display: 'flex',
@@ -225,7 +225,7 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
           </div>
       </header>
 
-      {/* 🔔 ELITE NOTIFICATION DRAWER (Right-to-Left) */}
+      {/* 🔔 NOTIFICATION DRAWER (Right-to-Left) */}
       {showNotifications && (
         <div style={{
             position: 'fixed', top: 0, right: 0, bottom: 0, left: 0,

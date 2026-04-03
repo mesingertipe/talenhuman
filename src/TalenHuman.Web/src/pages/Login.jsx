@@ -89,7 +89,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
         {/* Right Side: Login Form */}
         <div className="login-form-side">
             <div className="login-form-container">
-              {/* 🏠 Mobile Brand Header (Clean Elite Version) */}
+              {/* 🏠 Mobile Brand Header (Clean Version) */}
               <div className="login-mobile-brand">
                 <TalenHumanLogo size={36} />
               </div>

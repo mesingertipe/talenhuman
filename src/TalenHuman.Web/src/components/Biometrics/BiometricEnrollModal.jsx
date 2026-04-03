@@ -88,9 +88,9 @@ const BiometricEnrollModal = ({ onComplete, onCancel, theme }) => {
             {success ? <ShieldCheck size={42} /> : <Fingerprint size={42} />}
          </div>
          <h2 style={{ fontSize: '28px', fontWeight: '900', margin: '0 0 8px', letterSpacing: '-0.5px' }}>
-            {success ? '¡Acceso Vinculado!' : 'Biometría Elite'}
+            {success ? '¡Acceso Vinculado!' : 'Biometría Talenhuman'}
          </h2>
-         <p style={{ opacity: 0.8, fontSize: '15px', fontWeight: '500', margin: 0 }}>V16.3.0 Elite Security</p>
+         <p style={{ opacity: 0.8, fontSize: '15px', fontWeight: '500', margin: 0 }}>Talenhuman Security</p>
       </div>
 
       <div style={{ padding: '40px 32px', width: '100%', maxWidth: '400px', flex: 1, display: 'flex', flexDirection: 'column' }}>

@@ -14,7 +14,7 @@ const MobileNews = ({ user, theme }) => {
     const fetchNews = async () => {
       setLoading(true);
       try {
-        // 💎 ELITE V69: Independent PR Table Connection
+        // 💎 TALENHUMAN V69: Independent PR Table Connection
         const res = await api.get('/comunicados/my-communications');
         
         // Map ComunicadoDto to the existing UI structure
@@ -55,7 +55,7 @@ const MobileNews = ({ user, theme }) => {
       
       {/* 🏔️ NATIVE PAGE HEADER */}
       <div style={{ marginBottom: '28px' }}>
-         <h1 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px', color: primaryText, margin: 0 }}>Comunicados Elite</h1>
+         <h1 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px', color: primaryText, margin: 0 }}>Comunicados Talenhuman</h1>
          <p style={{ fontSize: '13px', color: mutedText, marginTop: '4px' }}>Mantente al día con las noticias y anuncios corporativos.</p>
       </div>
 

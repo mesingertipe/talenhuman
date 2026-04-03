@@ -42,8 +42,8 @@ import MobileShifts from './pages/Mobile/MobileShifts'
 
 import DebugPortal from './components/Shared/DebugPortal'
 
-// V54-FORCE-DOMAIN-REDIRECT
-const APP_VERSION = "V62.5-ELITE";
+// V63.6 PROD UNIFIED
+const APP_VERSION = "V63.6.0";
 
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION
@@ -64,7 +64,7 @@ function App() {
   const [booting, setBooting] = useState(true); 
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
 
-  // 🔐 ELITE IDENTITY SYNC (V65.0)
+  // 🔐 IDENTITY SYNC (V65.0)
   useEffect(() => {
     if (user && !booting) {
       const syncCloudId = async () => {
@@ -74,7 +74,7 @@ function App() {
             await api.post('/Security/token', fcmToken, {
               headers: { 'Content-Type': 'application/json' }
             });
-            console.log('Elite Cloud ID Synced ✅');
+            console.log('Cloud ID Synced ✅');
           }
         } catch (err) {
           console.warn('FCM Sync skipped:', err);
@@ -173,7 +173,7 @@ function App() {
       if (isMobileDevice && isEmployee) {
         switch(currentPage) {
           case 'Marcaciones': return <MobileAttendance user={user} isMobile theme={theme} />;
-          case 'Perfil': return <MobileProfile user={user} theme={theme} setPage={setCurrentPage} onLogout={handleLogout} />;
+          case 'Perfil': return <MobileProfile user={user} setPage={setCurrentPage} onLogout={handleLogout} />;
           case 'Novedades': return <MobileNews user={user} theme={theme} />;
           case 'Turnos': return <MobileShifts user={user} theme={theme} />;
           case 'ResetPassword': return <ResetPassword user={user} theme={theme} setPage={setCurrentPage} />;

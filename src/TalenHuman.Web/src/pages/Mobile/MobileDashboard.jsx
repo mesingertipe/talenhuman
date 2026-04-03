@@ -45,12 +45,14 @@ const MobileDashboard = ({ user, theme, setPage }) => {
     fetchData();
   }, []);
 
-  // Common styles
-  const cardBg = isDark ? 'rgba(15, 23, 42, 0.6)' : '#ffffff';
-  const cardBorder = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)';
-  const shadow = isDark ? '0 20px 40px rgba(0,0,0,0.4)' : '0 10px 25px rgba(0,0,0,0.04)';
+  // Premium Visual Tokens (V65.0)
+  const cardBg = isDark ? 'rgba(30, 41, 59, 0.4)' : 'rgba(255, 255, 255, 0.8)';
+  const cardBorder = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)';
+  const glassEffect = { backdropFilter: 'blur(20px)', border: `1px solid ${cardBorder}` };
+  const shadow = isDark ? '0 25px 50px -12px rgba(0, 0, 0, 0.5)' : '0 20px 40px rgba(0, 0, 0, 0.06)';
   const primaryText = isDark ? '#ffffff' : '#1e293b';
-  const mutedText = isDark ? 'rgba(255, 255, 255, 0.4)' : '#64748b';
+  const mutedText = isDark ? 'rgba(255, 255, 255, 0.5)' : '#64748b';
+  const accentGradient = 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)';
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-10 duration-700">
@@ -64,8 +66,8 @@ const MobileDashboard = ({ user, theme, setPage }) => {
         />
       )}
 
-      {/* 🏔️ ELITE DASHBOARD HEADER (V63.6 - CLEAN) */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+      {/* 🏔️ DASHBOARD HEADER */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', padding: '0 8px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
              <h2 style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '-0.6px', color: primaryText, margin: 0 }}>
                 <span style={{ color: '#4f46e5', opacity: 0.8 }}>Hola,</span> {user?.fullName || 'TalenHuman'}
@@ -96,20 +98,24 @@ const MobileDashboard = ({ user, theme, setPage }) => {
           </button>
        </div>
 
-       {/* 📅 DYNAMIC SHIFT CARD (V65.1 ELITE) */}
+       {/* 📅 DYNAMIC SHIFT CARD (PREMIUM GLASS) */}
        <div 
           onClick={() => setPage('Turnos')}
           style={{ 
-             background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-             borderRadius: '40px', padding: '40px 32px', color: 'white',
-             boxShadow: '0 20px 50px rgba(79, 70, 229, 0.3)',
+             background: accentGradient,
+             borderRadius: '40px', padding: '48px 32px', color: 'white',
+             boxShadow: '0 30px 60px rgba(79, 70, 229, 0.4)',
              marginBottom: '32px', position: 'relative', overflow: 'hidden',
-             cursor: 'pointer'
+             cursor: 'pointer',
+             border: '1px solid rgba(255,255,255,0.1)'
           }}
        >
-          <div style={{ position: 'absolute', top: '-10%', right: '-10%', opacity: 0.1 }}>
-             <CalendarDays size={200} />
+          <div style={{ position: 'absolute', top: '-15%', right: '-15%', opacity: 0.15, transform: 'rotate(-15deg)' }}>
+             <CalendarDays size={240} />
           </div>
+          
+          {/* Inner Glow Effect */}
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at top left, rgba(255,255,255,0.2) 0%, transparent 70%)' }} />
           
           <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
              <div style={{ width: '60px', height: '60px', borderRadius: '20px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
@@ -135,13 +141,12 @@ const MobileDashboard = ({ user, theme, setPage }) => {
           </div>
        </div>
 
-       {/* ⏱️ RECENT ACTIVITY SNIPPET */}
        {lastMarking && (
           <div style={{ 
-             marginBottom: '32px', padding: '20px 24px', borderRadius: '30px', 
-             background: isDark ? 'rgba(255,255,255,0.03)' : '#ffffff',
-             border: `1px solid ${cardBorder}`,
-             display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+             marginBottom: '32px', padding: '24px', borderRadius: '32px', 
+             background: cardBg, ...glassEffect,
+             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+             boxShadow: shadow
           }}>
              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                 <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
@@ -157,51 +162,59 @@ const MobileDashboard = ({ user, theme, setPage }) => {
        )}
 
        {/* 🧩 QUICK ACTIONS GRID */}
-       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-          <ActionCard 
-             icon={<CheckCircle2 size={24} />} 
-             label="ASISTENCIA" 
-             color="#10b981" 
-             isDark={isDark} 
-             onClick={() => setPage('Marcaciones')}
-          />
-          <ActionCard 
-             icon={<MessageSquare size={24} />} 
-             label="COMUNICADOS" 
-             color="#f59e0b" 
-             isDark={isDark} 
-             onClick={() => setPage('Novedades')}
-          />
-       </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+           <ActionCard 
+              icon={<CheckCircle2 size={24} />} 
+              label="ASISTENCIA" 
+              color="#10b981" 
+              isDark={isDark} 
+              cardBg={cardBg}
+              glassEffect={glassEffect}
+              shadow={shadow}
+              onClick={() => setPage('Marcaciones')}
+           />
+           <ActionCard 
+              icon={<MessageSquare size={24} />} 
+              label="COMUNICADOS" 
+              color="#f59e0b" 
+              isDark={isDark} 
+              cardBg={cardBg}
+              glassEffect={glassEffect}
+              shadow={shadow}
+              onClick={() => setPage('Novedades')}
+           />
+        </div>
 
        <div style={{ marginTop: '32px' }}>
           <SectionHeader title="NOTIFICACIONES" isDark={isDark} />
           <div style={{ 
-             background: cardBg, borderRadius: '30px', padding: '24px', 
-             border: `1px solid ${cardBorder}`, display: 'flex', alignItems: 'center', gap: '16px' 
+             background: cardBg, borderRadius: '32px', padding: '28px', 
+             ...glassEffect, boxShadow: shadow,
+             display: 'flex', alignItems: 'center', gap: '16px' 
           }}>
-             <div style={{ width: '48px', height: '48px', borderRadius: '15px', background: 'rgba(79, 70, 229, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
-                <Sparkles size={20} />
+             <div style={{ width: '52px', height: '52px', borderRadius: '18px', background: 'rgba(79, 70, 229, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
+                <Sparkles size={22} />
              </div>
              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: '14px', fontWeight: '700', color: primaryText, margin: '0 0 2px' }}>Actualización Elite V63.6</p>
-                <p style={{ fontSize: '12px', color: mutedText, margin: 0 }}>Jerarquía de Tienda y Header Central.</p>
+                <p style={{ fontSize: '15px', fontWeight: '800', color: primaryText, margin: '0 0 4px', letterSpacing: '-0.3px' }}>Nueva Actualización</p>
+                <p style={{ fontSize: '12px', color: mutedText, margin: 0, lineHeight: '1.4' }}>Sede Central y Gestión de Turnos.</p>
              </div>
           </div>
        </div>
     </div>
   );
 };
-
-const ActionCard = ({ icon, label, color, isDark, onClick }) => (
+const ActionCard = ({ icon, label, color, isDark, onClick, cardBg, glassEffect, shadow }) => (
     <div 
         onClick={onClick}
         style={{ 
-            background: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff',
-            borderRadius: '32px', padding: '32px 24px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'}`,
+            background: cardBg,
+            borderRadius: '32px', padding: '36px 24px', 
+            ...glassEffect,
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px',
-            boxShadow: isDark ? 'none' : '0 10px 25px rgba(0,0,0,0.04)',
-            cursor: 'pointer'
+            boxShadow: shadow,
+            cursor: 'pointer',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
         }}
     >
         <div style={{ width: '56px', height: '56px', borderRadius: '18px', background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: color }}>

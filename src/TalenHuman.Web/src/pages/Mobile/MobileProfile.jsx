@@ -2,14 +2,17 @@ import React, { useState } from 'react';
 import { 
   User, Mail, Phone, Calendar, MapPin, 
   ChevronRight, ArrowLeft, Camera, Edit2,
-  Shield, Bell, CreditCard, Droplets, Fingerprint, LogOut, Key
+  Shield, Bell, CreditCard, Droplets, Fingerprint, LogOut, Key, Sun, Moon
 } from 'lucide-react';
 import BiometricEnrollModal from '../../components/Biometrics/BiometricEnrollModal';
+import { useTheme } from '../../context/ThemeContext';
 
-const MobileProfile = ({ user, setPage, theme, onLogout }) => {
-  const isDark = theme === 'dark';
+const MobileProfile = ({ user, setPage, onLogout }) => {
+  const { isDarkMode, toggleTheme } = useTheme();
+  const isDark = isDarkMode;
   const [showBiometrics, setShowBiometrics] = useState(false);
   const [biometricsEnabled, setBiometricsEnabled] = useState(() => localStorage.getItem('biometrics_enabled') === 'true');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => localStorage.getItem('notifications_enabled') !== 'false');
   
   const primaryText = isDark ? '#ffffff' : '#1e293b';
   const mutedText = isDark ? 'rgba(255, 255, 255, 0.4)' : '#64748b';
@@ -27,6 +30,15 @@ const MobileProfile = ({ user, setPage, theme, onLogout }) => {
     }
   };
 
+  const handleToggleNotifications = () => {
+    const newState = !notificationsEnabled;
+    localStorage.setItem('notifications_enabled', String(newState));
+    setNotificationsEnabled(newState);
+    if (window.navigator && window.navigator.vibrate) {
+      window.navigator.vibrate([15]); 
+    }
+  };
+
   const handleBiometricsComplete = () => {
      localStorage.setItem('biometrics_enabled', 'true');
      setBiometricsEnabled(true);
@@ -39,13 +51,13 @@ const MobileProfile = ({ user, setPage, theme, onLogout }) => {
       {/* 🚀 BIOMETRIC MODAL INTEGRATION */}
       {showBiometrics && (
         <BiometricEnrollModal 
-          theme={theme}
+          theme={isDark ? 'dark' : 'light'}
           onComplete={handleBiometricsComplete} 
           onCancel={() => setShowBiometrics(false)} 
         />
       )}
 
-      {/* 🚀 ELITE PROFILE HEADER */}
+      {/* 🚀 PROFILE HEADER */}
       <div style={{
         display: 'flex',
         flexDirection: 'column',
@@ -164,27 +176,30 @@ const MobileProfile = ({ user, setPage, theme, onLogout }) => {
             />
          </div>
 
-         <SectionHeader title="Preferencias" isDark={isDark} />
-         <div style={{ 
-            background: cardBg, borderRadius: '28px', 
-            border: `1px solid ${cardBorder}`, overflow: 'hidden',
-            boxShadow: shadow
-         }}>
-            <ProfileItem 
-                icon={<Droplets size={20} />} 
-                label="Modo Visual" 
-                value={isDark ? 'Oscuro' : 'Claro'} 
-                isDark={isDark} 
-                showChevron
-            />
-            <ProfileItem 
-                icon={<Bell size={20} />} 
-                label="Notificaciones" 
-                value="Activado" 
-                isDark={isDark} 
-                showLast
-            />
-         </div>
+          <SectionHeader title="Preferencias" isDark={isDark} />
+          <div style={{ 
+             background: cardBg, borderRadius: '28px', 
+             border: `1px solid ${cardBorder}`, overflow: 'hidden',
+             boxShadow: shadow, backdropFilter: 'blur(20px)'
+          }}>
+             <InteractiveItem 
+                 icon={isDark ? <Moon size={20} /> : <Sun size={20} />} 
+                 label="Modo Visual" 
+                 value={isDark ? 'Oscuro' : 'Claro'} 
+                 isDark={isDark} 
+                 active={isDark}
+                 onClick={toggleTheme}
+             />
+             <InteractiveItem 
+                 icon={<Bell size={20} />} 
+                 label="Notificaciones" 
+                 value={notificationsEnabled ? 'Activado' : 'Desactivado'} 
+                 isDark={isDark} 
+                 active={notificationsEnabled}
+                 onClick={handleToggleNotifications}
+                 showLast
+             />
+          </div>
       </div>
 
       <button 
@@ -203,7 +218,7 @@ const MobileProfile = ({ user, setPage, theme, onLogout }) => {
       </button>
 
       <div style={{ textAlign: 'center', marginTop: '24px', opacity: 0.3 }}>
-         <span style={{ fontSize: '10px', fontWeight: '800', letterSpacing: '0.2em' }}>TALENHUMAN ELITE V63.6</span>
+         <span style={{ fontSize: '10px', fontWeight: '800', letterSpacing: '0.2em' }}>TALENHUMAN V63.6</span>
       </div>
     </div>
   );
@@ -222,13 +237,18 @@ const ProfileItem = ({ icon, label, value, isDark, showChevron, onClick, showLas
     <div 
         onClick={onClick}
         style={{
-            padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             borderBottom: showLast ? 'none' : `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'}`,
-            cursor: onClick ? 'pointer' : 'default'
+            cursor: onClick ? 'pointer' : 'default',
+            transition: 'all 0.3s'
         }}
     >
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(79, 70, 229, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
+            <div style={{ 
+                width: '44px', height: '44px', borderRadius: '15px', 
+                background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(79, 70, 229, 0.05)', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' 
+            }}>
                 {icon}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -241,6 +261,50 @@ const ProfileItem = ({ icon, label, value, isDark, showChevron, onClick, showLas
             </div>
         </div>
         {showChevron && <ChevronRight size={18} strokeWidth={2.5} color={isDark ? 'rgba(255,255,255,0.2)' : '#cbd5e1'} />}
+    </div>
+);
+
+const InteractiveItem = ({ icon, label, value, isDark, active, onClick, showLast }) => (
+    <div 
+        onClick={onClick}
+        style={{
+            padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            borderBottom: showLast ? 'none' : `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'}`,
+            cursor: 'pointer',
+            transition: 'all 0.3s'
+        }}
+    >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ 
+                width: '44px', height: '44px', borderRadius: '15px', 
+                background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(79, 70, 229, 0.05)', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' 
+            }}>
+                {icon}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '11px', color: isDark ? 'rgba(255,255,255,0.4)' : '#64748b', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {label}
+                </span>
+                <span style={{ fontSize: '15px', color: isDark ? '#ffffff' : '#1e293b', fontWeight: '700' }}>
+                    {value}
+                </span>
+            </div>
+        </div>
+        
+        {/* Toggle Switch UI */}
+        <div style={{
+            width: '52px', height: '28px', borderRadius: '14px',
+            background: active ? '#4f46e5' : (isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0'),
+            position: 'relative', transition: 'all 0.4s'
+        }}>
+            <div style={{
+                width: '20px', height: '20px', borderRadius: '50%', background: 'white',
+                position: 'absolute', top: '4px', left: active ? '28px' : '4px',
+                transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+            }} />
+        </div>
     </div>
 );
 
