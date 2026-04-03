@@ -247,8 +247,14 @@ public class Comunicado : BaseEntity, IMultitenant
 {
     public string Titulo { get; set; } = string.Empty;
     public string Contenido { get; set; } = string.Empty; // Full HTML / Rich Text
+    public string? ImagenUrl { get; set; }
     public DateTime FechaEnvio { get; set; } = ColombiaTime.Now;
     
+    // 📅 Validity Range (V63.7)
+    public DateTime? FechaInicio { get; set; }
+    public DateTime? FechaFin { get; set; }
+    public bool IsActive { get; set; } = true;
+
     public Guid CreatedByUserId { get; set; }
     public User CreatedByUser { get; set; } = null!;
     

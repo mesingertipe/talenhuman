@@ -39,11 +39,40 @@ public class ComunicadosController : ControllerBase
                 Id = c.Id,
                 Titulo = c.Titulo,
                 Contenido = c.Contenido,
+                ImagenUrl = c.ImagenUrl,
                 FechaEnvio = c.FechaEnvio,
+                FechaInicio = c.FechaInicio,
+                FechaFin = c.FechaFin,
+                IsActive = c.IsActive,
                 CreatedByName = c.CreatedByUser.FullName,
                 ReadCount = c.ReadCount
             })
             .ToListAsync();
+    }
+
+    [HttpGet("active")]
+    public async Task<ActionResult<ComunicadoDto>> GetActiveCommunication()
+    {
+        var now = ColombiaTime.Now;
+        
+        // 🔒 SMART FILTER: Must be active and within date range (if range exists)
+        var active = await _context.Comunicados
+            .Where(c => c.IsActive && 
+                        (c.FechaInicio == null || c.FechaInicio <= now) && 
+                        (c.FechaFin == null || c.FechaFin >= now))
+            .OrderByDescending(c => c.FechaEnvio)
+            .FirstOrDefaultAsync();
+
+        if (active == null) return NotFound();
+
+        return Ok(new ComunicadoDto
+        {
+            Id = active.Id,
+            Titulo = active.Titulo,
+            Contenido = active.Contenido,
+            ImagenUrl = active.ImagenUrl,
+            FechaEnvio = active.FechaEnvio
+        });
     }
 
     [HttpGet("my-communications")]
@@ -51,23 +80,21 @@ public class ComunicadosController : ControllerBase
     {
         var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
-        
-        var userId = Guid.Parse(userIdString);
-        var user = await _context.Users.FindAsync(userId);
-        if (user == null) return NotFound();
 
-        // 🛡️ Multi-tenant filter is already applied globally in DbContext
+        // 🛡️ Only show communications that are currently ACTIVE
+        var now = ColombiaTime.Now;
         return await _context.Comunicados
+            .Where(c => c.IsActive && (c.FechaFin == null || c.FechaFin >= now))
             .OrderByDescending(c => c.FechaEnvio)
-            .Take(10)
+            .Take(15)
             .Select(c => new ComunicadoDto
             {
                 Id = c.Id,
                 Titulo = c.Titulo,
                 Contenido = c.Contenido,
+                ImagenUrl = c.ImagenUrl,
                 FechaEnvio = c.FechaEnvio,
-                CreatedByName = "Corporativo",
-                ReadCount = c.ReadCount
+                CreatedByName = "Corporativo"
             })
             .ToListAsync();
     }
@@ -85,11 +112,15 @@ public class ComunicadosController : ControllerBase
 
         var companyId = admin.CompanyId;
 
-        // 1. Persist in the NEW independent table
+        // 1. Create with New V63.7 Schema
         var comunicado = new Comunicado
         {
             Titulo = dto.Title,
-            Contenido = dto.Body, // Rich Text / HTML
+            Contenido = dto.Body,
+            ImagenUrl = dto.ImageUrl,
+            FechaInicio = dto.FechaInicio,
+            FechaFin = dto.FechaFin,
+            IsActive = true,
             CreatedByUserId = userId,
             CompanyId = companyId,
             FechaEnvio = ColombiaTime.Now
@@ -98,7 +129,7 @@ public class ComunicadosController : ControllerBase
         _context.Comunicados.Add(comunicado);
         await _context.SaveChangesAsync(default);
 
-        // 2. Collect tokens ONLY for users belonging to THIS company
+        // 2. ONE-TIME PUSH: Only trigger on creation
         var tokens = await _context.Users
             .Where(u => u.CompanyId == companyId && !string.IsNullOrEmpty(u.FirebaseToken))
             .Select(u => u.FirebaseToken)
@@ -107,7 +138,6 @@ public class ComunicadosController : ControllerBase
         if (tokens.Any())
         {
             try {
-                // 🧹 CLEAN PUSH: Strip HTML tags for the notification bar
                 var plainBody = System.Text.RegularExpressions.Regex.Replace(dto.Body, "<.*?>", string.Empty);
                 if (plainBody.Length > 150) plainBody = plainBody.Substring(0, 147) + "...";
 
@@ -117,12 +147,12 @@ public class ComunicadosController : ControllerBase
                     Notification = new Notification()
                     {
                         Title = "📢 " + dto.Title,
-                        Body = plainBody
+                        Body = plainBody,
+                        ImageUrl = dto.ImageUrl // 📸 Push Image Injection
                     },
                     Data = new Dictionary<string, string>()
                     {
                         { "type", "broadcast" },
-                        { "tenant", companyId.ToString() },
                         { "comunicadoId", comunicado.Id.ToString() }
                     }
                 };
@@ -135,7 +165,27 @@ public class ComunicadosController : ControllerBase
 
         await _auditService.LogAsync("BROADCAST", "Comunicado", comunicado.Id.ToString(), $"Comunicado difundido: {dto.Title}");
 
-        return Ok(new { status = "success", count = tokens.Count, id = comunicado.Id });
+        return Ok(new { status = "success", id = comunicado.Id });
+    }
+
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] BroadcastDto dto)
+    {
+        var comunicado = await _context.Comunicados.FindAsync(id);
+        if (comunicado == null) return NotFound();
+
+        comunicado.Titulo = dto.Title;
+        comunicado.Contenido = dto.Body;
+        comunicado.ImagenUrl = dto.ImageUrl;
+        comunicado.FechaInicio = dto.FechaInicio;
+        comunicado.FechaFin = dto.FechaFin;
+        comunicado.IsActive = dto.IsActive;
+
+        await _context.SaveChangesAsync(default);
+        await _auditService.LogAsync("UPDATE", "Comunicado", id.ToString(), $"Comunicado editado: {dto.Title}");
+
+        return Ok();
     }
 }
 
@@ -144,7 +194,11 @@ public class ComunicadoDto
     public Guid Id { get; set; }
     public string Titulo { get; set; } = string.Empty;
     public string Contenido { get; set; } = string.Empty;
+    public string? ImagenUrl { get; set; }
     public DateTime FechaEnvio { get; set; }
+    public DateTime? FechaInicio { get; set; }
+    public DateTime? FechaFin { get; set; }
+    public bool IsActive { get; set; }
     public string CreatedByName { get; set; } = string.Empty;
     public int ReadCount { get; set; }
 }
@@ -153,4 +207,8 @@ public class BroadcastDto
 {
     public string Title { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
+    public string? ImageUrl { get; set; }
+    public DateTime? FechaInicio { get; set; }
+    public DateTime? FechaFin { get; set; }
+    public bool IsActive { get; set; } = true;
 }

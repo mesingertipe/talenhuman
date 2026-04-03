@@ -39,6 +39,24 @@ public class FilesController : ControllerBase
         }
     }
 
+    [HttpGet("raw/{*path}")]
+    public async Task<IActionResult> ViewFileRaw(string path)
+    {
+        if (string.IsNullOrEmpty(path)) return BadRequest();
+
+        try
+        {
+            (Stream stream, string contentType, string fileName) = await _storageService.GetFileStreamAsync(path);
+            // Cache for 24 hours for better performance on communications
+            Response.Headers.Add("Cache-Control", "public,max-age=86400");
+            return File(stream, contentType, fileName);
+        }
+        catch (Exception)
+        {
+            return NotFound();
+        }
+    }
+
     [HttpPost("upload")]
     public async Task<ActionResult<UploadResponseDto>> Upload(IFormFile file, [FromQuery] string folder = "attachments")
     {
@@ -46,8 +64,9 @@ public class FilesController : ControllerBase
 
         try
         {
-            var url = await _storageService.UploadFileAsync(file, folder);
-            return Ok(new UploadResponseDto { Url = url, FileName = file.FileName });
+            var key = await _storageService.UploadFileAsync(file, folder);
+            var proxyUrl = $"/api/Files/raw/{key}";
+            return Ok(new UploadResponseDto { Url = proxyUrl, FileName = file.FileName });
         }
         catch (Exception ex)
         {
