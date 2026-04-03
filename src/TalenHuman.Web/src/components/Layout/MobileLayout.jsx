@@ -202,8 +202,14 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
                 <TalenHumanLogo type="header" />
                 <div 
                     onClick={() => setShowDebug(!showDebug)} 
-                    style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'rgba(255,255,255,0.01)', cursor: 'pointer' }} 
-                />
+                    style={{ 
+                        width: '24px', height: '24px', borderRadius: '50%', 
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer' 
+                    }} 
+                >
+                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+                </div>
              </div>
              
              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', paddingLeft: '4px' }}>

@@ -55,6 +55,22 @@ const SecurityService = {
       console.error('Error actualizando token Firebase:', error);
       throw error;
     }
+  },
+
+  /**
+   * Obtiene opciones para Login Biométrico
+   */
+  async getAssertionOptions(email) {
+    const response = await api.post('/Security/assertion/options', { email });
+    return response.data;
+  },
+
+  /**
+   * Completa el proceso de aserción (Login)
+   */
+  async completeAssertion(assertion) {
+    const response = await api.post('/Security/assertion/complete', assertion);
+    return response.data;
   }
 };
 

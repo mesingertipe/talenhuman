@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Lock, Mail, Eye, EyeOff, Users, ArrowRight, ShieldAlert, Bell, Calendar, Fingerprint } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff, Users, ArrowRight, ShieldAlert, Bell, Calendar, Fingerprint, ShieldCheck } from 'lucide-react';
 import api from '../services/api';
+import SecurityService from '../services/securityService';
+import { get } from '@github/webauthn-json';
 import TalenHumanLogo from '../components/Shared/TalenHumanLogo';
 import './Login.css';
 
@@ -10,6 +12,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [biometricLoading, setBiometricLoading] = useState(false);
   const [error, setError] = useState('');
 
   React.useEffect(() => {
@@ -41,6 +44,33 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBiometricLogin = async () => {
+    if (!email) {
+      setError('Escribe tu correo para usar biometría.');
+      return;
+    }
+
+    setBiometricLoading(true);
+    setError('');
+
+    try {
+      const options = await SecurityService.getAssertionOptions(email);
+      const assertion = await get({ publicKey: options });
+      const res = await SecurityService.completeAssertion(assertion);
+
+      if (res.status === 'success') {
+        localStorage.setItem('token', res.token);
+        localStorage.setItem('user', JSON.stringify(res.user));
+        onLogin(res.user, res.token);
+      }
+    } catch (err) {
+      setError('Biometría no reconocida en este dispositivo.');
+      console.error(err);
+    } finally {
+      setBiometricLoading(false);
     }
   };
 
@@ -175,20 +205,38 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                   </div>
                 </div>
 
-                <button 
-                  type="submit" 
-                  disabled={loading}
-                  className="login-submit"
-                >
-                  {loading ? (
-                    <div className="loader"></div>
-                  ) : (
-                    <>
-                      <span>Ingresar al Sistema</span>
-                      <ArrowRight size={20} />
-                    </>
-                  )}
-                </button>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button 
+                    type="submit" 
+                    disabled={loading || biometricLoading}
+                    className="login-submit"
+                    style={{ flex: 1 }}
+                  >
+                    {loading ? (
+                      <div className="loader"></div>
+                    ) : (
+                      <>
+                        <span>Ingresar</span>
+                        <ArrowRight size={20} />
+                      </>
+                    )}
+                  </button>
+
+                  <button 
+                    type="button"
+                    disabled={loading || biometricLoading}
+                    onClick={handleBiometricLogin}
+                    className="login-biometric-btn"
+                    style={{
+                      width: '64px', height: '64px', borderRadius: '18px',
+                      background: 'rgba(79, 70, 229, 0.1)', border: '2px solid rgba(79, 70, 229, 0.2)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#4f46e5', transition: 'all 0.3s ease', cursor: 'pointer'
+                    }}
+                  >
+                    {biometricLoading ? <div className="loader" style={{ borderColor: '#4f46e5', borderTopColor: 'transparent' }}></div> : <Fingerprint size={28} />}
+                  </button>
+                </div>
               </form>
 
               <div className="login-footer">

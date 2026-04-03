@@ -8,6 +8,9 @@ using System.Text;
 using TalenHuman.Domain.Entities;
 using TalenHuman.Infrastructure.Persistence;
 using TalenHuman.Application.Common.Interfaces;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace TalenHuman.API.Controllers;
 
@@ -20,13 +23,26 @@ public class SecurityController : ControllerBase
     private readonly ApplicationDbContext _context;
     private readonly IConfiguration _config;
     private readonly IAuditService _auditService;
+    private readonly UserManager<User> _userManager;
+    private readonly IIdentityService _identityService;
+    private readonly ISystemSettingsService _settingsService;
 
-    public SecurityController(IFido2 fido2, ApplicationDbContext context, IConfiguration config, IAuditService auditService)
+    public SecurityController(
+        IFido2 fido2, 
+        ApplicationDbContext context, 
+        IConfiguration config, 
+        IAuditService auditService,
+        UserManager<User> userManager,
+        IIdentityService identityService,
+        ISystemSettingsService settingsService)
     {
         _fido2 = fido2;
         _context = context;
         _config = config;
         _auditService = auditService;
+        _userManager = userManager;
+        _identityService = identityService;
+        _settingsService = settingsService;
     }
 
 
@@ -139,7 +155,162 @@ public class SecurityController : ControllerBase
         public string Token { get; set; } = string.Empty;
     }
 
+    [AllowAnonymous]
+    [HttpPost("assertion/options")]
+    public async Task<IActionResult> AssertionOptions([FromBody] AssertionRequest request)
+    {
+        var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Email == request.Email || u.UserName == request.Email);
+        if (user == null) return NotFound("Usuario no encontrado");
+
+        var existingCredentials = await _context.UserCredentials
+            .Where(c => c.UserId == user.Id)
+            .Select(c => new PublicKeyCredentialDescriptor(c.DescriptorId))
+            .ToListAsync();
+
+        if (!existingCredentials.Any()) return BadRequest("No existe biometría vinculada a esta cuenta.");
+
+        var options = _fido2.GetAssertionOptions(existingCredentials, UserVerificationRequirement.Preferred);
+        
+        user.PendingFidoOptions = options.ToJson();
+        await _context.SaveChangesAsync();
+
+        return Content(options.ToJson(), "application/json");
+    }
+
+    [AllowAnonymous]
+    [HttpPost("assertion/complete")]
+    public async Task<IActionResult> AssertionComplete([FromBody] AuthenticatorAssertionRawResponse assertionResponse)
+    {
+        try
+        {
+            var userHandle = assertionResponse.Response.UserHandle ?? Array.Empty<byte>();
+            var userId = new Guid(userHandle);
+            
+            var user = await _userManager.Users
+                .IgnoreQueryFilters()
+                .Include(u => u.Company)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+            
+            if (user == null) return NotFound("Sesión inválida.");
+
+            var jsonOptions = user.PendingFidoOptions;
+            if (string.IsNullOrEmpty(jsonOptions)) return BadRequest("Sesión expirada.");
+
+            var options = AssertionOptions.FromJson(jsonOptions);
+
+            var credential = await _context.UserCredentials.FirstOrDefaultAsync(c => c.DescriptorId == assertionResponse.Id);
+            if (credential == null) return BadRequest("Credencial no reconocida.");
+
+            var storedCredential = new StoredCredential
+            {
+                Descriptor = new PublicKeyCredentialDescriptor(credential.DescriptorId),
+                PublicKey = credential.PublicKey,
+                UserHandle = credential.UserHandle,
+                SignatureCounter = credential.SignatureCounter
+            };
+
+            var success = await _fido2.MakeAssertionAsync(assertionResponse, options, storedCredential.PublicKey, storedCredential.SignatureCounter, (args, cancellationToken) =>
+            {
+                return Task.FromResult(true);
+            });
+
+            // Update counter
+            credential.SignatureCounter = success.Counter;
+            user.PendingFidoOptions = null;
+            await _context.SaveChangesAsync();
+
+            // 🚀 FULL JWT PAYLOAD (Matching AuthController.Login)
+            var roles = await _userManager.GetRolesAsync(user);
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email!),
+                new Claim("CompanyId", user.CompanyId.ToString())
+            };
+            foreach (var role in roles) claims.Add(new Claim(ClaimTypes.Role, role));
+
+            var permissions = await _identityService.GetUserPermissionsAsync(user.Id);
+            foreach (var perm in permissions) claims.Add(new Claim("perm", perm));
+
+            var activeModules = await _context.CompanyModules
+                .IgnoreQueryFilters()
+                .Include(cm => cm.Module)
+                .Where(cm => cm.CompanyId == user.CompanyId && cm.IsActive)
+                .Select(cm => cm.Module!.Code)
+                .ToListAsync();
+            foreach (var mod in activeModules) claims.Add(new Claim("mod", mod));
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"] ?? "SuperSecretKey123!_TalenHuman_2026_Secure"));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: "TalenHuman",
+                audience: "TalenHuman",
+                claims: claims,
+                expires: DateTime.Now.AddDays(7),
+                signingCredentials: creds
+            );
+
+            // Fetch extra info (Stores, District)
+            var employee = await _context.Employees
+                .IgnoreQueryFilters()
+                .Include(e => e.Store)
+                .Include(e => e.Profile)
+                .FirstOrDefaultAsync(e => e.Id == user.EmployeeId);
+
+            Guid? storeId = employee?.StoreId;
+            string? storeName = employee?.Store?.Name;
+            string? storeExternalId = employee?.Store?.ExternalId;
+
+            var managedDistricts = await _context.Districts.IgnoreQueryFilters().Where(d => d.SupervisorId == user.Id).ToListAsync();
+            var storeIds = await _context.SupervisorStores.IgnoreQueryFilters().Where(ss => ss.UserId == user.Id).Select(ss => ss.StoreId).ToListAsync();
+            
+            var firebaseConfig = await _settingsService.GetGroupSettingsAsync("Firebase");
+
+            await _auditService.LogAsync("LOGIN_BIOMETRIC", "Auth", user.Id.ToString(), "Acceso mediante biometría", true, user.Id, user.CompanyId, user.Email);
+
+            return Ok(new
+            {
+                token = new JwtSecurityTokenHandler().WriteToken(token),
+                user = new { 
+                    user.Email, 
+                    user.FullName, 
+                    user.CompanyId, 
+                    user.MustChangePassword, 
+                    roles, 
+                    companyName = user.Company?.Name,
+                    storeId,
+                    storeName,
+                    storeExternalId,
+                    districtName = managedDistricts.FirstOrDefault()?.Name,
+                    storeIds,
+                    employeeId = user.EmployeeId,
+                    joinDate = employee?.DateOfEntry,
+                    jobTitle = employee?.Profile?.Name,
+                    activeModules,
+                    permissions,
+                    firebaseApiKey = firebaseConfig.GetValueOrDefault("FIREBASE_API_KEY"),
+                    firebaseAuthDomain = firebaseConfig.GetValueOrDefault("FIREBASE_AUTH_DOMAIN"),
+                    firebaseProjectId = firebaseConfig.GetValueOrDefault("FIREBASE_PROJECT_ID"),
+                    firebaseStorageBucket = firebaseConfig.GetValueOrDefault("FIREBASE_STORAGE_BUCKET"),
+                    firebaseMessagingSenderId = firebaseConfig.GetValueOrDefault("FIREBASE_MESSAGING_SENDER_ID"),
+                    firebaseAppId = firebaseConfig.GetValueOrDefault("FIREBASE_APP_ID"),
+                    firebaseVapidKey = firebaseConfig.GetValueOrDefault("FIREBASE_VAPID_KEY"),
+                    acceptedPrivacyPolicy = user.AcceptedPrivacyPolicy,
+                    hasBiometrics = true
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { status = "error", message = ex.Message });
+        }
+    }
+
+    public class AssertionRequest { public string Email { get; set; } = string.Empty; }
+    
     [HttpPost("privacy-accept")]
+...
     public async Task<IActionResult> AcceptPrivacy()
     {
         var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
