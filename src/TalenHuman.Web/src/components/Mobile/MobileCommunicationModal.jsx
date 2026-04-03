@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Megaphone, CheckCircle, ChevronRight, Award } from 'lucide-react';
 
 const MobileCommunicationModal = ({ communication, onDismiss }) => {
@@ -24,33 +25,33 @@ const MobileCommunicationModal = ({ communication, onDismiss }) => {
         }, 350); 
     };
 
-    return (
+    return createPortal(
         <div 
-            onClick={handleClose} // Safe Close: Click backdrop to dismiss
+            onClick={handleClose} 
             style={{
                 position: 'fixed',
                 inset: 0,
-                zIndex: 2000000, // Absolute priority
-                background: 'rgba(7, 10, 25, 0.94)',
+                zIndex: 999999999, // 🚀 ABSOLUTE GLOBAL PRIORITY (V64.2)
+                background: 'rgba(7, 10, 25, 0.95)',
                 backdropFilter: 'blur(20px)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: '20px',
-                paddingTop: '60px', // Prevent header overlap
+                padding: '20px env(safe-area-inset-bottom, 20px)',
                 animation: isClosing ? 'fadeOut-v12 0.3s forwards' : 'fadeIn-v12 0.4s ease-out'
             }}
         >
             <div 
-                onClick={(e) => e.stopPropagation()} // Prevent closing when clicking modal content
+                onClick={(e) => e.stopPropagation()} 
                 style={{
                     width: '100%',
-                    maxHeight: '85vh',
+                    maxHeight: '90vh',
                     background: 'white',
                     borderRadius: '2.5rem',
                     overflow: 'hidden',
-                    boxShadow: '0 40px 100px rgba(0,0,0,0.5)',
+                    boxShadow: '0 40px 100px rgba(0,0,0,0.6)',
                     position: 'relative',
+                    marginTop: '20px', // Notch safety
                     animation: isClosing ? 'slideDown-v12 0.3s forwards' : 'slideUp-v12 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
                     display: 'flex',
                     flexDirection: 'column'
@@ -63,7 +64,7 @@ const MobileCommunicationModal = ({ communication, onDismiss }) => {
                             src={getSafeUrl(communication.imagenUrl)} 
                             alt="Header" 
                             style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }}
-                            onError={(e) => { e.target.style.display = 'none'; }} // Fallback if still 404
+                            onError={(e) => { e.target.style.display = 'none'; }} 
                         />
                     ) : (
                         <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
@@ -71,7 +72,6 @@ const MobileCommunicationModal = ({ communication, onDismiss }) => {
                         </div>
                     )}
                     
-                    {/* ENHANCED CLOSE BUTTON (V63.7.3) */}
                     <button 
                         onClick={handleClose}
                         style={{
@@ -86,7 +86,6 @@ const MobileCommunicationModal = ({ communication, onDismiss }) => {
                     </button>
                 </div>
 
-                {/* 📝 CONTENT */}
                 <div style={{ padding: '24px 30px', overflowY: 'auto', flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
                         <div style={{ background: '#4f46e5', width: '20px', height: '3px', borderRadius: '2px' }} />
@@ -104,7 +103,6 @@ const MobileCommunicationModal = ({ communication, onDismiss }) => {
                     />
                 </div>
 
-                {/* 🚀 ACTION */}
                 <div style={{ padding: '24px', background: '#f8fafc', borderTop: '1px solid #f1f5f9' }}>
                     <button 
                         onClick={handleClose}
@@ -129,7 +127,8 @@ const MobileCommunicationModal = ({ communication, onDismiss }) => {
                 .pr-content-v12 img { width: 100%; border-radius: 16px; margin: 12px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
                 .pr-content-v12 b, .pr-content-v12 strong { color: #4338ca; font-weight: 900; }
             `}</style>
-        </div>
+        </div>,
+        document.body
     );
 };
 

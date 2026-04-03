@@ -198,25 +198,32 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
 
           {/* BRAND POSITIONING (Elevated in center-bottom) */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '4px' }}>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', position: 'relative', zIndex: 1000 }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', position: 'relative' }}>
                 <TalenHumanLogo type="header" />
                 <div 
-                    onClick={() => {
-                        console.log('🐞 Debug Dot Tapped');
-                        setShowDebug(!showDebug);
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('🐞 CLICK DEBUG DOT');
+                        setShowDebug(prev => !prev);
                     }} 
                     style={{ 
-                        width: '32px', height: '32px', borderRadius: '50%', 
+                        width: '40px', height: '40px', 
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         cursor: 'pointer',
-                        background: 'transparent',
-                        position: 'relative',
-                        zIndex: 1001
+                        background: 'rgba(255,255,255,0.05)',
+                        borderRadius: '50%',
+                        position: 'absolute',
+                        right: '-45px', // Move it outside the logo area
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        zIndex: 9999999
                     }} 
                 >
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'rgba(255,255,255,0.12)' }} />
+                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 10px rgba(239, 68, 68, 0.5)' }} />
                 </div>
              </div>
+ toxicology: 
              
              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', paddingLeft: '4px' }}>
                 <span style={{ 
