@@ -37,16 +37,23 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
         top: 0,
         boxShadow: '0 4px 20px rgba(79, 70, 229, 0.2)'
       }}>
-         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <div style={{ transform: 'scale(0.85)', transformOrigin: 'left' }}>
-               <TalenHumanLogo size={18} white={true} />
-            </div>
-            <span style={{ fontSize: '9px', fontWeight: '800', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-               {user?.tenantName || 'Global Management'}
-            </span>
-         </div>
-         
-         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
+             <div style={{ marginBottom: '-2px' }}>
+                <TalenHumanLogo type="header" />
+             </div>
+             <span style={{ 
+                 fontSize: '11px', 
+                 fontWeight: '600', 
+                 color: 'rgba(255,255,255,0.8)', 
+                 textTransform: 'uppercase', 
+                 letterSpacing: '0.05em',
+                 paddingLeft: '34px'
+             }}>
+                {user?.companyName || 'Global Management'}
+             </span>
+          </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button 
                 onClick={toggleTheme}
                 style={{
@@ -70,7 +77,7 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
             >
                 <LogOut size={20} />
             </button>
-         </div>
+          </div>
       </header>
 
       {/* Main Content Area - Professional Native Scrolling */}

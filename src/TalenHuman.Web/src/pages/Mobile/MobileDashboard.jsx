@@ -72,22 +72,22 @@ const MobileDashboard = ({ user, theme }) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
              <h2 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-0.8px', color: primaryText, margin: 0 }}>
-                <span style={{ color: '#4f46e5', opacity: 0.8 }}>Hola,</span> {user?.fullName?.split(' ')[0] || 'Tito'}
+                <span style={{ color: '#4f46e5', opacity: 0.8 }}>Hola,</span> {user?.fullName || 'TalenHuman'}
              </h2>
              <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 <span style={{ fontSize: '12px', fontWeight: '800', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                   {user?.roleName || 'Colaborador'}
+                   {user?.roles?.[0] || 'Gerente General'}
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: mutedText }}>
                    <MapPin size={10} />
                    <span style={{ fontSize: '11px', fontWeight: '600' }}>
-                      {user?.storeName || todayShift?.storeName || 'Sede Principal'}
+                      {user?.companyName || user?.storeName || 'Sede Principal'}
                    </span>
                 </div>
              </div>
           </div>
           
-          {/* 🕒 IDENTITY & TIME WIDGET */}
+          {/* 🕒 DYNAMIC IDENTITY WIDGET (Tenant Sourced) */}
           <div style={{ 
               display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px',
               padding: '12px 16px', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(79, 70, 229, 0.03)',
@@ -95,18 +95,29 @@ const MobileDashboard = ({ user, theme }) => {
               boxShadow: isDark ? 'none' : '0 10px 20px rgba(79, 70, 229, 0.05)'
           }}>
              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#4f46e5' }}>
-                <span style={{ fontSize: '12px', fontWeight: '800', letterSpacing: '0.05em' }}>🇲🇽 MÉXICO</span>
+                <span style={{ fontSize: '12px', fontWeight: '800', letterSpacing: '0.05em' }}>
+                   {user?.countryCode === 'CO' ? '🇨🇴 COLOMBIA' : (user?.countryCode === 'MX' ? '🇲🇽 MÉXICO' : `📍 ${user?.countryCode || 'PAÍS'}`)}
+                </span>
              </div>
              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: primaryText }}>
                 <Clock size={12} strokeWidth={2.5} />
                 <span style={{ fontSize: '13px', fontWeight: '900' }}>
-                   {new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                   {new Date().toLocaleTimeString('es-ES', { 
+                       hour: '2-digit', 
+                       minute: '2-digit',
+                       timeZone: user?.timeZoneId || undefined 
+                   })}
                 </span>
              </div>
              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: mutedText }}>
                 <Calendar size={10} />
                 <span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase' }}>
-                   {new Date().toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' })}
+                   {new Date().toLocaleDateString('es-ES', { 
+                       weekday: 'short', 
+                       day: '2-digit', 
+                       month: 'short',
+                       timeZone: user?.timeZoneId || undefined
+                   })}
                 </span>
              </div>
           </div>
