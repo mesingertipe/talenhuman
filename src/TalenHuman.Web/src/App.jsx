@@ -79,9 +79,7 @@ function App() {
         try {
           const fcmToken = await requestForToken();
           if (fcmToken) {
-            await api.post('/Security/token', fcmToken, {
-              headers: { 'Content-Type': 'application/json' }
-            });
+            await api.post('/Security/token', { token: fcmToken });
             console.log('Cloud ID Synced ✅');
           }
         } catch (err) {
@@ -296,6 +294,7 @@ function App() {
       {/* 📺 MOBILE PR MODAL (V63.7) */}
       {showPRModal && activeCommunication && (
         <MobileCommunicationModal 
+          key={activeCommunication.id}
           communication={activeCommunication} 
           onDismiss={handleDismissPR} 
         />

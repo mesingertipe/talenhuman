@@ -141,6 +141,9 @@ public class ComunicadosController : ControllerBase
                 var plainBody = System.Text.RegularExpressions.Regex.Replace(dto.Body, "<.*?>", string.Empty);
                 if (plainBody.Length > 150) plainBody = plainBody.Substring(0, 147) + "...";
 
+                var absoluteImageUrl = string.IsNullOrEmpty(dto.ImageUrl) ? null : 
+                                      (dto.ImageUrl.StartsWith("http") ? dto.ImageUrl : $"{Request.Scheme}://{Request.Host}{dto.ImageUrl}");
+
                 var message = new MulticastMessage()
                 {
                     Tokens = tokens,
@@ -148,7 +151,7 @@ public class ComunicadosController : ControllerBase
                     {
                         Title = "📢 " + dto.Title,
                         Body = plainBody,
-                        ImageUrl = dto.ImageUrl // 📸 Push Image Injection
+                        ImageUrl = absoluteImageUrl // 📸 Push Absolute Image injection
                     },
                     Data = new Dictionary<string, string>()
                     {

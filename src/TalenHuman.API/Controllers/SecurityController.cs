@@ -114,7 +114,7 @@ public class SecurityController : ControllerBase
         }
     }
     [HttpPost("token")]
-    public async Task<IActionResult> UpdateFirebaseToken([FromBody] string token)
+    public async Task<IActionResult> UpdateFirebaseToken([FromBody] TokenUpdateDto dto)
     {
         var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
@@ -123,10 +123,15 @@ public class SecurityController : ControllerBase
         var user = await _context.Users.FindAsync(userId);
         if (user == null) return NotFound();
 
-        user.FirebaseToken = token;
+        user.FirebaseToken = dto.Token;
         await _context.SaveChangesAsync();
 
         return Ok(new { status = "success" });
+    }
+
+    public class TokenUpdateDto
+    {
+        public string Token { get; set; } = string.Empty;
     }
 
     [HttpPost("privacy-accept")]
