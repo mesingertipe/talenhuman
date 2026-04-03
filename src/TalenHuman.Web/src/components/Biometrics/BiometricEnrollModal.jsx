@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Fingerprint, ShieldCheck, X, AlertCircle, Sparkles } from 'lucide-react';
 import { create } from '@github/webauthn-json';
-import SecurityService from '../../services/security.service';
+import SecurityService from '../../services/securityService';
 
 const BiometricEnrollModal = ({ onComplete, onCancel, theme }) => {
   const [loading, setLoading] = useState(false);
