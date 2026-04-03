@@ -85,74 +85,103 @@ const BiometricEnrollModal = ({ onComplete, onCancel, theme }) => {
       overflowY: 'auto', minHeight: '100dvh', transition: 'background-color 0.4s'
     }}>
       
-      {/* 🏔️ BRAND HEADER (INDIGO) */}
+      {/* 🏔️ BRAND HEADER (ELITE PURPLE) + ESCAPE ROUTE (X) */}
       <div style={{
-        width: '100%', background: 'linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)',
-        padding: '70px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center',
+        width: '100%', background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+        padding: '60px 40px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'center', color: 'white', borderBottomLeftRadius: '3.5rem', borderBottomRightRadius: '3.5rem',
-        boxShadow: '0 20px 30px -10px rgba(79, 70, 229, 0.3)'
+        boxShadow: '0 20px 40px rgba(79, 70, 229, 0.25)', position: 'relative'
       }}>
-         <Fingerprint size={72} strokeWidth={1.2} style={{ marginBottom: '24px', opacity: loading ? 0.5 : 1 }} />
-         <h1 style={{ fontSize: '30px', fontWeight: '800', letterSpacing: '-1px', margin: 0, textAlign: 'center' }}>Acceso Seguro</h1>
+         {/* ❌ ABSOLUTE CLOSE BUTTON (NEVER GET TRAPPED) */}
+         <button 
+            onClick={onCancel}
+            style={{ 
+                position: 'absolute', top: 'env(safe-area-inset-top, 20px)', right: '20px',
+                width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)',
+                border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)', cursor: 'pointer', zIndex: 100
+            }}
+         >
+            <div style={{ fontSize: '24px', fontWeight: '300' }}>×</div>
+         </button>
+
+         <div style={{ 
+            width: '80px', height: '80px', borderRadius: '24px', background: 'rgba(255,255,255,0.12)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px',
+            backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)'
+         }}>
+             <Fingerprint size={44} strokeWidth={1.5} style={{ opacity: loading ? 0.5 : 1 }} />
+         </div>
+         <h1 style={{ fontSize: '28px', fontWeight: '900', letterSpacing: '-1px', margin: 0, textAlign: 'center' }}>Elite Identity</h1>
+         <span style={{ fontSize: '11px', fontWeight: '800', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.7 }}>Secure Biometrics</span>
       </div>
 
-      <div style={{ width: '100%', maxWidth: '400px', padding: '40px 32px', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: '100%', maxWidth: '400px', padding: '32px 24px', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start' }}>
 
-        <div style={{ textAlign: 'center', marginBottom: '40px', width: '100%' }}>
+        <div style={{ textAlign: 'center', marginBottom: '32px', width: '100%' }}>
            {success ? (
               <div style={{ color: '#10b981', animation: 'scaleIn 0.5s ease-out' }}>
-                 <CheckCircle2 size={64} style={{ margin: '0 auto 15px' }} />
-                 <h2 style={{ fontSize: '26px', fontWeight: '800', letterSpacing: '-0.5px' }}>¡Todo Listo!</h2>
-                 <p style={{ fontSize: '15px', color: isDark ? 'rgba(255,255,255,0.5)' : '#64748b', marginTop: '10px' }}>Tu biometría ha sido vinculada correctamente.</p>
+                 <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                    <CheckCircle2 size={36} />
+                 </div>
+                 <h2 style={{ fontSize: '24px', fontWeight: '900', letterSpacing: '-0.5px', color: isDark ? '#ffffff' : '#1e293b' }}>¡Activado!</h2>
+                 <p style={{ fontSize: '14px', color: isDark ? 'rgba(255,255,255,0.5)' : '#64748b', marginTop: '8px' }}>Tu huella ahora es tu llave maestra.</p>
               </div>
            ) : (
               <>
-                 <h2 style={{ fontSize: '26px', fontWeight: '800', color: isDark ? '#ffffff' : '#1e293b', letterSpacing: '-0.8px' }}>Tu <span style={{ color: '#4f46e5' }}>Huella</span> es la Clave</h2>
-                 <p style={{ fontSize: '15px', color: isDark ? 'rgba(255,255,255,0.5)' : '#64748b', marginTop: '12px', lineHeight: '1.6' }}>Olvida las contraseñas. Accede de forma instantánea usando el sensor biométrico de tu dispositivo.</p>
+                 <h2 style={{ fontSize: '26px', fontWeight: '900', color: isDark ? '#ffffff' : '#1e293b', letterSpacing: '-0.8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    <ShieldCheck size={28} style={{ color: '#4f46e5' }} /> Tu <span style={{ color: '#4f46e5' }}>Huella</span>
+                 </h2>
+                 <p style={{ fontSize: '15px', color: isDark ? 'rgba(255,255,255,0.5)' : '#64748b', marginTop: '12px', lineHeight: '1.6' }}>Olvida las claves. Accede de forma instantánea usando el sensor biométrico.</p>
               </>
            )}
         </div>
 
         {!success && (
-           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {error && (
                  <div style={{ 
-                    background: isDark ? 'rgba(239, 68, 68, 0.1)' : '#fef2f2', 
-                    border: `1px solid ${isDark ? 'rgba(239, 68, 68, 0.2)' : '#fee2e2'}`, 
-                    padding: '16px', borderRadius: '24px', display: 'flex', flexDirection: 'column', gap: '4px' 
+                    background: isDark ? 'rgba(239, 68, 68, 0.08)' : '#fef2f2', 
+                    borderLeft: `4px solid #ef4444`, 
+                    padding: '16px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '4px' 
                  }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ef4444' }}>
                         <AlertCircle size={18} />
-                        <span style={{ fontSize: '13px', fontWeight: '700' }}>{error}</span>
+                        <span style={{ fontSize: '13px', fontWeight: '800' }}>{error}</span>
                     </div>
-                    {diagInfo && <p style={{ fontSize: '11px', color: isDark ? 'rgba(239, 68, 68, 0.6)' : '#991b1b', margin: 0 }}>{diagInfo}</p>}
+                    {diagInfo && <p style={{ fontSize: '11px', color: isDark ? 'rgba(239, 68, 68, 0.6)' : '#991b1b', margin: 0, fontWeight: '600' }}>{diagInfo}</p>}
                  </div>
               )}
 
-              <button 
-                onClick={handleActivate}
-                disabled={loading || preLoading}
-                style={{
-                  width: '100%', background: (loading || preLoading) ? (isDark ? '#1e293b' : '#e2e8f0') : '#4f46e5',
-                  color: 'white', padding: '20px', borderRadius: '24px', fontSize: '16px',
-                  fontWeight: '700', border: 'none', boxShadow: (loading || preLoading) ? 'none' : '0 15px 30px -10px rgba(79, 70, 229, 0.4)',
-                  cursor: (loading || preLoading) ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                 {loading ? <div className="loading-spinner"></div> : <span>{preLoading ? 'Preparando...' : 'Activar Biometría'}</span>}
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+                 <button 
+                   onClick={handleActivate}
+                   disabled={loading || preLoading}
+                   className="no-select"
+                   style={{
+                     width: '100%', background: (loading || preLoading) ? (isDark ? '#1e293b' : '#e2e8f0') : 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                     color: 'white', padding: '22px', borderRadius: '24px', fontSize: '16px',
+                     fontWeight: '900', border: 'none', boxShadow: (loading || preLoading) ? 'none' : '0 12px 24px rgba(79, 70, 229, 0.3)',
+                     cursor: (loading || preLoading) ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
+                     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', transform: loading ? 'scale(0.98)' : 'scale(1)'
+                   }}
+                 >
+                    {loading ? <div className="loading-spinner"></div> : <><Fingerprint size={20} /> <span>{preLoading ? 'Preparando...' : 'Vincular Huella'}</span></>}
+                 </button>
 
-              <button 
-                onClick={onCancel} 
-                style={{ 
-                  background: 'none', border: 'none', color: isDark ? 'rgba(255,255,255,0.4)' : '#64748b', 
-                  fontSize: '14px', fontWeight: '600', cursor: 'pointer', padding: '12px', width: '100%', 
-                  transition: 'color 0.2s' 
-                }}
-              >
-                Configurar más tarde
-              </button>
+                 <button 
+                   onClick={onCancel} 
+                   className="no-select"
+                   style={{ 
+                     background: 'transparent', border: `1.5px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`, 
+                     color: isDark ? 'rgba(255,255,255,0.5)' : '#64748b', 
+                     padding: '18px', borderRadius: '24px', fontSize: '14px', fontWeight: '700', 
+                     cursor: 'pointer', width: '100%', transition: 'all 0.3s ease'
+                   }}
+                 >
+                   Configurar más tarde
+                 </button>
+              </div>
            </div>
         )}
       </div>

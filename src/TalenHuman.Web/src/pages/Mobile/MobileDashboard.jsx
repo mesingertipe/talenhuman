@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Calendar, MapPin, Clock, ChevronRight, 
-  CheckCircle2, AlertCircle, Info, Fingerprint 
+  CheckCircle2, AlertCircle, Info, Fingerprint, Map, ShieldCheck
 } from 'lucide-react';
 import api from '../../services/api';
 import BiometricEnrollModal from '../../components/Biometrics/BiometricEnrollModal';
@@ -21,7 +21,7 @@ const MobileDashboard = ({ user, theme }) => {
         try {
           const shiftsRes = await api.get('/shifts/my-shifts');
           const today = new Date().toISOString().split('T')[0];
-          const currentShift = shiftsRes.data.find(s => s.startTime.startsWith(today));
+          const currentShift = shiftsRes.data.find(s => s.startTime && s.startTime.startsWith(today));
           setTodayShift(currentShift);
         } catch (e) {
           console.error("Dashboard Shifts Error", e);
@@ -59,167 +59,167 @@ const MobileDashboard = ({ user, theme }) => {
   return (
     <div className="animate-in fade-in slide-in-from-bottom-10 duration-700">
       
-      {/* 🚀 BIOMETRIC MODAL */}
-      {showBiometrics && <BiometricEnrollModal onComplete={() => setShowBiometrics(false)} onCancel={() => setShowBiometrics(false)} />}
+      {/* 🚀 BIOMETRIC MODAL (V63.1 SECURE) */}
+      {showBiometrics && (
+        <BiometricEnrollModal 
+          theme={theme}
+          onComplete={() => setShowBiometrics(false)} 
+          onCancel={() => setShowBiometrics(false)} 
+        />
+      )}
 
-      {/* 🏔️ CLEAN NATIVE HEADER */}
+      {/* 🏔️ ELITE DASHBOARD HEADER */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-         <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <h2 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-0.8px', color: primaryText, margin: 0 }}>
-               Hola, <span style={{ color: '#4f46e5' }}>{user?.fullName?.split(' ')[0] || 'Usuario'}</span>
-            </h2>
-            <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-               <span style={{ fontSize: '12px', fontWeight: '800', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  {user?.roleName || 'Colaborador'}
-               </span>
-               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: mutedText }}>
-                  <MapPin size={10} />
-                  <span style={{ fontSize: '11px', fontWeight: '600' }}>
-                     {user?.storeName || todayShift?.storeName || 'Sede Principal'}
-                  </span>
-               </div>
-            </div>
-         </div>
-         
-         <button 
-            onClick={() => setShowBiometrics(true)}
-            style={{ 
-                width: '52px', height: '52px', borderRadius: '18px', 
-                background: isDark ? 'rgba(79, 70, 229, 0.1)' : 'rgba(79, 70, 229, 0.05)', 
-                border: `1px solid ${isDark ? 'rgba(79, 70, 229, 0.2)' : 'rgba(79, 70, 229, 0.1)'}`, 
-                display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                color: '#4f46e5', boxShadow: shadow, transition: 'all 0.3s' 
-            }}
-         >
-            <Fingerprint size={28} strokeWidth={1.5} />
-         </button>
-      </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+             <h2 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-0.8px', color: primaryText, margin: 0 }}>
+                <span style={{ color: '#4f46e5', opacity: 0.8 }}>Hola,</span> {user?.fullName?.split(' ')[0] || 'Tito'}
+             </h2>
+             <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <span style={{ fontSize: '12px', fontWeight: '800', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                   {user?.roleName || 'Colaborador'}
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: mutedText }}>
+                   <MapPin size={10} />
+                   <span style={{ fontSize: '11px', fontWeight: '600' }}>
+                      {user?.storeName || todayShift?.storeName || 'Sede Principal'}
+                   </span>
+                </div>
+             </div>
+          </div>
+          
+          {/* 🕒 IDENTITY & TIME WIDGET */}
+          <div style={{ 
+              display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px',
+              padding: '12px 16px', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(79, 70, 229, 0.03)',
+              borderRadius: '20px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(79, 70, 229, 0.1)'}`,
+              boxShadow: isDark ? 'none' : '0 10px 20px rgba(79, 70, 229, 0.05)'
+          }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#4f46e5' }}>
+                <span style={{ fontSize: '12px', fontWeight: '800', letterSpacing: '0.05em' }}>🇲🇽 MÉXICO</span>
+             </div>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: primaryText }}>
+                <Clock size={12} strokeWidth={2.5} />
+                <span style={{ fontSize: '13px', fontWeight: '900' }}>
+                   {new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+             </div>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: mutedText }}>
+                <Calendar size={10} />
+                <span style={{ fontSize: '10px', fontWeight: '700', textTransform: 'uppercase' }}>
+                   {new Date().toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' })}
+                </span>
+             </div>
+          </div>
+       </div>
 
       {/* 🗓️ TURNOS DASHBOARD CARD */}
       <section style={{ marginBottom: '32px' }}>
          {todayShift ? (
-           <div style={{ 
-               position: 'relative', background: cardBg, borderRadius: '32px', 
-               padding: '28px', border: `1px solid ${cardBorder}`, 
-               overflow: 'hidden', boxShadow: shadow 
-           }}>
-              <div style={{ position: 'absolute', top: 0, right: 0, padding: '20px' }}>
-                 <div style={{ padding: '4px 12px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '20px' }}>
-                    <span style={{ fontSize: '9px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase' }}>Presente</span>
-                 </div>
+            <div style={{ 
+              background: cardBg, borderRadius: '32px', padding: '30px', 
+              boxShadow: shadow, border: `1px solid ${cardBorder}`,
+              position: 'relative', overflow: 'hidden'
+            }}>
+              <div style={{ position: 'absolute', top: 0, right: 0, padding: '20px', opacity: 0.05 }}>
+                 <Calendar size={120} />
               </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-                 <div style={{ 
-                     width: '48px', height: '48px', 
-                     background: 'rgba(79, 70, 229, 0.05)', 
-                     borderRadius: '16px', border: '1px solid rgba(79, 70, 229, 0.1)', 
-                     display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' 
-                 }}>
-                    <Clock size={24} strokeWidth={1.5} />
-                 </div>
-                 <div>
-                    <p style={{ fontSize: '10px', fontWeight: '800', color: mutedText, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '2px' }}>Entrada Programada</p>
-                    <h3 style={{ fontSize: '32px', fontWeight: '800', color: primaryText, letterSpacing: '-1px' }}>
-                       {(() => {
-                          try {
-                            if (!todayShift?.startTime) return '--:--';
-                            const d = new Date(todayShift.startTime);
-                            return isNaN(d.getTime()) ? '--:--' : d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                          } catch (e) { return '--:--'; }
-                       })()}
-                    </h3>
-                 </div>
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'rgba(79, 70, 229, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+                   <Calendar size={32} style={{ color: '#4f46e5' }} />
+                </div>
+                <h3 style={{ fontSize: '22px', fontWeight: '800', marginBottom: '4px', color: primaryText }}>
+                   {todayShift.shiftName || 'Turno Asignado'}
+                </h3>
+                <p style={{ fontSize: '14px', fontWeight: '700', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                   {new Date(todayShift.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
+                   {new Date(todayShift.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
+                <div style={{ marginTop: '20px', padding: '8px 16px', background: isDark ? 'rgba(16, 185, 129, 0.1)' : '#f0fdf4', borderRadius: '12px', color: '#16a34a', fontSize: '12px', fontWeight: '700' }}>
+                   ESTADO: ACTIVO
+                </div>
               </div>
-
-              <div style={{ 
-                  padding: '16px 20px', background: isDark ? 'rgba(255,255,255,0.02)' : '#f8fafc', 
-                  borderRadius: '20px', border: `1px solid ${cardBorder}`, 
-                  display: 'flex', alignItems: 'center', gap: '12px' 
-              }}>
-                 <MapPin size={16} style={{ color: '#4f46e5' }} />
-                 <span style={{ fontSize: '13px', fontWeight: '700', color: primaryText }}>{todayShift?.storeName || 'Sede Central'}</span>
-              </div>
-           </div>
+            </div>
          ) : (
             <div style={{ 
-                background: cardBg, borderRadius: '32px', padding: '40px', 
-                border: `1px solid ${cardBorder}`, textAlign: 'center', boxShadow: shadow 
+              background: cardBg, borderRadius: '32px', padding: '40px 30px', 
+              boxShadow: shadow, border: `1px solid ${cardBorder}`,
+              textAlign: 'center'
             }}>
-               <div style={{ 
-                   width: '64px', height: '64px', background: isDark ? 'rgba(255,255,255,0.03)' : '#f8fafc', 
-                   borderRadius: '22px', margin: '0 auto 20px', display: 'flex', 
-                   alignItems: 'center', justifyContent: 'center', color: mutedText 
-               }}>
-                  <Calendar size={32} strokeWidth={1.5} />
+               <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'rgba(79, 70, 229, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                  <Calendar size={32} style={{ color: '#4f46e5' }} />
                </div>
-               <p style={{ fontSize: '18px', fontWeight: '800', color: primaryText, marginBottom: '4px', letterSpacing: '-0.5px' }}>Día de Descanso</p>
-               <p style={{ fontSize: '12px', fontWeight: '600', color: mutedText, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Disfruta tu jornada ✨</p>
+               <h3 style={{ fontSize: '20px', fontWeight: '800', color: primaryText, marginBottom: '8px' }}>Día de Descanso</h3>
+               <p style={{ fontSize: '14px', fontWeight: '700', color: mutedText, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Disfruta tu jornada ✨
+               </p>
             </div>
          )}
       </section>
 
-      {/* ⚡ NATIVE ACTION GRID */}
-      <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-         <button style={{ 
-             background: cardBg, padding: '24px 16px', borderRadius: '28px', 
-             border: `1px solid ${cardBorder}`, display: 'flex', flexDirection: 'column', 
-             alignItems: 'center', gap: '12px', boxShadow: shadow, transition: 'all 0.3s' 
-         }}>
-            <div style={{ 
-                width: '56px', height: '56px', background: 'rgba(34, 197, 94, 0.08)', 
-                borderRadius: '18px', border: '1px solid rgba(34, 197, 94, 0.1)', 
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#22c55e' 
-            }}>
-               <CheckCircle2 size={28} strokeWidth={1.5} />
+      {/* ⚡ QUICK ACTIONS GRID */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
+         <button 
+           onClick={() => setShowBiometrics(true)}
+           style={{ 
+            background: cardBg, borderRadius: '24px', padding: '24px', 
+            border: `1px solid ${cardBorder}`, boxShadow: shadow,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px'
+          }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: 'rgba(34, 197, 94, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+               <CheckCircle2 size={24} style={{ color: '#22c55e' }} />
             </div>
-            <span style={{ fontSize: '11px', fontWeight: '800', color: primaryText, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Asistencia</span>
+            <span style={{ fontSize: '13px', fontWeight: '800', color: primaryText, textTransform: 'uppercase' }}>Asistencia</span>
          </button>
+         
+         <button style={{ 
+            background: cardBg, borderRadius: '24px', padding: '24px', 
+            border: `1px solid ${cardBorder}`, boxShadow: shadow,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px'
+          }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: 'rgba(245, 158, 11, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+               <Info size={24} style={{ color: '#f59e0b' }} />
+            </div>
+            <span style={{ fontSize: '13px', fontWeight: '800', color: primaryText, textTransform: 'uppercase' }}>Novedades</span>
+         </button>
+      </div>
 
-         <button style={{ 
-             background: cardBg, padding: '24px 16px', borderRadius: '28px', 
-             border: `1px solid ${cardBorder}`, display: 'flex', flexDirection: 'column', 
-             alignItems: 'center', gap: '12px', boxShadow: shadow, transition: 'all 0.3s' 
-         }}>
-            <div style={{ 
-                width: '56px', height: '56px', background: 'rgba(245, 158, 11, 0.08)', 
-                borderRadius: '18px', border: '1px solid rgba(245, 158, 11, 0.1)', 
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f59e0b' 
-            }}>
-               <Info size={28} strokeWidth={1.5} />
-            </div>
-            <span style={{ fontSize: '11px', fontWeight: '800', color: primaryText, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Novedades</span>
-         </button>
+      {/* 🔔 NOVEDADES / NOTIFICACIONES SECTION */}
+      <section style={{ marginBottom: '24px' }}>
+         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+             <div style={{ height: '3px', width: '24px', background: '#4f46e5', borderRadius: '4px' }} />
+             <h4 style={{ fontSize: '13px', fontWeight: '800', color: mutedText, textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>
+               Notificaciones
+             </h4>
+         </div>
+
+         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {news.length > 0 ? news.map(item => (
+               <div key={item.id} style={{ 
+                 background: cardBg, padding: '16px', borderRadius: '20px', 
+                 border: `1px solid ${cardBorder}`, display: 'flex', alignItems: 'center', gap: '16px' 
+               }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(79, 70, 229, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                     <Info size={20} style={{ color: '#4f46e5' }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                     <h5 style={{ fontSize: '14px', fontWeight: '700', color: primaryText, margin: 0 }}>{item.title}</h5>
+                     <p style={{ fontSize: '12px', color: mutedText, margin: '2px 0 0' }}>{item.description}</p>
+                  </div>
+                  <ChevronRight size={18} style={{ color: mutedText }} />
+               </div>
+            )) : (
+               <div style={{ textAlign: 'center', padding: '32px 20px', color: mutedText }}>
+                  <p style={{ fontSize: '13px', fontWeight: '600' }}>Sin notificaciones pendientes</p>
+               </div>
+            )}
+         </div>
       </section>
 
-      {/* 🔔 ALERTS AREA */}
-      {news.length > 0 && (
-         <section style={{ marginTop: '32px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', padding: '0 8px' }}>
-               <span style={{ fontSize: '10px', fontWeight: '800', color: mutedText, textTransform: 'uppercase', letterSpacing: '0.2em' }}>Notificaciones</span>
-               <div style={{ flex: 1, height: '1px', background: cardBorder }} />
-            </div>
-            <div style={{ 
-                background: isDark ? 'linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(15,23,42,0.6) 100%)' : '#ffffff', 
-                padding: '20px', borderRadius: '28px', border: `1px solid ${cardBorder}`, 
-                display: 'flex', alignItems: 'center', gap: '16px', boxShadow: shadow, position: 'relative', overflow: 'hidden' 
-            }}>
-               <div style={{ 
-                   width: '44px', height: '44px', background: 'rgba(79, 70, 229, 0.05)', 
-                   borderRadius: '14px', border: '1px solid rgba(79, 70, 229, 0.1)', 
-                   display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' 
-               }}>
-                  <AlertCircle size={22} strokeWidth={1.5} />
-               </div>
-               <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: '14px', fontWeight: '800', color: primaryText, marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{news[0].title}</p>
-                  <span style={{ fontSize: '10px', fontWeight: '700', color: mutedText }}>Toque para ver detalles</span>
-               </div>
-               <ChevronRight size={18} style={{ color: mutedText }} />
-            </div>
-         </section>
-      )}
-
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
   );
 };

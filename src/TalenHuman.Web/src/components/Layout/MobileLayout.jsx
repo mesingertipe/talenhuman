@@ -22,33 +22,38 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
       className="overscroll-none no-select"
     >
       
-      {/* 🏔️ CLEAN BRAND HEADER (NATIVE FEEL) */}
+      {/* 🏔️ CORPORATE PURPLE HEADER (ELITE FEEL) */}
       <header style={{
         padding: 'env(safe-area-inset-top, 20px) 24px 20px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        background: isDark ? 'rgba(12, 18, 34, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+        background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
+        borderBottom: `1px solid rgba(255,255,255,0.1)`,
         zIndex: 100,
         position: 'sticky',
-        top: 0
+        top: 0,
+        boxShadow: '0 4px 20px rgba(79, 70, 229, 0.2)'
       }}>
-         <div style={{ transform: 'scale(0.85)', transformOrigin: 'left' }}>
-            <TalenHumanLogo />
+         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <div style={{ transform: 'scale(0.85)', transformOrigin: 'left' }}>
+               <TalenHumanLogo size={18} white={true} />
+            </div>
+            <span style={{ fontSize: '9px', fontWeight: '800', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+               {user?.tenantName || 'Global Management'}
+            </span>
          </div>
          
          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {/* Theme Toggle Button */}
             <button 
                 onClick={toggleTheme}
                 style={{
                     width: '44px', height: '44px', borderRadius: '15px',
-                    background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                    background: 'rgba(255,255,255,0.1)',
                     border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: isDark ? '#fbbf24' : '#4f46e5', cursor: 'pointer', transition: 'all 0.3s'
+                    color: '#ffffff', cursor: 'pointer', transition: 'all 0.3s'
                 }}
             >
                 {isDark ? <Sun size={20} /> : <Moon size={20} />}
@@ -58,9 +63,9 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
                 onClick={onLogout}
                 style={{
                     width: '44px', height: '44px', borderRadius: '15px',
-                    background: 'rgba(239, 68, 68, 0.1)',
+                    background: 'rgba(255,255,255,0.15)',
                     border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#ef4444', cursor: 'pointer'
+                    color: '#ffffff', cursor: 'pointer'
                 }}
             >
                 <LogOut size={20} />
@@ -84,7 +89,7 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
         </div>
       </main>
 
-      {/* 🏝️ BRANDED NAVIGATION ZONE (PURPLE CORPORATE) */}
+      {/* 🏝️ MINIMALIST NAVIGATION (NO EXTRA TEXT) */}
       <footer style={{ 
         position: 'fixed', bottom: 0, left: 0, right: 0, 
         zIndex: 1000, 
@@ -92,27 +97,9 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
         borderTopLeftRadius: '32px', borderTopRightRadius: '32px',
         padding: '12px 20px env(safe-area-inset-bottom, 20px)',
         boxShadow: '0 -10px 30px rgba(79, 70, 229, 0.2)',
-        display: 'flex', flexDirection: 'column', gap: '16px',
         transition: 'all 0.5s ease'
       }}>
-         {/* Navigation Tabs */}
-         <div style={{ width: '100%', height: '60px' }}>
-            <MobileBottomNav activePage={activePage} setPage={setPage} theme={theme} isBranded={true} />
-         </div>
-
-         {/* Corporate Logo & Tenant Branding */}
-         <div style={{ 
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
-            paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.1)' 
-         }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'white' }}>
-                <TalenHumanLogo size={18} white={true} />
-                <span style={{ fontSize: '15px', fontWeight: '900', letterSpacing: '0.05em' }}>TALENHUMAN</span>
-            </div>
-            <span style={{ fontSize: '10px', fontWeight: '700', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-               {user?.tenantName || 'Global Management'}
-            </span>
-         </div>
+         <MobileBottomNav activePage={activePage} setPage={setPage} theme={theme} isBranded={true} />
       </footer>
 
     </div>
