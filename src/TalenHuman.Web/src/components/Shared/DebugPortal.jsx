@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Terminal, X, Trash2, ChevronDown, ChevronUp, RefreshCw, Send, ShieldCheck, Zap } from 'lucide-react';
 import { requestForToken } from '../../firebase';
 
@@ -57,12 +58,12 @@ const DebugPortal = ({ isOpen, onClose }) => {
         setFcmToken(token || 'Sync Failed');
     };
 
-    return (
-        <div className={`fixed left-0 right-0 z-[100000] bg-[#020617] text-slate-100 font-mono text-[10px] transition-all duration-300 shadow-2xl border-t border-slate-800 ${isMinimized ? 'bottom-0 h-10' : 'bottom-0 h-[65%]'}`}>
+    return createPortal(
+        <div className={`fixed left-0 right-0 z-[1000000] bg-[#020617] text-slate-100 font-mono text-[10px] transition-all duration-300 shadow-2xl border-t border-slate-800 ${isMinimized ? 'bottom-0 h-10' : 'bottom-0 h-[65%]'}`}>
             <div className="flex items-center justify-between p-2 bg-slate-900 border-b border-slate-800 h-10">
                 <div className="flex items-center gap-2">
                     <Zap size={14} className="text-amber-400" />
-                    <span className="font-black text-[10px] uppercase tracking-widest text-slate-400">Elite Diagnostic Hub V63.8</span>
+                    <span className="font-black text-[10px] uppercase tracking-widest text-slate-400">Elite Diagnostic Hub V64.2</span>
                 </div>
                 <div className="flex gap-2">
                     <button onClick={() => setLogs([])} className="p-1 hover:bg-slate-800 rounded"><Trash2 size={14} /></button>
@@ -96,7 +97,8 @@ const DebugPortal = ({ isOpen, onClose }) => {
                     </div>
                 </div>
             )}
-        </div>
+        </div>,
+        document.body
     );
 };
 
