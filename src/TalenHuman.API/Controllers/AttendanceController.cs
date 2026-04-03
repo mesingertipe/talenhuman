@@ -26,6 +26,39 @@ public class AttendanceController : ControllerBase
         _tenantProvider = tenantProvider;
     }
 
+    [HttpGet("my-attendance")]
+    public async Task<IActionResult> GetMyAttendance()
+    {
+        var companyId = _tenantProvider.GetTenantId();
+        var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
+
+        var userId = Guid.Parse(userIdString);
+        var employee = await _context.Employees.FirstOrDefaultAsync(e => e.UserId == userId);
+        if (employee == null) return Ok(new List<object>());
+
+        var attendances = await _context.Attendances
+            .Include(a => a.Store)
+            .Where(a => a.EmployeeId == employee.Id && a.CompanyId == companyId)
+            .OrderByDescending(a => a.ClockIn)
+            .Take(10)
+            .Select(a => new {
+                a.Id,
+                StoreName = a.Store != null ? a.Store.Name : "N/A",
+                a.ClockIn,
+                a.ClockOut,
+                Status = (int)a.Status,
+                StatusText = a.Status == AttendanceStatus.Correcto ? "Correcto" :
+                             a.Status == AttendanceStatus.Desfasado ? "Desfase" :
+                             a.Status == AttendanceStatus.MarcacionErrada ? "Errada" :
+                             a.Status == AttendanceStatus.SinMarcacion ? "Sin Marcación" : "En Curso",
+                a.StatusObservation
+            })
+            .ToListAsync();
+
+        return Ok(attendances);
+    }
+
     [HttpGet("config")]
     public IActionResult GetConfig()
     {

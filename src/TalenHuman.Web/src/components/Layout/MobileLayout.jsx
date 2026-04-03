@@ -3,27 +3,59 @@ import { Sun, Moon, LogOut, Clock, Calendar, Bell, X, Info, AlertCircle, CheckCi
 import MobileBottomNav from '../Navigation/MobileBottomNav';
 import TalenHumanLogo from '../Shared/TalenHumanLogo';
 import { onMessageListener } from '../../firebase';
+import ElitePremiumToast from '../Shared/ElitePremiumToast';
 
 const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, theme, toggleTheme }) => {
   const isDark = theme === 'dark';
   const [time, setTime] = useState(new Date());
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifCount, setNotifCount] = useState(0); // Reset for real tracking
+  const [notifications, setNotifications] = useState(() => {
+    const saved = localStorage.getItem(`notifs_${user?.id}`);
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [notifCount, setNotifCount] = useState(() => {
+    return notifications.filter(n => !n.read).length;
+  });
   const [toast, setToast] = useState(null);
 
-  // 🔔 FIREBASE REAL-TIME TOAST LISTENER
+  // 🔔 FIREBASE REAL-TIME TOAST & HISTORY LISTENER
   useEffect(() => {
-    onMessageListener()
+    const unsubscribe = onMessageListener()
       .then((payload) => {
-        setToast({
-          title: payload.notification?.title || 'Nuevo Comunicado',
-          body: payload.notification?.body || 'Revisa la sección de noticias que acabamos de publicar.',
+        const newNotif = {
+          id: Date.now(),
+          title: payload.notification?.title || 'Notificación Elite',
+          body: payload.notification?.body || 'Tienes un nuevo mensaje.',
+          type: payload.data?.type || 'info', // 'shift_update', 'broadcast', etc
+          time: 'Ahora',
+          read: false,
+          date: new Date().toISOString()
+        };
+
+        setNotifications(prev => {
+          const updated = [newNotif, ...prev].slice(0, 50); // Keep last 50
+          localStorage.setItem(`notifs_${user?.id}`, JSON.stringify(updated));
+          return updated;
         });
+
+        setToast({
+          title: newNotif.title,
+          body: newNotif.body,
+          type: newNotif.type === 'shift_update' ? 'shift' : 
+                newNotif.type === 'broadcast' ? 'broadcast' : 'info'
+        });
+        
         setNotifCount(prev => prev + 1);
-        setTimeout(() => setToast(null), 6000);
       })
       .catch((err) => console.log('Firebase onMessage error: ', err));
-  }, []);
+  }, [user?.id]);
+
+  const markAllAsRead = () => {
+    const updated = notifications.map(n => ({ ...n, read: true }));
+    setNotifications(updated);
+    localStorage.setItem(`notifs_${user?.id}`, JSON.stringify(updated));
+    setNotifCount(0);
+  };
 
   // 🕒 REAL-TIME COMMAND CENTER CLOCK (V63.6)
   useEffect(() => {
@@ -86,31 +118,15 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
         fontFamily: "'Inter', sans-serif"
       }}
     >
-      {/* 🔔 ELITE REAL-TIME TOAST (V65.0) */}
+      {/* 🔔 ELITE REAL-TIME TOAST (V65.1 PREMIUM) */}
       {toast && (
-        <div 
-          onClick={() => { setPage('Novedades'); setToast(null); }}
-          style={{
-            position: 'fixed', top: '20px', left: '20px', right: '20px',
-            zIndex: 3000, background: isDark ? 'rgba(30, 41, 59, 0.95)' : '#ffffff',
-            backdropFilter: 'blur(12px)', borderRadius: '24px', padding: '16px 20px',
-            display: 'flex', alignItems: 'center', gap: '16px',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
-            border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}`,
-            animation: 'slideInDown 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
-          }}
-        >
-          <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: 'rgba(79, 70, 229, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
-            <MessageSquare size={24} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <p style={{ fontSize: '15px', fontWeight: '800', margin: '0 0 2px', color: isDark ? 'white' : '#1e293b' }}>{toast.title}</p>
-            <p style={{ fontSize: '12px', color: isDark ? 'rgba(255,255,255,0.5)' : '#64748b', margin: 0 }}>{toast.body}</p>
-          </div>
-          <button style={{ border: 'none', background: 'none', color: '#cbd5e1' }} onClick={(e) => { e.stopPropagation(); setToast(null); }}>
-            <X size={18} />
-          </button>
-        </div>
+        <ElitePremiumToast 
+          title={toast.title}
+          body={toast.body}
+          type={toast.type}
+          theme={theme}
+          onClose={() => setToast(null)}
+        />
       )}
       
       {/* 🏔️ ELITE DUAL-LEVEL HEADER (V64.1) */}
@@ -215,7 +231,7 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
             position: 'fixed', top: 0, right: 0, bottom: 0, left: 0,
             zIndex: 2000, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(6px)',
             display: 'flex', justifyContent: 'flex-end'
-        }} onClick={() => setShowNotifications(false)}>
+        }} onClick={() => { setShowNotifications(false); markAllAsRead(); }}>
             <div 
                 style={{
                     width: '85%', height: '100%', background: isDark ? '#0f172a' : '#ffffff',
@@ -237,27 +253,29 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
                 </div>
 
                 <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 40px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <NotifItem 
-                        icon={<Info size={18} color="#4f46e5" />} 
-                        title="Nueva Novedad" 
-                        desc="Se ha aprobado tu solicitud de permiso de vacaciones." 
-                        time="Hace 5 min" 
-                        isDark={isDark} 
-                    />
-                    <NotifItem 
-                        icon={<CheckCircle2 size={18} color="#10b981" />} 
-                        title="Asistencia Exitosa" 
-                        desc="Tu marcación de entrada fue registrada correctamente en Sede Principal." 
-                        time="Hoy, 08:00 AM" 
-                        isDark={isDark} 
-                    />
-                    <NotifItem 
-                        icon={<AlertCircle size={18} color="#f59e0b" />} 
-                        title="Recordatorio Elite" 
-                        desc="No olvides subir el reporte de cierre hoy antes de salir." 
-                        time="Ayer" 
-                        isDark={isDark} 
-                    />
+                    {notifications.length > 0 ? (
+                        notifications.map((n) => (
+                            <NotifItem 
+                                key={n.id}
+                                icon={
+                                    n.type === 'shift_update' ? <Calendar size={18} color="#4f46e5" /> :
+                                    n.type === 'broadcast' ? <MessageSquare size={18} color="#f59e0b" /> :
+                                    <Info size={18} color="#4f46e5" />
+                                } 
+                                title={n.title} 
+                                desc={n.body} 
+                                time={new Date(n.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} 
+                                isDark={isDark} 
+                                unread={!n.read}
+                            />
+                        ))
+                    ) : (
+                        <div style={{ textAlign: 'center', py: '60px', opacity: 0.5 }}>
+                            <Bell size={48} style={{ margin: '0 auto 16px' }} />
+                            <p style={{ fontSize: '14px', fontWeight: '800' }}>Sin notificaciones</p>
+                            <p style={{ fontSize: '11px' }}>Tu historial aparecerá aquí</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -303,14 +321,23 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
   );
 };
 
-const NotifItem = ({ icon, title, desc, time, isDark }) => (
+const NotifItem = ({ icon, title, desc, time, isDark, unread }) => (
     <div style={{
        padding: '20px', borderRadius: '24px', 
        background: isDark ? 'rgba(255,255,255,0.03)' : '#f8fafc',
-       border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : '#e2e8f0'}`,
+       border: unread 
+           ? `1px solid #4f46e5` 
+           : `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : '#e2e8f0'}`,
        display: 'flex', gap: '14px',
-       boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+       boxShadow: unread ? '0 8px 20px rgba(79, 70, 229, 0.15)' : '0 4px 12px rgba(0,0,0,0.02)',
+       position: 'relative'
     }}>
+       {unread && (
+           <div style={{ 
+               position: 'absolute', top: '12px', right: '12px', 
+               width: '8px', height: '8px', borderRadius: '50%', background: '#4f46e5' 
+           }} />
+       )}
        <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: isDark ? 'rgba(255,255,255,0.05)' : '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {icon}
        </div>

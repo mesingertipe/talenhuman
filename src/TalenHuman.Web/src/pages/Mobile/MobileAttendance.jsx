@@ -9,8 +9,7 @@ const MobileAttendance = ({ user }) => {
   React.useEffect(() => {
     const fetchAttendance = async () => {
       try {
-        const today = new Date().toISOString().split('T')[0];
-        const res = await api.get('/attendance', { params: { start: today, end: today } });
+        const res = await api.get('/attendance/my-attendance');
         setData(res.data);
       } catch (err) {
         console.error("Fetch attendance error", err);

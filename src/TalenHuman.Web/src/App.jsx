@@ -37,7 +37,8 @@ import BiometricEnrollModal from './components/Biometrics/BiometricEnrollModal'
 import MobileDashboard from './pages/Mobile/MobileDashboard'
 import MobileAttendance from './pages/Mobile/MobileAttendance'
 import MobileProfile from './pages/Mobile/MobileProfile'
-import MobileNews from './pages/Mobile/MobileNews' // 🚀 FIXED: Added missing import to prevent white screen
+import MobileNews from './pages/Mobile/MobileNews'
+import MobileShifts from './pages/Mobile/MobileShifts'
 
 import DebugPortal from './components/Shared/DebugPortal'
 
@@ -174,6 +175,7 @@ function App() {
           case 'Marcaciones': return <MobileAttendance user={user} isMobile theme={theme} />;
           case 'Perfil': return <MobileProfile user={user} theme={theme} setPage={setCurrentPage} onLogout={handleLogout} />;
           case 'Novedades': return <MobileNews user={user} theme={theme} />;
+          case 'Turnos': return <MobileShifts user={user} theme={theme} />;
           case 'ResetPassword': return <ResetPassword user={user} theme={theme} setPage={setCurrentPage} />;
           default: return <MobileDashboard user={user} theme={theme} setPage={setCurrentPage} />;
         }

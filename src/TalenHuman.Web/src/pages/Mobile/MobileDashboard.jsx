@@ -10,6 +10,39 @@ import BiometricEnrollModal from '../../components/Biometrics/BiometricEnrollMod
 const MobileDashboard = ({ user, theme, setPage }) => {
   const isDark = theme === 'dark';
   const [showBiometrics, setShowBiometrics] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [shiftData, setShiftData] = useState(null);
+  const [lastMarking, setLastMarking] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // 1. Fetch Today's Shift
+        const now = new Date();
+        const start = new Date(now.setHours(0,0,0,0)).toISOString();
+        const end = new Date(now.setHours(23,59,59,999)).toISOString();
+        
+        const [shiftRes, attRes] = await Promise.all([
+          api.get('/shifts/my-shifts', { params: { start, end } }),
+          api.get('/attendance/my-attendance')
+        ]);
+
+        if (shiftRes.data?.length > 0) {
+          setShiftData(shiftRes.data[0]);
+        }
+        
+        if (attRes.data?.length > 0) {
+          setLastMarking(attRes.data[0]);
+        }
+      } catch (err) {
+        console.error("Dashboard data fetch error", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   // Common styles
   const cardBg = isDark ? 'rgba(15, 23, 42, 0.6)' : '#ffffff';
@@ -62,27 +95,65 @@ const MobileDashboard = ({ user, theme, setPage }) => {
           </button>
        </div>
 
-       {/* 📅 FEATURE CARD: TURNOS */}
-       <div style={{ 
-          background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-          borderRadius: '40px', padding: '40px 32px', color: 'white',
-          boxShadow: '0 20px 50px rgba(79, 70, 229, 0.3)',
-          marginBottom: '32px', position: 'relative', overflow: 'hidden'
-       }}>
+       {/* 📅 DYNAMIC SHIFT CARD (V65.1 ELITE) */}
+       <div 
+          onClick={() => setPage('Turnos')}
+          style={{ 
+             background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+             borderRadius: '40px', padding: '40px 32px', color: 'white',
+             boxShadow: '0 20px 50px rgba(79, 70, 229, 0.3)',
+             marginBottom: '32px', position: 'relative', overflow: 'hidden',
+             cursor: 'pointer'
+          }}
+       >
           <div style={{ position: 'absolute', top: '-10%', right: '-10%', opacity: 0.1 }}>
              <CalendarDays size={200} />
           </div>
           
           <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
              <div style={{ width: '60px', height: '60px', borderRadius: '20px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
-                <CalendarDays size={32} />
+                {shiftData?.isDescanso ? <Sparkles size={32} /> : <CalendarDays size={32} />}
              </div>
-             <h3 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 8px' }}>Día de Descanso</h3>
-             <p style={{ fontSize: '15px', fontWeight: '600', opacity: 0.8, margin: 0, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                Disfruta tu jornada ✨
-             </p>
+             
+             {loading ? (
+                <div style={{ height: '40px', width: '120px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px', animation: 'pulse 1.5s infinite' }} />
+             ) : (
+                <>
+                   <h3 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 8px' }}>
+                      {shiftData?.isDescanso ? 'Día de Descanso' : 
+                       shiftData ? `${new Date(shiftData.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 
+                       'Sin Turno Hoy'}
+                   </h3>
+                   <p style={{ fontSize: '15px', fontWeight: '600', opacity: 0.8, margin: 0, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                      {shiftData?.isDescanso ? 'Disfruta tu jornada ✨' : 
+                       shiftData ? 'Tu próximo turno comienza pronto' : 
+                       'Valida con tu gerente'}
+                   </p>
+                </>
+             )}
           </div>
        </div>
+
+       {/* ⏱️ RECENT ACTIVITY SNIPPET */}
+       {lastMarking && (
+          <div style={{ 
+             marginBottom: '32px', padding: '20px 24px', borderRadius: '30px', 
+             background: isDark ? 'rgba(255,255,255,0.03)' : '#ffffff',
+             border: `1px solid ${cardBorder}`,
+             display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+          }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
+                    <CheckCircle2 size={20} />
+                </div>
+                <div>
+                   <p style={{ fontSize: '13px', fontWeight: '800', margin: '0 0 2px' }}>Último Registro</p>
+                   <p style={{ fontSize: '11px', color: mutedText, margin: 0 }}>{lastMarking.storeName} • {new Date(lastMarking.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                </div>
+             </div>
+             <ChevronRight size={18} color="#cbd5e1" />
+          </div>
+       )}
 
        {/* 🧩 QUICK ACTIONS GRID */}
        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>

@@ -8,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FirebaseAdmin.Messaging;
+using System.Security.Claims;
 
 namespace TalenHuman.API.Controllers;
 
@@ -113,15 +115,48 @@ public class ShiftsController : ControllerBase
 
         await _context.SaveChangesAsync(default);
 
+        // 5. Notify Employees via Firebase Push (Elite V65.1)
+        try {
+            var employeeIds = dto.Shifts.Select(s => s.EmployeeId).Distinct().ToList();
+            var usersWithTokens = await _context.Users
+                .Where(u => _context.Employees.Where(e => employeeIds.Contains(e.Id)).Select(e => e.UserId).Contains(u.Id))
+                .Where(u => !string.IsNullOrEmpty(u.FirebaseToken))
+                .Select(u => new { u.FirebaseToken, u.CompanyId })
+                .ToListAsync();
+
+            var tokens = usersWithTokens.Select(u => u.FirebaseToken).ToList();
+            if (tokens.Any())
+            {
+                var message = new MulticastMessage()
+                {
+                    Tokens = tokens,
+                    Notification = new Notification()
+                    {
+                        Title = "📅 Nuevos Turnos Programados",
+                        Body = $"Se han actualizado tus turnos en {dto.StoreId}. Revisa tu aplicación Elite para ver los detalles."
+                    },
+                    Data = new Dictionary<string, string>()
+                    {
+                        { "type", "shift_update" },
+                        { "storeId", dto.StoreId.ToString() }
+                    }
+                };
+                await FirebaseMessaging.DefaultInstance.SendMulticastAsync(message);
+            }
+        } catch (Exception ex) {
+            // Log but don't fail the request
+            Console.WriteLine($"FCM Shift Notification Error: {ex.Message}");
+        }
+
         await _auditService.LogAsync("MASS_UPDATE", "Shifts", dto.StoreId.ToString(), $"Actualizados {dto.Shifts.Count} turnos. Motivo/Comentario: {dto.Comment}");
 
         return NoContent();
     }
 
     [HttpGet("my-shifts")]
-    public async Task<ActionResult<IEnumerable<ShiftDto>>> GetMyShifts()
+    public async Task<ActionResult<IEnumerable<ShiftDto>>> GetMyShifts([FromQuery] DateTime? start, [FromQuery] DateTime? end)
     {
-        var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
 
         var userId = Guid.Parse(userIdString);
@@ -129,10 +164,17 @@ public class ShiftsController : ControllerBase
         
         if (employee == null) return Ok(new List<ShiftDto>());
 
-        var shifts = await _context.Shifts
-            .Where(s => s.EmployeeId == employee.Id)
+        var query = _context.Shifts.Where(s => s.EmployeeId == employee.Id);
+
+        if (start.HasValue) 
+            query = query.Where(s => s.StartTime >= DateTime.SpecifyKind(start.Value, DateTimeKind.Unspecified));
+        
+        if (end.HasValue) 
+            query = query.Where(s => s.StartTime <= DateTime.SpecifyKind(end.Value, DateTimeKind.Unspecified));
+
+        var shifts = await query
             .OrderByDescending(s => s.StartTime)
-            .Take(10) // Show last 10 relevant shifts
+            .Take(start.HasValue ? 100 : 10) // More context if range provided
             .Select(s => new ShiftDto
             {
                 Id = s.Id,
