@@ -27,7 +27,7 @@ public class AttendanceController : ControllerBase
     }
 
     [HttpGet("my-attendance")]
-    public async Task<IActionResult> GetMyAttendance()
+    public async Task<IActionResult> GetMyAttendance(DateTime? start = null, DateTime? end = null)
     {
         var companyId = _tenantProvider.GetTenantId();
         var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -37,11 +37,23 @@ public class AttendanceController : ControllerBase
         var employee = await _context.Employees.FirstOrDefaultAsync(e => e.UserId == userId);
         if (employee == null) return Ok(new List<object>());
 
-        var attendances = await _context.Attendances
+        var query = _context.Attendances
             .Include(a => a.Store)
-            .Where(a => a.EmployeeId == employee.Id && a.CompanyId == companyId)
-            .OrderByDescending(a => a.ClockIn)
-            .Take(10)
+            .Where(a => a.EmployeeId == employee.Id && a.CompanyId == companyId);
+
+        if (start.HasValue)
+            query = query.Where(a => a.ClockIn >= start.Value.Date);
+        
+        if (end.HasValue)
+            query = query.Where(a => a.ClockIn <= end.Value.Date.AddDays(1).AddTicks(-1));
+
+        var attendancesQuery = query.OrderByDescending(a => a.ClockIn);
+
+        // Preservar comportamiento original si no hay fechas (últimos 10)
+        if (!start.HasValue && !end.HasValue)
+            attendancesQuery = (IOrderedQueryable<Attendance>)attendancesQuery.Take(10);
+
+        var attendances = await attendancesQuery
             .Select(a => new {
                 a.Id,
                 StoreName = a.Store != null ? a.Store.Name : "N/A",
