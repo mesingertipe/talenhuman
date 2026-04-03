@@ -1,13 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { Sun, Moon, LogOut, Clock, Calendar, Bell, X, Info, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Sun, Moon, LogOut, Clock, Calendar, Bell, X, Info, AlertCircle, CheckCircle2, MessageSquare } from 'lucide-react';
 import MobileBottomNav from '../Navigation/MobileBottomNav';
 import TalenHumanLogo from '../Shared/TalenHumanLogo';
+import { onMessageListener } from '../../firebase';
 
 const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, theme, toggleTheme }) => {
   const isDark = theme === 'dark';
   const [time, setTime] = useState(new Date());
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifCount, setNotifCount] = useState(3);
+  const [notifCount, setNotifCount] = useState(0); // Reset for real tracking
+  const [toast, setToast] = useState(null);
+
+  // 🔔 FIREBASE REAL-TIME TOAST LISTENER
+  useEffect(() => {
+    onMessageListener()
+      .then((payload) => {
+        setToast({
+          title: payload.notification?.title || 'Nuevo Comunicado',
+          body: payload.notification?.body || 'Revisa la sección de noticias que acabamos de publicar.',
+        });
+        setNotifCount(prev => prev + 1);
+        setTimeout(() => setToast(null), 6000);
+      })
+      .catch((err) => console.log('Firebase onMessage error: ', err));
+  }, []);
 
   // 🕒 REAL-TIME COMMAND CENTER CLOCK (V63.6)
   useEffect(() => {
@@ -69,8 +85,33 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
         transition: 'background-color 0.5s ease',
         fontFamily: "'Inter', sans-serif"
       }}
-      className="overscroll-none no-select"
     >
+      {/* 🔔 ELITE REAL-TIME TOAST (V65.0) */}
+      {toast && (
+        <div 
+          onClick={() => { setPage('Novedades'); setToast(null); }}
+          style={{
+            position: 'fixed', top: '20px', left: '20px', right: '20px',
+            zIndex: 3000, background: isDark ? 'rgba(30, 41, 59, 0.95)' : '#ffffff',
+            backdropFilter: 'blur(12px)', borderRadius: '24px', padding: '16px 20px',
+            display: 'flex', alignItems: 'center', gap: '16px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'}`,
+            animation: 'slideInDown 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
+          }}
+        >
+          <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: 'rgba(79, 70, 229, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
+            <MessageSquare size={24} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: '15px', fontWeight: '800', margin: '0 0 2px', color: isDark ? 'white' : '#1e293b' }}>{toast.title}</p>
+            <p style={{ fontSize: '12px', color: isDark ? 'rgba(255,255,255,0.5)' : '#64748b', margin: 0 }}>{toast.body}</p>
+          </div>
+          <button style={{ border: 'none', background: 'none', color: '#cbd5e1' }} onClick={(e) => { e.stopPropagation(); setToast(null); }}>
+            <X size={18} />
+          </button>
+        </div>
+      )}
       
       {/* 🏔️ ELITE DUAL-LEVEL HEADER (V64.1) */}
       <header style={{

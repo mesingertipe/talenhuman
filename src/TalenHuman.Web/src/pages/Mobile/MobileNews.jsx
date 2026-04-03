@@ -91,20 +91,37 @@ const MobileNews = ({ user, theme }) => {
                   </div>
                   
                   <div style={{ flex: 1, minWidth: 0 }}>
-                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                        <span style={{ fontSize: '15px', fontWeight: '800', color: primaryText }}>{item.title}</span>
-                        <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#4f46e5' }} />
+                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                        <span style={{ fontSize: '15px', fontWeight: '800', color: primaryText }}>{item.novedadTipoNombre || 'Comunicado'}</span>
+                        {item.novedadTipoNombre?.includes('Comunicado') && (
+                           <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#4f46e5' }} />
+                        )}
                      </div>
-                     <p style={{ fontSize: '12px', color: mutedText, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.description}</p>
                      
-                     <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#4f46e5' }}>
-                            <Clock size={12} />
-                            <span style={{ fontSize: '10px', fontWeight: '700' }}>Pendiente</span>
+                     <div 
+                        style={{ 
+                          fontSize: '13px', 
+                          color: mutedText, 
+                          lineHeight: '1.5',
+                          maxHeight: '120px',
+                          overflow: 'hidden',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 5,
+                          WebkitBoxOrient: 'vertical'
+                        }}
+                        dangerouslySetInnerHTML={{ __html: item.observaciones }}
+                     />
+                     
+                     <div style={{ display: 'flex', gap: '12px', marginTop: '12px', borderTop: `1px solid ${cardBorder}`, paddingTop: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: item.status === 1 ? '#10b981' : '#f59e0b' }}>
+                            <Info size={12} />
+                            <span style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase' }}>
+                              {item.status === 1 ? 'Vigente' : 'Pendiente'}
+                            </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: mutedText }}>
                             <Calendar size={12} />
-                            <span style={{ fontSize: '10px', fontWeight: '700' }}>{new Date().toLocaleDateString()}</span>
+                            <span style={{ fontSize: '10px', fontWeight: '700' }}>{new Date(item.fechaInicio).toLocaleDateString()}</span>
                         </div>
                      </div>
                   </div>

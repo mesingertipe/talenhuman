@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import BiometricEnrollModal from '../../components/Biometrics/BiometricEnrollModal';
 
-const MobileDashboard = ({ user, theme }) => {
+const MobileDashboard = ({ user, theme, setPage }) => {
   const isDark = theme === 'dark';
   const [showBiometrics, setShowBiometrics] = useState(false);
 
@@ -91,12 +91,14 @@ const MobileDashboard = ({ user, theme }) => {
              label="ASISTENCIA" 
              color="#10b981" 
              isDark={isDark} 
+             onClick={() => setPage('Marcaciones')}
           />
           <ActionCard 
-             icon={<AlertCircle size={24} />} 
-             label="NOVEDADES" 
+             icon={<MessageSquare size={24} />} 
+             label="COMUNICADOS" 
              color="#f59e0b" 
              isDark={isDark} 
+             onClick={() => setPage('Novedades')}
           />
        </div>
 
@@ -119,13 +121,17 @@ const MobileDashboard = ({ user, theme }) => {
   );
 };
 
-const ActionCard = ({ icon, label, color, isDark }) => (
-    <div style={{ 
-        background: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff',
-        borderRadius: '32px', padding: '32px 24px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'}`,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px',
-        boxShadow: isDark ? 'none' : '0 10px 25px rgba(0,0,0,0.04)'
-    }}>
+const ActionCard = ({ icon, label, color, isDark, onClick }) => (
+    <div 
+        onClick={onClick}
+        style={{ 
+            background: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff',
+            borderRadius: '32px', padding: '32px 24px', border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'}`,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px',
+            boxShadow: isDark ? 'none' : '0 10px 25px rgba(0,0,0,0.04)',
+            cursor: 'pointer'
+        }}
+    >
         <div style={{ width: '56px', height: '56px', borderRadius: '18px', background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: color }}>
             {icon}
         </div>

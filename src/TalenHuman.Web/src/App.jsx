@@ -24,7 +24,7 @@ import ModulePermissions from './pages/SuperAdmin/ModulePermissions';
 import SystemSettings from './pages/SuperAdmin/SystemSettings';
 import NewsTemplateDesigner from './pages/SuperAdmin/NewsTemplateDesigner';
 import AuditLogs from './pages/Core/AuditLogs';
-import { initializeFirebase } from './firebase';
+import { initializeFirebase, requestForToken } from './firebase';
 
 import MobileLayout from './components/Layout/MobileLayout'
 import EmployeeDashboard from './pages/Employee/EmployeeDashboard'
@@ -61,6 +61,26 @@ function App() {
   const [currentPage, setCurrentPage] = useState('Dashboard');
   const [booting, setBooting] = useState(true); 
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+
+  // 🔐 ELITE IDENTITY SYNC (V65.0)
+  useEffect(() => {
+    if (user && !booting) {
+      const syncCloudId = async () => {
+        try {
+          const fcmToken = await requestForToken();
+          if (fcmToken) {
+            await api.post('/Security/token', fcmToken, {
+              headers: { 'Content-Type': 'application/json' }
+            });
+            console.log('Elite Cloud ID Synced ✅');
+          }
+        } catch (err) {
+          console.warn('FCM Sync skipped:', err);
+        }
+      };
+      syncCloudId();
+    }
+  }, [user, booting]);
   
   const [isStandalone, setIsStandalone] = useState(() => {
      if (typeof window === 'undefined') return false;
@@ -154,7 +174,7 @@ function App() {
           case 'Perfil': return <MobileProfile user={user} theme={theme} setPage={setCurrentPage} onLogout={handleLogout} />;
           case 'Novedades': return <MobileNews user={user} theme={theme} />;
           case 'ResetPassword': return <ResetPassword user={user} theme={theme} setPage={setCurrentPage} />;
-          default: return <MobileDashboard user={user} theme={theme} />;
+          default: return <MobileDashboard user={user} theme={theme} setPage={setCurrentPage} />;
         }
       }
       

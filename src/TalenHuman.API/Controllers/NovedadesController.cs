@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Security.Claims;
+using FirebaseAdmin.Messaging;
 
 namespace TalenHuman.API.Controllers;
 
@@ -304,6 +305,79 @@ public class NovedadesController : ControllerBase
             })
             .ToListAsync();
     }
+
+    [HttpPost("broadcast")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    public async Task<IActionResult> Broadcast([FromBody] BroadcastDto dto)
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
+        
+        var userId = Guid.Parse(userIdString);
+        var admin = await _context.Users.FindAsync(userId);
+        if (admin == null) return NotFound();
+
+        var companyId = admin.CompanyId;
+
+        // 🛡️ ELITE MULTI-TENANT ISOLATION: Find a suitable news type for this company
+        var tipo = await _context.NovedadTipos
+            .Where(t => t.CompanyId == companyId)
+            .OrderBy(t => t.Nombre.Contains("Comunicado") ? 0 : 1)
+            .FirstOrDefaultAsync();
+
+        if (tipo == null) return BadRequest("La empresa no tiene configurada ninguna estructura de comunicaciones.");
+
+        // 1. Create a "Global News" record tied strictly to THIS company
+        // 🧪 ELITE MEDIA: We store the full HTML in Observaciones
+        var generalNews = new Novedad
+        {
+            NovedadTipoId = tipo.Id,
+            CompanyId = companyId,
+            FechaInicio = DateTime.UtcNow,
+            FechaFin = DateTime.UtcNow.AddDays(7),
+            Status = NovedadStatus.Aprobado,
+            Observaciones = dto.Body // Full Rich Text / HTML
+        };
+        _context.Novedades.Add(generalNews);
+        await _context.SaveChangesAsync(default);
+        
+        // 2. Collect tokens ONLY for users belonging to THIS company
+        var tokens = await _context.Users
+            .Where(u => u.CompanyId == companyId && !string.IsNullOrEmpty(u.FirebaseToken))
+            .Select(u => u.FirebaseToken)
+            .ToListAsync();
+
+        if (tokens.Any())
+        {
+            try {
+                // 🧹 CLEAN PUSH: Strip HTML tags for the notification bar to avoid showing <b> or <img> tags
+                var plainBody = System.Text.RegularExpressions.Regex.Replace(dto.Body, "<.*?>", string.Empty);
+                if (plainBody.Length > 150) plainBody = plainBody.Substring(0, 147) + "...";
+
+                var message = new MulticastMessage()
+                {
+                    Tokens = tokens,
+                    Notification = new Notification()
+                    {
+                        Title = "📢 " + dto.Title,
+                        Body = plainBody
+                    },
+                    Data = new Dictionary<string, string>()
+                    {
+                        { "type", "broadcast" },
+                        { "tenant", companyId.ToString() },
+                        { "newsId", generalNews.Id.ToString() }
+                    }
+                };
+
+                await FirebaseMessaging.DefaultInstance.SendMulticastAsync(message);
+            } catch (Exception ex) {
+                Console.WriteLine($"FCM Broadcast Error: {ex.Message}");
+            }
+        }
+
+        return Ok(new { status = "success", count = tokens.Count });
+    }
 }
 
 public class NovedadDto
@@ -369,4 +443,10 @@ public class UpdateNovedadStatusDto
 {
     public NovedadStatus Status { get; set; }
     public string Comentario { get; set; } = string.Empty;
+}
+
+public class BroadcastDto
+{
+    public string Title { get; set; } = string.Empty;
+    public string Body { get; set; } = string.Empty;
 }

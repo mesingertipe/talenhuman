@@ -1,13 +1,11 @@
-import React from 'react';
-import { Home, Clock, User, Info } from 'lucide-react';
+import { Home, Info, MessageSquare, User } from 'lucide-react';
 
 const MobileBottomNav = ({ activePage, setPage, theme, isBranded = false }) => {
   const isDark = theme === 'dark';
   
   const tabs = [
     { id: 'Dashboard', icon: Home, label: 'Turnos' },
-    { id: 'Novedades', icon: Info, label: 'Novedades' },
-    { id: 'Marcaciones', icon: Clock, label: 'Marcas' },
+    { id: 'Novedades', icon: Info, label: 'Comunicados' },
     { id: 'Perfil', icon: User, label: 'Perfil' },
   ];
 
