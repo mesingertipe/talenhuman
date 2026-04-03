@@ -20,21 +20,23 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
   });
   const [toast, setToast] = useState(null);
 
-  // 🔔 REAL-TIME TOAST & HISTORY LISTENER
+  // 🔔 REAL-TIME TOAST & HISTORY LISTENER (V65.0)
   useEffect(() => {
-    const unsubscribe = onMessageListener()
-      .then((payload) => {
+    if (!user?.id) return;
+    
+    console.log('📡 Subscribing to FCM Real-time Bridge...');
+    const unsubscribe = onMessageListener((payload) => {
         const newNotif = {
           id: Date.now(),
           title: payload.notification?.title || 'Notificación Talenhuman',
           body: payload.notification?.body || 'Tienes un nuevo mensaje.',
-          type: payload.data?.type || 'info', // 'shift_update', 'broadcast', etc
+          type: payload.data?.type || 'info',
           read: false,
           date: new Date().toISOString()
         };
 
         setNotifications(prev => {
-          const updated = [newNotif, ...prev].slice(0, 50); // Keep last 50
+          const updated = [newNotif, ...prev].slice(0, 50);
           localStorage.setItem(`notifs_${user?.id}`, JSON.stringify(updated));
           return updated;
         });
@@ -47,8 +49,14 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
         });
         
         setNotifCount(prev => prev + 1);
-      })
-      .catch((err) => console.log('Firebase onMessage error: ', err));
+    });
+
+    return () => {
+        if (unsubscribe) {
+            console.log('🛑 Unsubscribing from FCM Bridge');
+            unsubscribe();
+        }
+    };
   }, [user?.id]);
 
   const markAllAsRead = () => {

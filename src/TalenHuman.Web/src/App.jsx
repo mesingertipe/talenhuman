@@ -136,20 +136,6 @@ function App() {
     setShowPRModal(false);
   };
 
-  // 🔔 Real-Time Notification Bridge
-  useEffect(() => {
-    onMessageListener().then(payload => {
-        if (payload.data?.type === 'broadcast') {
-            setNotification({
-                show: true,
-                title: payload.notification.title,
-                body: payload.notification.body
-            });
-            setTimeout(() => setNotification({ show: false, title: '', body: '' }), 6000);
-        }
-    }).catch(err => console.error('FCM Registry Error:', err));
-  }, []);
-
   useEffect(() => {
     try {
       localStorage.setItem('app_version', APP_VERSION);
