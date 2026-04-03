@@ -142,7 +142,8 @@ public enum NovedadCategoria
 {
     Empleado,
     Tienda,
-    Marca
+    Marca,
+    Comunicado
 }
 
 public class NovedadTipo : BaseEntity, IMultitenant
@@ -241,4 +242,20 @@ public class SalesData : BaseEntity, IMultitenant
     
     public Guid CompanyId { get; set; }
     public Company Company { get; set; } = null!;
+}
+
+public class Comunicado : BaseEntity, IMultitenant
+{
+    public string Titulo { get; set; } = string.Empty;
+    public string Contenido { get; set; } = string.Empty; // Full HTML / Rich Text
+    public DateTime FechaEnvio { get; set; } = ColombiaTime.Now;
+    
+    public Guid CreatedByUserId { get; set; }
+    public User CreatedByUser { get; set; } = null!;
+    
+    public Guid CompanyId { get; set; }
+    public Company Company { get; set; } = null!;
+    
+    // Future metrics
+    public int ReadCount { get; set; }
 }

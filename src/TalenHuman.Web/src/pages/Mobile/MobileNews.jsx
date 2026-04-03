@@ -14,10 +14,21 @@ const MobileNews = ({ user, theme }) => {
     const fetchNews = async () => {
       setLoading(true);
       try {
-        const res = await api.get('/novedades/my-news');
-        setNews(res.data || []);
+        // 💎 ELITE V69: Independent PR Table Connection
+        const res = await api.get('/comunicados/my-communications');
+        
+        // Map ComunicadoDto to the existing UI structure
+        const mappedData = res.data.map(c => ({
+            id: c.id,
+            novedadTipoNombre: 'CORPORATIVO',
+            observaciones: c.contenido, // Full HTML
+            fechaInicio: c.fechaEnvio,
+            status: 1 // Active
+        }));
+        
+        setNews(mappedData || []);
       } catch (err) {
-        console.error("News Fetch Error", err);
+        console.error("Communications Fetch Error", err);
         setNews([]);
       } finally {
         setLoading(false);
@@ -44,8 +55,8 @@ const MobileNews = ({ user, theme }) => {
       
       {/* 🏔️ NATIVE PAGE HEADER */}
       <div style={{ marginBottom: '28px' }}>
-         <h1 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px', color: primaryText, margin: 0 }}>Novedades</h1>
-         <p style={{ fontSize: '13px', color: mutedText, marginTop: '4px' }}>Gestiona tus solicitudes y comunicados.</p>
+         <h1 style={{ fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px', color: primaryText, margin: 0 }}>Comunicados Elite</h1>
+         <p style={{ fontSize: '13px', color: mutedText, marginTop: '4px' }}>Mantente al día con las noticias y anuncios corporativos.</p>
       </div>
 
       {/* 🔍 SEARCH & FILTER BAR */}
@@ -109,7 +120,7 @@ const MobileNews = ({ user, theme }) => {
                           WebkitLineClamp: 5,
                           WebkitBoxOrient: 'vertical'
                         }}
-                        dangerouslySetInnerHTML={{ __html: item.observaciones }}
+                        dangerouslySetInnerHTML={{ __html: item.observaciones || '<span style="opacity:0.5; font-style:italic;">Sin contenido detallado.</span>' }}
                      />
                      
                      <div style={{ display: 'flex', gap: '12px', marginTop: '12px', borderTop: `1px solid ${cardBorder}`, paddingTop: '10px' }}>
@@ -121,7 +132,9 @@ const MobileNews = ({ user, theme }) => {
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: mutedText }}>
                             <Calendar size={12} />
-                            <span style={{ fontSize: '10px', fontWeight: '700' }}>{new Date(item.fechaInicio).toLocaleDateString()}</span>
+                            <span style={{ fontSize: '10px', fontWeight: '700' }}>
+                              {item.fechaInicio ? new Date(item.fechaInicio).toLocaleDateString() : 'Fecha N/A'}
+                            </span>
                         </div>
                      </div>
                   </div>
@@ -133,7 +146,7 @@ const MobileNews = ({ user, theme }) => {
       ) : (
          <div style={{ textAlign: 'center', padding: '60px 20px', background: cardBg, borderRadius: '32px', border: `2px dashed ${cardBorder}` }}>
             <Inbox size={48} color={mutedText} style={{ marginBottom: '16px', opacity: 0.5 }} />
-            <p style={{ color: primaryText, fontWeight: '700', margin: 0 }}>No tienes novedades pendientes</p>
+            <p style={{ color: primaryText, fontWeight: '700', margin: 0 }}>Sin nuevos comunicados corporativos</p>
             <p style={{ color: mutedText, fontSize: '13px', marginTop: '4px' }}>Todo se ve despejado por aquí ✨</p>
          </div>
       )}

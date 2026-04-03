@@ -50,6 +50,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<TalenHuman.Domain.Entities.Module> Modules => Set<TalenHuman.Domain.Entities.Module>();
     public DbSet<CompanyModule> CompanyModules => Set<CompanyModule>();
     public DbSet<ModulePermission> ModulePermissions => Set<ModulePermission>();
+    public DbSet<Comunicado> Comunicados => Set<Comunicado>();
     public Guid TenantId => _tenantProvider.GetTenantId();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -79,6 +80,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<AuditLog>().HasQueryFilter(a => a.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<CompanyModule>().HasQueryFilter(c => c.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<ModulePermission>().HasQueryFilter(m => m.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<Comunicado>().HasQueryFilter(c => c.CompanyId == TenantId || TenantId == Guid.Empty);
 
         // Many-to-Many: Supervisor -> Stores
         builder.Entity<SupervisorStore>()

@@ -3,7 +3,7 @@ import {
   Calendar, Clock, MapPin, 
   ChevronRight, ArrowRight, Bell, 
   Search, Filter, Plus, Fingerprint, CalendarDays,
-  CheckCircle2, AlertCircle, Sparkles
+  CheckCircle2, AlertCircle, Sparkles, MessageSquare, MessageCircle
 } from 'lucide-react';
 import BiometricEnrollModal from '../../components/Biometrics/BiometricEnrollModal';
 

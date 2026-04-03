@@ -33,6 +33,7 @@ public interface IApplicationDbContext
     DbSet<TalenHuman.Domain.Entities.Module> Modules { get; }
     DbSet<CompanyModule> CompanyModules { get; }
     DbSet<ModulePermission> ModulePermissions { get; }
+    DbSet<Comunicado> Comunicados { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }
