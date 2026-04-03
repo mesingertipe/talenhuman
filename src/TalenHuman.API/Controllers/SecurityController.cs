@@ -158,7 +158,7 @@ public class SecurityController : ControllerBase
 
     [AllowAnonymous]
     [HttpPost("assertion/options")]
-    public async Task<IActionResult> AssertionOptions([FromBody] AssertionRequest request)
+    public async Task<IActionResult> GetAssertionOptions([FromBody] AssertionRequest request)
     {
         var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Email == request.Email || u.UserName == request.Email);
         if (user == null) return NotFound("Usuario no encontrado");
@@ -197,7 +197,7 @@ public class SecurityController : ControllerBase
             var jsonOptions = user.PendingFidoOptions;
             if (string.IsNullOrEmpty(jsonOptions)) return BadRequest("Sesión expirada.");
 
-            var options = AssertionOptions.FromJson(jsonOptions);
+            var options = Fido2NetLib.AssertionOptions.FromJson(jsonOptions);
 
             var credential = await _context.UserCredentials.FirstOrDefaultAsync(c => c.DescriptorId == assertionResponse.Id);
             if (credential == null) return BadRequest("Credencial no reconocida.");
@@ -290,13 +290,13 @@ public class SecurityController : ControllerBase
                     jobTitle = employee?.Profile?.Name,
                     activeModules,
                     permissions,
-                    firebaseApiKey = firebaseConfig.GetValueOrDefault("FIREBASE_API_KEY"),
-                    firebaseAuthDomain = firebaseConfig.GetValueOrDefault("FIREBASE_AUTH_DOMAIN"),
-                    firebaseProjectId = firebaseConfig.GetValueOrDefault("FIREBASE_PROJECT_ID"),
-                    firebaseStorageBucket = firebaseConfig.GetValueOrDefault("FIREBASE_STORAGE_BUCKET"),
-                    firebaseMessagingSenderId = firebaseConfig.GetValueOrDefault("FIREBASE_MESSAGING_SENDER_ID"),
-                    firebaseAppId = firebaseConfig.GetValueOrDefault("FIREBASE_APP_ID"),
-                    firebaseVapidKey = firebaseConfig.GetValueOrDefault("FIREBASE_VAPID_KEY"),
+                    firebaseApiKey = firebaseConfig.ContainsKey("FIREBASE_API_KEY") ? firebaseConfig["FIREBASE_API_KEY"] : null,
+                    firebaseAuthDomain = firebaseConfig.ContainsKey("FIREBASE_AUTH_DOMAIN") ? firebaseConfig["FIREBASE_AUTH_DOMAIN"] : null,
+                    firebaseProjectId = firebaseConfig.ContainsKey("FIREBASE_PROJECT_ID") ? firebaseConfig["FIREBASE_PROJECT_ID"] : null,
+                    firebaseStorageBucket = firebaseConfig.ContainsKey("FIREBASE_STORAGE_BUCKET") ? firebaseConfig["FIREBASE_STORAGE_BUCKET"] : null,
+                    firebaseMessagingSenderId = firebaseConfig.ContainsKey("FIREBASE_MESSAGING_SENDER_ID") ? firebaseConfig["FIREBASE_MESSAGING_SENDER_ID"] : null,
+                    firebaseAppId = firebaseConfig.ContainsKey("FIREBASE_APP_ID") ? firebaseConfig["FIREBASE_APP_ID"] : null,
+                    firebaseVapidKey = firebaseConfig.ContainsKey("FIREBASE_VAPID_KEY") ? firebaseConfig["FIREBASE_VAPID_KEY"] : null,
                     acceptedPrivacyPolicy = user.AcceptedPrivacyPolicy,
                     hasBiometrics = true
                 }
@@ -309,6 +309,15 @@ public class SecurityController : ControllerBase
     }
 
     public class AssertionRequest { public string Email { get; set; } = string.Empty; }
+    
+    public class StoredCredential
+    {
+        public byte[] DescriptorId { get; set; } = Array.Empty<byte>();
+        public byte[] PublicKey { get; set; } = Array.Empty<byte>();
+        public byte[] UserHandle { get; set; } = Array.Empty<byte>();
+        public uint SignatureCounter { get; set; }
+        public PublicKeyCredentialDescriptor Descriptor { get; set; }
+    }
     
     [HttpPost("privacy-accept")]
     public async Task<IActionResult> AcceptPrivacy()
