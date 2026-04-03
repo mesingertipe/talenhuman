@@ -39,7 +39,7 @@ import MobileAttendance from './pages/Mobile/MobileAttendance'
 import MobileProfile from './pages/Mobile/MobileProfile'
 import MobileNews from './pages/Mobile/MobileNews'
 import MobileShifts from './pages/Mobile/MobileShifts'
-
+import { useTheme } from './context/ThemeContext'
 import DebugPortal from './components/Shared/DebugPortal'
 
 // V63.6 PROD UNIFIED
@@ -62,7 +62,8 @@ function App() {
   const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [currentPage, setCurrentPage] = useState('Dashboard');
   const [booting, setBooting] = useState(true); 
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+  const { isDarkMode, toggleTheme } = useTheme();
+  const theme = isDarkMode ? 'dark' : 'light';
 
   // 🔐 IDENTITY SYNC (V65.0)
   useEffect(() => {
@@ -104,8 +105,7 @@ function App() {
   useEffect(() => {
     try {
       localStorage.setItem('app_version', APP_VERSION);
-      localStorage.setItem('theme', theme);
-      document.documentElement.className = theme; 
+      // Removed local theme management, now handled by ThemeProvider
       
       if (user && token) {
         initializeFirebase(user).catch(err => console.warn('Firebase Init suppressed:', err));
@@ -115,11 +115,9 @@ function App() {
     } finally {
       setTimeout(() => setBooting(false), 800);
     }
-  }, [theme]);
+  }, [user, token]); // Re-run if user/token changes to sync Firebase
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  };
+  // toggleTheme is now from useTheme() context
 
   const handleLogout = () => {
     localStorage.clear();

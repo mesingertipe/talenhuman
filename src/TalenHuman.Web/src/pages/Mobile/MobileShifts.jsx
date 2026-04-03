@@ -31,12 +31,15 @@ const MobileShifts = ({ user }) => {
         start = new Date(d_day.setHours(0,0,0,0)).toISOString();
         end = new Date(d_day.setHours(23,59,59,999)).toISOString();
       } else if (view === 'week') {
-        const d_week = new Date(d);
-        const first = d_week.getDate() - d_week.getDay();
-        const last = first + 6;
-        start = new Date(new Date(d_week.setDate(first)).setHours(0,0,0,0)).toISOString();
-        const d_last = new Date(d_week);
-        end = new Date(new Date(d_last.setDate(last)).setHours(23,59,59,999)).toISOString();
+        const startOfWeek = new Date(d);
+        startOfWeek.setDate(d.getDate() - d.getDay());
+        startOfWeek.setHours(0,0,0,0);
+        start = startOfWeek.toISOString();
+
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        endOfWeek.setHours(23,59,59,999);
+        end = endOfWeek.toISOString();
       } else {
         start = new Date(d.getFullYear(), d.getMonth(), 1).toISOString();
         end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59).toISOString();
@@ -70,11 +73,16 @@ const MobileShifts = ({ user }) => {
   const formatDateLabel = () => {
     if (view === 'day') return currentDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
     if (view === 'week') {
-      const d = new Date(currentDate);
-      const first = new Date(d.setDate(d.getDate() - d.getDay()));
-      const last = new Date(first);
-      last.setDate(first.getDate() + 6);
-      return `${first.getDate()} - ${last.getDate()} ${last.toLocaleDateString('es-ES', { month: 'short' })}`;
+      const startOfWeek = new Date(currentDate);
+      startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      
+      const options = { month: 'short' };
+      if (startOfWeek.getMonth() !== endOfWeek.getMonth()) {
+         return `${startOfWeek.getDate()} ${startOfWeek.toLocaleDateString('es-ES', options)} - ${endOfWeek.getDate()} ${endOfWeek.toLocaleDateString('es-ES', options)}`;
+      }
+      return `${startOfWeek.getDate()} - ${endOfWeek.getDate()} ${endOfWeek.toLocaleDateString('es-ES', options)}`;
     }
     return currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
   };
