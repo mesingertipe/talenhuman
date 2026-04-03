@@ -22,8 +22,6 @@ const NewsInbox = ({ user }) => {
     const [showDetail, setShowDetail] = useState(false);
     const [showRequest, setShowRequest] = useState(false);
     const [showActionModal, setShowActionModal] = useState(false);
-    const [showBroadcastModal, setShowBroadcastModal] = useState(false);
-    const [broadcastData, setBroadcastData] = useState({ title: '', body: '' });
     const [actionType, setActionType] = useState('Approve'); 
     const [actionComment, setActionComment] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -108,26 +106,6 @@ const NewsInbox = ({ user }) => {
         }
     };
 
-    const handleBroadcast = async (e) => {
-        e.preventDefault();
-        if (!broadcastData.title.trim() || !broadcastData.body.trim()) {
-            showToast("Complete todos los campos", "error");
-            return;
-        }
-
-        try {
-            setIsSubmitting(true);
-            await api.post('/novedades/broadcast', broadcastData);
-            showToast("📢 Comunicado Elite enviado con éxito");
-            setShowBroadcastModal(false);
-            setBroadcastData({ title: '', body: '' });
-            fetchNews();
-        } catch (err) {
-            showToast("Error al disparar comunicado", "error");
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
 
     const filteredNews = news.filter(n => {
         const term = searchTerm.toLowerCase();
@@ -168,13 +146,6 @@ const NewsInbox = ({ user }) => {
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px' }}>
-                    <button 
-                        onClick={() => setShowBroadcastModal(true)} 
-                        className="btn-premium" 
-                        style={{ height: '52px', padding: '0 25px', borderRadius: '18px', display: 'flex', alignItems: 'center', gap: '10px', background: isDarkMode ? 'rgba(79, 70, 229, 0.1)' : '#f0f4ff', color: activeColors.accent, border: `1px solid ${activeColors.accent}30`, fontWeight: '900', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}
-                    >
-                        <AlertCircle size={20} /> Emitir Comunicado
-                    </button>
                     <button onClick={() => setShowRequest(true)} className="btn-premium btn-premium-primary" style={{ height: '52px', padding: '0 30px', borderRadius: '18px', display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <Plus size={20} /> Nueva Solicitud
                     </button>
@@ -458,65 +429,6 @@ const NewsInbox = ({ user }) => {
                 document.body
             )}
 
-            {/* 📢 ELITE BROADCAST COMMAND CENTER (V65.0) */}
-            {showBroadcastModal && createPortal(
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.85)', backdropFilter: 'blur(20px)', zIndex: 11000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-                    <div style={{ background: activeColors.card, width: '100%', maxWidth: '600px', borderRadius: '40px', border: `1px solid ${activeColors.border}`, boxShadow: '0 50px 100px rgba(0,0,0,0.5)', animation: 'scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)', overflow: 'hidden' }}>
-                        <div style={{ padding: '35px 40px', borderBottom: `1px solid ${activeColors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: isDarkMode ? '#1e293b' : '#ffffff' }}>
-                             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(79, 70, 229, 0.1)', color: activeColors.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <AlertCircle size={24} />
-                                </div>
-                                <div>
-                                    <h3 style={{ fontSize: '1.25rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.02em' }}>Elite PR Command Center</h3>
-                                    <p style={{ fontSize: '0.75rem', color: activeColors.textMuted, fontWeight: '700', margin: 0 }}>Difusión masiva a toda la compañía</p>
-                                </div>
-                             </div>
-                             <button onClick={() => setShowBroadcastModal(false)} style={{ border: 'none', background: 'none', color: activeColors.textMuted }}><X size={24} /></button>
-                        </div>
-                        
-                        <form onSubmit={handleBroadcast} style={{ padding: '40px' }}>
-                            <div style={{ marginBottom: '25px' }}>
-                                <label style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '10px', letterSpacing: '0.1em' }}>Título del Comunicado *</label>
-                                <input 
-                                    required
-                                    value={broadcastData.title}
-                                    onChange={(e) => setBroadcastData({ ...broadcastData, title: e.target.value })}
-                                    placeholder="Ej: Gran Agradecimiento Corporativo..."
-                                    style={{ width: '100%', padding: '18px 24px', borderRadius: '18px', border: `2px solid ${activeColors.border}`, background: activeColors.bg, color: activeColors.textMain, fontWeight: '700', boxSizing: 'border-box', outline: 'none' }}
-                                />
-                            </div>
-
-                            <div style={{ marginBottom: '35px' }}>
-                                <label style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '15px', letterSpacing: '0.1em' }}>Cuerpo del Mensaje (Elite Media Content) *</label>
-                                <EliteRichEditor 
-                                    value={broadcastData.body}
-                                    onChange={(html) => setBroadcastData({ ...broadcastData, body: html })}
-                                    placeholder="Redacte su comunicado premium aquí. Suba imágenes a Ocean directamente..."
-                                    isDarkMode={isDarkMode}
-                                    accentColor={activeColors.accent}
-                                />
-                                <p style={{ fontSize: '11px', color: activeColors.textMuted, marginTop: '12px', fontWeight: '600' }}>
-                                    ✨ Use negritas, listas y cargue imágenes directamente a su nube de DigitalOcean.
-                                </p>
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '15px' }}>
-                                <button type="button" onClick={() => setShowBroadcastModal(false)} style={{ flex: 1, padding: '20px', borderRadius: '20px', border: `2px solid ${activeColors.border}`, background: 'transparent', color: activeColors.textMuted, fontWeight: '900', fontSize: '10px', textTransform: 'uppercase' }}>Cerrar</button>
-                                <button 
-                                    type="submit" 
-                                    disabled={isSubmitting}
-                                    style={{ flex: 2, padding: '20px', borderRadius: '20px', border: 'none', background: activeColors.accent, color: 'white', fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', boxShadow: '0 15px 30px rgba(79, 70, 229, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}
-                                >
-                                    {isSubmitting ? 'Difundiendo...' : 'ENVIAR COMUNICADO ELITE'}
-                                    {!isSubmitting && <CheckCircle size={20} />}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>,
-                document.body
-            )}
             {showRequest && createPortal(
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.95)', backdropFilter: 'blur(20px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
                     <div style={{ width: '100%', maxWidth: '1200px', animation: 'fadeInDown 0.5s ease-out' }}>

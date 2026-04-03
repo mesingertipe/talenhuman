@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Users, Clock, Calendar, FileText, Settings, 
   LogOut, Store, Sun, Moon, Pin, PinOff, ChevronLeft, ChevronRight,
-  Briefcase, Boxes, Building, Link, ChevronDown, ChevronUp, User as UserIcon, MapPin, Cpu, Globe, Activity, ShieldAlert, Building2, Shield
+  Briefcase, Boxes, Building, Link, ChevronDown, ChevronUp, User as UserIcon, MapPin, Cpu, Globe, Activity, ShieldAlert, Building2, Shield,
+  Megaphone
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
@@ -50,6 +51,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
       module: 'ADVANCED',
       children: [
         { icon: <Activity size={20} />, label: 'Monitoreo Asistencia', sub: 'MONITORING' },
+        { icon: <Megaphone size={20} />, label: 'Centro de Comunicados', sub: 'BROADCAST' },
         { icon: <Globe size={20} />, label: 'Diseñador de Plantillas', sub: 'TEMPLATES' },
         { icon: <FileText size={20} />, label: 'Configuración novedades', sub: 'NOVELTY_CONFIG' },
       ]
@@ -202,6 +204,7 @@ const getPageInfo = (page) => {
     case 'Auditoría': return { title: 'Auditoría del Sistema', subtitle: 'Trazabilidad y control de movimientos críticos' };
     case 'Configuración Sistema': return { title: 'Parámetros del Sistema', subtitle: 'Configuración de infraestructura y servicios core' };
     case 'Diseñador de Plantillas': return { title: 'Catálogo de Plantillas', subtitle: 'Diseño de novedades globales para el ecosistema' };
+    case 'Centro de Comunicados': return { title: 'Centro de Comunicados Elite', subtitle: 'Difusión estratégica y masiva de cultura corporativa' };
     default: return { title: page, subtitle: '' };
   }
 };

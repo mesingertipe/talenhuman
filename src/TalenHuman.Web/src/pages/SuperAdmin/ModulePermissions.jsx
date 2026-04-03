@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Building2, Save, CheckCircle, XCircle, ChevronRight, Activity, Boxes, Settings, Clock, Layout, Fingerprint, MapPin, Users, Briefcase, FileText, Monitor, Palette, Terminal, Search, ArrowLeft, ChevronDown, Check, X } from 'lucide-react';
+import { Shield, Building2, Save, CheckCircle, XCircle, ChevronRight, Activity, Boxes, Settings, Clock, Layout, Fingerprint, MapPin, Users, Briefcase, FileText, Monitor, Palette, Terminal, Search, ArrowLeft, ChevronDown, Check, X, Megaphone } from 'lucide-react';
 import api from '../../services/api';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
 
@@ -42,6 +42,7 @@ const ModulePermissions = ({ user }) => {
     ],
     'ADVANCED': [
       { code: 'MONITORING', name: 'Monitoreo Tiempo Real', icon: Monitor, desc: 'Panel de control de asistencia viva' },
+      { code: 'BROADCAST', name: 'Centro de Comunicados', icon: Megaphone, desc: 'Difusión y PR corporativo' },
       { code: 'TEMPLATES', name: 'Plantillas Novedades', icon: Palette, desc: 'Diseño de tipos de novedades' },
       { code: 'NOVELTY_CONFIG', name: 'Configuración Novedades', icon: Settings, desc: 'Reglas de negocio para incidencias' }
     ],

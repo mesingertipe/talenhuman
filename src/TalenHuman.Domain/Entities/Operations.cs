@@ -142,8 +142,7 @@ public enum NovedadCategoria
 {
     Empleado,
     Tienda,
-    Marca,
-    Comunicado
+    Marca
 }
 
 public class NovedadTipo : BaseEntity, IMultitenant

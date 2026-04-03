@@ -24,6 +24,7 @@ import ModulePermissions from './pages/SuperAdmin/ModulePermissions';
 import SystemSettings from './pages/SuperAdmin/SystemSettings';
 import NewsTemplateDesigner from './pages/SuperAdmin/NewsTemplateDesigner';
 import AuditLogs from './pages/Core/AuditLogs';
+import CommunicationsCenter from './pages/Admin/CommunicationsCenter';
 import { initializeFirebase, requestForToken } from './firebase';
 
 import MobileLayout from './components/Layout/MobileLayout'
@@ -195,6 +196,7 @@ function App() {
         case 'Novedades': return <NewsInbox user={user} />;
         case 'Configuración novedades': return <NewsDesigner user={user} />;
         case 'Diseñador de Plantillas': return <NewsTemplateDesigner user={user} />;
+        case 'Centro de Comunicados': return <CommunicationsCenter user={user} />;
         case 'Turnos': return <ShiftScheduler user={user} />;
         case 'Permisos': return <ModulePermissions user={user} />;
         case 'Configuración Sistema': return <SystemSettings user={user} />;
