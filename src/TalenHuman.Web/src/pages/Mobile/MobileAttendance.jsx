@@ -180,8 +180,8 @@ const AttendanceCard = ({ item, isDark, primaryText, mutedText, cardBg, glassEff
          </div>
          <div style={{ 
              padding: '6px 14px', borderRadius: '30px', 
-             background: item.status === 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
-             color: item.status === 0 ? '#10b981' : '#f59e0b',
+             background: item.status === -1 ? 'rgba(79, 70, 229, 0.15)' : (item.status === 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)'),
+             color: item.status === -1 ? '#4f46e5' : (item.status === 0 ? '#10b981' : '#f59e0b'),
              fontSize: '9px', fontWeight: '950', textTransform: 'uppercase'
          }}>{item.statusText || 'Procesado'}</div>
       </div>

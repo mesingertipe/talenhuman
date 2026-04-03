@@ -34,41 +34,78 @@ public class AttendanceController : ControllerBase
         if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
 
         var userId = Guid.Parse(userIdString);
-        var employee = await _context.Employees.FirstOrDefaultAsync(e => e.UserId == userId);
+        var employee = await _context.Employees.Include(e => e.Store).FirstOrDefaultAsync(e => e.UserId == userId);
         if (employee == null) return Ok(new List<object>());
 
-        var query = _context.Attendances
+        // 🟢 1. FETCH CONSOLIDATED ATTENDANCE
+        var attendanceQuery = _context.Attendances
             .Include(a => a.Store)
             .Where(a => a.EmployeeId == employee.Id && a.CompanyId == companyId);
 
         if (start.HasValue)
-            query = query.Where(a => a.ClockIn >= start.Value.Date);
-        
+            attendanceQuery = attendanceQuery.Where(a => a.ClockIn >= start.Value.Date);
         if (end.HasValue)
-            query = query.Where(a => a.ClockIn <= end.Value.Date.AddDays(1).AddTicks(-1));
+            attendanceQuery = attendanceQuery.Where(a => a.ClockIn <= end.Value.Date.AddDays(1).AddTicks(-1));
 
-        var attendancesQuery = query.OrderByDescending(a => a.ClockIn);
+        var consolidatedList = await attendanceQuery.ToListAsync();
 
-        // Preservar comportamiento original si no hay fechas (últimos 10)
+        // 🟢 2. FETCH RAW BIOMETRIC RECORDS (FOR REAL-TIME FEEDBACK)
+        // We look for raw records that haven't been consolidated yet
+        var tenantToday = _tenantTimeProvider.Now.Date;
+        var fetchStart = start?.Date ?? tenantToday;
+        var fetchEnd = end?.Date ?? tenantToday;
+
+        var rawQuery = _context.BiometricRecords
+            .Where(r => r.CompanyId == companyId && 
+                        (r.DeviceUser == employee.IdentificationNumber || r.DeviceUser == employee.IdentificationNumber.TrimStart('0')) &&
+                        r.RecordDate >= fetchStart && r.RecordDate <= fetchEnd.AddDays(1).AddTicks(-1));
+
+        var rawRecords = await rawQuery.OrderBy(r => r.RecordDate).ToListAsync();
+
+        // 🟢 3. SYNTHESIZE VIRTUAL ENTRIES
+        var resultList = consolidatedList.Select(a => new {
+            a.Id,
+            StoreName = a.Store?.Name ?? "Sede Principal",
+            a.ClockIn,
+            a.ClockOut,
+            Status = (int)a.Status,
+            StatusText = a.Status == AttendanceStatus.Correcto ? "Correcto" :
+                         a.Status == AttendanceStatus.Desfasado ? "Desfase" :
+                         a.Status == AttendanceStatus.MarcacionErrada ? "Errada" :
+                         a.Status == AttendanceStatus.SinMarcacion ? "Sin Marcación" : "En Curso",
+            a.StatusObservation
+        }).ToList<object>();
+
+        var groupedRaw = rawRecords.GroupBy(r => r.RecordDate.Date);
+        foreach (var group in groupedRaw)
+        {
+            // If we don't have a consolidated record for this date, show the raw one
+            if (!consolidatedList.Any(a => a.ClockIn.Date == group.Key))
+            {
+                var first = group.First();
+                var last = group.Count() > 1 ? group.Last() : null;
+                
+                resultList.Add(new {
+                    Id = Guid.Empty,
+                    StoreName = employee.Store?.Name ?? "Sede Principal",
+                    ClockIn = first.RecordDate,
+                    ClockOut = last?.RecordDate,
+                    Status = -1, // Custom code for "Real-Time"
+                    StatusText = "Tiempo Real",
+                    StatusObservation = "Marcación registrada (Pendiente de procesar)"
+                });
+            }
+        }
+
+        // 🟢 4. SORT AND LIMIT
+        var sortedResult = resultList
+            .Cast<dynamic>()
+            .OrderByDescending(a => a.ClockIn);
+
         if (!start.HasValue && !end.HasValue)
-            attendancesQuery = (IOrderedQueryable<Attendance>)attendancesQuery.Take(10);
+            return Ok(sortedResult.Take(10).ToList());
 
-        var attendances = await attendancesQuery
-            .Select(a => new {
-                a.Id,
-                StoreName = a.Store != null ? a.Store.Name : "N/A",
-                a.ClockIn,
-                a.ClockOut,
-                Status = (int)a.Status,
-                StatusText = a.Status == AttendanceStatus.Correcto ? "Correcto" :
-                             a.Status == AttendanceStatus.Desfasado ? "Desfase" :
-                             a.Status == AttendanceStatus.MarcacionErrada ? "Errada" :
-                             a.Status == AttendanceStatus.SinMarcacion ? "Sin Marcación" : "En Curso",
-                a.StatusObservation
-            })
-            .ToListAsync();
-
-        return Ok(attendances);
+        return Ok(sortedResult.ToList());
     }
 
     [HttpGet("config")]
