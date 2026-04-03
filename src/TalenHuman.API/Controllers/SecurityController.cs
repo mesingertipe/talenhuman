@@ -310,7 +310,6 @@ public class SecurityController : ControllerBase
     public class AssertionRequest { public string Email { get; set; } = string.Empty; }
     
     [HttpPost("privacy-accept")]
-...
     public async Task<IActionResult> AcceptPrivacy()
     {
         var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());

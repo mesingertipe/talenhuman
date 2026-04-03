@@ -205,7 +205,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
                   <button 
                     type="submit" 
                     disabled={loading || biometricLoading}
@@ -222,20 +222,24 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                     )}
                   </button>
 
-                  <button 
-                    type="button"
-                    disabled={loading || biometricLoading}
-                    onClick={handleBiometricLogin}
-                    className="login-biometric-btn"
-                    style={{
-                      width: '64px', height: '64px', borderRadius: '18px',
-                      background: 'rgba(79, 70, 229, 0.1)', border: '2px solid rgba(79, 70, 229, 0.2)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: '#4f46e5', transition: 'all 0.3s ease', cursor: 'pointer'
-                    }}
-                  >
-                    {biometricLoading ? <div className="loader" style={{ borderColor: '#4f46e5', borderTopColor: 'transparent' }}></div> : <Fingerprint size={28} />}
-                  </button>
+                  {/* 🛡️ BIOMETRIC LOGIN: Mobile-Only & Previously Setup-Only (V64.0.1) */}
+                  {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && 
+                   localStorage.getItem('hasBiometrics') === 'true' && (
+                    <button 
+                        type="button"
+                        disabled={loading || biometricLoading}
+                        onClick={handleBiometricLogin}
+                        className="login-biometric-btn"
+                        style={{
+                            width: '64px', height: '64px', borderRadius: '18px',
+                            background: 'rgba(79, 70, 229, 0.1)', border: '2px solid rgba(79, 70, 229, 0.2)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            color: '#4f46e5', transition: 'all 0.3s ease', cursor: 'pointer'
+                        }}
+                    >
+                        {biometricLoading ? <div className="loader" style={{ borderColor: '#4f46e5', borderTopColor: 'transparent' }}></div> : <Fingerprint size={28} />}
+                    </button>
+                  )}
                 </div>
               </form>
 

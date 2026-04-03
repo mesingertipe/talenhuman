@@ -32,6 +32,7 @@ const BiometricEnrollModal = ({ onComplete, onCancel, theme }) => {
 
       await SecurityService.completeRegistration(credential);
       setSuccess(true);
+      localStorage.setItem('hasBiometrics', 'true');
       setTimeout(() => onComplete(), 1500);
     } catch (err) {
       const errName = err.name || 'Error';
