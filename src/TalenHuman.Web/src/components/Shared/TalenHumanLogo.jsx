@@ -38,9 +38,9 @@ const TalenHumanLogo = ({ size = 32, type = 'full', white = false }) => {
     <div style={{ display: 'flex', alignItems: 'center', gap: isHeader ? '12px' : (isSmall ? '8px' : '14px') }}>
       {iconBox}
       <span style={{ 
-        fontSize: isHeader ? '24px' : `${size * 0.55}px`, 
+        fontSize: isHeader ? '32px' : `${size * 0.55}px`, 
         fontWeight: '950', 
-        letterSpacing: isHeader ? '-1.2px' : '-1px', 
+        letterSpacing: isHeader ? '-1.5px' : '-1px', 
         color: (white || isHeader) ? 'white' : 'inherit',
         fontFamily: "'Outfit', sans-serif",
         textTransform: isHeader ? 'none' : 'none'

@@ -151,7 +151,7 @@ function App() {
       if (isMobileDevice && isEmployee) {
         switch(currentPage) {
           case 'Marcaciones': return <MobileAttendance user={user} isMobile theme={theme} />;
-          case 'Perfil': return <MobileProfile user={user} theme={theme} />;
+          case 'Perfil': return <MobileProfile user={user} theme={theme} setPage={setCurrentPage} onLogout={handleLogout} />;
           case 'Novedades': return <MobileNews user={user} theme={theme} />;
           default: return <MobileDashboard user={user} theme={theme} />;
         }

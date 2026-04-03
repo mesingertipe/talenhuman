@@ -52,7 +52,8 @@ builder.Services.AddFido2(options =>
     options.Origins = new HashSet<string>(builder.Configuration.GetSection("Fido2:Origins").Get<string[]>() ?? new string[] { 
         "https://talenhuman.com", 
         "https://www.talenhuman.com",
-        "https://talenhuman.com:5001" 
+        "https://talenhuman.com:5001",
+        "https://app.talenhuman.com"
     });
     options.TimestampDriftTolerance = 300000;
 });

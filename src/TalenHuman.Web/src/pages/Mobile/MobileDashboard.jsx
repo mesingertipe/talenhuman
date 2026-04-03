@@ -33,7 +33,7 @@ const MobileDashboard = ({ user, theme }) => {
       {/* 🏔️ ELITE DASHBOARD HEADER (V63.6 - CLEAN) */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-             <h2 style={{ fontSize: '32px', fontWeight: '800', letterSpacing: '-0.8px', color: primaryText, margin: 0 }}>
+             <h2 style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '-0.6px', color: primaryText, margin: 0 }}>
                 <span style={{ color: '#4f46e5', opacity: 0.8 }}>Hola,</span> {user?.fullName || 'TalenHuman'}
              </h2>
              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>

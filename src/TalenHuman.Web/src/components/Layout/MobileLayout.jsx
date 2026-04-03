@@ -75,7 +75,7 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
         padding: 'env(safe-area-inset-top, 54px) 24px 28px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '12px',
+        gap: '4px', // 🚀 V63.8: Compact brand gap
         background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
         zIndex: 100,
         position: 'sticky',

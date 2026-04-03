@@ -79,7 +79,7 @@ const MobileProfile = ({ user, setPage, theme, onLogout }) => {
             </div>
          </div>
          
-         <h2 style={{ fontSize: '28px', fontWeight: '800', color: primaryText, margin: 0, letterSpacing: '-0.8px' }}>
+         <h2 style={{ fontSize: '22px', fontWeight: '800', color: primaryText, margin: 0, letterSpacing: '-0.6px' }}>
             {user?.fullName || 'Colaborador'}
          </h2>
          <span style={{ 
