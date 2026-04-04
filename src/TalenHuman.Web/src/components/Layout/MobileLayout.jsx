@@ -20,14 +20,20 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
   });
   const [toast, setToast] = useState(null);
 
-  // 🔔 REAL-TIME TOAST & HISTORY LISTENER (V65.1)
+  // 🔔 REAL-TIME TOAST & HISTORY LISTENER (V65.1.7 VERBOSE)
   useEffect(() => {
-    if (!user?.id) return;
+    const currentId = user?.Id || user?.id || user?.userName || 'unknown';
+    console.log('🔔 [SYSTEM] Iniciando puente de notificaciones para:', currentId);
     
-    console.log('📡 Subscribing to FCM Real-time Bridge...');
+    if (!user) {
+        console.warn('⚠️ [SYSTEM] Usuario no detectado. Reintentando suscripción...');
+        return;
+    }
+
+    console.log('📡 [SYSTEM] Suscribiendo al Bridge Real-time de FCM...');
     
     const handlePayload = (payload) => {
-        console.log('📦 FCM Payload Received:', payload);
+        console.log('📦 [FCM] Payload Recibido en App:', payload);
         const newNotif = {
           id: Date.now(),
           title: payload.notification?.title || 'Notificación Talenhuman',
@@ -39,10 +45,12 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
 
         setNotifications(prev => {
           const updated = [newNotif, ...prev].slice(0, 50);
-          localStorage.setItem(`notifs_${user?.id}`, JSON.stringify(updated));
+          console.log('💾 [LIST] Historial actualizado (+1). Total:', updated.length);
+          localStorage.setItem(`notifs_${currentId}`, JSON.stringify(updated));
           return updated;
         });
 
+        console.log('🎨 [UI] Lanzando Toast V65.1.7 (Portal)...');
         setToast({
           title: newNotif.title,
           body: newNotif.body,
@@ -55,23 +63,27 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
 
     const unsubscribe = onMessageListener(handlePayload);
 
-    // 🚀 SIMULATOR BRIDGE (V65.1)
+    // 🚀 SIMULATOR BRIDGE (V65.1.7)
     const handleSimulated = (e) => {
-        console.log('🕹️ SIMULATING FCM EVENT...');
+        console.log('🕹️ [SIM] Evento de simulación capturado. Procesando...');
         handlePayload(e.detail);
     };
     window.addEventListener('simulate-fcm', handleSimulated);
 
     return () => {
-        if (unsubscribe) unsubscribe();
+        if (unsubscribe) {
+            console.log('🛑 [SYSTEM] Desconectando Puente FCM');
+            unsubscribe();
+        }
         window.removeEventListener('simulate-fcm', handleSimulated);
     };
-  }, [user?.id]);
+  }, [user]);
 
   const markAllAsRead = () => {
+    const currentId = user?.Id || user?.id || user?.userName || 'unknown';
     const updated = notifications.map(n => ({ ...n, read: true }));
     setNotifications(updated);
-    localStorage.setItem(`notifs_${user?.id}`, JSON.stringify(updated));
+    localStorage.setItem(`notifs_${currentId}`, JSON.stringify(updated));
     setNotifCount(0);
   };
 

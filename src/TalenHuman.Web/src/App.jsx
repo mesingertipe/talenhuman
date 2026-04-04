@@ -44,8 +44,8 @@ import { useTheme } from './context/ThemeContext'
 import DebugPortal from './components/Shared/DebugPortal'
 import MobileCommunicationModal from './components/Mobile/MobileCommunicationModal'
 
-// V65.1.3 PROD ABSOLUTE PRIORITY
-const APP_VERSION = "V65.1.3";
+// V65.1.7 PROD VERBOSE + CASE FIX
+const APP_VERSION = "V65.1.7";
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION
   React.useEffect(() => {
