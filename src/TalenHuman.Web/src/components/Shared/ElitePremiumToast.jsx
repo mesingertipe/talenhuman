@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Bell, Calendar, Sparkles, MessageSquare, CheckCircle2, AlertCircle } from 'lucide-react';
 
 const TalenHumanToast = ({ title, body, type = 'info', onClose, theme }) => {
@@ -49,14 +50,14 @@ const TalenHumanToast = ({ title, body, type = 'info', onClose, theme }) => {
 
   const current = config[type] || config.info;
 
-  return (
+  return createPortal(
     <div 
       style={{
         position: 'fixed',
         top: '20px',
         left: '20px',
         right: '20px',
-        zIndex: 9999,
+        zIndex: 9999999, // 🥇 MAX PRIORITY
         transform: isVisible ? 'translateY(0)' : 'translateY(-120%)',
         opacity: isVisible ? 1 : 0,
         transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -69,6 +70,7 @@ const TalenHumanToast = ({ title, body, type = 'info', onClose, theme }) => {
         borderRadius: '24px',
         boxShadow: isDark ? '0 25px 50px -12px rgba(0, 0, 0, 0.5)' : '0 20px 40px rgba(0, 0, 0, 0.08)',
         border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'}`,
+        fontFamily: "'Inter', sans-serif"
       }}
     >
       {/* 🔮 VIBRANT ICON CONTAINER */}
@@ -134,7 +136,8 @@ const TalenHumanToast = ({ title, body, type = 'info', onClose, theme }) => {
         filter: 'blur(4px)',
         borderRadius: '100%'
       }} />
-    </div>
+    </div>,
+    document.body
   );
 };
 
