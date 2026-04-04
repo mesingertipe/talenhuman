@@ -15,7 +15,7 @@ namespace TalenHuman.API.Controllers;
 
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/comunicados")]
 public class ComunicadosController : ControllerBase
 {
     private readonly IApplicationDbContext _context;

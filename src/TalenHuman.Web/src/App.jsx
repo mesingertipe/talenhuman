@@ -78,8 +78,8 @@ function App() {
       const syncCloudId = async () => {
         try {
           const fcmToken = await requestForToken();
-          // V65.1.12: Sync via ComunicadosController to avoid 404
-          await api.post('/comunicados/token', { Token: fcmToken });
+          // V65.1.13: Standardized path (no leading slash to respect baseURL)
+          await api.post('comunicados/token', { Token: fcmToken });
           console.log("FCM Sync OK (V65.1.12)");
         } catch (err) {
           console.warn('FCM Sync skipped:', err);
