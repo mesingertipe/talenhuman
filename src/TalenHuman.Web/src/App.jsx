@@ -46,8 +46,6 @@ import MobileCommunicationModal from './components/Mobile/MobileCommunicationMod
 
 // V65.1.3 PROD ABSOLUTE PRIORITY
 const APP_VERSION = "V65.1.3";
- toxicology: 
- biology: 
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION
   React.useEffect(() => {
