@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Terminal, X, Trash2, ChevronDown, ChevronUp, RefreshCw, Send, ShieldCheck, Zap } from 'lucide-react';
 import { requestForToken } from '../../firebase';
+import api from '../../services/api';
 
 const DebugPortal = ({ isOpen, onClose }) => {
     const [logs, setLogs] = useState([]);
@@ -63,7 +64,7 @@ const DebugPortal = ({ isOpen, onClose }) => {
             <div className="flex items-center justify-between p-2 bg-slate-900 border-b border-slate-800 h-10">
                 <div className="flex items-center gap-2">
                     <Zap size={14} className="text-amber-400" />
-                    <span className="font-black text-[10px] uppercase tracking-widest text-slate-400">Elite Diagnostic Hub V65.1.9</span>
+                    <span className="font-black text-[10px] uppercase tracking-widest text-slate-400">Elite Diagnostic Hub V65.1.11</span>
                 </div>
                 <div className="flex gap-2">
                     <button 

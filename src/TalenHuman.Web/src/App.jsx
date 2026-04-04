@@ -44,8 +44,8 @@ import { useTheme } from './context/ThemeContext'
 import DebugPortal from './components/Shared/DebugPortal'
 import MobileCommunicationModal from './components/Mobile/MobileCommunicationModal'
 
-// V65.1.9 CLOUD STABILIZER
-const APP_VERSION = "V65.1.9";
+// V65.1.11 CLOUD TEST FIX
+const APP_VERSION = "V65.1.11";
 
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION
