@@ -44,8 +44,8 @@ import { useTheme } from './context/ThemeContext'
 import DebugPortal from './components/Shared/DebugPortal'
 import MobileCommunicationModal from './components/Mobile/MobileCommunicationModal'
 
-// V63.6 PROD UNIFIED
-const APP_VERSION = "V63.6.0";
+// V65.1 PROD UNIFIED
+const APP_VERSION = "V65.1.0";
 
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION
