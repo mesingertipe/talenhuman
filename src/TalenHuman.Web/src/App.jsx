@@ -44,8 +44,8 @@ import { useTheme } from './context/ThemeContext'
 import DebugPortal from './components/Shared/DebugPortal'
 import MobileCommunicationModal from './components/Mobile/MobileCommunicationModal'
 
-// V65.1.11 CLOUD TEST FIX
-const APP_VERSION = "V65.1.11";
+// V65.1.12 CLOUD SYNC FIX
+const APP_VERSION = "V65.1.12";
 
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION
@@ -78,10 +78,9 @@ function App() {
       const syncCloudId = async () => {
         try {
           const fcmToken = await requestForToken();
-          if (fcmToken) {
-            await api.post('/Security/token', { token: fcmToken });
-            console.log('Cloud ID Synced ✅');
-          }
+          // V65.1.12: Sync via ComunicadosController to avoid 404
+          await api.post('/comunicados/token', { Token: fcmToken });
+          console.log("FCM Sync OK (V65.1.12)");
         } catch (err) {
           console.warn('FCM Sync skipped:', err);
         }

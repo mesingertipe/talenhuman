@@ -20,11 +20,52 @@ public class ComunicadosController : ControllerBase
 {
     private readonly IApplicationDbContext _context;
     private readonly IAuditService _auditService;
+    private readonly ISystemSettingsService _settings;
 
-    public ComunicadosController(IApplicationDbContext context, IAuditService auditService)
+    public ComunicadosController(IApplicationDbContext context, IAuditService auditService, ISystemSettingsService settings)
     {
         _context = context;
         _auditService = auditService;
+        _settings = settings;
+    }
+
+    [HttpPost("token")]
+    public async Task<IActionResult> UpdateFirebaseToken([FromBody] TokenUpdateDto dto)
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
+
+        var userId = Guid.Parse(userIdString);
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return NotFound();
+
+        user.FirebaseToken = dto.Token;
+        await _context.SaveChangesAsync();
+
+        await _auditService.LogAsync("FCM_SYNC", "User", userId.ToString(), $"Token sync (V65.1.12) para {user.UserName}");
+
+        return Ok(new { status = "success" });
+    }
+
+    public class TokenUpdateDto { public string Token { get; set; } = string.Empty; }
+
+    private async Task<string> EnsureFirebaseInitializedAsync()
+    {
+        if (FirebaseAdmin.FirebaseApp.DefaultInstance != null) return "OK";
+
+        var projectId = await _settings.GetSettingAsync("FIREBASE_PROJECT_ID");
+        if (string.IsNullOrEmpty(projectId)) 
+            throw new Exception("FIREBASE_PROJECT_ID no configurado en ajustes del sistema.");
+
+        try {
+            FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions() {
+                Credential = Google.Apis.Auth.OAuth2.GoogleCredential.GetApplicationDefault(),
+                ProjectId = projectId
+            });
+            return "INITIALIZED";
+        } catch (Exception ex) {
+            throw new Exception($"Error inicializando Firebase: {ex.Message}");
+        }
     }
 
     [HttpGet]
@@ -205,29 +246,30 @@ public class ComunicadosController : ControllerBase
         var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
 
-        var userId = Guid.Parse(userIdString);
-        var user = await _context.Users.FindAsync(userId);
-        if (user == null || string.IsNullOrEmpty(user.FirebaseToken)) 
-            return BadRequest("No se encontró token FCM para este usuario.");
-
         try {
+            await EnsureFirebaseInitializedAsync();
+            
+            var userId = Guid.Parse(userIdString);
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null || string.IsNullOrEmpty(user.FirebaseToken)) 
+                return BadRequest(new { status = "error", message = "No tienes token FCM registrado. Intenta refrescar la App." });
+
             var message = new Message()
             {
                 Token = user.FirebaseToken,
                 Notification = new Notification()
                 {
                     Title = "⚡️ Prueba de Nube Elite",
-                    Body = "Si recibiste esto, tu conexión real con Firebase está ACTIVA."
+                    Body = $"Enviado el {DateTime.Now:HH:mm:ss} desde V65.1.12"
                 },
-                Data = new Dictionary<string, string>()
-                {
-                    { "type", "broadcast" }
+                Data = new Dictionary<string, string>() {
+                    { "type", "test" },
+                    { "version", "V65.1.12" }
                 }
             };
 
             var response = await FirebaseMessaging.DefaultInstance.SendAsync(message);
-            await _auditService.LogAsync("TEST_PUSH", "User", userId.ToString(), $"Prueba FCM enviada: {response}");
-            return Ok(new { status = "success", message = "Mensaje enviado a la nube." });
+            return Ok(new { status = "success", message = "Orden enviada a la nube", response });
         } catch (Exception ex) {
             return BadRequest(new { status = "error", message = ex.Message });
         }
