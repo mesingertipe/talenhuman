@@ -20,12 +20,14 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
   });
   const [toast, setToast] = useState(null);
 
-  // 🔔 REAL-TIME TOAST & HISTORY LISTENER (V65.0)
+  // 🔔 REAL-TIME TOAST & HISTORY LISTENER (V65.1)
   useEffect(() => {
     if (!user?.id) return;
     
     console.log('📡 Subscribing to FCM Real-time Bridge...');
-    const unsubscribe = onMessageListener((payload) => {
+    
+    const handlePayload = (payload) => {
+        console.log('📦 FCM Payload Received:', payload);
         const newNotif = {
           id: Date.now(),
           title: payload.notification?.title || 'Notificación Talenhuman',
@@ -49,13 +51,20 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
         });
         
         setNotifCount(prev => prev + 1);
-    });
+    };
+
+    const unsubscribe = onMessageListener(handlePayload);
+
+    // 🚀 SIMULATOR BRIDGE (V65.1)
+    const handleSimulated = (e) => {
+        console.log('🕹️ SIMULATING FCM EVENT...');
+        handlePayload(e.detail);
+    };
+    window.addEventListener('simulate-fcm', handleSimulated);
 
     return () => {
-        if (unsubscribe) {
-            console.log('🛑 Unsubscribing from FCM Bridge');
-            unsubscribe();
-        }
+        if (unsubscribe) unsubscribe();
+        window.removeEventListener('simulate-fcm', handleSimulated);
     };
   }, [user?.id]);
 

@@ -85,6 +85,19 @@ const DebugPortal = ({ isOpen, onClose }) => {
                         <button onClick={forceSync} className="flex-1 bg-indigo-600 hover:bg-indigo-500 p-2 rounded flex items-center justify-center gap-2 font-bold uppercase text-[9px]">
                             <RefreshCw size={12} /> Re-Sync Token
                         </button>
+                        <button 
+                            onClick={() => {
+                                window.dispatchEvent(new CustomEvent('simulate-fcm', { 
+                                    detail: { 
+                                        notification: { title: '🚀 Simulador V65.1', body: 'Si lees esto, el Toast funciona.' },
+                                        data: { type: 'broadcast' }
+                                    } 
+                                }));
+                            }} 
+                            className="flex-1 bg-emerald-600 hover:bg-emerald-500 p-2 rounded flex items-center justify-center gap-2 font-bold uppercase text-[9px]"
+                        >
+                            <Zap size={12} /> Simular Push
+                        </button>
                     </div>
 
                     <div className="space-y-1">
