@@ -44,8 +44,9 @@ import { useTheme } from './context/ThemeContext'
 import DebugPortal from './components/Shared/DebugPortal'
 import MobileCommunicationModal from './components/Mobile/MobileCommunicationModal'
 
-// V65.1.8 PROD TOP-HUB
-const APP_VERSION = "V65.1.8";
+// V65.1.9 CLOUD STABILIZER
+const APP_VERSION = "V65.1.9";
+
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION
   React.useEffect(() => {
@@ -71,7 +72,7 @@ function App() {
   const [showPRModal, setShowPRModal] = useState(false);
   const [notification, setNotification] = useState({ show: false, title: '', body: '' });
 
-  // 🔐 IDENTITY SYNC (V65.0)
+  // 🔐 IDENTITY SYNC (V65.1.9)
   useEffect(() => {
     if (user && !booting) {
       const syncCloudId = async () => {

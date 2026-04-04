@@ -63,9 +63,24 @@ const DebugPortal = ({ isOpen, onClose }) => {
             <div className="flex items-center justify-between p-2 bg-slate-900 border-b border-slate-800 h-10">
                 <div className="flex items-center gap-2">
                     <Zap size={14} className="text-amber-400" />
-                    <span className="font-black text-[10px] uppercase tracking-widest text-slate-400">Elite Diagnostic Hub V65.1.8</span>
+                    <span className="font-black text-[10px] uppercase tracking-widest text-slate-400">Elite Diagnostic Hub V65.1.9</span>
                 </div>
                 <div className="flex gap-2">
+                    <button 
+                        onClick={async () => {
+                            if (window.confirm('¿Enviar prueba REAL desde la nube?')) {
+                                try {
+                                    const res = await api.post('/comunicados/test-fcm');
+                                    alert('✅ Orden enviada a la nube: ' + (res.data?.message || 'OK'));
+                                } catch (err) {
+                                    alert('❌ Error de nube: ' + (err.response?.data?.message || err.message));
+                                }
+                            }
+                        }} 
+                        className="p-1 px-2 hover:bg-amber-500 bg-amber-600 rounded text-[8px] flex items-center gap-1 font-bold text-black"
+                    >
+                        <Zap size={10} /> PRUEBA REAL FCM
+                    </button>
                     <button 
                         onClick={() => {
                             if (window.confirm('¿Forzar descarga de nueva versión?')) {

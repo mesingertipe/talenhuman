@@ -130,8 +130,16 @@ public class ComunicadosController : ControllerBase
         await _context.SaveChangesAsync(default);
 
         // 2. ONE-TIME PUSH: Only trigger on creation
-        var tokens = await _context.Users
-            .Where(u => u.CompanyId == companyId && !string.IsNullOrEmpty(u.FirebaseToken))
+        var tokensQuery = _context.Users.AsQueryable();
+        
+        // 🛡️ If admin has a company, only send to that company. 
+        // 🛡️ If admin is SuperAdmin (null company), send to all registered tokens.
+        if (companyId != null) {
+            tokensQuery = tokensQuery.Where(u => u.CompanyId == companyId);
+        }
+
+        var tokens = await tokensQuery
+            .Where(u => !string.IsNullOrEmpty(u.FirebaseToken))
             .Select(u => u.FirebaseToken)
             .ToListAsync();
 
@@ -189,6 +197,40 @@ public class ComunicadosController : ControllerBase
         await _auditService.LogAsync("UPDATE", "Comunicado", id.ToString(), $"Comunicado editado: {dto.Title}");
 
         return Ok();
+    }
+
+    [HttpPost("test-fcm")]
+    public async Task<IActionResult> TestFcm()
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
+
+        var userId = Guid.Parse(userIdString);
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null || string.IsNullOrEmpty(user.FirebaseToken)) 
+            return BadRequest("No se encontró token FCM para este usuario.");
+
+        try {
+            var message = new Message()
+            {
+                Token = user.FirebaseToken,
+                Notification = new Notification()
+                {
+                    Title = "⚡️ Prueba de Nube Elite",
+                    Body = "Si recibiste esto, tu conexión real con Firebase está ACTIVA."
+                },
+                Data = new Dictionary<string, string>()
+                {
+                    { "type", "broadcast" }
+                }
+            };
+
+            var response = await FirebaseMessaging.DefaultInstance.SendAsync(message);
+            await _auditService.LogAsync("TEST_PUSH", "User", userId.ToString(), $"Prueba FCM enviada: {response}");
+            return Ok(new { status = "success", message = "Mensaje enviado a la nube." });
+        } catch (Exception ex) {
+            return BadRequest(new { status = "error", message = ex.Message });
+        }
     }
 }
 
