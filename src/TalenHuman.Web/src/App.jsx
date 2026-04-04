@@ -44,8 +44,8 @@ import { useTheme } from './context/ThemeContext'
 import DebugPortal from './components/Shared/DebugPortal'
 import MobileCommunicationModal from './components/Mobile/MobileCommunicationModal'
 
-// V65.1.7 PROD VERBOSE + CASE FIX
-const APP_VERSION = "V65.1.7";
+// V65.1.8 PROD TOP-HUB
+const APP_VERSION = "V65.1.8";
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION
   React.useEffect(() => {

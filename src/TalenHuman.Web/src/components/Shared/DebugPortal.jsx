@@ -59,11 +59,11 @@ const DebugPortal = ({ isOpen, onClose }) => {
     };
 
     return createPortal(
-        <div className={`fixed left-0 right-0 z-[1000000] bg-[#020617] text-slate-100 font-mono text-[10px] transition-all duration-300 shadow-2xl border-t border-slate-800 ${isMinimized ? 'bottom-0 h-10' : 'bottom-0 h-[65%]'}`}>
+        <div className={`fixed left-0 right-0 z-[1000000] bg-[#020617] text-slate-100 font-mono text-[10px] transition-all duration-300 shadow-2xl border-b border-slate-800 ${isMinimized ? 'top-0 h-10' : 'top-0 h-[75%]'}`}>
             <div className="flex items-center justify-between p-2 bg-slate-900 border-b border-slate-800 h-10">
                 <div className="flex items-center gap-2">
                     <Zap size={14} className="text-amber-400" />
-                    <span className="font-black text-[10px] uppercase tracking-widest text-slate-400">Elite Diagnostic Hub V65.1.7</span>
+                    <span className="font-black text-[10px] uppercase tracking-widest text-slate-400">Elite Diagnostic Hub V65.1.8</span>
                 </div>
                 <div className="flex gap-2">
                     <button 
