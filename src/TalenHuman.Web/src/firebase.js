@@ -96,6 +96,7 @@ export const initializeFirebase = async (tenantConfig = {}) => {
             }
 
             console.log("🔥 Firebase SW registered for tenant:", finalConfig.projectId);
+            registration.update();
             isRegistering = false;
           }).catch((err) => {
             console.error("Firebase SW registration failed:", err);
