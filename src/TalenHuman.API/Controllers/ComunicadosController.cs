@@ -32,7 +32,7 @@ public class ComunicadosController : ControllerBase
     [HttpPost("token")]
     public async Task<IActionResult> UpdateFirebaseToken([FromBody] TokenUpdateDto dto)
     {
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
 
         var userId = Guid.Parse(userIdString);
@@ -40,7 +40,7 @@ public class ComunicadosController : ControllerBase
         if (user == null) return NotFound();
 
         user.FirebaseToken = dto.Token;
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(default);
 
         await _auditService.LogAsync("FCM_SYNC", "User", userId.ToString(), $"Token sync (V65.1.12) para {user.UserName}");
 
@@ -243,7 +243,7 @@ public class ComunicadosController : ControllerBase
     [HttpPost("test-fcm")]
     public async Task<IActionResult> TestFcm()
     {
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
 
         try {
