@@ -63,9 +63,24 @@ const DebugPortal = ({ isOpen, onClose }) => {
             <div className="flex items-center justify-between p-2 bg-slate-900 border-b border-slate-800 h-10">
                 <div className="flex items-center gap-2">
                     <Zap size={14} className="text-amber-400" />
-                    <span className="font-black text-[10px] uppercase tracking-widest text-slate-400">Elite Diagnostic Hub V65.1</span>
+                    <span className="font-black text-[10px] uppercase tracking-widest text-slate-400">Elite Diagnostic Hub V65.1.5</span>
                 </div>
                 <div className="flex gap-2">
+                    <button 
+                        onClick={() => {
+                            if (window.confirm('¿Forzar descarga de nueva versión?')) {
+                                if ('serviceWorker' in navigator) {
+                                  navigator.serviceWorker.getRegistrations().then(rs => {
+                                    for(let r of rs) r.unregister();
+                                    window.location.reload();
+                                  });
+                                } else window.location.reload();
+                            }
+                        }} 
+                        className="p-1 px-2 hover:bg-red-800 bg-red-900 rounded text-[8px] flex items-center gap-1 font-bold"
+                    >
+                        <RefreshCw size={10} /> FORCE HARD UPDATE
+                    </button>
                     <button onClick={() => setLogs([])} className="p-1 hover:bg-slate-800 rounded"><Trash2 size={14} /></button>
                     <button onClick={() => setIsMinimized(!isMinimized)} className="p-1 hover:bg-slate-800 rounded">
                         {isMinimized ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
