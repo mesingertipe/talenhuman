@@ -212,7 +212,7 @@ public class ComunicadosController : ControllerBase
         var companyId = admin.CompanyId;
         _logger.LogInformation("FCM Broadcast: Inicia proceso para CompanyId {CompanyId} por {User}", companyId, admin.UserName);
 
-        // 1. Create with New V63.7 Schema
+        // 1. Create Comunicado record
         var comunicado = new Comunicado
         {
             Titulo = dto.Title,
@@ -230,24 +230,21 @@ public class ComunicadosController : ControllerBase
         await _context.SaveChangesAsync(default);
 
         // 2. ONE-TIME PUSH: Only trigger on creation
-        var tokensQuery = _context.Users.AsQueryable();
-        
-        // 🛡️ Strict filtering: Only tokens from the same CompanyId
-        tokensQuery = tokensQuery.Where(u => u.CompanyId == companyId);
-
-        var tokens = await tokensQuery
-            .Where(u => !string.IsNullOrEmpty(u.FirebaseToken))
+        var tokens = await _context.Users
+            .Where(u => u.CompanyId == companyId && !string.IsNullOrEmpty(u.FirebaseToken))
             .Select(u => u.FirebaseToken)
+            .Distinct() // 🛡️ Avoid double notifications if session duplicated
             .ToListAsync();
 
-        _logger.LogInformation("FCM Broadcast: {Count} tokens encontrados para CompanyId {CompanyId}", tokens.Count, companyId);
+        _logger.LogInformation("FCM Broadcast: {Count} tokens encontrados para CompanyId {CompanyId}", tokens?.Count ?? 0, companyId);
 
-        if (tokens.Any())
+        if (tokens != null && tokens.Any())
         {
             try {
-                var plainBody = System.Text.RegularExpressions.Regex.Replace(dto.Body, "<.*?>", string.Empty);
+                // Strip HTML for the push notification body
+                var plainBody = System.Text.RegularExpressions.Regex.Replace(dto.Body ?? "", "<.*?>", string.Empty).Trim();
                 if (string.IsNullOrWhiteSpace(plainBody)) plainBody = "Nuevo comunicado disponible";
-                if (plainBody.Length > 150) plainBody = plainBody.Substring(0, 147) + "...";
+                if (plainBody.Length > 160) plainBody = plainBody.Substring(0, 157) + "...";
 
                 var absoluteImageUrl = string.IsNullOrEmpty(dto.ImageUrl) ? null : 
                                       (dto.ImageUrl.StartsWith("http") ? dto.ImageUrl : $"{Request.Scheme}://{Request.Host}{dto.ImageUrl}");
@@ -259,25 +256,36 @@ public class ComunicadosController : ControllerBase
                     {
                         Title = "📢 " + dto.Title,
                         Body = plainBody,
-                        ImageUrl = absoluteImageUrl // 📸 Push Absolute Image injection
+                        ImageUrl = absoluteImageUrl
                     },
                     Data = new Dictionary<string, string>()
                     {
                         { "type", "broadcast" },
-                        { "comunicadoId", comunicado.Id.ToString() }
+                        { "comunicadoId", comunicado.Id.ToString() },
+                        { "click_action", "FLUTTER_NOTIFICATION_CLICK" } // 🛡️ Flutter/PWA target compatibility
                     }
                 };
 
-                var response = await FirebaseMessaging.DefaultInstance.SendMulticastAsync(message);
-                _logger.LogInformation("FCM Broadcast Result: {Success} exitosos, {Failure} fallidos", response.SuccessCount, response.FailureCount);
+                // Use the modern SendEachForMulticastAsync as recommended
+                var response = await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(message);
+                _logger.LogInformation("FCM Broadcast Result: {Success} exitosos, {Failure} fallidos de {Total}", response.SuccessCount, response.FailureCount, tokens.Count);
             } catch (Exception ex) {
                 _logger.LogError(ex, "FCM Broadcast Error Fatal: {Message}", ex.Message);
             }
         }
+        else 
+        {
+            _logger.LogWarning("FCM Broadcast: No se enviaron notificaciones porque no se encontraron tokens activos.");
+        }
 
         await _auditService.LogAsync("BROADCAST", "Comunicado", comunicado.Id.ToString(), $"Comunicado difundido: {dto.Title}");
 
-        return Ok(new { status = "success", id = comunicado.Id });
+        return Ok(new { 
+            status = tokens.Any() ? "success" : "warning", 
+            message = tokens.Any() ? "Comunicado enviado a la nube" : "Comunicado guardado pero no hay dispositivos registrados",
+            id = comunicado.Id,
+            tokensCount = tokens.Count
+        });
     }
 
     [HttpPut("{id}")]
