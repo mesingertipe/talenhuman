@@ -247,8 +247,18 @@ function App() {
   // toggleTheme is now from useTheme() context
 
   const handleLogout = () => {
+    // 🛡️ ACCURATE SESSION CLEAR (V65.1.38)
+    // Keep device-specific settings like hasBiometrics and Theme
+    const keysToKeep = ['hasBiometrics', 'biometrics_enabled', 'theme', 'app_version', 'fcm_token'];
+    const savedValues = {};
+    keysToKeep.forEach(k => { savedValues[k] = localStorage.getItem(k); });
+    
     localStorage.clear();
     sessionStorage.clear();
+    
+    // Restore persistent device settings
+    keysToKeep.forEach(k => { if (savedValues[k]) localStorage.setItem(k, savedValues[k]); });
+    
     window.location.replace('/');
   };
 
