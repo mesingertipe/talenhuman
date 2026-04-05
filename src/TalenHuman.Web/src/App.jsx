@@ -44,8 +44,8 @@ import { useTheme } from './context/ThemeContext'
 import DebugPortal from './components/Shared/DebugPortal'
 import MobileCommunicationModal from './components/Mobile/MobileCommunicationModal'
 
-// V65.1.12 CLOUD SYNC FIX
-const APP_VERSION = "V65.1.14-ELITE";
+// V65.1.18 ELITE SILENT UPDATE
+const APP_VERSION = "V65.1.18-ELITE";
 
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION
@@ -73,13 +73,34 @@ function App() {
   const [notification, setNotification] = useState({ show: false, title: '', body: '' });
 
   const CURRENT_VERSION = "V65.1.18-ELITE";
-  const [showUpdateFlag, setShowUpdateFlag] = useState(false);
-
+  
   useEffect(() => {
       const lastVersion = localStorage.getItem('app_version');
+      
+      // 🚀 SILENT AUTO-UPDATE (V65.1.18-ELITE)
+      // Detects version mismatch and forces a full internal reset to fix Workbox precaching errors
       if (lastVersion && lastVersion !== CURRENT_VERSION) {
-          setShowUpdateFlag(true);
+          console.log(`PWA: Version mismatch (${lastVersion} vs ${CURRENT_VERSION}). Initializing silent reset...`);
+          
+          const performSilentReset = async () => {
+              if ('serviceWorker' in navigator) {
+                  const regs = await navigator.serviceWorker.getRegistrations();
+                  for (let r of regs) await r.unregister();
+              }
+              if ('caches' in window) {
+                  const keys = await caches.keys();
+                  for (let k of keys) await caches.delete(k);
+              }
+              localStorage.setItem('app_version', CURRENT_VERSION);
+              // Wait 1 second before reload to ensure storage is committed
+              setTimeout(() => {
+                  window.location.reload(true);
+              }, 1000);
+          };
+          
+          performSilentReset();
       }
+      
       localStorage.setItem('app_version', CURRENT_VERSION);
 
       const syncToken = async () => {
@@ -165,12 +186,8 @@ function App() {
 
   useEffect(() => {
     try {
-      const storedVersion = localStorage.getItem('app_version');
-      if (storedVersion && storedVersion !== CURRENT_VERSION) {
-          setShowUpdateFlag(true);
-      }
-      localStorage.setItem('app_version', CURRENT_VERSION);
-
+      // Auto-update check is handled in the dedicated useEffect above for clarity
+      
       if (user && token) {
         initializeFirebase(user).catch(err => console.warn('Firebase Init suppressed:', err));
       }
@@ -318,35 +335,6 @@ function App() {
         />
       )}
 
-      {/* 🚢 PWA RESCUE FLAG (V65.1.16) */}
-      {showUpdateFlag && (
-        <div style={{
-          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000000,
-          background: '#ef4444', color: 'white', padding: '15px',
-          textAlign: 'center', fontWeight: 'bold', fontSize: '12px',
-          display: 'flex', flexDirection: 'column', gap: '8px'
-        }}>
-          <span>NUEVA VERSIÓN ESTABLE DISPONIBLE (V65.1.16)</span>
-          <button 
-            onClick={async () => {
-                // Hard Clean
-                if ('serviceWorker' in navigator) {
-                    const regs = await navigator.serviceWorker.getRegistrations();
-                    for (let r of regs) await r.unregister();
-                }
-                if ('caches' in window) {
-                    const keys = await caches.keys();
-                    for (let k of keys) await caches.delete(k);
-                }
-                localStorage.setItem('app_version', CURRENT_VERSION);
-                window.location.reload(true);
-            }}
-            style={{ background: 'white', color: '#ef4444', border: 'none', padding: '8px 15px', borderRadius: '10px', fontSize: '10px', fontWeight: '900' }}
-          >
-            ACTUALIZAR AHORA (FULL RESET)
-          </button>
-        </div>
-      )}
 
       {/* 🔔 REAL-TIME BROADCAST TOAST */}
       {notification.show && (

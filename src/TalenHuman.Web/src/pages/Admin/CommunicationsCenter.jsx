@@ -117,6 +117,18 @@ const CommunicationsCenter = ({ user }) => {
         }
     };
 
+    const handleDelete = async (id) => {
+        if (!window.confirm("¿Estás seguro de eliminar este comunicado? Esta acción no se puede deshacer.")) return;
+        
+        try {
+            await api.delete(`/comunicados/${id}`);
+            showToast("Comunicado eliminado definitivamente");
+            fetchHistory();
+        } catch (err) {
+            showToast("Error al eliminar el comunicado", "error");
+        }
+    };
+
     return (
         <div style={{ padding: '40px', maxWidth: '1400px', margin: '0 auto', animation: 'fadeIn 0.5s ease-out' }}>
             {/* Header V63.7 */}
@@ -171,9 +183,17 @@ const CommunicationsCenter = ({ user }) => {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                 <button 
                                     onClick={() => handleOpenEdit(c)}
+                                    title="Editar"
                                     style={{ width: '40px', height: '40px', borderRadius: '12px', background: isDarkMode ? '#1e293b' : '#f8fafc', border: `1px solid ${colors.border}`, color: colors.textMuted, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                 >
                                     <Edit3 size={18} />
+                                </button>
+                                <button 
+                                    onClick={() => handleDelete(c.id)}
+                                    title="Eliminar"
+                                    style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                >
+                                    <Trash2 size={18} />
                                 </button>
                             </div>
                         </div>
