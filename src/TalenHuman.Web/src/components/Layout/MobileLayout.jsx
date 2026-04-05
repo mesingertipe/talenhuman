@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sun, Moon, LogOut, Clock, Calendar, Bell, X, Info, AlertCircle, CheckCircle2, MessageSquare } from 'lucide-react';
+import { Sun, Moon, LogOut, Clock, Calendar, Bell, X, Info, AlertCircle, CheckCircle2, MessageSquare, Trash2 } from 'lucide-react';
 import MobileBottomNav from '../Navigation/MobileBottomNav';
 import TalenHumanLogo from '../Shared/TalenHumanLogo';
 import { onMessageListener } from '../../firebase';
@@ -110,6 +110,28 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
         window.dispatchEvent(new CustomEvent('open-communication', { 
             detail: { id: notif.metadata.comunicadoId } 
         }));
+    }
+  };
+
+  const handleDeleteNotification = async (id, e) => {
+    e.stopPropagation();
+    try {
+        await api.delete(`/notifications/${id}`);
+        setNotifications(prev => prev.filter(n => n.id !== id));
+        setNotifCount(prev => notifications.find(n => n.id === id && !n.isRead) ? prev - 1 : prev);
+    } catch (err) {
+        console.error('Failed to delete notification:', err);
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (!window.confirm('¿Estás seguro de que deseas limpiar todo el historial?')) return;
+    try {
+        await api.delete('/notifications/all');
+        setNotifications([]);
+        setNotifCount(0);
+    } catch (err) {
+        console.error('Failed to clear notifications:', err);
     }
   };
 
@@ -325,12 +347,28 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
             >
                 <div style={{ padding: '32px 24px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <h3 style={{ fontSize: '24px', fontWeight: '800', color: isDark ? 'white' : '#1e293b', margin: 0, letterSpacing: '-0.5px' }}>Notificaciones</h3>
-                    <button 
-                        onClick={() => setShowNotifications(false)}
-                        style={{ width: '40px', height: '40px', borderRadius: '12px', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    >
-                        <X size={20} />
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {notifications.length > 0 && (
+                            <button 
+                                onClick={handleClearAll}
+                                style={{ 
+                                    padding: '8px 12px', borderRadius: '10px', 
+                                    background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444',
+                                    border: 'none', fontSize: '12px', fontWeight: '800', 
+                                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                                }}
+                            >
+                                <Trash2 size={14} />
+                                Limpiar todo
+                            </button>
+                        )}
+                        <button 
+                            onClick={() => setShowNotifications(false)}
+                            style={{ width: '40px', height: '40px', borderRadius: '12px', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        >
+                            <X size={20} />
+                        </button>
+                    </div>
                 </div>
 
                 <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 40px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -349,6 +387,7 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
                                 time={new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} 
                                 isDark={isDark} 
                                 unread={!n.isRead}
+                                onDelete={(e) => handleDeleteNotification(n.id, e)}
                             />
                         ))
                     ) : (
@@ -407,7 +446,7 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
   );
 };
 
-const NotifItem = ({ icon, title, desc, time, isDark, unread, onClick }) => (
+const NotifItem = ({ icon, title, desc, time, isDark, unread, onClick, onDelete }) => (
     <div 
       onClick={onClick}
       style={{
@@ -430,11 +469,21 @@ const NotifItem = ({ icon, title, desc, time, isDark, unread, onClick }) => (
        <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: isDark ? 'rgba(255,255,255,0.05)' : '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {icon}
        </div>
-       <div style={{ flex: 1 }}>
+       <div style={{ flex: 1, paddingRight: '20px' }}>
           <p style={{ fontSize: '15px', fontWeight: '800', margin: '0 0 4px', color: isDark ? 'white' : '#1e293b', letterSpacing: '-0.3px' }}>{title}</p>
-          <p style={{ fontSize: '12px', color: isDark ? 'rgba(255,255,255,0.5)' : '#64748b', margin: '0 0 6px', lineHeight: '1.4' }}>{desc}</p>
+          <p style={{ fontSize: '12px', color: isDark ? 'rgba(255,255,255,0.5)' : '#64748b', margin: '0 0 6px', lineHeight: '1.4', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{desc}</p>
           <p style={{ fontSize: '11px', color: '#4f46e5', fontWeight: '800', margin: 0 }}>{time}</p>
        </div>
+       <button 
+           onClick={onDelete}
+           style={{ 
+               alignSelf: 'center', border: 'none', background: 'none', 
+               color: isDark ? 'rgba(255,255,255,0.15)' : '#cbd5e1', cursor: 'pointer',
+               padding: '8px', borderRadius: '10px'
+           }}
+       >
+           <Trash2 size={18} />
+       </button>
     </div>
 );
 

@@ -103,6 +103,23 @@ public class NotificationsController : ControllerBase
 
         return Ok();
     }
+
+    [HttpDelete("all")]
+    public async Task<IActionResult> DeleteAll()
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
+
+        var userId = Guid.Parse(userIdString);
+        var notifications = await _context.NotificationLogs
+            .Where(n => n.UserId == userId)
+            .ToListAsync();
+
+        _context.NotificationLogs.RemoveRange(notifications);
+        await _context.SaveChangesAsync(default);
+
+        return Ok();
+    }
 }
 
 public class NotificationLogDto
