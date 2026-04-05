@@ -140,15 +140,15 @@ public class SecurityController : ControllerBase
         if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
 
         var userId = Guid.Parse(userIdString);
-        var user = await _context.Users.FindAsync(userId);
+        var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null) return NotFound();
 
         user.FirebaseToken = dto.Token;
         await _context.SaveChangesAsync();
 
-        await _auditService.LogAsync("FCM_SYNC", "User", userId.ToString(), $"Token sync V65.1.34 para {user.UserName}");
+        await _auditService.LogAsync("FCM_SYNC", "User", userId.ToString(), $"Token sync V65.1.36 para {user.UserName}");
 
-        return Ok(new { status = "success", version = "V65.1.34" });
+        return Ok(new { status = "success", version = "V65.1.36" });
     }
 
     public class TokenUpdateDto
