@@ -71,19 +71,29 @@ const SystemSettings = () => {
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 group-hover/field:text-indigo-400 transition-colors">
                     {s.key.replace(/_/g, ' ')}
                 </label>
-                {s.key.includes('SECRET') || s.key.includes('KEY') ? (
+                {s.key.includes('SECRET') || s.key.includes('KEY') || s.key.includes('ACCOUNT') ? (
                     <Lock size={12} className="text-slate-300" />
                 ) : null}
             </div>
             <div className="relative">
-                <input 
-                    type={s.key.includes('SECRET') || s.key.includes('KEY') ? 'password' : 'text'}
-                    value={s.value}
-                    onChange={(e) => handleChange(s.key, e.target.value)}
-                    className="w-full p-4 rounded-2xl border-slate-200 bg-white/50 backdrop-blur-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-mono text-sm shadow-sm"
-                    placeholder={`Ingrese ${s.key}...`}
-                    style={{ border: `1px solid ${activeColors.border}` }}
-                />
+                {s.key.includes('ACCOUNT') || s.key.includes('JSON') ? (
+                    <textarea 
+                        value={s.value}
+                        onChange={(e) => handleChange(s.key, e.target.value)}
+                        className="w-full p-4 rounded-2xl border-slate-200 bg-white/50 backdrop-blur-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-mono text-xs shadow-sm min-h-[120px] resize-y"
+                        placeholder={`Pegue el JSON de ${s.key} aquí...`}
+                        style={{ border: `1px solid ${activeColors.border}` }}
+                    />
+                ) : (
+                    <input 
+                        type={s.key.includes('SECRET') || s.key.includes('KEY') ? 'password' : 'text'}
+                        value={s.value}
+                        onChange={(e) => handleChange(s.key, e.target.value)}
+                        className="w-full p-4 rounded-2xl border-slate-200 bg-white/50 backdrop-blur-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-mono text-sm shadow-sm"
+                        placeholder={`Ingrese ${s.key}...`}
+                        style={{ border: `1px solid ${activeColors.border}` }}
+                    />
+                )}
             </div>
             {s.description && (
                 <div className="flex items-start gap-2 px-1">
@@ -307,7 +317,8 @@ const SystemSettings = () => {
                                                         { key: 'FIREBASE_MESSAGING_SENDER_ID', value: '', group: 'Firebase', description: 'Sender ID para mensajes' },
                                                         { key: 'FIREBASE_APP_ID', value: '', group: 'Firebase', description: 'App ID (Web)' },
                                                         { key: 'FIREBASE_MEASUREMENT_ID', value: '', group: 'Firebase', description: 'ID de Analytics' },
-                                                        { key: 'FIREBASE_VAPID_KEY', value: '', group: 'Firebase', description: 'Clave pública VAPID para Push' }
+                                                        { key: 'FIREBASE_VAPID_KEY', value: '', group: 'Firebase', description: 'Clave pública VAPID para Push' },
+                                                        { key: 'FIREBASE_S_ACCOUNT', value: '', group: 'Firebase', description: 'JSON completo de la Cuenta de Servicio de Firebase Admin' }
                                                     ];
                                                     await api.post('/SystemSettings/batch', defaults);
                                                     fetchSettings();
