@@ -79,8 +79,8 @@ function App() {
         try {
           const fcmToken = await requestForToken();
           // V65.1.13: Standardized path (no leading slash to respect baseURL)
-          console.log(`FCM Sync: Iniciando registro en ${api.defaults.baseURL}/comunicados/token`);
-          const response = await api.post('comunicados/token', { Token: fcmToken });
+          console.log(`FCM Sync: Iniciando registro en ${api.defaults.baseURL}/comunicados/sync-token`);
+          const response = await api.post('comunicados/sync-token', { Token: fcmToken });
           console.log('FCM Sync OK:', response.data);
         } catch (err) {
           console.warn('FCM Sync skipped:', err);

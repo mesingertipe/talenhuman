@@ -14,7 +14,7 @@ const DebugPortal = ({ isOpen, onClose }) => {
         if (!isOpen) return;
 
         // 📝 CAPTURE CONSOLE
-        const currentVersion = "V65.1.14-ELITE";
+        const currentVersion = "V65.1.15-ELITE";
         const originalLog = console.log;
         const originalError = console.error;
         const addLog = (type, args) => {
@@ -65,7 +65,7 @@ const DebugPortal = ({ isOpen, onClose }) => {
             <div className="flex items-center justify-between p-2 bg-slate-900 border-b border-slate-800 h-10">
                 <div className="flex items-center gap-2">
                     <Zap size={14} className="text-amber-400" />
-                    <span className="font-black text-[10px] uppercase tracking-widest text-slate-400">Elite Diagnostic Hub V65.1.12</span>
+                    <span className="font-black text-[10px] uppercase tracking-widest text-slate-400">Elite Diagnostic Hub V65.1.15</span>
                 </div>
                 <div className="flex gap-2">
                     <button 
@@ -75,7 +75,8 @@ const DebugPortal = ({ isOpen, onClose }) => {
                                     const res = await api.post('/comunicados/test-fcm');
                                     alert('✅ Orden enviada a la nube: ' + (res.data?.message || 'OK'));
                                 } catch (err) {
-                                    alert('❌ Error de nube: ' + (err.response?.data?.message || err.message));
+                                    const errorMsg = err.response?.data?.message || err.response?.data?.error || err.message;
+                                    alert('❌ Error de nube: ' + errorMsg);
                                 }
                             }
                         }} 
@@ -84,19 +85,33 @@ const DebugPortal = ({ isOpen, onClose }) => {
                         <Zap size={10} /> PRUEBA REAL FCM
                     </button>
                     <button 
-                        onClick={() => {
-                            if (window.confirm('¿Forzar descarga de nueva versión?')) {
-                                if ('serviceWorker' in navigator) {
-                                  navigator.serviceWorker.getRegistrations().then(rs => {
-                                    for(let r of rs) r.unregister();
+                        onClick={async () => {
+                            if (window.confirm('¿LIMPIEZA PROFUNDA? (Borra caché, unregistra SW y recarga)')) {
+                                try {
+                                    // 1. Unregister SW
+                                    if ('serviceWorker' in navigator) {
+                                        const registrations = await navigator.serviceWorker.getRegistrations();
+                                        for (let registration of registrations) {
+                                            await registration.unregister();
+                                        }
+                                    }
+                                    // 2. Clear Caches
+                                    if ('caches' in window) {
+                                        const keys = await caches.keys();
+                                        for (let key of keys) {
+                                            await caches.delete(key);
+                                        }
+                                    }
+                                    // 3. Reload
+                                    window.location.reload(true);
+                                } catch (e) {
                                     window.location.reload();
-                                  });
-                                } else window.location.reload();
+                                }
                             }
                         }} 
-                        className="p-1 px-2 hover:bg-red-800 bg-red-900 rounded text-[8px] flex items-center gap-1 font-bold"
+                        className="p-1 px-2 hover:bg-red-500 bg-red-600 rounded text-[8px] flex items-center gap-1 font-bold text-white"
                     >
-                        <RefreshCw size={10} /> FORCE HARD UPDATE
+                        <RefreshCw size={10} /> FULL CACHE CLEAN
                     </button>
                     <button onClick={() => setLogs([])} className="p-1 hover:bg-slate-800 rounded"><Trash2 size={14} /></button>
                     <button onClick={() => setIsMinimized(!isMinimized)} className="p-1 hover:bg-slate-800 rounded">
