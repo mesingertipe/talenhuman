@@ -162,8 +162,15 @@ public class AttendanceService
                     ClockOut = clockOut
                 };
 
-            // 2. Associate with the closest shift
+            // 2. Associate with the closest shift (Prefer 4h window, else closest available in window)
             var matchedShift = shifts.FirstOrDefault(s => s.StartTime >= clockIn.AddHours(-4) && s.StartTime <= clockIn.AddHours(4));
+            
+            if (matchedShift == null && shifts.Any())
+            {
+                // FALLBACK (V65.1.32): Link to closest shift in same operational day to avoid "Ausente"
+                matchedShift = shifts.OrderBy(s => Math.Abs((s.StartTime - clockIn).TotalMinutes)).First();
+                Console.WriteLine($"⚠️ [FCM SW] Flex-Link: {clockIn} linked to shift {matchedShift.StartTime} (outside 4h window)");
+            }
             
             DateTime? refStart = matchedShift?.StartTime;
             DateTime? refEnd = matchedShift?.EndTime;

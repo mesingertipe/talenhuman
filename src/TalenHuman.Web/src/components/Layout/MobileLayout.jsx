@@ -352,19 +352,27 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
                             <button 
                                 onClick={handleClearAll}
                                 style={{ 
-                                    padding: '8px 12px', borderRadius: '10px', 
-                                    background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444',
-                                    border: 'none', fontSize: '12px', fontWeight: '800', 
-                                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                                    width: '38px', height: '38px', borderRadius: '12px', 
+                                    background: 'rgba(239, 68, 68, 0.08)', color: '#ef4444',
+                                    border: '1px solid rgba(239, 68, 68, 0.1)', 
+                                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    transition: 'all 0.2s',
+                                    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.05)'
                                 }}
+                                title="Limpiar todo"
                             >
-                                <Trash2 size={14} />
-                                Limpiar todo
+                                <Trash2 size={18} />
                             </button>
                         )}
                         <button 
                             onClick={() => setShowNotifications(false)}
-                            style={{ width: '40px', height: '40px', borderRadius: '12px', background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            style={{ 
+                                width: '38px', height: '38px', borderRadius: '12px', 
+                                background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9', 
+                                border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : '#e2e8f0'}`, 
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                color: isDark ? 'white' : '#1e293b'
+                            }}
                         >
                             <X size={20} />
                         </button>

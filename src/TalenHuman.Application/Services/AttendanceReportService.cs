@@ -93,7 +93,12 @@ public class AttendanceReportService
 
         var allContextStores = await storeQuery.ToListAsync();
 
-        // 2. Fetch Attendance Data for the same day (Only Active Employees)
+        // 2. Fetch Master Data for the day: Shifts and Attendances (Only Active Employees)
+        var shiftQuery = _context.Shifts
+            .Include(s => s.Store)
+            .Include(s => s.Employee)
+            .Where(s => s.CompanyId == companyId && s.StartTime.Date == date.Date && s.Employee.IsActive && !s.IsDescanso);
+
         var attendanceQuery = _context.Attendances
             .Include(a => a.Store)
             .Include(a => a.Employee)
@@ -101,16 +106,20 @@ public class AttendanceReportService
 
         if (districtId.HasValue)
         {
+            shiftQuery = shiftQuery.Where(s => s.Store.DistrictId == districtId.Value);
             attendanceQuery = attendanceQuery.Where(a => a.Store.DistrictId == districtId.Value);
         }
         else if (storeIds != null && storeIds.Any())
         {
+            shiftQuery = shiftQuery.Where(s => storeIds.Contains(s.StoreId));
             attendanceQuery = attendanceQuery.Where(a => storeIds.Contains(a.StoreId));
         }
 
-        var attendanceData = await attendanceQuery.ToListAsync();
-        var attendanceGroups = attendanceData.GroupBy(a => a.StoreId)
-            .ToDictionary(g => g.Key, g => g.ToList());
+        var allShifts = await shiftQuery.ToListAsync();
+        var allAttendances = await attendanceQuery.ToListAsync();
+
+        var shiftGroups = allShifts.GroupBy(s => s.StoreId).ToDictionary(g => g.Key, g => g.ToList());
+        var attendanceGroups = allAttendances.GroupBy(a => a.StoreId).ToDictionary(g => g.Key, g => g.ToList());
 
         // 3. Fetch Employee counts per store for "Plantilla"
         var employeeCounts = await _context.Employees
@@ -119,18 +128,22 @@ public class AttendanceReportService
             .Select(g => new { StoreId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.StoreId, x => x.Count);
 
-        // 4. Project stats using ALL stores (Left Join Logic)
+        // 4. Project stats using ALL context stores (The 7 Request Rules)
         var stats = allContextStores.Select(s => {
-            var records = attendanceGroups.ContainsKey(s.Id) ? attendanceGroups[s.Id] : new List<Attendance>();
+            var storeShifts = shiftGroups.ContainsKey(s.Id) ? shiftGroups[s.Id] : new List<Shift>();
+            var storeAttendances = attendanceGroups.ContainsKey(s.Id) ? attendanceGroups[s.Id] : new List<Attendance>();
             var empCount = employeeCounts.ContainsKey(s.Id) ? employeeCounts[s.Id] : 0;
+
+            // Link Attendances to Shifts found for this store (V65.1.32 Logic)
+            // A shift is linked if attendance.ShiftId matches or if they share employee and date
             return new {
                 Store = s.Name,
                 Plantilla = empCount,
-                Total = records.Count(),
-                Correct = records.Count(x => x.Status == AttendanceStatus.Correcto),
-                Errada = records.Count(x => x.Status == AttendanceStatus.MarcacionErrada),
-                Desfasada = records.Count(x => x.Status == AttendanceStatus.Desfasado),
-                SinMarcacion = records.Count(x => x.Status == AttendanceStatus.SinMarcacion)
+                TotalTurnos = storeShifts.Count,
+                Correcto = storeShifts.Count(sh => storeAttendances.Any(a => a.ShiftId == sh.Id && a.Status == AttendanceStatus.Correcto)),
+                Errada = storeShifts.Count(sh => storeAttendances.Any(a => a.ShiftId == sh.Id && a.Status == AttendanceStatus.MarcacionErrada)),
+                Desfase = storeShifts.Count(sh => storeAttendances.Any(a => a.ShiftId == sh.Id && a.Status == AttendanceStatus.Desfasado)),
+                Ausente = storeShifts.Count(sh => !storeAttendances.Any(a => a.ShiftId == sh.Id) || storeAttendances.Any(a => a.ShiftId == sh.Id && a.Status == AttendanceStatus.SinMarcacion))
             };
         }).OrderBy(s => s.Store).ToList();
 
@@ -193,11 +206,11 @@ public class AttendanceReportService
                         {
                             table.Cell().Element(Padding).Text(item.Store);
                             table.Cell().Element(Padding).AlignCenter().Text(item.Plantilla.ToString());
-                            table.Cell().Element(Padding).AlignCenter().Text(item.Total.ToString());
-                            table.Cell().Element(Padding).AlignCenter().Text($"{item.Correct}").FontColor(Colors.Green.Darken2);
+                            table.Cell().Element(Padding).AlignCenter().Text(item.TotalTurnos.ToString());
+                            table.Cell().Element(Padding).AlignCenter().Text($"{item.Correcto}").FontColor(Colors.Green.Darken2);
                             table.Cell().Element(Padding).AlignCenter().Text($"{item.Errada}").FontColor(Colors.Amber.Darken2);
-                            table.Cell().Element(Padding).AlignCenter().Text($"{item.Desfasada}").FontColor(Colors.Blue.Darken2);
-                            table.Cell().Element(Padding).AlignCenter().Text($"{item.SinMarcacion}").FontColor(Colors.Red.Darken2);
+                            table.Cell().Element(Padding).AlignCenter().Text($"{item.Desfase}").FontColor(Colors.Blue.Darken2);
+                            table.Cell().Element(Padding).AlignCenter().Text($"{item.Ausente}").FontColor(Colors.Red.Darken2);
 
                             static IContainer Padding(IContainer container) => container.PaddingVertical(5).BorderBottom(1).BorderColor(Colors.Grey.Lighten3);
                         }
