@@ -116,19 +116,18 @@ public class ComunicadosController : ControllerBase
     public async Task<ActionResult<IEnumerable<ComunicadoDto>>> GetComunicados()
     {
         var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var user = await _context.Users.FindAsync(Guid.Parse(userIdString));
+        if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
+
+        var userId = Guid.Parse(userIdString);
+        var user = await _context.Users.FindAsync(userId);
         if (user == null) return Unauthorized();
 
         // 🛡️ STRICT TENANT FILTER: Even SuperAdmin only sees communications for their current CompanyId
         var query = _context.Comunicados.AsQueryable();
-        if (user.CompanyId != null) 
-        {
-            query = query.Where(c => c.CompanyId == user.CompanyId);
-        }
-        else if (user.Role != "SuperAdmin")
-        {
-            return Forbid(); // Admin without company shouldn't see anything
-        }
+        
+        // Since CompanyId is Guid (non-nullable), we always filter by it.
+        // If it were Guid.Empty, that might be an issue, but we rely on the user's assigned company.
+        query = query.Where(c => c.CompanyId == user.CompanyId);
 
         return await query
             .Include(c => c.CreatedByUser)
@@ -234,12 +233,7 @@ public class ComunicadosController : ControllerBase
         var tokensQuery = _context.Users.AsQueryable();
         
         // 🛡️ Strict filtering: Only tokens from the same CompanyId
-        if (companyId != null) {
-            tokensQuery = tokensQuery.Where(u => u.CompanyId == companyId);
-        } else if (admin.Role != "SuperAdmin") {
-             _logger.LogWarning("FCM Broadcast blocked: Admin {User} has no company assigned", admin.UserName);
-             return Forbid();
-        }
+        tokensQuery = tokensQuery.Where(u => u.CompanyId == companyId);
 
         var tokens = await tokensQuery
             .Where(u => !string.IsNullOrEmpty(u.FirebaseToken))
@@ -318,16 +312,10 @@ public class ComunicadosController : ControllerBase
         if (comunicado == null) return NotFound();
 
         // 🛡️ SECURITY: Even SuperAdmin can only delete if CompanyId matches (Current Tenant)
-        if (comunicado.CompanyId != admin.CompanyId && admin.Role != "SuperAdmin")
+        if (comunicado.CompanyId != admin.CompanyId)
         {
+            // Even if they are SuperAdmin, they must be in the correct tenant context
             return Forbid();
-        }
-        
-        // Strict tenant isolation for SuperAdmin as requested
-        if (admin.Role == "SuperAdmin" && comunicado.CompanyId != admin.CompanyId)
-        {
-             // Optional: If SuperAdmin is viewing by Tenant Header, we should check that too.
-             // For now, restricting to the admin's assigned CompanyId or if they match.
         }
 
         _context.Comunicados.Remove(comunicado);
