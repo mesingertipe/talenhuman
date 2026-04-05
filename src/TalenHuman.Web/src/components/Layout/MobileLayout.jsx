@@ -10,81 +10,88 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
   const isDark = theme === 'dark';
   const [time, setTime] = useState(new Date());
   const [showDebug, setShowDebug] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState(() => {
-    const saved = localStorage.getItem(`notifs_${user?.id}`);
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [notifCount, setNotifCount] = useState(() => {
-    return notifications.filter(n => !n.read).length;
-  });
+  const [notifications, setNotifications] = useState([]);
+  const [notifCount, setNotifCount] = useState(0);
   const [toast, setToast] = useState(null);
 
-  // 🔔 REAL-TIME TOAST & HISTORY LISTENER (V65.1.7 VERBOSE)
-  useEffect(() => {
-    const currentId = user?.Id || user?.id || user?.userName || 'unknown';
-    console.log('🔔 [SYSTEM] Iniciando puente de notificaciones para:', currentId);
-    
-    if (!user) {
-        console.warn('⚠️ [SYSTEM] Usuario no detectado. Reintentando suscripción...');
-        return;
+  // 📥 FETCH HISTORY FROM SERVER (V65.1.28)
+  const fetchHistory = async () => {
+    if (!user) return;
+    try {
+        const res = await api.get('/notifications/history');
+        setNotifications(res.data);
+        setNotifCount(res.data.filter(n => !n.isRead).length);
+    } catch (err) {
+        console.error('Failed to fetch notification history:', err);
     }
+  };
 
-    console.log('📡 [SYSTEM] Suscribiendo al Bridge Real-time de FCM...');
+  useEffect(() => {
+    fetchHistory();
+  }, [user]);
+
+  // 🔔 REAL-TIME TOAST & SYNC (V65.1.28)
+  useEffect(() => {
+    if (!user) return;
     
     const handlePayload = (payload) => {
-        console.log('📦 [FCM] Payload Recibido en App:', payload);
-        const newNotif = {
-          id: Date.now(),
-          title: payload.notification?.title || 'Notificación Talenhuman',
-          body: payload.notification?.body || 'Tienes un nuevo mensaje.',
-          type: payload.data?.type || 'info',
-          read: false,
-          date: new Date().toISOString()
-        };
-
-        setNotifications(prev => {
-          const updated = [newNotif, ...prev].slice(0, 50);
-          console.log('💾 [LIST] Historial actualizado (+1). Total:', updated.length);
-          localStorage.setItem(`notifs_${currentId}`, JSON.stringify(updated));
-          return updated;
-        });
-
-        console.log('🎨 [UI] Lanzando Toast V65.1.7 (Portal)...');
-        setToast({
-          title: newNotif.title,
-          body: newNotif.body,
-          type: newNotif.type === 'shift_update' ? 'shift' : 
-                newNotif.type === 'broadcast' ? 'broadcast' : 'info'
-        });
+        console.log('📦 [FCM] Payload Recibido:', payload);
         
-        setNotifCount(prev => prev + 1);
+        // Refresh history to get the latest from DB (which already includes this one)
+        fetchHistory();
+
+        setToast({
+          title: payload.notification?.title || 'Notificación',
+          body: payload.notification?.body || 'Tienes un nuevo mensaje.',
+          type: payload.data?.type === 'shift_update' ? 'shift' : 
+                payload.data?.type === 'broadcast' ? 'broadcast' : 'info',
+          metadata: payload.data // Pass metadata for deep linking from toast
+        });
     };
 
     const unsubscribe = onMessageListener(handlePayload);
 
-    // 🚀 SIMULATOR BRIDGE (V65.1.7)
-    const handleSimulated = (e) => {
-        console.log('🕹️ [SIM] Evento de simulación capturado. Procesando...');
-        handlePayload(e.detail);
-    };
+    // Simulator Bridge
+    const handleSimulated = (e) => handlePayload(e.detail);
     window.addEventListener('simulate-fcm', handleSimulated);
 
     return () => {
-        if (unsubscribe) {
-            console.log('🛑 [SYSTEM] Desconectando Puente FCM');
-            unsubscribe();
-        }
+        if (unsubscribe) unsubscribe();
         window.removeEventListener('simulate-fcm', handleSimulated);
     };
   }, [user]);
 
-  const markAllAsRead = () => {
-    const currentId = user?.Id || user?.id || user?.userName || 'unknown';
-    const updated = notifications.map(n => ({ ...n, read: true }));
-    setNotifications(updated);
-    localStorage.setItem(`notifs_${currentId}`, JSON.stringify(updated));
-    setNotifCount(0);
+  const handleOpenNotifications = async () => {
+    setShowNotifications(true);
+    // Silent mark all as read on server when opening
+    if (notifCount > 0) {
+        try {
+            await api.post('/notifications/read-all');
+            setNotifCount(0);
+            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        } catch (err) {
+            console.warn('Failed to mark all as read:', err);
+        }
+    }
+  };
+
+  const handleNotificationClick = async (notif) => {
+    // 1. Mark as read if needed
+    if (!notif.isRead) {
+        try {
+            await api.post(`/notifications/${notif.id}/read`);
+            setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, isRead: true } : n));
+        } catch (err) {}
+    }
+
+    // 2. Deep Linking logic
+    if (notif.metadata?.comunicadoId) {
+        setShowNotifications(false);
+        // Custom event or state update to open the communication in App.jsx
+        window.dispatchEvent(new CustomEvent('open-communication', { 
+            detail: { id: notif.metadata.comunicadoId } 
+        }));
+    }
   };
 
   // 🕒 REAL-TIME COMMAND CENTER CLOCK (V63.6)
@@ -182,7 +189,7 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
               width: '100%', marginBottom: '12px', gap: '10px' 
           }}>
                 <button 
-                    onClick={() => setShowNotifications(true)}
+                    onClick={handleOpenNotifications}
                     style={{
                         width: '44px', height: '44px', borderRadius: '14px',
                         background: 'rgba(255,255,255,0.15)', border: 'none', 
@@ -277,7 +284,7 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
             position: 'fixed', top: 0, right: 0, bottom: 0, left: 0,
             zIndex: 2000, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(6px)',
             display: 'flex', justifyContent: 'flex-end'
-        }} onClick={() => { setShowNotifications(false); markAllAsRead(); }}>
+        }} onClick={() => { setShowNotifications(false); }}>
             <div 
                 style={{
                     width: '85%', height: '100%', background: isDark ? '#0f172a' : '#ffffff',
@@ -303,6 +310,7 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
                         notifications.map((n) => (
                             <NotifItem 
                                 key={n.id}
+                                onClick={() => handleNotificationClick(n)}
                                 icon={
                                     n.type === 'shift_update' ? <Calendar size={18} color="#4f46e5" /> :
                                     n.type === 'broadcast' ? <MessageSquare size={18} color="#f59e0b" /> :
@@ -310,9 +318,9 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
                                 } 
                                 title={n.title} 
                                 desc={n.body} 
-                                time={new Date(n.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} 
+                                time={new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} 
                                 isDark={isDark} 
-                                unread={!n.read}
+                                unread={!n.isRead}
                             />
                         ))
                     ) : (
@@ -371,8 +379,10 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
   );
 };
 
-const NotifItem = ({ icon, title, desc, time, isDark, unread }) => (
-    <div style={{
+const NotifItem = ({ icon, title, desc, time, isDark, unread, onClick }) => (
+    <div 
+      onClick={onClick}
+      style={{
        padding: '20px', borderRadius: '24px', 
        background: isDark ? 'rgba(255,255,255,0.03)' : '#f8fafc',
        border: unread 
@@ -380,7 +390,8 @@ const NotifItem = ({ icon, title, desc, time, isDark, unread }) => (
            : `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : '#e2e8f0'}`,
        display: 'flex', gap: '14px',
        boxShadow: unread ? '0 8px 20px rgba(79, 70, 229, 0.15)' : '0 4px 12px rgba(0,0,0,0.02)',
-       position: 'relative'
+       position: 'relative',
+       cursor: 'pointer'
     }}>
        {unread && (
            <div style={{ 

@@ -7,7 +7,6 @@ using System.Reflection;
 
 namespace TalenHuman.Infrastructure.Persistence;
 
-// Deployment sync: 2026-03-31 - Triggering modular architecture update
 public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplicationDbContext
 {
     private readonly ITenantProvider _tenantProvider;
@@ -51,6 +50,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<CompanyModule> CompanyModules => Set<CompanyModule>();
     public DbSet<ModulePermission> ModulePermissions => Set<ModulePermission>();
     public DbSet<Comunicado> Comunicados => Set<Comunicado>();
+    public DbSet<NotificationLog> NotificationLogs => Set<NotificationLog>();
     public Guid TenantId => _tenantProvider.GetTenantId();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -81,6 +81,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<CompanyModule>().HasQueryFilter(c => c.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<ModulePermission>().HasQueryFilter(m => m.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<Comunicado>().HasQueryFilter(c => c.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<NotificationLog>().HasQueryFilter(n => n.CompanyId == TenantId || TenantId == Guid.Empty);
 
         // Many-to-Many: Supervisor -> Stores
         builder.Entity<SupervisorStore>()
@@ -155,36 +156,26 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
             .HasForeignKey(a => a.NovedadId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Performance Indices for Global Scaling
+        // Performance Indices
         builder.Entity<Novedad>().HasIndex(n => new { n.CompanyId, n.FechaInicio });
         builder.Entity<Novedad>().HasIndex(n => new { n.CompanyId, n.EmpleadoId, n.Status });
-        
         builder.Entity<Attendance>().HasIndex(a => new { a.CompanyId, a.EmployeeId, a.ClockIn });
         builder.Entity<Attendance>().HasIndex(a => new { a.CompanyId, a.StoreId, a.ClockIn });
-        
         builder.Entity<Shift>().HasIndex(s => new { s.CompanyId, s.EmployeeId, s.StartTime });
         builder.Entity<Shift>().HasIndex(s => new { s.CompanyId, s.StoreId, s.StartTime });
-        
         builder.Entity<BiometricRecord>().HasIndex(b => new { b.CompanyId, b.RecordDate });
         builder.Entity<BiometricRecord>().HasIndex(b => new { b.CompanyId, b.DeviceUser });
-        
         builder.Entity<Employee>().HasIndex(e => new { e.CompanyId, e.IdentificationNumber });
         builder.Entity<Employee>().HasIndex(e => new { e.CompanyId, e.IsActive });
-        
         builder.Entity<AuditLog>().HasIndex(a => new { a.CompanyId, a.CreatedAt });
         builder.Entity<AuditLog>().HasIndex(a => new { a.UserId, a.CreatedAt });
-        
         builder.Entity<SyncLog>().HasIndex(s => new { s.CompanyId, s.CreatedAt });
-        
         builder.Entity<SalesData>().HasIndex(s => new { s.CompanyId, s.StoreId, s.Timestamp });
-
         builder.Entity<NovedadLog>().HasIndex(n => new { n.CompanyId, n.NovedadId, n.CreatedAt });
         builder.Entity<NovedadAdjunto>().HasIndex(n => new { n.CompanyId, n.NovedadId });
+        builder.Entity<NotificationLog>().HasIndex(n => new { n.CompanyId, n.UserId, n.CreatedAt });
         builder.Entity<User>().HasIndex(u => u.CompanyId);
-
         builder.Entity<UserCredential>().HasIndex(u => u.UserId);
-
-        // Additional configuration can be added here
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -194,7 +185,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
 
         foreach (var entry in ChangeTracker.Entries<IMultitenant>())
         {
-            if (entry.State == EntityState.Added && entry.Entity.CompanyId == Guid.Empty)
+            if (entry.State == EntityState.Added && (entry.Entity.CompanyId == Guid.Empty || entry.Entity.CompanyId == null))
             {
                 entry.Entity.CompanyId = tenantId;
             }

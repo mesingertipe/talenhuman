@@ -34,6 +34,7 @@ public interface IApplicationDbContext
     DbSet<CompanyModule> CompanyModules { get; }
     DbSet<ModulePermission> ModulePermissions { get; }
     DbSet<Comunicado> Comunicados { get; }
+    DbSet<NotificationLog> NotificationLogs { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

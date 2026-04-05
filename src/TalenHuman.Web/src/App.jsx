@@ -44,8 +44,8 @@ import { useTheme } from './context/ThemeContext'
 import DebugPortal from './components/Shared/DebugPortal'
 import MobileCommunicationModal from './components/Mobile/MobileCommunicationModal'
 
-// V65.1.18 ELITE SILENT UPDATE
-const APP_VERSION = "V65.1.18-ELITE";
+// V65.1.28 ELITE PERSISTENT UPDATE
+const APP_VERSION = "V65.1.28-ELITE";
 
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION
@@ -72,7 +72,7 @@ function App() {
   const [showPRModal, setShowPRModal] = useState(false);
   const [notification, setNotification] = useState({ show: false, title: '', body: '' });
 
-  const CURRENT_VERSION = "V65.1.18-ELITE";
+  const CURRENT_VERSION = "V65.1.28-ELITE";
   
   useEffect(() => {
       const lastVersion = localStorage.getItem('app_version');
@@ -182,7 +182,26 @@ function App() {
         localStorage.setItem('last_seen_pr', activeCommunication.id);
     }
     setShowPRModal(false);
+    setActiveCommunication(null);
   };
+
+  // 🖱️ DEEP LINKING LISTENER (V65.1.28)
+  useEffect(() => {
+    const handleOpenComm = async (e) => {
+        const { id } = e.detail;
+        console.log('🔗 [DEEP LINK] Abriendo comunicado:', id);
+        try {
+            const res = await api.get(`/comunicados/${id}`);
+            setActiveCommunication(res.data);
+            setShowPRModal(true);
+        } catch (err) {
+            console.error('Failed to load deep linked communication:', err);
+        }
+    };
+
+    window.addEventListener('open-communication', handleOpenComm);
+    return () => window.removeEventListener('open-communication', handleOpenComm);
+  }, []);
 
   useEffect(() => {
     try {

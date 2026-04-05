@@ -27,6 +27,7 @@ const CommunicationsCenter = ({ user }) => {
     
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+    const [confirmModal, setConfirmModal] = useState({ show: false, id: null, title: '' });
     const { isDarkMode } = useTheme();
 
     const colors = {
@@ -117,12 +118,15 @@ const CommunicationsCenter = ({ user }) => {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("¿Estás seguro de eliminar este comunicado? Esta acción no se puede deshacer.")) return;
-        
+    const handleDeleteTrigger = (c) => {
+        setConfirmModal({ show: true, id: c.id, title: c.titulo });
+    };
+
+    const confirmDelete = async () => {
         try {
-            await api.delete(`/comunicados/${id}`);
+            await api.delete(`/comunicados/${confirmModal.id}`);
             showToast("Comunicado eliminado definitivamente");
+            setConfirmModal({ show: false, id: null, title: '' });
             fetchHistory();
         } catch (err) {
             showToast("Error al eliminar el comunicado", "error");
@@ -189,7 +193,7 @@ const CommunicationsCenter = ({ user }) => {
                                     <Edit3 size={18} />
                                 </button>
                                 <button 
-                                    onClick={() => handleDelete(c.id)}
+                                    onClick={() => handleDeleteTrigger(c)}
                                     title="Eliminar"
                                     style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                 >
@@ -260,6 +264,29 @@ const CommunicationsCenter = ({ user }) => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Premium Confirmation Modal */}
+            {confirmModal.show && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.8)', backdropFilter: 'blur(10px)', zIndex: 12000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ background: colors.card, width: '400px', borderRadius: '32px', padding: '30px', border: `1px solid ${colors.border}`, textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', animation: 'scaleIn 0.2s ease' }}>
+                        <div style={{ width: '60px', height: '60px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                            <Trash2 size={30} />
+                        </div>
+                        <h4 style={{ fontSize: '1.2rem', fontWeight: '950', color: colors.textMain, margin: '0 0 10px' }}>¿Eliminar Comunicado?</h4>
+                        <p style={{ color: colors.textMuted, fontSize: '0.9rem', marginBottom: '30px', fontWeight: '600' }}>
+                            Esta acción borrará definitivamente <strong>"{confirmModal.title}"</strong> y no se puede deshacer.
+                        </p>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <button onClick={() => setConfirmModal({ show: false, id: null, title: '' })} style={{ height: '48px', borderRadius: '16px', background: isDarkMode ? '#334155' : '#f1f5f9', border: 'none', color: colors.textMain, fontWeight: '800', cursor: 'pointer' }}>
+                                Cancelar
+                            </button>
+                            <button onClick={confirmDelete} style={{ height: '48px', borderRadius: '16px', background: '#ef4444', border: 'none', color: 'white', fontWeight: '800', cursor: 'pointer', boxShadow: '0 10px 20px rgba(239, 68, 68, 0.2)' }}>
+                                Sí, eliminar
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

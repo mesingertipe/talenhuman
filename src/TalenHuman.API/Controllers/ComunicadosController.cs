@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using System.Security.Claims;
 using FirebaseAdmin.Messaging;
 
+using TalenHuman.Application.Services;
+
 namespace TalenHuman.API.Controllers;
 
 [Authorize]
@@ -22,13 +24,20 @@ public class ComunicadosController : ControllerBase
     private readonly IAuditService _auditService;
     private readonly ISystemSettingsService _settings;
     private readonly ILogger<ComunicadosController> _logger;
+    private readonly NotificationService _notificationService;
 
-    public ComunicadosController(IApplicationDbContext context, IAuditService auditService, ISystemSettingsService settings, ILogger<ComunicadosController> logger)
+    public ComunicadosController(
+        IApplicationDbContext context, 
+        IAuditService auditService, 
+        ISystemSettingsService settings, 
+        ILogger<ComunicadosController> logger,
+        NotificationService notificationService)
     {
         _context = context;
         _auditService = auditService;
         _settings = settings;
         _logger = logger;
+        _notificationService = notificationService;
     }
 
     [AllowAnonymous]
@@ -36,13 +45,13 @@ public class ComunicadosController : ControllerBase
     public IActionResult Ping()
     {
         _logger.LogInformation("FCM Diagnostic: Ping received at {Time}", DateTime.UtcNow);
-        return Ok(new { message = "Pong", version = "V65.1.14-ELITE", timestamp = DateTime.UtcNow });
+        return Ok(new { message = "Pong", version = "V65.1.25-ELITE", timestamp = DateTime.UtcNow });
     }
 
     [HttpPost("sync-token")]
     public async Task<IActionResult> UpdateFirebaseToken([FromBody] TokenUpdateDto dto)
     {
-        _logger.LogInformation("FCM Sync: Request received (V65.1.16)");
+        _logger.LogInformation("FCM Sync: Request received (V65.1.25)");
 
         var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdString)) 
@@ -63,9 +72,9 @@ public class ComunicadosController : ControllerBase
         await _context.SaveChangesAsync(default);
 
         _logger.LogInformation("FCM Sync: Token updated for user {User}", user.UserName);
-        await _auditService.LogAsync("FCM_SYNC", "User", userId.ToString(), $"Token sync V65.1.16 para {user.UserName}");
+        await _auditService.LogAsync("FCM_SYNC", "User", userId.ToString(), $"Token sync V65.1.25 para {user.UserName}");
 
-        return Ok(new { status = "success", version = "V65.1.16" });
+        return Ok(new { status = "success", version = "V65.1.25" });
     }
 
     public class TokenUpdateDto { public string Token { get; set; } = string.Empty; }
@@ -74,11 +83,7 @@ public class ComunicadosController : ControllerBase
     {
         if (FirebaseAdmin.FirebaseApp.DefaultInstance != null) return "OK";
 
-        // ELITE V65.1: Multiple config sources
         var projectId = await _settings.GetSettingAsync("FIREBASE_PROJECT_ID");
-        
-        // Priority 1: DB Setting "FIREBASE_S_ACCOUNT"
-        // Priority 2: Env Var "FIREBASE_S_ACCOUNT"
         var json = await _settings.GetSettingAsync("FIREBASE_S_ACCOUNT") 
                    ?? Environment.GetEnvironmentVariable("FIREBASE_S_ACCOUNT");
         
@@ -87,7 +92,6 @@ public class ComunicadosController : ControllerBase
 
         try {
             FirebaseAdmin.AppOptions options;
-            
             if (!string.IsNullOrEmpty(json))
             {
                 options = new FirebaseAdmin.AppOptions() {
@@ -97,7 +101,6 @@ public class ComunicadosController : ControllerBase
             }
             else
             {
-                // Last resort: Application Default (fails in non-GCP without env file)
                 options = new FirebaseAdmin.AppOptions() {
                     Credential = Google.Apis.Auth.OAuth2.GoogleCredential.GetApplicationDefault(),
                     ProjectId = projectId
@@ -122,11 +125,7 @@ public class ComunicadosController : ControllerBase
         var user = await _context.Users.FindAsync(userId);
         if (user == null) return Unauthorized();
 
-        // 🛡️ STRICT TENANT FILTER: Even SuperAdmin only sees communications for their current CompanyId
         var query = _context.Comunicados.AsQueryable();
-        
-        // Since CompanyId is Guid (non-nullable), we always filter by it.
-        // If it were Guid.Empty, that might be an issue, but we rely on the user's assigned company.
         query = query.Where(c => c.CompanyId == user.CompanyId);
 
         return await query
@@ -152,8 +151,6 @@ public class ComunicadosController : ControllerBase
     public async Task<ActionResult<ComunicadoDto>> GetActiveCommunication()
     {
         var now = ColombiaTime.Now;
-        
-        // 🔒 SMART FILTER: Must be active and within date range (if range exists)
         var active = await _context.Comunicados
             .Where(c => c.IsActive && 
                         (c.FechaInicio == null || c.FechaInicio <= now) && 
@@ -176,10 +173,6 @@ public class ComunicadosController : ControllerBase
     [HttpGet("my-communications")]
     public async Task<ActionResult<IEnumerable<ComunicadoDto>>> GetMyCommunications()
     {
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
-
-        // 🛡️ Only show communications that are currently ACTIVE
         var now = ColombiaTime.Now;
         return await _context.Comunicados
             .Where(c => c.IsActive && (c.FechaFin == null || c.FechaFin >= now))
@@ -210,7 +203,7 @@ public class ComunicadosController : ControllerBase
         if (admin == null) return NotFound();
 
         var companyId = admin.CompanyId;
-        _logger.LogInformation("FCM Broadcast: Inicia proceso para CompanyId {CompanyId} por {User}", companyId, admin.UserName);
+        _logger.LogInformation("Elite Broadcast: Starting for CompanyId {CompanyId}", companyId);
 
         // 1. Create Comunicado record
         var comunicado = new Comunicado
@@ -229,62 +222,43 @@ public class ComunicadosController : ControllerBase
         _context.Comunicados.Add(comunicado);
         await _context.SaveChangesAsync(default);
 
-        // 2. ONE-TIME PUSH: Only trigger on creation
-        var tokens = await _context.Users
-            .Where(u => u.CompanyId == companyId && !string.IsNullOrEmpty(u.FirebaseToken))
-            .Select(u => u.FirebaseToken)
-            .Distinct() // 🛡️ Avoid double notifications if session duplicated
+        // 2. Fetch all users and tokens for this company
+        var targetUsers = await _context.Users
+            .Where(u => u.CompanyId == companyId && u.IsActive)
+            .Select(u => new { u.Id, u.FirebaseToken })
             .ToListAsync();
 
-        _logger.LogInformation("FCM Broadcast: {Count} tokens encontrados para CompanyId {CompanyId}", tokens?.Count ?? 0, companyId);
+        var userIds = targetUsers.Select(u => u.Id).ToList();
+        var tokens = targetUsers
+            .Where(u => !string.IsNullOrEmpty(u.FirebaseToken))
+            .Select(u => u.FirebaseToken!)
+            .Distinct()
+            .ToList();
 
-        if (tokens != null && tokens.Any())
+        // 3. Send via optimized NotificationService
+        var plainBody = System.Text.RegularExpressions.Regex.Replace(dto.Body ?? "", "<.*?>", string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(plainBody)) plainBody = "Nuevo comunicado disponible";
+        if (plainBody.Length > 160) plainBody = plainBody.Substring(0, 157) + "...";
+
+        await _notificationService.SendBroadcastAsync(userIds, tokens, new NotificationRequest
         {
-            try {
-                // Strip HTML for the push notification body
-                var plainBody = System.Text.RegularExpressions.Regex.Replace(dto.Body ?? "", "<.*?>", string.Empty).Trim();
-                if (string.IsNullOrWhiteSpace(plainBody)) plainBody = "Nuevo comunicado disponible";
-                if (plainBody.Length > 160) plainBody = plainBody.Substring(0, 157) + "...";
-
-                var absoluteImageUrl = string.IsNullOrEmpty(dto.ImageUrl) ? null : 
-                                      (dto.ImageUrl.StartsWith("http") ? dto.ImageUrl : $"{Request.Scheme}://{Request.Host}{dto.ImageUrl}");
-
-                var message = new MulticastMessage()
-                {
-                    Tokens = tokens,
-                    Notification = new Notification()
-                    {
-                        Title = "📢 " + dto.Title,
-                        Body = plainBody,
-                        ImageUrl = absoluteImageUrl
-                    },
-                    Data = new Dictionary<string, string>()
-                    {
-                        { "type", "broadcast" },
-                        { "comunicadoId", comunicado.Id.ToString() },
-                        { "click_action", "FLUTTER_NOTIFICATION_CLICK" } // 🛡️ Flutter/PWA target compatibility
-                    }
-                };
-
-                // Use the modern SendEachForMulticastAsync as recommended
-                var response = await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(message);
-                _logger.LogInformation("FCM Broadcast Result: {Success} exitosos, {Failure} fallidos de {Total}", response.SuccessCount, response.FailureCount, tokens.Count);
-            } catch (Exception ex) {
-                _logger.LogError(ex, "FCM Broadcast Error Fatal: {Message}", ex.Message);
+            Subject = "📢 " + dto.Title,
+            Message = plainBody,
+            Type = NotificationType.Push,
+            Category = "broadcast",
+            Metadata = new Dictionary<string, string>
+            {
+                { "comunicadoId", comunicado.Id.ToString() },
+                { "type", "broadcast" }
             }
-        }
-        else 
-        {
-            _logger.LogWarning("FCM Broadcast: No se enviaron notificaciones porque no se encontraron tokens activos.");
-        }
+        });
 
         await _auditService.LogAsync("BROADCAST", "Comunicado", comunicado.Id.ToString(), $"Comunicado difundido: {dto.Title}");
 
         return Ok(new { 
             status = tokens.Any() ? "success" : "warning", 
-            message = tokens.Any() ? "Comunicado enviado a la nube" : "Comunicado guardado pero no hay dispositivos registrados",
-            id = comunicado.Id,
-            tokensCount = tokens.Count
+            message = tokens.Any() ? "Comunicado enviado a la nube e historial actualizado" : "Comunicado guardado e historial actualizado, pero no hay dispositivos registrados",
+            id = comunicado.Id
         });
     }
 

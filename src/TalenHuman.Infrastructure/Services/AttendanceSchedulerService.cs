@@ -143,10 +143,17 @@ public class AttendanceSchedulerService : BackgroundService
                 {
                     await notificationService.SendNotificationAsync(new NotificationRequest
                     {
+                        UserId = user.Id,
                         To = user.FirebaseToken,
                         Type = NotificationType.Push,
+                        Category = "shift_reminder",
                         Subject = "⏳ Turno por iniciar",
-                        Message = $"Hola {user.FullName}, tu turno está programado para iniciar a las {shift.StartTime:HH:mm}. ¡Prepárate!"
+                        Message = $"Hola {user.FullName}, tu turno está programado para iniciar a las {shift.StartTime:HH:mm}. ¡Prepárate!",
+                        Metadata = new Dictionary<string, string> 
+                        {
+                            { "shiftId", shift.Id.ToString() },
+                            { "type", "shift_reminder" }
+                        }
                     });
 
                     _notifiedShifts.Add(shift.Id);
