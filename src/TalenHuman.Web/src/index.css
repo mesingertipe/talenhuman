@@ -854,3 +854,59 @@ tr.bg-red-50\/40 .sticky { background-color: #fef2f2 !important; opacity: 1 !imp
   background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
+/* --- Smart-Elite Login Actions --- */
+.login-actions-row {
+  display: flex !important;
+  gap: 12px !important;
+  width: 100% !important;
+  align-items: stretch !important;
+}
+
+.login-submit {
+  flex: 1;
+  height: 56px !important;
+  margin: 0 !important;
+}
+
+.login-biometric-btn {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  border-radius: 16px !important;
+  background: white !important;
+  border: 1.5px solid #e2e8f0 !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  color: #4f46e5;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.login-biometric-btn:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.login-biometric-btn:active:not(:disabled) {
+  transform: translateY(0);
+  background: #f1f5f9;
+}
+
+.login-biometric-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dark .login-biometric-btn {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+.dark .login-biometric-btn:hover:not(:disabled) {
+  background: #334155 !important;
+}

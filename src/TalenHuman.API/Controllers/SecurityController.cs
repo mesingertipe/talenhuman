@@ -148,7 +148,7 @@ public class SecurityController : ControllerBase
 
         await _auditService.LogAsync("FCM_SYNC", "User", userId.ToString(), $"Token sync V65.1.36 para {user.UserName}");
 
-        return Ok(new { status = "success", version = "V65.1.36" });
+        return Ok(new { status = "success", version = "V65.1.39" });
     }
 
     public class TokenUpdateDto

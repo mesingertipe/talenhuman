@@ -9,16 +9,16 @@ import './Login.css';
 const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [biometricLoading, setBiometricLoading] = useState(false);
   const [error, setError] = useState('');
 
-  React.useEffect(() => {
-    const savedEmail = localStorage.getItem('rememberedEmail');
-    if (savedEmail) {
-      setEmail(savedEmail);
+  useEffect(() => {
+    const saved = localStorage.getItem('rememberedEmail') || localStorage.getItem('lastIdentifier');
+    if (saved) {
+      setEmail(saved);
       setRememberMe(true);
     }
   }, []);
@@ -38,6 +38,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       localStorage.setItem('tenantId', res.data.user.companyId);
+      localStorage.setItem('lastIdentifier', email); // 🛡️ Save for next time
       onLogin(res.data.user, res.data.token);
     } catch (err) {
       setError('Credenciales inválidas. Por favor intenta de nuevo.');
@@ -48,16 +49,23 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
   };
 
   const handleBiometricLogin = async () => {
-    if (!email) {
-      setError('Escribe tu correo para usar biometría.');
+    let identifier = email;
+    if (!identifier) {
+        identifier = localStorage.getItem('lastIdentifier') || localStorage.getItem('rememberedEmail');
+    }
+
+    if (!identifier) {
+      setError('Escribe tu usuario para usar biometría.');
       return;
     }
+
+    if (!email) setEmail(identifier); // Show what we found
 
     setBiometricLoading(true);
     setError('');
 
     try {
-      const options = await SecurityService.getAssertionOptions(email);
+      const options = await SecurityService.getAssertionOptions(identifier);
       const assertion = await get({ publicKey: options });
       const res = await SecurityService.completeAssertion(assertion);
 
@@ -136,7 +144,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="login-form">
+              <form onSubmit={handleSubmit} className="login-form" autoComplete="off">
                 <div className="form-group">
                   <label className="form-label">Usuario o Correo Corporativo</label>
                   <div className="input-wrapper">
@@ -144,10 +152,12 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                     <input 
                       type="text" 
                       required
+                      name="talen-user"
+                      autoComplete="off"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="login-input"
-                      placeholder="admin@empresa.com"
+                      placeholder="Usuario o Identificación"
                     />
                   </div>
                 </div>
@@ -205,12 +215,11 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+                <div className="login-actions-row">
                   <button 
                     type="submit" 
                     disabled={loading || biometricLoading}
                     className="login-submit"
-                    style={{ flex: 1 }}
                   >
                     {loading ? (
                       <div className="loader"></div>
@@ -222,7 +231,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                     )}
                   </button>
 
-                  {/* 🛡️ BIOMETRIC LOGIN: Mobile-Only & Previously Setup-Only (V64.0.1) */}
+                  {/* 🛡️ SMART BIOMETRIC BUTTON (V65.1.39) */}
                   {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && 
                    localStorage.getItem('hasBiometrics') === 'true' && (
                     <button 
@@ -230,14 +239,9 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                         disabled={loading || biometricLoading}
                         onClick={handleBiometricLogin}
                         className="login-biometric-btn"
-                        style={{
-                            width: '64px', height: '64px', borderRadius: '18px',
-                            background: 'rgba(79, 70, 229, 0.1)', border: '2px solid rgba(79, 70, 229, 0.2)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            color: '#4f46e5', transition: 'all 0.3s ease', cursor: 'pointer'
-                        }}
+                        title="Usar Biometría"
                     >
-                        {biometricLoading ? <div className="loader" style={{ borderColor: '#4f46e5', borderTopColor: 'transparent' }}></div> : <Fingerprint size={28} />}
+                        {biometricLoading ? <div className="loader loader-indigo"></div> : <Fingerprint size={28} />}
                     </button>
                   )}
                 </div>
