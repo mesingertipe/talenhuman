@@ -21,30 +21,51 @@ public class ComunicadosController : ControllerBase
     private readonly IApplicationDbContext _context;
     private readonly IAuditService _auditService;
     private readonly ISystemSettingsService _settings;
+    private readonly ILogger<ComunicadosController> _logger;
 
-    public ComunicadosController(IApplicationDbContext context, IAuditService auditService, ISystemSettingsService settings)
+    public ComunicadosController(IApplicationDbContext context, IAuditService auditService, ISystemSettingsService settings, ILogger<ComunicadosController> logger)
     {
         _context = context;
         _auditService = auditService;
         _settings = settings;
+        _logger = logger;
+    }
+
+    [AllowAnonymous]
+    [HttpGet("ping")]
+    public IActionResult Ping()
+    {
+        _logger.LogInformation("FCM Diagnostic: Ping received at {Time}", DateTime.UtcNow);
+        return Ok(new { message = "Pong", version = "V65.1.14-ELITE", timestamp = DateTime.UtcNow });
     }
 
     [HttpPost("token")]
     public async Task<IActionResult> UpdateFirebaseToken([FromBody] TokenUpdateDto dto)
     {
+        _logger.LogInformation("FCM Sync: Request received (V65.1.14)");
+
         var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
+        if (string.IsNullOrEmpty(userIdString)) 
+        {
+            _logger.LogWarning("FCM Sync: Unauthorized (No NameIdentifier)");
+            return Unauthorized();
+        }
 
         var userId = Guid.Parse(userIdString);
         var user = await _context.Users.FindAsync(userId);
-        if (user == null) return NotFound();
+        if (user == null) 
+        {
+            _logger.LogWarning("FCM Sync: User {UserId} not found", userId);
+            return NotFound();
+        }
 
         user.FirebaseToken = dto.Token;
         await _context.SaveChangesAsync(default);
 
-        await _auditService.LogAsync("FCM_SYNC", "User", userId.ToString(), $"Token sync (V65.1.12) para {user.UserName}");
+        _logger.LogInformation("FCM Sync: Token updated for user {User}", user.UserName);
+        await _auditService.LogAsync("FCM_SYNC", "User", userId.ToString(), $"Token sync V65.1.14 para {user.UserName}");
 
-        return Ok(new { status = "success" });
+        return Ok(new { status = "success", version = "V65.1.14" });
     }
 
     public class TokenUpdateDto { public string Token { get; set; } = string.Empty; }

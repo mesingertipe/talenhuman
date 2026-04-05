@@ -45,7 +45,7 @@ import DebugPortal from './components/Shared/DebugPortal'
 import MobileCommunicationModal from './components/Mobile/MobileCommunicationModal'
 
 // V65.1.12 CLOUD SYNC FIX
-const APP_VERSION = "V65.1.12";
+const APP_VERSION = "V65.1.14-ELITE";
 
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION
@@ -79,8 +79,9 @@ function App() {
         try {
           const fcmToken = await requestForToken();
           // V65.1.13: Standardized path (no leading slash to respect baseURL)
-          await api.post('comunicados/token', { Token: fcmToken });
-          console.log("FCM Sync OK (V65.1.12)");
+          console.log(`FCM Sync: Iniciando registro en ${api.defaults.baseURL}/comunicados/token`);
+          const response = await api.post('comunicados/token', { Token: fcmToken });
+          console.log('FCM Sync OK:', response.data);
         } catch (err) {
           console.warn('FCM Sync skipped:', err);
         }
