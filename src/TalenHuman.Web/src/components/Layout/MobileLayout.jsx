@@ -5,6 +5,7 @@ import TalenHumanLogo from '../Shared/TalenHumanLogo';
 import { onMessageListener } from '../../firebase';
 import TalenHumanToast from '../Shared/ElitePremiumToast';
 import DebugPortal from '../Shared/DebugPortal';
+import api from '../../services/api';
 
 const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, theme, toggleTheme }) => {
   const isDark = theme === 'dark';
@@ -13,6 +14,7 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
   const [notifications, setNotifications] = useState([]);
   const [notifCount, setNotifCount] = useState(0);
   const [toast, setToast] = useState(null);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   // 📥 FETCH HISTORY FROM SERVER (V65.1.28)
   const fetchHistory = async () => {
