@@ -57,19 +57,19 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
     const handleSimulated = (e) => handlePayload(e.detail);
     window.addEventListener('simulate-fcm', handleSimulated);
 
-    // 🛡️ SW FOREGROUND LISTENER (V65.1.29)
-    const handleSWMessage = (event) => {
+    // 📻 BROADCAST CHANNEL (V65.1.30) - Escuchador universal
+    const bc = new BroadcastChannel('talenhuman_notifications');
+    bc.onmessage = (event) => {
         if (event.data?.type === 'FOREGROUND_NOTIFICATION') {
-            console.log('📡 [SW Forward] Foreground message captured:', event.data.payload);
+            console.log('📡 [Broadcast] Notification received:', event.data.payload);
             handlePayload(event.data.payload);
         }
     };
-    navigator.serviceWorker.addEventListener('message', handleSWMessage);
 
     return () => {
         if (unsubscribe) unsubscribe();
         window.removeEventListener('simulate-fcm', handleSimulated);
-        navigator.serviceWorker.removeEventListener('message', handleSWMessage);
+        bc.close(); // Limpiar el canal
     };
   }, [user]);
 

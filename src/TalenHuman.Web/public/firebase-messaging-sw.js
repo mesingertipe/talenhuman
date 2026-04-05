@@ -18,37 +18,34 @@ firebase.initializeApp(firebaseConfig);
 
 const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Background Message Received:', payload);
-  
-  const notificationTitle = payload.notification?.title || 'Notificación';
-  const notificationOptions = {
-      body: payload.notification?.body || 'Nuevo mensaje recibido',
-      icon: payload.notification?.image || '/logo192.png',
-      badge: '/icon-192.png',
-      tag: payload.data?.comunicadoId || 'talenhuman-broadcast',
-      renotify: true,
-      data: payload.data // Incluir METADATOS para el clic
-  };
+// 📻 BROADCAST CHANNEL (V65.1.30) - Canal de radio para hablar con la UI
+const bc = new BroadcastChannel('talenhuman_notifications');
 
-  // 🛡️ INTELLIGENT FILTERING (V65.1.29)
+messaging.onBackgroundMessage((payload) => {
+  console.log('📻 [FCM SW] Received:', payload);
+  
+  // 1. Siempre emitir hacia la radio interna (Toast)
+  bc.postMessage({ type: 'FOREGROUND_NOTIFICATION', payload });
+
+  // 2. Revisar si debemos mostrar Push de sistema
   return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       const isFocused = clientList.some(client => client.focused);
       
       if (isFocused) {
-          console.log('✅ App is FOCUSED. Skipping system notification, sending message to UI.');
-          clientList.forEach(client => {
-              if (client.focused) {
-                  client.postMessage({
-                      type: 'FOREGROUND_NOTIFICATION',
-                      payload: payload
-                  });
-              }
-          });
-          return; // No showNotification here
+          console.log('✅ UI is FOCUSED. Toast handled via BC. Skipping push.');
+          return; 
       }
 
-      console.log('💤 App is in BACKGROUND. Showing system notification.');
+      console.log('💤 UI is BACKGROUND. Showing system push.');
+      const notificationTitle = payload.notification?.title || 'Notificación';
+      const notificationOptions = {
+          body: payload.notification?.body || 'Nuevo mensaje',
+          icon: payload.notification?.image || '/logo192.png',
+          badge: '/icon-192.png',
+          tag: payload.data?.comunicadoId || 'talenhuman-broadcast',
+          renotify: true,
+          data: payload.data
+      };
       return self.registration.showNotification(notificationTitle, notificationOptions);
   });
 });
@@ -66,9 +63,9 @@ self.addEventListener('notificationclick', (event) => {
             // 1. Try to find an existing window
             for (const client of clientList) {
                 if (client.url.includes(self.location.origin)) {
-                    // Send a message to the client instead of reloading if it's already open
+                    // Send a message via Radio instead of individual postMessage
                     if (comunicadoId) {
-                        client.postMessage({
+                        bc.postMessage({
                             type: 'NOTIFICATION_CLICK',
                             comunicadoId: comunicadoId
                         });

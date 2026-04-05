@@ -200,16 +200,16 @@ function App() {
         }, 1500);
     }
 
-    // 2. Listen for messages from Service Worker (when app is already open)
-    const handleSWMessage = (event) => {
+    // 2. Listen for messages from Radio (BroadcastChannel)
+    const bc = new BroadcastChannel('talenhuman_notifications');
+    bc.onmessage = (event) => {
         if (event.data?.type === 'NOTIFICATION_CLICK' && event.data?.comunicadoId) {
-            console.log('📩 [SW Message] Notification click detected:', event.data.comunicadoId);
+            console.log('📩 [Broadcast Click] Notification click detected:', event.data.comunicadoId);
             window.dispatchEvent(new CustomEvent('open-communication', { 
                 detail: { id: event.data.comunicadoId } 
             }));
         }
     };
-    navigator.serviceWorker.addEventListener('message', handleSWMessage);
 
     const handleOpenComm = async (e) => {
         const { id } = e.detail;
@@ -226,7 +226,7 @@ function App() {
     window.addEventListener('open-communication', handleOpenComm);
     return () => {
         window.removeEventListener('open-communication', handleOpenComm);
-        navigator.serviceWorker.removeEventListener('message', handleSWMessage);
+        bc.close();
     };
   }, []);
 
