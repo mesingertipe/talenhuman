@@ -72,7 +72,7 @@ function App() {
   const [showPRModal, setShowPRModal] = useState(false);
   const [notification, setNotification] = useState({ show: false, title: '', body: '' });
 
-  const CURRENT_VERSION = "V65.1.17-ELITE";
+  const CURRENT_VERSION = "V65.1.18-ELITE";
   const [showUpdateFlag, setShowUpdateFlag] = useState(false);
 
   useEffect(() => {

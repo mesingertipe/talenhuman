@@ -302,35 +302,69 @@ const SystemSettings = () => {
                                     </button>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
-                                    {settings.filter(s => s.group === 'Firebase').length > 0 ? (
-                                        settings.filter(s => s.group === 'Firebase').map(renderSettingInput)
-                                    ) : (
-                                        <div className="col-span-2">
-                                            <button 
-                                                onClick={async () => {
-                                                    const defaults = [
-                                                        { key: 'FIREBASE_API_KEY', value: '', group: 'Firebase', description: 'API Key de Firebase' },
-                                                        { key: 'FIREBASE_AUTH_DOMAIN', value: '', group: 'Firebase', description: 'Dominio de autenticación' },
-                                                        { key: 'FIREBASE_PROJECT_ID', value: '', group: 'Firebase', description: 'ID del Proyecto' },
-                                                        { key: 'FIREBASE_STORAGE_BUCKET', value: '', group: 'Firebase', description: 'Bucket de Storage' },
-                                                        { key: 'FIREBASE_MESSAGING_SENDER_ID', value: '', group: 'Firebase', description: 'Sender ID para mensajes' },
-                                                        { key: 'FIREBASE_APP_ID', value: '', group: 'Firebase', description: 'App ID (Web)' },
-                                                        { key: 'FIREBASE_MEASUREMENT_ID', value: '', group: 'Firebase', description: 'ID de Analytics' },
-                                                        { key: 'FIREBASE_VAPID_KEY', value: '', group: 'Firebase', description: 'Clave pública VAPID para Push' },
-                                                        { key: 'FIREBASE_S_ACCOUNT', value: '', group: 'Firebase', description: 'JSON completo de la Cuenta de Servicio de Firebase Admin' }
-                                                    ];
-                                                    await api.post('/SystemSettings/batch', defaults);
-                                                    fetchSettings();
-                                                }}
-                                                className="w-full p-12 border-2 border-dashed border-slate-200 rounded-[32px] text-slate-400 font-bold text-sm hover:border-indigo-400 hover:text-indigo-400 hover:bg-orange-50/30 transition-all group"
-                                            >
-                                                <Activity size={40} className="mx-auto mb-4 opacity-30 group-hover:scale-110 transition-transform" />
-                                                + Inicializar parámetros de Firebase Global
-                                            </button>
-                                        </div>
-                                    )}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 mb-10">
+                                    {settings.filter(s => s.group === 'Firebase').map(renderSettingInput)}
                                 </div>
+
+                                {settings.filter(s => s.group === 'Firebase').length > 0 && !settings.some(s => s.key === 'FIREBASE_S_ACCOUNT') && (
+                                    <div className="p-8 border-2 border-dashed border-orange-200 rounded-[32px] bg-orange-50/20 text-center mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                                        <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                            <Shield size={24} />
+                                        </div>
+                                        <p className="text-orange-600 font-black text-xs uppercase mb-2 tracking-widest">Configuración de Backend Pendiente</p>
+                                        <p className="text-slate-400 font-bold text-[10px] mb-6 max-w-md mx-auto leading-relaxed">
+                                            Falta el parámetro <code className="text-orange-600 bg-orange-100/50 px-1 rounded">FIREBASE_S_ACCOUNT</code>. 
+                                            Es crítico para el envío de notificaciones.
+                                        </p>
+                                        <button 
+                                            onClick={async () => {
+                                                const defaults = [
+                                                    { key: 'FIREBASE_API_KEY', value: '', group: 'Firebase', description: 'API Key de Firebase' },
+                                                    { key: 'FIREBASE_AUTH_DOMAIN', value: '', group: 'Firebase', description: 'Dominio de autenticación' },
+                                                    { key: 'FIREBASE_PROJECT_ID', value: '', group: 'Firebase', description: 'ID del Proyecto' },
+                                                    { key: 'FIREBASE_STORAGE_BUCKET', value: '', group: 'Firebase', description: 'Bucket de Storage' },
+                                                    { key: 'FIREBASE_MESSAGING_SENDER_ID', value: '', group: 'Firebase', description: 'Sender ID para mensajes' },
+                                                    { key: 'FIREBASE_APP_ID', value: '', group: 'Firebase', description: 'App ID (Web)' },
+                                                    { key: 'FIREBASE_MEASUREMENT_ID', value: '', group: 'Firebase', description: 'ID de Analytics' },
+                                                    { key: 'FIREBASE_VAPID_KEY', value: '', group: 'Firebase', description: 'Clave pública VAPID para Push' },
+                                                    { key: 'FIREBASE_S_ACCOUNT', value: '', group: 'Firebase', description: 'JSON completo de la Cuenta de Servicio de Firebase Admin' }
+                                                ];
+                                                await api.post('/SystemSettings/batch', defaults);
+                                                fetchSettings();
+                                                showToast("Parámetros de Firebase sincronizados");
+                                            }}
+                                            className="px-10 py-4 bg-orange-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-orange-700 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-orange-100"
+                                        >
+                                            + Habilitar Configuración de Backend
+                                        </button>
+                                    </div>
+                                )}
+
+                                {settings.filter(s => s.group === 'Firebase').length === 0 && (
+                                    <div className="col-span-2">
+                                        <button 
+                                            onClick={async () => {
+                                                const defaults = [
+                                                    { key: 'FIREBASE_API_KEY', value: '', group: 'Firebase', description: 'API Key de Firebase' },
+                                                    { key: 'FIREBASE_AUTH_DOMAIN', value: '', group: 'Firebase', description: 'Dominio de autenticación' },
+                                                    { key: 'FIREBASE_PROJECT_ID', value: '', group: 'Firebase', description: 'ID del Proyecto' },
+                                                    { key: 'FIREBASE_STORAGE_BUCKET', value: '', group: 'Firebase', description: 'Bucket de Storage' },
+                                                    { key: 'FIREBASE_MESSAGING_SENDER_ID', value: '', group: 'Firebase', description: 'Sender ID para mensajes' },
+                                                    { key: 'FIREBASE_APP_ID', value: '', group: 'Firebase', description: 'App ID (Web)' },
+                                                    { key: 'FIREBASE_MEASUREMENT_ID', value: '', group: 'Firebase', description: 'ID de Analytics' },
+                                                    { key: 'FIREBASE_VAPID_KEY', value: '', group: 'Firebase', description: 'Clave pública VAPID para Push' },
+                                                    { key: 'FIREBASE_S_ACCOUNT', value: '', group: 'Firebase', description: 'JSON completo de la Cuenta de Servicio de Firebase Admin' }
+                                                ];
+                                                await api.post('/SystemSettings/batch', defaults);
+                                                fetchSettings();
+                                            }}
+                                            className="w-full p-12 border-2 border-dashed border-slate-200 rounded-[32px] text-slate-400 font-bold text-sm hover:border-indigo-400 hover:text-indigo-400 hover:bg-orange-50/30 transition-all group"
+                                        >
+                                            <Activity size={40} className="mx-auto mb-4 opacity-30 group-hover:scale-110 transition-transform" />
+                                            + Inicializar parámetros de Firebase Global
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )}
 
