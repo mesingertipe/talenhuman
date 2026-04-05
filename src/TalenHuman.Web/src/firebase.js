@@ -12,20 +12,23 @@ const defaultFirebaseConfig = {
   messagingSenderId: "YOUR_SENDER_ID",
   appId: "YOUR_APP_ID",
   measurementId: "YOUR_MEASUREMENT_ID",
-  vapidKey: "YOUR_VAPID_KEY" // Guardar aquí la vapid key por defecto
+  vapidKey: "YOUR_VAPID_KEY"
 };
 
-let pendingMessageCallback = null;
-let currentOnMessageUnsubscribe = null;
+let app = null;
 let messaging = null;
 let analytics = null;
-let app = null;
-let currentVapidKey = null;
+let performance = null;
+let pendingMessageCallback = null;
+let currentOnMessageUnsubscribe = null;
+let currentVapidKey = defaultFirebaseConfig.vapidKey;
 let isRegistering = false;
 
+/**
+ * Inicializa Firebase de forma dinámica con la configuración del Tenant
+ */
 export const initializeFirebase = async (tenantConfig = {}) => {
   try {
-    // ... (logic existing until messaging initialization)
     const finalConfig = {
       apiKey: tenantConfig.firebaseApiKey || defaultFirebaseConfig.apiKey,
       authDomain: tenantConfig.firebaseAuthDomain || defaultFirebaseConfig.authDomain,
@@ -63,9 +66,25 @@ export const initializeFirebase = async (tenantConfig = {}) => {
             });
         }
 
-        const configParams = new URLSearchParams(finalConfig).toString();
-        const swUrl = `/firebase-messaging-sw.js?${configParams}`;
+        // Initialize Analytics/Performance early if available
+        if (finalConfig.measurementId && !finalConfig.measurementId.includes('YOUR_')) {
+            try {
+                analytics = getAnalytics(app);
+                performance = getPerformance(app);
+            } catch (err) {}
+        }
 
+        const configParams = new URLSearchParams({
+            apiKey: finalConfig.apiKey,
+            authDomain: finalConfig.authDomain,
+            projectId: finalConfig.projectId,
+            storageBucket: finalConfig.storageBucket,
+            messagingSenderId: finalConfig.messagingSenderId,
+            appId: finalConfig.appId,
+            measurementId: finalConfig.measurementId
+        }).toString();
+
+        const swUrl = `/firebase-messaging-sw.js?${configParams}`;
         const registrations = await navigator.serviceWorker.getRegistrations();
         const alreadyRegistered = registrations.some(reg => reg.active && reg.active.scriptURL.includes(finalConfig.projectId));
 
@@ -75,7 +94,10 @@ export const initializeFirebase = async (tenantConfig = {}) => {
             console.log("🔥 Firebase SW registered for tenant:", finalConfig.projectId);
             registration.update();
             isRegistering = false;
-          }).catch(() => { isRegistering = false; });
+          }).catch((err) => { 
+            console.error("SW Registration failed:", err);
+            isRegistering = false; 
+          });
         }
       } catch (mErr) {
         console.warn("Firebase Messaging failed to init:", mErr);
@@ -117,7 +139,5 @@ export const onMessageListener = (callback) => {
         pendingMessageCallback = null;
     };
 };
-
-export { messaging, analytics };
 
 export { messaging, analytics };
