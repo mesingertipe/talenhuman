@@ -218,7 +218,7 @@ public class AttendanceReportService
 
 
 
-                    if (!attendanceData.Any())
+                    if (!allAttendances.Any())
                     {
                         col.Item().PaddingTop(20).AlignCenter().Text("No se encontraron registros de marcación para la fecha seleccionada.").Italic().FontColor(Colors.Grey.Medium);
                     }
