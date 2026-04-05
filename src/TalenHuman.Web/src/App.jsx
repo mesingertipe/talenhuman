@@ -26,6 +26,7 @@ import SystemSettings from './pages/SuperAdmin/SystemSettings';
 import NewsTemplateDesigner from './pages/SuperAdmin/NewsTemplateDesigner';
 import AuditLogs from './pages/Core/AuditLogs';
 import CommunicationsCenter from './pages/Admin/CommunicationsCenter';
+import SecurityService from './services/securityService';
 import { initializeFirebase, requestForToken, onMessageListener } from './firebase';
 
 import MobileLayout from './components/Layout/MobileLayout'
@@ -109,9 +110,9 @@ function App() {
           
           if (token && user.id) {
               try {
-                  console.log(`FCM Sync: Iniciando registro en ${api.defaults.baseURL}/comunicados/sync-token`);
-                  const response = await api.post('comunicados/sync-token', { Token: token });
-                  console.log('FCM Sync success:', response.data);
+                  console.log(`FCM Sync: Iniciando registro en el Núcleo de Seguridad...`);
+                  const response = await SecurityService.syncFcmToken(token);
+                  console.log('FCM Sync success:', response);
               } catch (error) {
                   console.error("FCM Sync skipped:", error);
               }
@@ -126,10 +127,9 @@ function App() {
       const syncCloudId = async () => {
         try {
           const fcmToken = await requestForToken();
-          // V65.1.13: Standardized path (no leading slash to respect baseURL)
-          console.log(`FCM Sync: Iniciando registro en ${api.defaults.baseURL}/comunicados/sync-token`);
-          const response = await api.post('comunicados/sync-token', { Token: fcmToken });
-          console.log('FCM Sync OK:', response.data);
+          console.log(`FCM Sync: Iniciando registro en el Núcleo de Seguridad...`);
+          const response = await SecurityService.syncFcmToken(fcmToken);
+          console.log('FCM Sync OK:', response);
         } catch (err) {
           console.warn('FCM Sync skipped:', err);
         }

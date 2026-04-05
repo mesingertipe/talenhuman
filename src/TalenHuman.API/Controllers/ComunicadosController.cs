@@ -61,7 +61,7 @@ public class ComunicadosController : ControllerBase
         }
 
         var userId = Guid.Parse(userIdString);
-        var user = await _context.Users.FindAsync(userId);
+        var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null) 
         {
             _logger.LogWarning("FCM Sync: User {UserId} not found", userId);
@@ -122,7 +122,7 @@ public class ComunicadosController : ControllerBase
         if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
 
         var userId = Guid.Parse(userIdString);
-        var user = await _context.Users.FindAsync(userId);
+        var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null) return Unauthorized();
 
         var query = _context.Comunicados.AsQueryable();
@@ -199,7 +199,7 @@ public class ComunicadosController : ControllerBase
         if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
         
         var userId = Guid.Parse(userIdString);
-        var admin = await _context.Users.FindAsync(userId);
+        var admin = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
         if (admin == null) return NotFound();
 
         var companyId = admin.CompanyId;
@@ -287,7 +287,7 @@ public class ComunicadosController : ControllerBase
     public async Task<IActionResult> DeleteComunicado(Guid id)
     {
         var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var admin = await _context.Users.FindAsync(Guid.Parse(userIdString));
+        var admin = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == Guid.Parse(userIdString));
         if (admin == null) return Unauthorized();
 
         var comunicado = await _context.Comunicados.FindAsync(id);
@@ -317,7 +317,7 @@ public class ComunicadosController : ControllerBase
             await EnsureFirebaseInitializedAsync();
             
             var userId = Guid.Parse(userIdString);
-            var user = await _context.Users.FindAsync(userId);
+            var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null || string.IsNullOrEmpty(user.FirebaseToken)) 
                 return BadRequest(new { status = "error", message = "No tienes token FCM registrado. Intenta refrescar la App." });
 

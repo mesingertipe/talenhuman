@@ -88,6 +88,14 @@ const SecurityService = {
   async revokeBiometrics() {
     const response = await api.delete('/Security/revoke');
     return response.data;
+  },
+
+  /**
+   * Sincroniza el token FCM en el núcleo de seguridad (V65.1.34)
+   */
+  async syncFcmToken(token) {
+    const response = await api.post('/Security/sync-token', { Token: token });
+    return response.data;
   }
 };
 

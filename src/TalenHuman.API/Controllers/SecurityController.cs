@@ -133,7 +133,7 @@ public class SecurityController : ControllerBase
             return BadRequest(new { status = "error", message = ex.Message });
         }
     }
-    [HttpPost("token")]
+    [HttpPost("sync-token")]
     public async Task<IActionResult> UpdateFirebaseToken([FromBody] TokenUpdateDto dto)
     {
         var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -146,9 +146,9 @@ public class SecurityController : ControllerBase
         user.FirebaseToken = dto.Token;
         await _context.SaveChangesAsync();
 
-        await _auditService.LogAsync("FCM_SYNC", "User", userId.ToString(), $"Token actualizado para {user.UserName}: {dto.Token.Substring(0, Math.Min(10, dto.Token.Length))}...");
+        await _auditService.LogAsync("FCM_SYNC", "User", userId.ToString(), $"Token sync V65.1.34 para {user.UserName}");
 
-        return Ok(new { status = "success" });
+        return Ok(new { status = "success", version = "V65.1.34" });
     }
 
     public class TokenUpdateDto
