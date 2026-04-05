@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { 
   User, Mail, Phone, Calendar, MapPin, 
   ChevronRight, ArrowLeft, Camera, Edit2,
@@ -6,7 +7,6 @@ import {
 import BiometricEnrollModal from '../../components/Biometrics/BiometricEnrollModal';
 import { useTheme } from '../../context/ThemeContext';
 import SecurityService from '../../services/securityService';
-import { useEffect } from 'react';
 
 const MobileProfile = ({ user, setPage, onLogout }) => {
   const { isDarkMode, toggleTheme } = useTheme();
