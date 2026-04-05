@@ -15,19 +15,17 @@ const defaultFirebaseConfig = {
   vapidKey: "YOUR_VAPID_KEY" // Guardar aquí la vapid key por defecto
 };
 
-let app;
-let messaging;
-let analytics;
-let performance;
-let currentVapidKey = defaultFirebaseConfig.vapidKey;
-let isRegistering = false; // Bloqueo de sesión para evitar registros duplicados
+let pendingMessageCallback = null;
+let currentOnMessageUnsubscribe = null;
+let messaging = null;
+let analytics = null;
+let app = null;
+let currentVapidKey = null;
+let isRegistering = false;
 
-/**
- * Inicializa Firebase de forma dinámica con la configuración del Tenant
- * @param {Object} tenantConfig Configuración opcional del tenant
- */
 export const initializeFirebase = async (tenantConfig = {}) => {
   try {
+    // ... (logic existing until messaging initialization)
     const finalConfig = {
       apiKey: tenantConfig.firebaseApiKey || defaultFirebaseConfig.apiKey,
       authDomain: tenantConfig.firebaseAuthDomain || defaultFirebaseConfig.authDomain,
@@ -40,19 +38,10 @@ export const initializeFirebase = async (tenantConfig = {}) => {
 
     currentVapidKey = tenantConfig.firebaseVapidKey || defaultFirebaseConfig.vapidKey;
 
-    // VALIDACIÓN CRITICA: No inicializar si son valores por defecto (placeholders)
     const isPlaceholder = !finalConfig.apiKey || finalConfig.apiKey.includes('YOUR_') || 
                          !finalConfig.appId || finalConfig.appId.includes('YOUR_');
 
-    if (isPlaceholder) {
-      // Solo advertir si nos pasaron un objeto tenantConfig pero las llaves faltan
-      if (Object.keys(tenantConfig).length > 0) {
-        console.warn("⚠️ Firebase: Configuración incompleta o inválida en el perfil del usuario.");
-      }
-      return;
-    }
-
-    const appName = finalConfig.projectId;
+    if (isPlaceholder) return;
 
     if (!getApps().length) {
       app = initializeApp(finalConfig);
@@ -63,48 +52,33 @@ export const initializeFirebase = async (tenantConfig = {}) => {
     if (typeof window !== "undefined" && app) {
       try {
         messaging = getMessaging(app);
+        
+        // 🚀 Register pending listener if exists
+        if (pendingMessageCallback) {
+            console.log("🔗 Firebase: Registering pending FCM listener...");
+            if (currentOnMessageUnsubscribe) currentOnMessageUnsubscribe();
+            currentOnMessageUnsubscribe = onMessage(messaging, (payload) => {
+                console.log('🔥 FCM Message Received (Late Init):', payload);
+                if (pendingMessageCallback) pendingMessageCallback(payload);
+            });
+        }
 
-        // Register Service Worker with dynamic config as query params
-        const configParams = new URLSearchParams({
-          apiKey: finalConfig.apiKey,
-          authDomain: finalConfig.authDomain,
-          projectId: finalConfig.projectId,
-          storageBucket: finalConfig.storageBucket,
-          messagingSenderId: finalConfig.messagingSenderId,
-          appId: finalConfig.appId,
-          measurementId: finalConfig.measurementId
-        }).toString();
-
+        const configParams = new URLSearchParams(finalConfig).toString();
         const swUrl = `/firebase-messaging-sw.js?${configParams}`;
 
-        // Verificar si el SW ya está registrado para este mismo proyecto para evitar bucles
         const registrations = await navigator.serviceWorker.getRegistrations();
         const alreadyRegistered = registrations.some(reg => reg.active && reg.active.scriptURL.includes(finalConfig.projectId));
 
         if (!alreadyRegistered && !isRegistering) {
           isRegistering = true;
-          navigator.serviceWorker.register(swUrl)
-            .then((registration) => {
-            // Initialize Analytics/Performance
-            try {
-              if (typeof window !== "undefined" && finalConfig.measurementId && !finalConfig.measurementId.includes('YOUR_')) {
-                analytics = getAnalytics(app);
-                performance = getPerformance(app);
-              }
-            } catch (aErr) {
-              console.warn("Firebase Analytics/Performance failed to init:", aErr);
-            }
-
+          navigator.serviceWorker.register(swUrl).then((registration) => {
             console.log("🔥 Firebase SW registered for tenant:", finalConfig.projectId);
             registration.update();
             isRegistering = false;
-          }).catch((err) => {
-            console.error("Firebase SW registration failed:", err);
-            isRegistering = false;
-          });
+          }).catch(() => { isRegistering = false; });
         }
       } catch (mErr) {
-        console.warn("Firebase Messaging failed to init (may not be supported in this browser):", mErr);
+        console.warn("Firebase Messaging failed to init:", mErr);
       }
     }
   } catch (error) {
@@ -112,34 +86,38 @@ export const initializeFirebase = async (tenantConfig = {}) => {
   }
 };
 
-// Se ha eliminado la llamada inicial automática initializeFirebase();
-// Ahora solo se inicializará cuando APP lo llame con datos reales en el login.
-
 export const requestForToken = async () => {
   if (!messaging) return null;
   try {
     const registration = await navigator.serviceWorker.ready;
-    const currentToken = await getToken(messaging, {
+    return await getToken(messaging, {
       vapidKey: currentVapidKey,
       serviceWorkerRegistration: registration,
     });
-    if (currentToken) {
-      console.log("Firebase Token:", currentToken);
-      return currentToken;
-    }
-    return null;
   } catch (err) {
-    console.log("An error occurred while retrieving token. ", err);
     return null;
   }
 };
 
 export const onMessageListener = (callback) => {
-    if (!messaging) return null;
-    return onMessage(messaging, (payload) => {
+    pendingMessageCallback = callback;
+    if (!messaging) {
+        console.log('⏳ Firebase: Messaging not ready, pooling listener...');
+        return () => { pendingMessageCallback = null; };
+    }
+
+    if (currentOnMessageUnsubscribe) currentOnMessageUnsubscribe();
+    currentOnMessageUnsubscribe = onMessage(messaging, (payload) => {
         console.log('🔥 FCM Message Received:', payload);
         if (callback) callback(payload);
     });
+    
+    return () => {
+        if (currentOnMessageUnsubscribe) currentOnMessageUnsubscribe();
+        pendingMessageCallback = null;
+    };
 };
+
+export { messaging, analytics };
 
 export { messaging, analytics };
