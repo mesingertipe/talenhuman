@@ -36,19 +36,36 @@ messaging.onBackgroundMessage((payload) => {
   }
 });
 
-// 🚀 HANDLE NOTIFICATION CLICK
+// 🚀 HANDLE NOTIFICATION CLICK (V65.1.28)
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
+    
+    // Extract metadata
+    const data = event.notification.data || {};
+    const comunicadoId = data.comunicadoId;
+
     event.waitUntil(
         self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            if (clientList.length > 0) {
-                let client = clientList[0];
-                for (let i = 0; i < clientList.length; i++) {
-                    if (clientList[i].focused) { client = clientList[i]; }
+            // 1. Try to find an existing window
+            for (const client of clientList) {
+                if (client.url.includes(self.location.origin)) {
+                    // Send a message to the client instead of reloading if it's already open
+                    if (comunicadoId) {
+                        client.postMessage({
+                            type: 'NOTIFICATION_CLICK',
+                            comunicadoId: comunicadoId
+                        });
+                    }
+                    return client.focus();
                 }
-                return client.focus();
             }
-            return self.clients.openWindow('/');
+
+            // 2. Open new window if none found, with the deep link parameter
+            let targetUrl = '/';
+            if (comunicadoId) {
+                targetUrl = `/?comunicadoId=${comunicadoId}`;
+            }
+            return self.clients.openWindow(targetUrl);
         })
     );
 });

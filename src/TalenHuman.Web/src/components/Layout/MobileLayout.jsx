@@ -63,6 +63,13 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
     };
   }, [user]);
 
+  // 🔄 REFRESH ON EXTERNAL CLICK (V65.1.28)
+  useEffect(() => {
+    const handleExternalClick = () => fetchHistory();
+    window.addEventListener('open-communication', handleExternalClick);
+    return () => window.removeEventListener('open-communication', handleExternalClick);
+  }, []);
+
   const handleOpenNotifications = async () => {
     setShowNotifications(true);
     // Silent mark all as read on server when opening
@@ -165,6 +172,15 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
           type={toast.type}
           theme={theme}
           onClose={() => setToast(null)}
+          onClick={() => {
+            if (toast.metadata?.comunicadoId) {
+                handleNotificationClick({ 
+                    id: toast.metadata.id, // Notification Log ID if available
+                    metadata: toast.metadata,
+                    isRead: false 
+                });
+            }
+          }}
         />
       )}
       

@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Bell, Calendar, Sparkles, MessageSquare, CheckCircle2, AlertCircle } from 'lucide-react';
 
-const TalenHumanToast = ({ title, body, type = 'info', onClose, theme }) => {
+const TalenHumanToast = ({ title, body, type = 'info', onClose, onClick, theme }) => {
   const isDark = theme === 'dark';
   const [isVisible, setIsVisible] = useState(false);
+  // ...
 
   useEffect(() => {
     // Entrance animation
@@ -52,6 +53,13 @@ const TalenHumanToast = ({ title, body, type = 'info', onClose, theme }) => {
 
   return createPortal(
     <div 
+      onClick={() => {
+        if (onClick) {
+            onClick();
+            setIsVisible(false);
+            setTimeout(onClose, 500);
+        }
+      }}
       style={{
         position: 'fixed',
         top: '20px',
@@ -70,7 +78,8 @@ const TalenHumanToast = ({ title, body, type = 'info', onClose, theme }) => {
         borderRadius: '24px',
         boxShadow: isDark ? '0 25px 50px -12px rgba(0, 0, 0, 0.5)' : '0 20px 40px rgba(0, 0, 0, 0.08)',
         border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'}`,
-        fontFamily: "'Inter', sans-serif"
+        fontFamily: "'Inter', sans-serif",
+        cursor: onClick ? 'pointer' : 'default'
       }}
     >
       {/* 🔮 VIBRANT ICON CONTAINER */}
@@ -109,7 +118,8 @@ const TalenHumanToast = ({ title, body, type = 'info', onClose, theme }) => {
       </div>
 
       <button 
-        onClick={() => {
+        onClick={(e) => {
+          e.stopPropagation();
           setIsVisible(false);
           setTimeout(onClose, 500);
         }}

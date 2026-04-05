@@ -185,8 +185,32 @@ function App() {
     setActiveCommunication(null);
   };
 
-  // 🖱️ DEEP LINKING LISTENER (V65.1.28)
+  // 🖱️ DEEP LINKING & SW LISTENER (V65.1.28)
   useEffect(() => {
+    // 1. Check URL on mount
+    const params = new URLSearchParams(window.location.search);
+    const commId = params.get('comunicadoId');
+    if (commId) {
+        console.log('🔗 [Deep Link] ID detected in URL:', commId);
+        // Delay slightly to ensure layout is ready
+        setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('open-communication', { detail: { id: commId } }));
+            // Clean URL without reload
+            window.history.replaceState({}, document.title, "/");
+        }, 1500);
+    }
+
+    // 2. Listen for messages from Service Worker (when app is already open)
+    const handleSWMessage = (event) => {
+        if (event.data?.type === 'NOTIFICATION_CLICK' && event.data?.comunicadoId) {
+            console.log('📩 [SW Message] Notification click detected:', event.data.comunicadoId);
+            window.dispatchEvent(new CustomEvent('open-communication', { 
+                detail: { id: event.data.comunicadoId } 
+            }));
+        }
+    };
+    navigator.serviceWorker.addEventListener('message', handleSWMessage);
+
     const handleOpenComm = async (e) => {
         const { id } = e.detail;
         console.log('🔗 [DEEP LINK] Abriendo comunicado:', id);
@@ -200,7 +224,10 @@ function App() {
     };
 
     window.addEventListener('open-communication', handleOpenComm);
-    return () => window.removeEventListener('open-communication', handleOpenComm);
+    return () => {
+        window.removeEventListener('open-communication', handleOpenComm);
+        navigator.serviceWorker.removeEventListener('message', handleSWMessage);
+    };
   }, []);
 
   useEffect(() => {
