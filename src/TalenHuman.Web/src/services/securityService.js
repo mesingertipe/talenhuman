@@ -71,6 +71,23 @@ const SecurityService = {
   async completeAssertion(assertion) {
     const response = await api.post('/Security/assertion/complete', assertion);
     return response.data;
+  },
+
+  /**
+   * Verifica estatus real en el servidor
+   */
+  async getBiometricStatus(email = null) {
+    const url = email ? `/Security/status?email=${encodeURIComponent(email)}` : '/Security/status';
+    const response = await api.get(url);
+    return response.data.hasBiometrics;
+  },
+
+  /**
+   * Revoca todas las credenciales del servidor
+   */
+  async revokeBiometrics() {
+    const response = await api.delete('/Security/revoke');
+    return response.data;
   }
 };
 

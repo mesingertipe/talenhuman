@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
 import { 
   User, Mail, Phone, Calendar, MapPin, 
   ChevronRight, ArrowLeft, Camera, Edit2,
-  Shield, Bell, CreditCard, Droplets, Fingerprint, LogOut, Key, Sun, Moon
+  Shield, Bell, CreditCard, Droplets, Fingerprint, LogOut, Key, Sun, Moon, Trash2
 } from 'lucide-react';
 import BiometricEnrollModal from '../../components/Biometrics/BiometricEnrollModal';
 import { useTheme } from '../../context/ThemeContext';
+import SecurityService from '../../services/securityService';
+import { useEffect } from 'react';
 
 const MobileProfile = ({ user, setPage, onLogout }) => {
   const { isDarkMode, toggleTheme } = useTheme();
@@ -14,6 +15,21 @@ const MobileProfile = ({ user, setPage, onLogout }) => {
   const [biometricsEnabled, setBiometricsEnabled] = useState(() => localStorage.getItem('biometrics_enabled') === 'true');
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => localStorage.getItem('notifications_enabled') !== 'false');
   
+  // 🛡️ SYNC BIOMETRIC STATUS WITH SERVER (V65.1.33)
+  useEffect(() => {
+    const checkStatus = async () => {
+        try {
+            const hasBio = await SecurityService.getBiometricStatus();
+            setBiometricsEnabled(hasBio);
+            localStorage.setItem('biometrics_enabled', String(hasBio));
+            localStorage.setItem('hasBiometrics', String(hasBio));
+        } catch (err) {
+            console.error('Failed to sync biometric status:', err);
+        }
+    };
+    checkStatus();
+  }, []);
+
   const primaryText = isDark ? '#ffffff' : '#1e293b';
   const mutedText = isDark ? 'rgba(255, 255, 255, 0.4)' : '#64748b';
   const cardBg = isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff';
@@ -21,7 +37,7 @@ const MobileProfile = ({ user, setPage, onLogout }) => {
   const accentColor = '#4f46e5';
   const shadow = isDark ? '0 20px 40px rgba(0,0,0,0.4)' : '0 10px 25px rgba(0,0,0,0.04)';
 
-  const handleToggleBiometrics = () => {
+  const handleToggleBiometrics = async () => {
     if (!biometricsEnabled) {
        setShowBiometrics(true);
     } else {
@@ -143,8 +159,12 @@ const MobileProfile = ({ user, setPage, onLogout }) => {
                         <Fingerprint size={20} />
                     </div>
                     <div>
-                        <p style={{ fontSize: '14px', fontWeight: '800', color: primaryText, margin: 0 }}>Huella / Biometría</p>
-                        <p style={{ fontSize: '11px', color: mutedText, margin: 0 }}>Acceso rápido y seguro</p>
+                        <p style={{ fontSize: '14px', fontWeight: '800', color: primaryText, margin: 0 }}>
+                            {biometricsEnabled ? 'Huella Activada' : 'Huella / Biometría'}
+                        </p>
+                        <p style={{ fontSize: '11px', color: biometricsEnabled ? '#10b981' : mutedText, margin: 0, fontWeight: biometricsEnabled ? '700' : '500' }}>
+                            {biometricsEnabled ? 'Detección segura activa' : 'Acceso rápido y seguro'}
+                        </p>
                     </div>
                 </div>
                 <div 

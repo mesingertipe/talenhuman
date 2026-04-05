@@ -308,6 +308,47 @@ public class SecurityController : ControllerBase
         }
     }
 
+    [HttpGet("status")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetBiometricStatus([FromQuery] string? email)
+    {
+        Guid? userId = null;
+        if (string.IsNullOrEmpty(email))
+        {
+            var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userIdString)) userId = Guid.Parse(userIdString);
+        }
+        else
+        {
+            var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Email == email || u.UserName == email);
+            if (user != null) userId = user.Id;
+        }
+
+        if (userId == null) return NotFound(new { hasBiometrics = false });
+
+        var hasCredentials = await _context.UserCredentials.AnyAsync(c => c.UserId == userId.Value);
+        return Ok(new { hasBiometrics = hasCredentials });
+    }
+
+    [HttpDelete("revoke")]
+    public async Task<IActionResult> RevokeBiometrics()
+    {
+        var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
+
+        var userId = Guid.Parse(userIdString);
+        var credentials = await _context.UserCredentials.Where(c => c.UserId == userId).ToListAsync();
+        
+        if (credentials.Any())
+        {
+            _context.UserCredentials.RemoveRange(credentials);
+            await _context.SaveChangesAsync();
+            await _auditService.LogAsync("BIOMETRIC_REVOKE", "Auth", userId.ToString(), "Biometría revocada por el usuario");
+        }
+
+        return Ok(new { status = "success", message = "Biometría eliminada del servidor." });
+    }
+
     public class AssertionRequest { public string Email { get; set; } = string.Empty; }
     
     public class StoredCredential
