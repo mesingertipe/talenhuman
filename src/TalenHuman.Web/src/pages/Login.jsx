@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Lock, Mail, Eye, EyeOff, Users, ArrowRight, ShieldAlert, Bell, Calendar, Fingerprint, ShieldCheck } from 'lucide-react';
 import api from '../services/api';
 import SecurityService from '../services/securityService';
