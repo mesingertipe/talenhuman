@@ -21,19 +21,36 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Background Message Received:', payload);
   
-  if (payload.notification) {
-    const notificationTitle = payload.notification.title;
-    const notificationOptions = {
-        body: payload.notification.body,
-        icon: payload.notification.image || '/logo192.png',
-        badge: '/icon-192.png',
-        tag: payload.data?.comunicadoId || 'talenhuman-broadcast',
-        renotify: true,
-        data: payload.data
-    };
+  const notificationTitle = payload.notification?.title || 'Notificación';
+  const notificationOptions = {
+      body: payload.notification?.body || 'Nuevo mensaje recibido',
+      icon: payload.notification?.image || '/logo192.png',
+      badge: '/icon-192.png',
+      tag: payload.data?.comunicadoId || 'talenhuman-broadcast',
+      renotify: true,
+      data: payload.data // Incluir METADATOS para el clic
+  };
 
-    return self.registration.showNotification(notificationTitle, notificationOptions);
-  }
+  // 🛡️ INTELLIGENT FILTERING (V65.1.29)
+  return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      const isFocused = clientList.some(client => client.focused);
+      
+      if (isFocused) {
+          console.log('✅ App is FOCUSED. Skipping system notification, sending message to UI.');
+          clientList.forEach(client => {
+              if (client.focused) {
+                  client.postMessage({
+                      type: 'FOREGROUND_NOTIFICATION',
+                      payload: payload
+                  });
+              }
+          });
+          return; // No showNotification here
+      }
+
+      console.log('💤 App is in BACKGROUND. Showing system notification.');
+      return self.registration.showNotification(notificationTitle, notificationOptions);
+  });
 });
 
 // 🚀 HANDLE NOTIFICATION CLICK (V65.1.28)

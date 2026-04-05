@@ -57,9 +57,19 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
     const handleSimulated = (e) => handlePayload(e.detail);
     window.addEventListener('simulate-fcm', handleSimulated);
 
+    // 🛡️ SW FOREGROUND LISTENER (V65.1.29)
+    const handleSWMessage = (event) => {
+        if (event.data?.type === 'FOREGROUND_NOTIFICATION') {
+            console.log('📡 [SW Forward] Foreground message captured:', event.data.payload);
+            handlePayload(event.data.payload);
+        }
+    };
+    navigator.serviceWorker.addEventListener('message', handleSWMessage);
+
     return () => {
         if (unsubscribe) unsubscribe();
         window.removeEventListener('simulate-fcm', handleSimulated);
+        navigator.serviceWorker.removeEventListener('message', handleSWMessage);
     };
   }, [user]);
 
