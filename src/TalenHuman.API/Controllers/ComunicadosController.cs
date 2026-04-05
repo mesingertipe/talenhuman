@@ -42,7 +42,7 @@ public class ComunicadosController : ControllerBase
     [HttpPost("sync-token")]
     public async Task<IActionResult> UpdateFirebaseToken([FromBody] TokenUpdateDto dto)
     {
-        _logger.LogInformation("FCM Sync: Request received (V65.1.15)");
+        _logger.LogInformation("FCM Sync: Request received (V65.1.16)");
 
         var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdString)) 
@@ -63,9 +63,9 @@ public class ComunicadosController : ControllerBase
         await _context.SaveChangesAsync(default);
 
         _logger.LogInformation("FCM Sync: Token updated for user {User}", user.UserName);
-        await _auditService.LogAsync("FCM_SYNC", "User", userId.ToString(), $"Token sync V65.1.15 para {user.UserName}");
+        await _auditService.LogAsync("FCM_SYNC", "User", userId.ToString(), $"Token sync V65.1.16 para {user.UserName}");
 
-        return Ok(new { status = "success", version = "V65.1.15" });
+        return Ok(new { status = "success", version = "V65.1.16" });
     }
 
     public class TokenUpdateDto { public string Token { get; set; } = string.Empty; }
@@ -74,8 +74,13 @@ public class ComunicadosController : ControllerBase
     {
         if (FirebaseAdmin.FirebaseApp.DefaultInstance != null) return "OK";
 
+        // ELITE V65.1: Multiple config sources
         var projectId = await _settings.GetSettingAsync("FIREBASE_PROJECT_ID");
-        var json = Environment.GetEnvironmentVariable("FIREBASE_S_ACCOUNT");
+        
+        // Priority 1: DB Setting "FIREBASE_S_ACCOUNT"
+        // Priority 2: Env Var "FIREBASE_S_ACCOUNT"
+        var json = await _settings.GetSettingAsync("FIREBASE_S_ACCOUNT") 
+                   ?? Environment.GetEnvironmentVariable("FIREBASE_S_ACCOUNT");
         
         if (string.IsNullOrEmpty(projectId)) 
             throw new Exception("FIREBASE_PROJECT_ID no configurado en ajustes del sistema.");
@@ -92,6 +97,7 @@ public class ComunicadosController : ControllerBase
             }
             else
             {
+                // Last resort: Application Default (fails in non-GCP without env file)
                 options = new FirebaseAdmin.AppOptions() {
                     Credential = Google.Apis.Auth.OAuth2.GoogleCredential.GetApplicationDefault(),
                     ProjectId = projectId
@@ -297,11 +303,11 @@ public class ComunicadosController : ControllerBase
                 Notification = new Notification()
                 {
                     Title = "⚡️ Prueba de Nube Elite",
-                    Body = $"Enviado el {DateTime.Now:HH:mm:ss} desde V65.1.15"
+                    Body = $"Enviado el {DateTime.Now:HH:mm:ss} desde V65.1.16"
                 },
                 Data = new Dictionary<string, string>() {
                     { "type", "test" },
-                    { "version", "V65.1.15" }
+                    { "version", "V65.1.16" }
                 }
             };
 

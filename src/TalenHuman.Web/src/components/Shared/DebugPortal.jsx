@@ -14,7 +14,7 @@ const DebugPortal = ({ isOpen, onClose }) => {
         if (!isOpen) return;
 
         // 📝 CAPTURE CONSOLE
-        const currentVersion = "V65.1.15-ELITE";
+        const HUB_VERSION = "V65.1.16";
         const originalLog = console.log;
         const originalError = console.error;
         const addLog = (type, args) => {

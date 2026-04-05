@@ -72,6 +72,33 @@ function App() {
   const [showPRModal, setShowPRModal] = useState(false);
   const [notification, setNotification] = useState({ show: false, title: '', body: '' });
 
+  const CURRENT_VERSION = "V65.1.16-ELITE";
+  const [showUpdateFlag, setShowUpdateFlag] = useState(false);
+
+  useEffect(() => {
+      const lastVersion = localStorage.getItem('app_version');
+      if (lastVersion && lastVersion !== CURRENT_VERSION) {
+          setShowUpdateFlag(true);
+      }
+      localStorage.setItem('app_version', CURRENT_VERSION);
+
+      const syncToken = async () => {
+          const token = localStorage.getItem('fcm_token');
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          
+          if (token && user.id) {
+              try {
+                  console.log(`FCM Sync: Iniciando registro en ${api.defaults.baseURL}/comunicados/sync-token`);
+                  const response = await api.post('comunicados/sync-token', { Token: token });
+                  console.log('FCM Sync success:', response.data);
+              } catch (error) {
+                  console.error("FCM Sync skipped:", error);
+              }
+          }
+      };
+      syncToken();
+  }, []);
+
   // 🔐 IDENTITY SYNC (V65.1.9)
   useEffect(() => {
     if (user && !booting) {
@@ -138,9 +165,12 @@ function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('app_version', APP_VERSION);
-      // Removed local theme management, now handled by ThemeProvider
-      
+      const storedVersion = localStorage.getItem('app_version');
+      if (storedVersion && storedVersion !== CURRENT_VERSION) {
+          setShowUpdateFlag(true);
+      }
+      localStorage.setItem('app_version', CURRENT_VERSION);
+
       if (user && token) {
         initializeFirebase(user).catch(err => console.warn('Firebase Init suppressed:', err));
       }
@@ -149,7 +179,7 @@ function App() {
     } finally {
       setTimeout(() => setBooting(false), 800);
     }
-  }, [user, token]); // Re-run if user/token changes to sync Firebase
+  }, [user, token]); 
 
   // toggleTheme is now from useTheme() context
 
@@ -286,6 +316,36 @@ function App() {
           communication={activeCommunication} 
           onDismiss={handleDismissPR} 
         />
+      )}
+
+      {/* 🚢 PWA RESCUE FLAG (V65.1.16) */}
+      {showUpdateFlag && (
+        <div style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000000,
+          background: '#ef4444', color: 'white', padding: '15px',
+          textAlign: 'center', fontWeight: 'bold', fontSize: '12px',
+          display: 'flex', flexDirection: 'column', gap: '8px'
+        }}>
+          <span>NUEVA VERSIÓN ESTABLE DISPONIBLE (V65.1.16)</span>
+          <button 
+            onClick={async () => {
+                // Hard Clean
+                if ('serviceWorker' in navigator) {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    for (let r of regs) await r.unregister();
+                }
+                if ('caches' in window) {
+                    const keys = await caches.keys();
+                    for (let k of keys) await caches.delete(k);
+                }
+                localStorage.setItem('app_version', CURRENT_VERSION);
+                window.location.reload(true);
+            }}
+            style={{ background: 'white', color: '#ef4444', border: 'none', padding: '8px 15px', borderRadius: '10px', fontSize: '10px', fontWeight: '900' }}
+          >
+            ACTUALIZAR AHORA (FULL RESET)
+          </button>
+        </div>
       )}
 
       {/* 🔔 REAL-TIME BROADCAST TOAST */}
