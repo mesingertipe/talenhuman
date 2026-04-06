@@ -107,10 +107,16 @@ public class NotificationService
                 if (app == null)
                 {
                     _logger.LogInformation("🚀 [FCM] Initializing Named Instance: {ProjectId} (Sender: {SenderId})", projectId, senderId);
+                    
+                    var sAccountJson = await _settingsService.GetSettingAsync("FIREBASE_S_ACCOUNT");
+                    var credential = !string.IsNullOrEmpty(sAccountJson)
+                        ? Google.Apis.Auth.OAuth2.GoogleCredential.FromJson(sAccountJson)
+                        : Google.Apis.Auth.OAuth2.GoogleCredential.GetApplicationDefault();
+
                     app = FirebaseApp.Create(new AppOptions
                     {
                         ProjectId = projectId,
-                        Credential = Google.Apis.Auth.OAuth2.GoogleCredential.GetApplicationDefault(),
+                        Credential = credential,
                     }, appName);
                 }
             }
