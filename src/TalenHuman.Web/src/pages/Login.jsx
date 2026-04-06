@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Mail, Eye, EyeOff, ArrowRight, ShieldAlert, Bell, Calendar, Megaphone, Globe } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff, ArrowRight, ShieldAlert, Bell, Calendar, Megaphone, Globe, UserCheck, ShieldCheck, HelpCircle, ChevronRight } from 'lucide-react';
 import api from '../services/api';
 import TalenHumanLogo from '../components/Shared/TalenHumanLogo';
 import './Login.css';
@@ -40,8 +40,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
       onLogin(res.data.user, res.data.token);
     } catch (err) {
       setError('Credenciales inválidas. Por favor intenta de nuevo.');
-      console.error(err);
-    } finally {
+      console.error(err);    } finally {
       setLoading(false);
     }
   };
@@ -85,7 +84,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
             {/* 📝 FORM AREA */}
             <div className="login-form-side">
                 <div className="login-form-container">
-                  {/* 🏠 Mobile Brand Header (Purple Gradient background in CSS) */}
+                  {/* 🏠 Mobile Brand Header */}
                   <div className="login-mobile-brand">
                     <TalenHumanLogo size={36} white={true} />
                     <span className="login-mobile-brand-name">TalenHuman</span>
@@ -97,7 +96,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                   </div>
 
                   {error && (
-                    <div className="login-error animate-in fade-in slide-in-from-top-2">
+                    <div className="login-error animate-in fade-in slide-in-from-bottom-2">
                       <ShieldAlert size={18} />
                       <span>{error}</span>
                     </div>
@@ -141,7 +140,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                       </div>
                     </div>
 
-                    <div className="form-options">
+                    <div className="form-options mb-12">
                         <label className="remember-me">
                           <input 
                             type="checkbox" 
@@ -150,19 +149,12 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                           />
                           <span>Recordarme</span>
                         </label>
-                        <button 
-                          type="button" 
-                          className="forgot-password"
-                          onClick={onForgotPassword}
-                        >
-                          ¿Olvidaste tu contraseña?
-                        </button>
                     </div>
 
                     <button 
                       type="submit" 
                       disabled={loading}
-                      className="login-submit"
+                      className="login-submit w-full"
                     >
                       {loading ? (
                         <div className="loader"></div>
@@ -173,22 +165,32 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                         </>
                       )}
                     </button>
-
-                    <div className="text-center mt-6">
-                        <button 
-                          type="button" 
-                          className="link-sutil"
-                          onClick={onSelfServiceReset}
-                        >
-                          No tengo correo corporativo
-                        </button>
-                    </div>
                   </form>
 
-                  <div className="login-footer">
-                      <p>¿Necesitas ayuda? <a href="#">Soporte</a></p>
-                      <div className="version-tag">
-                         {version || 'V65.2.7-ELITE'}
+                  {/* 🛡️ PREMIUM HELP CARDS (V65.2.8) */}
+                  <div className="login-help-section mt-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                    <h3 className="section-title text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mb-4 px-2 text-center">Ayuda con el Acceso</h3>
+                    
+                    <div className="help-cards-stack flex flex-col gap-3">
+                        <LoginHelpItem 
+                            icon={<ShieldCheck size={20} />}
+                            title="¿Olvidaste tu contraseña?"
+                            subtitle="Recuperación síncrona por correo"
+                            onClick={onForgotPassword}
+                        />
+
+                        <LoginHelpItem 
+                            icon={<HelpCircle size={20} />}
+                            title="No tengo correo corporativo"
+                            subtitle="Gestión mediante auto-servicio"
+                            onClick={onSelfServiceReset}
+                        />
+                    </div>
+                  </div>
+
+                  <div className="login-footer mt-12">
+                      <div className="version-tag text-center opacity-30 text-[8px] font-black tracking-widest">
+                         {version || 'V65.2.8-ELITE'}
                       </div>
                   </div>
                 </div>
@@ -197,5 +199,22 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
     </div>
   );
 };
+
+const LoginHelpItem = ({ icon, title, subtitle, onClick }) => (
+    <button 
+        type="button"
+        onClick={onClick}
+        className="login-help-card group"
+    >
+        <div className="help-card-icon-box">
+            {icon}
+        </div>
+        <div className="help-card-content">
+            <span className="help-card-title">{title}</span>
+            <span className="help-card-subtitle">{subtitle}</span>
+        </div>
+        <ChevronRight size={16} className="help-card-chevron transition-transform group-hover:translate-x-1" />
+    </button>
+);
 
 export default Login;
