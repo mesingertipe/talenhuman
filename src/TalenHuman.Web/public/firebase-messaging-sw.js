@@ -30,13 +30,14 @@ messaging.onBackgroundMessage((payload) => {
   // 2. Revisar si debemos mostrar Push de sistema
   return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       const isFocused = clientList.some(client => client.focused);
+      const isDiagnostic = payload.data?.category === 'diagnostic' || payload.data?.type === 'test';
       
-      if (isFocused) {
+      if (isFocused && !isDiagnostic) {
           console.log('✅ UI is FOCUSED. Toast handled via BC. Skipping push.');
           return; 
       }
 
-      console.log('💤 UI is BACKGROUND. Showing system push.');
+      console.log(isDiagnostic ? '🚀 Diagnostic Push: Forcing System Notification.' : '💤 UI is BACKGROUND. Showing system push.');
       const notificationTitle = payload.notification?.title || 'Notificación';
       const notificationOptions = {
           body: payload.notification?.body || 'Nuevo mensaje',
