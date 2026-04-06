@@ -5,7 +5,8 @@ const ThemeContext = createContext();
 export const ThemeProvider = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
-    return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    // Default to Light Mode (Sol) if nothing is saved, ignoring system preference.
+    return saved === 'dark';
   });
 
   useEffect(() => {

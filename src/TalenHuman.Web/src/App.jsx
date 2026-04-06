@@ -45,8 +45,8 @@ import { useTheme } from './context/ThemeContext'
 import DebugPortal from './components/Shared/DebugPortal'
 import MobileCommunicationModal from './components/Mobile/MobileCommunicationModal'
 
-// V65.1.28 ELITE PERSISTENT UPDATE
-const APP_VERSION = "V65.1.28-ELITE";
+// V65.2.18 STABILITY UPDATE
+const APP_VERSION = "V65.2.18";
 
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION
@@ -65,7 +65,8 @@ function App() {
   const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [currentPage, setCurrentPage] = useState('Dashboard');
   const [booting, setBooting] = useState(true); 
-  const [authView, setAuthView] = useState('login'); // 'login', 'forgot', 'self-service'
+  const [authView, setAuthView] = useState('login'); // 'login', 'forgot', 'self-service', 'reset-forgotten'
+  const [recoveryEmail, setRecoveryEmail] = useState('');
   const { isDarkMode, toggleTheme } = useTheme();
   const theme = isDarkMode ? 'dark' : 'light';
 
@@ -74,7 +75,7 @@ function App() {
   const [showPRModal, setShowPRModal] = useState(false);
   const [notification, setNotification] = useState({ show: false, title: '', body: '' });
 
-  const CURRENT_VERSION = "V65.1.28-ELITE";
+  const CURRENT_VERSION = "V65.2.18";
   
   useEffect(() => {
       const lastVersion = localStorage.getItem('app_version');
@@ -277,7 +278,19 @@ function App() {
 
     if (!token) {
         if (authView === 'forgot') {
-            return <ForgotPassword onBack={() => setAuthView('login')} />;
+            return <ForgotPassword 
+                onBack={() => setAuthView('login')} 
+                onNext={(email) => {
+                    setRecoveryEmail(email);
+                    setAuthView('reset-forgotten');
+                }}
+            />;
+        }
+        if (authView === 'reset-forgotten') {
+            return <ResetForgottenPassword 
+                email={recoveryEmail} 
+                onBack={() => setAuthView('login')} 
+            />;
         }
         if (authView === 'self-service') {
             return <SelfServiceReset onBack={() => setAuthView('login')} />;

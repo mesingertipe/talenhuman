@@ -78,10 +78,12 @@ const ResetForgottenPassword = ({ email, onBack }) => {
   return (
     <div className="mobile-premium-flow-root animate-in fade-in duration-500">
         <header className="elite-mobile-header">
-            <button onClick={onBack} className="elite-back-btn"><ArrowLeft size={22} /></button>
+            <button onClick={onBack} className="elite-back-btn">
+                <ArrowLeft size={22} />
+            </button>
             <div className="elite-header-title">
                 <TalenHumanLogo size={24} white={true} />
-                <span>SEGURIDAD ELITE</span>
+                <span>SEGURIDAD TALENHUMAN</span>
             </div>
             <div style={{ width: 40 }} />
         </header>
@@ -126,7 +128,9 @@ const ResetForgottenPassword = ({ email, onBack }) => {
                     </form>
                 </div>
             </div>
-            <p className="security-engine-footer">TALENHUMAN SECURITY ENGINE</p>
+            <footer className="elite-mobile-footer text-center mt-4">
+                <div className="elite-version">V65.2.18</div>
+            </footer>
         </main>
     </div>
   );

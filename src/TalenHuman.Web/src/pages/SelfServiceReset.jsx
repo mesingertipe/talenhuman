@@ -88,7 +88,7 @@ const SelfServiceReset = ({ onBack }) => {
             <button onClick={onBack} className="elite-back-btn"><ArrowLeft size={22} /></button>
             <div className="elite-header-title">
                 <TalenHumanLogo size={24} white={true} />
-                <span>ACCESO ELITE</span>
+                <span>ACCESO SEGURO</span>
             </div>
             <div style={{ width: 40 }} />
         </header>
@@ -113,7 +113,7 @@ const SelfServiceReset = ({ onBack }) => {
                     {error && <div className="premium-error-toast mb-6"><AlertCircle size={18} /><span>{error}</span></div>}
 
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        <EliteInput label="Cédula" icon={<User size={18} />} value={formData.identificationNumber} onChange={(v) => setFormData({...formData, identificationNumber:v})} type="text" placeholder="ID" />
+        <EliteInput label="Número de Identificación" icon={<User size={18} />} value={formData.identificationNumber} onChange={(v) => setFormData({...formData, identificationNumber:v})} type="text" placeholder="Número de Identificación" />
                         <EliteInput label="Nacimiento" icon={<Calendar size={18} />} value={formData.birthDate} onChange={(v) => setFormData({...formData, birthDate:v})} type="date" />
                         <div className="divider-premium" />
                         <EliteInput label="Nueva Clave" icon={<Lock size={18} />} value={formData.newPassword} onChange={(v) => setFormData({...formData, newPassword:v})} type={showPassword ? "text" : "password"} placeholder="Min 6" suffix={<button type="button" onClick={() => setShowPassword(!showPassword)} className="field-toggle-btn-v2">{showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}</button>} />
@@ -132,7 +132,9 @@ const SelfServiceReset = ({ onBack }) => {
                 </div>
                 )}
             </div>
-            <p className="security-engine-footer">TALENHUMAN SECURITY ENGINE</p>
+            <footer className="elite-mobile-footer text-center mt-4">
+                <div className="elite-version">V65.2.18</div>
+            </footer>
         </main>
     </div>
   );

@@ -693,16 +693,17 @@
 }
 
 .premium-error-toast {
-    background: #fff1f2;
-    color: #e11d48;
-    padding: 1rem;
-    border-radius: 18px;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 0.8rem;
-    font-weight: 700;
-    margin-bottom: 1.5rem;
+    background: #fee2e2 !important; /* Rojo claro suave */
+    color: #991b1b !important;      /* Rojo oscuro intenso */
+    border: 1px solid #fca5a5 !important;
+    padding: 1rem !important;
+    border-radius: 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    font-size: 0.85rem !important;
+    font-weight: 800 !important;
+    margin-bottom: 1.5rem !important;
 }
 
 .success-icon-box {

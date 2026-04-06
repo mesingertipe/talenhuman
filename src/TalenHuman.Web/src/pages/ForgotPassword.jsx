@@ -38,7 +38,7 @@ const ForgotPassword = ({ onBack, onNext }) => {
             </button>
             <div className="elite-header-title">
                 <TalenHumanLogo size={24} white={true} />
-                <span>ACCESO ELITE</span>
+                <span>ACCESO SEGURO</span>
             </div>
             <div style={{ width: 40 }} />
         </header>
@@ -95,9 +95,9 @@ const ForgotPassword = ({ onBack, onNext }) => {
                 </div>
             </div>
             
-            <p className="security-engine-footer">
-                TALENHUMAN SECURITY ENGINE
-            </p>
+            <footer className="elite-mobile-footer text-center mt-4">
+                <div className="elite-version">V65.2.18</div>
+            </footer>
         </main>
     </div>
   );
