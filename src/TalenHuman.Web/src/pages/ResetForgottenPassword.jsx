@@ -33,45 +33,43 @@ const ResetForgottenPassword = ({ email, onBack }) => {
         token: token.trim(), 
         newPassword 
       });
-      setMessage('Contraseña restablecida con éxito. Ya puedes ingresar con tu nueva clave.');
+      setMessage('Contraseña restablecida con éxito.');
       setTimeout(() => {
-        onBack(); // Go back to login
+        onBack(); 
       }, 3000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Error al restablecer la contraseña. Verifica el código.');
+      setError(err.response?.data?.message || 'Código inválido o expirado.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-container mobile-premium-flow">
-        {/* 🏔️ TOP BRAND BAR (Mobile Only) */}
-        <div className="mobile-brand-bar">
-            <TalenHumanLogo size={28} white={false} />
-            <span className="brand-name-text">TalenHuman</span>
-        </div>
+    <div className="mobile-premium-flow-root animate-in fade-in duration-500">
+        
+        {/* 🏔️ ELITE STICKY HEADER */}
+        <header className="elite-mobile-header">
+            <button onClick={onBack} className="elite-back-btn">
+                <ArrowLeft size={22} />
+            </button>
+            <div className="elite-header-title">
+                <TalenHumanLogo size={24} white={true} />
+                <span>NUEVA CLAVE</span>
+            </div>
+            <div style={{ width: 40 }} />
+        </header>
 
-        <div className="content-wrapper">
-            {/* 🛡️ FLOATING PREMIUM CARD */}
-            <div className="premium-recovery-card animate-in fade-in slide-in-from-bottom-12 duration-700">
+        <main className="elite-mobile-content">
+            <div className="premium-recovery-card-v2">
                 
-                <button 
-                onClick={onBack}
-                className="back-control-premium"
-                >
-                <ArrowLeft size={18} />
-                <span>CANCELAR PROCESO</span>
-                </button>
-
                 <div className="form-state-premium">
                     <div className="header-section-premium">
-                        <h2 className="premium-title">Nueva Clave</h2>
-                        <p className="premium-subtitle">Hemos enviado un código de 6 dígitos a <span style={{ color: '#4f46e5', fontWeight: '800' }}>{email}</span></p>
+                        <h2 className="premium-title">Ingresa el código</h2>
+                        <p className="premium-subtitle">Hemos enviado un PIN de 6 dígitos a su correo corporativo.</p>
                     </div>
 
                     {error && (
-                    <div className="premium-error-toast animate-in fade-in slide-in-from-top-2">
+                    <div className="premium-error-toast">
                         <ShieldAlert size={18} />
                         <span>{error}</span>
                     </div>
@@ -79,27 +77,27 @@ const ResetForgottenPassword = ({ email, onBack }) => {
 
                     {message && (
                     <div className="success-state-premium text-center py-4 mb-6">
-                        <div className="success-icon-box" style={{ width: '40px', height: '40px', borderRadius: '12px' }}>
-                            <ShieldCheck size={20} />
+                        <div className="success-icon-box" style={{ width: '44px', height: '44px', borderRadius: '14px' }}>
+                            <ShieldCheck size={24} />
                         </div>
-                        <p className="text-xs font-bold text-emerald-600 mt-2">{message}</p>
+                        <p className="text-sm font-bold text-emerald-600 mt-2">{message}</p>
                     </div>
                     )}
 
                     <form onSubmit={handleSubmit} className="premium-form-layout">
                         <div className="premium-field-group">
-                            <label className="premium-field-label">CÓDIGO DE SEGURIDAD</label>
-                            <div className="premium-input-box">
-                                <KeyRound className="field-icon" size={20} />
+                            <label className="premium-field-label">CÓDIGO DE 6 DÍGITOS</label>
+                            <div className="premium-input-box-v2">
+                                <KeyRound className="field-icon-v2" size={20} />
                                 <input 
                                     type="text" 
                                     required
                                     maxLength={6}
                                     value={token}
                                     onChange={(e) => setToken(e.target.value.replace(/\D/g, ''))}
-                                    className="premium-field-input"
+                                    className="premium-field-input-v2"
                                     placeholder="000000"
-                                    style={{ letterSpacing: '0.5em', textAlign: 'center', fontSize: '1.2rem' }}
+                                    style={{ letterSpacing: '0.4em', textAlign: 'center', fontSize: '1.4rem', fontWeight: '900' }}
                                 />
                             </div>
                         </div>
@@ -108,35 +106,31 @@ const ResetForgottenPassword = ({ email, onBack }) => {
 
                         <div className="premium-field-group">
                             <label className="premium-field-label">NUEVA CONTRASEÑA</label>
-                            <div className="premium-input-box">
-                                <Lock className="field-icon" size={20} />
+                            <div className="premium-input-box-v2">
+                                <Lock className="field-icon-v2" size={20} />
                                 <input 
                                     required
                                     type={showPass ? "text" : "password"}
-                                    className="premium-field-input"
+                                    className="premium-field-input-v2"
                                     placeholder="Mínimo 6 caracteres"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
                                 />
-                                <button 
-                                    type="button"
-                                    onClick={() => setShowPass(!showPass)}
-                                    className="field-toggle-btn"
-                                >
+                                <button type="button" onClick={() => setShowPass(!showPass)} className="field-toggle-btn-v2">
                                     {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
                                 </button>
                             </div>
                         </div>
 
                         <div className="premium-field-group">
-                            <label className="premium-field-label">CONFIRMAR CONTRASEÑA</label>
-                            <div className="premium-input-box">
-                                <Lock className="field-icon" size={20} />
+                            <label className="premium-field-label">CONFIRMAR CLAVE</label>
+                            <div className="premium-input-box-v2">
+                                <Lock className="field-icon-v2" size={20} />
                                 <input 
                                     required
                                     type={showPass ? "text" : "password"}
-                                    className="premium-field-input"
-                                    placeholder="Repite la nueva contraseña"
+                                    className="premium-field-input-v2"
+                                    placeholder="Repite tu nueva clave"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
                                 />
@@ -146,26 +140,19 @@ const ResetForgottenPassword = ({ email, onBack }) => {
                         <button 
                             type="submit" 
                             disabled={loading}
-                            className="login-submit-premium w-full mt-10"
+                            className="login-submit-premium-v2 w-full mt-10"
                         >
-                            {loading ? (
-                            <div className="loader-white"></div>
-                            ) : (
-                            <>
-                                <span>ACTUALIZAR CONTRASEÑA</span>
-                                <ArrowRight size={22} />
-                            </>
-                            )}
+                            {loading ? <div className="loader-white"></div> : <span>ACTUALIZAR ACCESO</span>}
                         </button>
                     </form>
                 </div>
             </div>
             
-            <div className="premium-footer-note text-center mt-12">
-                <p className="footer-label">EL CÓDIGO ES VÁLIDO POR 15 MINUTOS</p>
-                <div className="elite-tag">V65.2.12-ELITE-PWA</div>
-            </div>
-        </div>
+            <footer className="elite-mobile-footer">
+                <p>EL CÓDIGO EXPIRA EN POCOS MINUTOS</p>
+                <div className="elite-version">V65.2.13-ELITE</div>
+            </footer>
+        </main>
     </div>
   );
 };

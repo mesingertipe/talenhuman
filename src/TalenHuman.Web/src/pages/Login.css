@@ -519,7 +519,7 @@
 /* 🚀 V65.2.12 ELITE EXTREME PREMIUM FLOW */
 .mobile-premium-flow {
     font-family: 'Outfit', sans-serif !important;
-    background: #f8fafc;
+    background: #ffffff !important; /* Force clean background */
     min-height: 100vh;
     padding-top: 2rem;
     display: flex;
@@ -543,12 +543,14 @@
 }
 
 .premium-recovery-card {
-    background: #ffffff;
+    background: #ffffff !important; /* Force extreme white card */
     margin: 0 1.25rem 2rem;
     padding: 2.5rem 1.75rem;
     border-radius: 40px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(0,0,0,0.02);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(0,0,0,0.05);
+    position: relative;
+    z-index: 100;
 }
 
 .back-control-premium {
@@ -608,16 +610,22 @@
     align-items: center;
 }
 
-.premium-field-input {
-    width: 100%;
-    padding: 1.1rem 1.25rem 1.1rem 3.25rem;
-    border-radius: 20px;
-    background: #f1f5f9;
-    border: 2px solid transparent;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #1e293b;
+.mobile-premium-flow .premium-field-input {
+    width: 100% !important;
+    padding: 1.2rem 1.25rem 1.2rem 3.5rem !important; /* Proper internal spacing */
+    border-radius: 20px !important;
+    background: #f8fafc !important; /* Light slate background */
+    border: 2px solid #f1f5f9 !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: #1e293b !important; /* Force dark text even in dark mode */
     transition: all 0.3s ease;
+    box-sizing: border-box !important;
+}
+
+.mobile-premium-flow .premium-field-input::placeholder {
+    color: #94a3b8 !important;
+    opacity: 1 !important;
 }
 
 .premium-field-input:focus {
@@ -628,10 +636,14 @@
 }
 
 .field-icon {
-    position: absolute;
-    left: 1.15rem;
-    color: #94a3b8;
-    transition: all 0.3s ease;
+    position: absolute !important;
+    left: 1.25rem !important;
+    color: #4f46e5 !important; /* Use primary color for icons */
+    z-index: 50 !important;
+    pointer-events: none;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
 .premium-field-input:focus + .field-icon,
@@ -741,4 +753,147 @@
     border-top-color: white;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
+}
+
+/* 🏆 V65.2.13 ELITE VIP EXTREME RECOVERY */
+.mobile-premium-flow-root {
+    min-height: 100vh;
+    background: #f8fafc !important;
+    font-family: 'Outfit', sans-serif !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.elite-mobile-header {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.25rem;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.elite-back-btn {
+    background: none;
+    border: none;
+    color: white;
+    padding: 0.5rem;
+    cursor: pointer;
+}
+
+.elite-header-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: white;
+    font-weight: 900;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+}
+
+.elite-mobile-content {
+    flex: 1;
+    padding: 2.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.premium-recovery-card-v2 {
+    background: white !important;
+    border-radius: 40px;
+    padding: 2.75rem 1.75rem;
+    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0,0,0,0.03);
+    margin-bottom: 2rem;
+}
+
+.premium-input-box-v2 {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: #f1f5f9 !important; /* Force internal background */
+    border-radius: 20px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    margin-top: 0 !important;
+}
+
+.premium-input-box-v2:focus-within {
+    background: white !important;
+    border-color: #4f46e5 !important;
+    box-shadow: 0 10px 20px rgba(79, 70, 229, 0.1);
+}
+
+.premium-field-input-v2 {
+    width: 100% !important;
+    padding: 1.2rem 1.25rem 1.2rem 3.5rem !important;
+    background: transparent !important;
+    border: none !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.field-icon-v2 {
+    position: absolute !important;
+    left: 1.25rem !important;
+    color: #4f46e5 !important;
+    z-index: 10 !important;
+}
+
+.field-toggle-btn-v2 {
+    position: absolute;
+    right: 1.15rem;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    padding: 0;
+}
+
+.login-submit-premium-v2 {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+    color: white !important;
+    border: none !important;
+    padding: 1.25rem;
+    border-radius: 24px;
+    font-weight: 900;
+    font-size: 0.95rem;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    box-shadow: 0 15px 35px -5px rgba(79, 70, 229, 0.4);
+    transition: all 0.4s ease;
+}
+
+.login-submit-premium-v2:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 45px rgba(79, 70, 229, 0.5);
+}
+
+.elite-mobile-footer {
+    text-align: center;
+    padding: 2rem 0;
+}
+
+.elite-mobile-footer p {
+    font-size: 0.61rem;
+    font-weight: 900;
+    color: #94a3b8;
+    letter-spacing: 0.15em;
+    margin-bottom: 0.75rem;
+}
+
+.elite-version {
+    display: inline-block;
+    padding: 0.2rem 1rem;
+    background: #1e293b;
+    color: white;
+    font-size: 0.55rem;
+    font-weight: 900;
+    border-radius: 100px;
 }

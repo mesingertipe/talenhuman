@@ -42,38 +42,33 @@ const SelfServiceReset = ({ onBack }) => {
   };
 
   return (
-    <div className="login-container mobile-premium-flow">
-        {/* 🏔️ TOP BRAND BAR (Mobile Only) */}
-        <div className="mobile-brand-bar">
-            <TalenHumanLogo size={28} white={false} />
-            <span className="brand-name-text">TalenHuman</span>
-        </div>
+    <div className="mobile-premium-flow-root animate-in fade-in duration-500">
+        
+        {/* 🏔️ ELITE STICKY HEADER */}
+        <header className="elite-mobile-header">
+            <button onClick={onBack} className="elite-back-btn">
+                <ArrowLeft size={22} />
+            </button>
+            <div className="elite-header-title">
+                <TalenHumanLogo size={24} white={true} />
+                <span>TALENHUMAN</span>
+            </div>
+            <div style={{ width: 40 }} /> {/* Spacer for balance */}
+        </header>
 
-        <div className="content-wrapper">
-            {/* 🛡️ FLOATING PREMIUM CARD */}
-            <div className="premium-recovery-card animate-in fade-in slide-in-from-bottom-12 duration-700">
+        <main className="elite-mobile-content">
+            <div className="premium-recovery-card-v2">
                 
-                <button 
-                onClick={onBack}
-                className="back-control-premium"
-                >
-                <ArrowLeft size={18} />
-                <span>VOLVER AL INICIO</span>
-                </button>
-
                 {success ? (
-                <div className="success-state-premium text-center py-8 animate-in zoom-in duration-500">
+                <div className="success-state-premium text-center py-8">
                     <div className="success-icon-box">
                         <CheckCircle size={44} />
                     </div>
-                    <h3 className="premium-title">¡Éxito Total!</h3>
+                    <h3 className="premium-title">¡Contraseña Actualizada!</h3>
                     <p className="premium-subtitle">
-                        Tu contraseña ha sido actualizada. Ya puedes ingresar al sistema con tus nuevos accesos.
+                        Tu acceso ha sido restablecido con éxito. Ya puedes ingresar al sistema.
                     </p>
-                    <button 
-                        onClick={onBack}
-                        className="login-submit-premium w-full mt-6"
-                    >
+                    <button onClick={onBack} className="login-submit-premium w-full mt-6">
                         <span>IR AL LOGIN</span>
                         <ArrowRight size={20} />
                     </button>
@@ -82,109 +77,94 @@ const SelfServiceReset = ({ onBack }) => {
                 <div className="form-state-premium">
                     <div className="header-section-premium">
                         <h2 className="premium-title">Auto-Servicio</h2>
-                        <p className="premium-subtitle">Valida tu identidad para definir una nueva contraseña de forma segura.</p>
+                        <p className="premium-subtitle">Valida tu identidad para definir una nueva contraseña sin depender de un correo corporativo.</p>
                     </div>
 
                     {error && (
-                    <div className="premium-error-toast animate-in fade-in slide-in-from-top-2">
+                    <div className="premium-error-toast">
                         <AlertCircle size={18} />
                         <span>{error}</span>
                     </div>
                     )}
 
                     <form onSubmit={handleSubmit} className="premium-form-layout">
-                    <div className="premium-field-group">
-                        <label className="premium-field-label">NÚMERO DE CÉDULA</label>
-                        <div className="premium-input-box">
-                        <User className="field-icon" size={20} />
-                        <input 
-                            required
-                            type="text"
-                            className="premium-field-input"
-                            placeholder="Identificación del empleado"
-                            value={formData.identificationNumber}
-                            onChange={(e) => setFormData({ ...formData, identificationNumber: e.target.value })}
-                        />
+                        <div className="premium-field-group">
+                            <label className="premium-field-label">NÚMERO DE CÉDULA</label>
+                            <div className="premium-input-box-v2">
+                                <User className="field-icon-v2" size={20} />
+                                <input 
+                                    required
+                                    type="text"
+                                    className="premium-field-input-v2"
+                                    placeholder="Identificación del empleado"
+                                    value={formData.identificationNumber}
+                                    onChange={(e) => setFormData({ ...formData, identificationNumber: e.target.value })}
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="premium-field-group">
-                        <label className="premium-field-label">FECHA DE NACIMIENTO</label>
-                        <div className="premium-input-box">
-                        <Calendar className="field-icon" size={20} />
-                        <input 
-                            required
-                            type="date"
-                            className="premium-field-input"
-                            value={formData.birthDate}
-                            onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
-                        />
+                        <div className="premium-field-group">
+                            <label className="premium-field-label">FECHA DE NACIMIENTO</label>
+                            <div className="premium-input-box-v2">
+                                <Calendar className="field-icon-v2" size={20} />
+                                <input 
+                                    required
+                                    type="date"
+                                    className="premium-field-input-v2"
+                                    value={formData.birthDate}
+                                    onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="divider-premium" />
+                        <div className="divider-premium" />
 
-                    <div className="premium-field-group">
-                        <label className="premium-field-label">NUEVA CONTRASEÑA</label>
-                        <div className="premium-input-box">
-                        <Lock className="field-icon" size={20} />
-                        <input 
-                            required
-                            type={showPassword ? "text" : "password"}
-                            className="premium-field-input"
-                            placeholder="Mínimo 6 caracteres"
-                            value={formData.newPassword}
-                            onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                        />
-                        <button 
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="field-toggle-btn"
-                        >
-                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        <div className="premium-field-group">
+                            <label className="premium-field-label">NUEVA CONTRASEÑA</label>
+                            <div className="premium-input-box-v2">
+                                <Lock className="field-icon-v2" size={20} />
+                                <input 
+                                    required
+                                    type={showPassword ? "text" : "password"}
+                                    className="premium-field-input-v2"
+                                    placeholder="Mínimo 6 caracteres"
+                                    value={formData.newPassword}
+                                    onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                                />
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="field-toggle-btn-v2">
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="premium-field-group">
+                            <label className="premium-field-label">CONFIRMAR CONTRASEÑA</label>
+                            <div className="premium-input-box-v2">
+                                <Lock className="field-icon-v2" size={20} />
+                                <input 
+                                    required
+                                    type={showPassword ? "text" : "password"}
+                                    className="premium-field-input-v2"
+                                    placeholder="Repite la nueva clave"
+                                    value={formData.confirmPassword}
+                                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        <button type="submit" disabled={loading} className="login-submit-premium-v2 w-full mt-8">
+                            {loading ? <div className="loader-white"></div> : <span>ACTUALIZAR CONTRASEÑA</span>}
                         </button>
-                        </div>
-                    </div>
-
-                    <div className="premium-field-group">
-                        <label className="premium-field-label">CONFIRMAR CONTRASEÑA</label>
-                        <div className="premium-input-box">
-                        <Lock className="field-icon" size={20} />
-                        <input 
-                            required
-                            type={showPassword ? "text" : "password"}
-                            className="premium-field-input"
-                            placeholder="Repite la nueva contraseña"
-                            value={formData.confirmPassword}
-                            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                        />
-                        </div>
-                    </div>
-
-                    <button 
-                        type="submit" 
-                        disabled={loading}
-                        className="login-submit-premium w-full mt-10"
-                    >
-                        {loading ? (
-                        <div className="loader-white"></div>
-                        ) : (
-                        <>
-                            <span>ACTUALIZAR CONTRASEÑA</span>
-                            <ArrowRight size={22} />
-                        </>
-                        )}
-                    </button>
                     </form>
                 </div>
                 )}
             </div>
             
-            <div className="premium-footer-note text-center mt-12">
-                <p className="footer-label">PROTECCIÓN DE DATOS BAJO ESTÁNDARES INTERNACIONALES</p>
-                <div className="elite-tag">V65.2.12-ELITE-PWA</div>
-            </div>
-        </div>
+            <footer className="elite-mobile-footer">
+                <p>GESTIÓN HUMANA DE ÚLTIMA GENERACIÓN</p>
+                <div className="elite-version">V65.2.13-ELITE</div>
+            </footer>
+        </main>
     </div>
   );
 };

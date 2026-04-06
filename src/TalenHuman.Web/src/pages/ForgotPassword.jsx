@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, ArrowLeft, ArrowRight, ShieldCheck, HelpCircle, ChevronRight, Bell, Calendar } from 'lucide-react';
+import { Mail, ArrowLeft, ArrowRight, ShieldCheck, HelpCircle, ChevronRight, Bell, Calendar, AlertCircle } from 'lucide-react';
 import api from '../services/api';
 import TalenHumanLogo from '../components/Shared/TalenHumanLogo';
 import './Login.css';
@@ -23,40 +23,38 @@ const ForgotPassword = ({ onBack, onNext }) => {
         onNext(email);
       }, 2000);
     } catch (err) {
-      setError('Error al procesar la solicitud. Verifica el correo e intenta de nuevo.');
+      setError('Por favor verifica el correo e intenta de nuevo.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-container mobile-premium-flow">
-        {/* 🏔️ TOP BRAND BAR (Mobile Only) */}
-        <div className="mobile-brand-bar">
-            <TalenHumanLogo size={28} white={false} />
-            <span className="brand-name-text">TalenHuman</span>
-        </div>
+    <div className="mobile-premium-flow-root animate-in fade-in duration-500">
+        
+        {/* 🏔️ ELITE STICKY HEADER */}
+        <header className="elite-mobile-header">
+            <button onClick={onBack} className="elite-back-btn">
+                <ArrowLeft size={22} />
+            </button>
+            <div className="elite-header-title">
+                <TalenHumanLogo size={24} white={true} />
+                <span>RECUPERACIÓN</span>
+            </div>
+            <div style={{ width: 40 }} />
+        </header>
 
-        <div className="content-wrapper">
-            {/* 🛡️ FLOATING PREMIUM CARD */}
-            <div className="premium-recovery-card animate-in fade-in slide-in-from-bottom-12 duration-700">
+        <main className="elite-mobile-content">
+            <div className="premium-recovery-card-v2">
                 
-                <button 
-                onClick={onBack}
-                className="back-control-premium"
-                >
-                <ArrowLeft size={18} />
-                <span>VOLVER AL INICIO</span>
-                </button>
-
                 <div className="form-state-premium">
                     <div className="header-section-premium">
-                        <h2 className="premium-title">Recuperación</h2>
-                        <p className="premium-subtitle">Ingresa tu correo corporativo y te enviaremos las instrucciones para restablecer tu clave.</p>
+                        <h2 className="premium-title">Olvidé mi clave</h2>
+                        <p className="premium-subtitle">Ingresa tu correo corporativo y te enviaremos las instrucciones de seguridad.</p>
                     </div>
 
                     {error && (
-                    <div className="premium-error-toast animate-in fade-in slide-in-from-top-2">
+                    <div className="premium-error-toast">
                         <AlertCircle size={18} />
                         <span>{error}</span>
                     </div>
@@ -64,8 +62,8 @@ const ForgotPassword = ({ onBack, onNext }) => {
 
                     {message && (
                     <div className="success-state-premium text-center py-4 mb-6">
-                        <div className="success-icon-box" style={{ width: '40px', height: '40px', borderRadius: '12px' }}>
-                            <ShieldCheck size={20} />
+                        <div className="success-icon-box" style={{ width: '44px', height: '44px', borderRadius: '14px' }}>
+                            <ShieldCheck size={24} />
                         </div>
                         <p className="text-xs font-bold text-emerald-600 mt-2">{message}</p>
                     </div>
@@ -74,12 +72,12 @@ const ForgotPassword = ({ onBack, onNext }) => {
                     <form onSubmit={handleSubmit} className="premium-form-layout">
                         <div className="premium-field-group">
                             <label className="premium-field-label">EMAIL CORPORATIVO</label>
-                            <div className="premium-input-box">
-                                <Mail className="field-icon" size={20} />
+                            <div className="premium-input-box-v2">
+                                <Mail className="field-icon-v2" size={20} />
                                 <input 
                                     required
                                     type="email"
-                                    className="premium-field-input"
+                                    className="premium-field-input-v2"
                                     placeholder="nombre@empresa.com"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -90,13 +88,13 @@ const ForgotPassword = ({ onBack, onNext }) => {
                         <button 
                             type="submit" 
                             disabled={loading}
-                            className="login-submit-premium w-full mt-10"
+                            className="login-submit-premium-v2 w-full mt-10"
                         >
                             {loading ? (
                             <div className="loader-white"></div>
                             ) : (
                             <>
-                                <span>ENVIAR INSTRUCCIONES</span>
+                                <span>SOLICITAR ACCESO</span>
                                 <ArrowRight size={22} />
                             </>
                             )}
@@ -105,11 +103,11 @@ const ForgotPassword = ({ onBack, onNext }) => {
                 </div>
             </div>
             
-            <div className="premium-footer-note text-center mt-12">
-                <p className="footer-label">SOPORTE TÉCNICO DISPONIBLE 24/7</p>
-                <div className="elite-tag">V65.2.12-ELITE-PWA</div>
-            </div>
-        </div>
+            <footer className="elite-mobile-footer">
+                <p>PROTECCIÓN DE DATOS DE GRADO MILITAR</p>
+                <div className="elite-version">V65.2.13-ELITE</div>
+            </footer>
+        </main>
     </div>
   );
 };
