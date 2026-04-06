@@ -15,7 +15,7 @@ const DebugPortal = ({ isOpen, onClose }) => {
         if (!isOpen) return;
 
         // 📝 CAPTURE CONSOLE
-        const HUB_VERSION = "V65.1.20";
+        const HUB_VERSION = "V65.1.25";
         const originalLog = console.log;
         const originalError = console.error;
         const addLog = (type, args) => {
@@ -78,7 +78,7 @@ const DebugPortal = ({ isOpen, onClose }) => {
             <div className="flex items-center justify-between p-2 bg-slate-900 border-b border-slate-800 h-10">
                 <div className="flex items-center gap-2">
                     <Zap size={14} className="text-amber-400" />
-                    <span className="font-black text-[10px] uppercase tracking-widest text-slate-400">Elite Diagnostic Hub V65.1.20</span>
+                    <span className="font-black text-[10px] uppercase tracking-widest text-slate-400">Elite Diagnostic Hub V65.1.25</span>
                 </div>
                 <div className="flex gap-2">
                     <button 

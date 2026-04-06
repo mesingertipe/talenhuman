@@ -169,7 +169,7 @@ public class NotificationService
 
                     var messaging = await GetMessagingAsync();
                     var response = await messaging.SendAsync(fcmMessage);
-                    _logger.LogInformation("FCM Push SENT successfully to user {UserId}. Message ID: {Response}. Token: {TokenPreview}", 
+                    _logger.LogInformation("V12.30: FCM Push SENT successfully to user {UserId}. Message ID: {Response}. Token: {TokenPreview}", 
                         request.UserId, response, request.To.Substring(0, 10) + "...");
                 } catch (Exception ex) {
                     _logger.LogError(ex, "FCM Error sending notification to user {UserId}: {Message}", request.UserId, ex.Message);
