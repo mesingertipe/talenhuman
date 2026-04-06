@@ -186,13 +186,7 @@ public class NotificationService
                     var fcmMessage = new Message()
                     {
                         Token = request.To,
-                        Notification = new FirebaseAdmin.Messaging.Notification()
-                        {
-                            Title = sanitizedTitle,
-                            Body = sanitizedBody,
-                            ImageUrl = ExtractFirstImageUrl(request.Message)
-                        },
-                        Data = data,
+                        Data = data
                     };
 
                     var messaging = await GetMessagingAsync();
