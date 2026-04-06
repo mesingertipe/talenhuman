@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Lock, ArrowLeft, ArrowRight, ShieldCheck, KeyRound, Eye, EyeOff, ShieldAlert, Smartphone, Bell, Calendar, Sparkles, Check, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Lock, ArrowLeft, ArrowRight, ShieldCheck, KeyRound, Eye, EyeOff, ShieldAlert, Smartphone, Bell, Calendar, Key, Check } from 'lucide-react';
 import api from '../services/api';
 import TalenHumanLogo from '../components/Shared/TalenHumanLogo';
 import './Login.css';
@@ -13,15 +13,27 @@ const ResetForgottenPassword = ({ email, onBack }) => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  // ⚡️ Elite Indicators (V12 Premium)
-  const isMatch = newPassword && newPassword === confirmPassword;
-  const isLongEnough = newPassword.length >= 6;
-  const strengthPercent = Math.min((newPassword.length / 8) * 100, 100);
+  // ⚡️ Elite Validations (V12 Premium)
+  const [validations, setValidations] = useState({
+    minChar: false,
+    hasAlphaNum: false,
+    match: false
+  });
+
+  useEffect(() => {
+    setValidations({
+      minChar: newPassword.length >= 6,
+      hasAlphaNum: /[a-zA-Z]/.test(newPassword) && /[0-9]/.test(newPassword),
+      match: newPassword === confirmPassword && confirmPassword !== ''
+    });
+  }, [newPassword, confirmPassword]);
+
+  const allValid = validations.minChar && validations.hasAlphaNum && validations.match;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isMatch) {
-      setError('Las contraseñas deben coincidir.');
+    if (!allValid) {
+      setError('Por favor cumple con todos los requisitos de seguridad.');
       return;
     }
 
@@ -33,7 +45,7 @@ const ResetForgottenPassword = ({ email, onBack }) => {
         token: token.trim(), 
         newPassword 
       });
-      setMessage('¡Contraseña restablecida!');
+      setMessage('¡Contraseña restablecida con éxito!');
       setTimeout(() => {
         onBack(); 
       }, 3000);
@@ -43,6 +55,33 @@ const ResetForgottenPassword = ({ email, onBack }) => {
       setLoading(false);
     }
   };
+
+  const ValidationItem = ({ label, passed }) => (
+    <div className={`validation-pill \${passed ? 'passed' : 'pending'}`}>
+      <div className="status-dot">
+        {passed && <Check size={10} strokeWidth={4} />}
+      </div>
+      <span className="pill-label">{label}</span>
+    </div>
+  );
+
+  const EliteInput = ({ label, icon, value, onChange, type, placeholder, suffix }) => (
+    <div className="elite-field-group">
+        <label className="elite-field-label">{label}</label>
+        <div className="elite-input-container">
+            <div className="elite-input-icon">{icon}</div>
+            <input 
+                type={type}
+                required
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder={placeholder}
+                className="elite-native-input"
+            />
+            {suffix}
+        </div>
+    </div>
+  );
 
   return (
     <div className="mobile-premium-flow-root animate-in fade-in duration-500">
@@ -54,7 +93,7 @@ const ResetForgottenPassword = ({ email, onBack }) => {
             </button>
             <div className="elite-header-title">
                 <TalenHumanLogo size={24} white={true} />
-                <span>NUEVA CLAVE</span>
+                <span>SEGURIDAD ELITE</span>
             </div>
             <div style={{ width: 40 }} />
         </header>
@@ -63,18 +102,16 @@ const ResetForgottenPassword = ({ email, onBack }) => {
             <div className="premium-recovery-card-v2 animate-in slide-in-from-bottom-10">
                 
                 <div className="form-state-premium">
-                    <div className="header-section-premium mb-10">
-                        <div className="flex items-center gap-3 mb-2">
-                           <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
-                               <KeyRound size={18} />
-                           </div>
-                           <h2 className="premium-title" style={{ margin: 0 }}>VALIDACIÓN PIN</h2>
+                    <div className="header-section-premium mb-8 text-center">
+                        <div className="key-icon-box">
+                            <KeyRound size={30} />
                         </div>
-                        <p className="premium-subtitle">Ingresa el código de 6 dígitos que enviamos a tu correo corporativo.</p>
+                        <h2 className="premium-title">Nueva Clave</h2>
+                        <p className="premium-subtitle">Ingresa el PIN de 6 dígitos enviado a tu correo.</p>
                     </div>
 
                     {error && (
-                    <div className="premium-error-toast mb-8">
+                    <div className="premium-error-toast mb-6">
                         <ShieldAlert size={18} />
                         <span>{error}</span>
                     </div>
@@ -89,88 +126,58 @@ const ResetForgottenPassword = ({ email, onBack }) => {
                     </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="premium-form-layout">
-                        {/* 🔢 CÓDIGO PIN */}
-                        <div className="premium-field-group">
-                            <label className="premium-field-label">CÓDIGO DE SEGURIDAD</label>
-                            <div className="premium-input-box-v2">
-                                <KeyRound className="field-icon-v2" size={20} />
-                                <input 
-                                    type="text" 
-                                    required
-                                    maxLength={6}
-                                    value={token}
-                                    onChange={(e) => setToken(e.target.value.replace(/\D/g, ''))}
-                                    className="premium-field-input-v2"
-                                    placeholder="000000"
-                                    style={{ letterSpacing: '0.4em', textAlign: 'center', fontSize: '1.4rem', fontWeight: '900' }}
-                                />
-                            </div>
-                        </div>
+                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        
+                        <EliteInput 
+                            label="Código de Seguridad"
+                            icon={<Key size={18} />}
+                            value={token}
+                            onChange={(val) => setToken(val.replace(/\D/g, ''))}
+                            type="text"
+                            placeholder="PIN de 6 dígitos"
+                        />
 
-                        <div className="divider-premium" />
+                        <div className="divider-premium" style={{ margin: '10px 0' }} />
 
-                        {/* 🔒 NUEVA CLAVE */}
-                        <div className="premium-field-group">
-                            <div className="flex justify-between items-center mb-1">
-                                <label className="premium-field-label">NUEVA CONTRASEÑA</label>
-                                {isLongEnough && <span className="text-[10px] text-emerald-600 font-bold tracking-widest flex items-center gap-1"><Check size={10} /> SEGURA</span>}
-                            </div>
-                            <div className="premium-input-box-v2">
-                                <Lock className="field-icon-v2" size={20} />
-                                <input 
-                                    required
-                                    type={showPass ? "text" : "password"}
-                                    className="premium-field-input-v2"
-                                    placeholder="Mínimo 6 caracteres"
-                                    value={newPassword}
-                                    onChange={(e) => setNewPassword(e.target.value)}
-                                />
+                        <EliteInput 
+                            label="Nueva Contraseña"
+                            icon={<Lock size={18} />}
+                            value={newPassword}
+                            onChange={(val) => setNewPassword(val)}
+                            type={showPass ? "text" : "password"}
+                            placeholder="Crea tu nueva clave"
+                            suffix={
                                 <button type="button" onClick={() => setShowPass(!showPass)} className="field-toggle-btn-v2">
-                                    {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
-                            </div>
-                            {/* Strength Bar */}
-                            <div className="w-full h-1 bg-slate-100 rounded-full mt-3 overflow-hidden">
-                                <div 
-                                   className="h-full bg-indigo-500 transition-all duration-500" 
-                                   style={{ width: `${strengthPercent}%`, opacity: newPassword ? 1 : 0 }} 
-                                />
-                            </div>
-                        </div>
+                            }
+                        />
 
-                        {/* 🔒 CONFIRMAR CLAVE */}
-                        <div className="premium-field-group">
-                            <div className="flex justify-between items-center mb-1">
-                                <label className="premium-field-label">CONFIRMAR CLAVE</label>
-                                {confirmPassword && (
-                                    isMatch ? 
-                                    <span className="text-[10px] text-emerald-600 font-black flex items-center gap-1"><Check size={10} /> COINCIDE</span> : 
-                                    <span className="text-[10px] text-rose-600 font-black flex items-center gap-1"><X size={10} /> NO COINCIDE</span>
-                                )}
-                            </div>
-                            <div className={`premium-input-box-v2 ${confirmPassword && !isMatch ? 'border-rose-300' : ''}`}>
-                                <Lock className="field-icon-v2" size={20} />
-                                <input 
-                                    required
-                                    type={showPass ? "text" : "password"}
-                                    className="premium-field-input-v2"
-                                    placeholder="Repite la clave"
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                />
-                            </div>
+                        <EliteInput 
+                            label="Confirmar Nueva Clave"
+                            icon={<ShieldCheck size={18} />}
+                            value={confirmPassword}
+                            onChange={(val) => setConfirmPassword(val)}
+                            type="password"
+                            placeholder="Repite la clave"
+                        />
+
+                        {/* Validation Panel */}
+                        <div className="validation-panel">
+                            <ValidationItem label="Mínimo 6" passed={validations.minChar} />
+                            <ValidationItem label="Alfa / Num" passed={validations.hasAlphaNum} />
+                            <ValidationItem label="Coinciden" passed={validations.match} />
                         </div>
 
                         <button 
-                            type="submit" 
-                            disabled={loading || !isMatch || !isLongEnough} 
-                            className="login-submit-premium-v2 w-full mt-10"
+                           type="submit" 
+                           disabled={loading || !allValid} 
+                           className={`login-submit-premium-v2 w-full mt-8 \${!allValid ? 'btn-disabled' : ''}`}
                         >
                             {loading ? <div className="loader-white"></div> : (
                                 <div className="flex items-center gap-3">
                                     <span>ACTUALIZAR ACCESO</span>
-                                    <ArrowRight size={22} />
+                                    <ShieldCheck size={20} />
                                 </div>
                             )}
                         </button>
@@ -178,10 +185,9 @@ const ResetForgottenPassword = ({ email, onBack }) => {
                 </div>
             </div>
             
-            <footer className="elite-mobile-footer">
-                <p>PROTECCIÓN DE DATOS DE GRADO MILITAR</p>
-                <div className="elite-version">V65.2.14-ELITE</div>
-            </footer>
+            <p className="security-engine-footer">
+                TALENHUMAN SECURITY ENGINE
+            </p>
         </main>
     </div>
   );
