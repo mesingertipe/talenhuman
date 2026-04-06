@@ -181,17 +181,17 @@ const Marcaciones = ({ user }) => {
                 <div style={{ display: 'flex', gap: '1rem' }}>
                     <button 
                         onClick={handleExport}
-                        style={{ background: activeColors.card, color: activeColors.textMain, padding: '14px 24px', borderRadius: '20px', border: `1px solid ${activeColors.border}`, fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.2s' }}
+                        style={{ background: activeColors.card, color: activeColors.textMain, padding: '14px 24px', borderRadius: '20px', border: `1px solid ${activeColors.border}`, fontWeight: '800', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.2s' }}
                         className="hover:scale-[1.02] active:scale-95"
                     >
-                        <Download size={18} /> <span className="hidden lg:inline">Detalle Excel</span>
+                        <Download size={18} /> <span className="hidden lg:inline">Detalle excel</span>
                     </button>
                     <button 
                         onClick={handleExportStats}
-                        style={{ background: activeColors.card, color: activeColors.textMain, padding: '14px 24px', borderRadius: '20px', border: `1px solid ${activeColors.border}`, fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.2s' }}
+                        style={{ background: activeColors.card, color: activeColors.textMain, padding: '14px 24px', borderRadius: '20px', border: `1px solid ${activeColors.border}`, fontWeight: '800', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.2s' }}
                         className="hover:scale-[1.02] active:scale-95 border-indigo-100"
                     >
-                        <FileText size={18} className="text-indigo-500" /> <span className="hidden lg:inline">Resumen Estadístico</span>
+                        <FileText size={18} className="text-indigo-500" /> <span className="hidden lg:inline">Resumen estadístico</span>
                     </button>
                 </div>
             </div>
@@ -214,17 +214,19 @@ const Marcaciones = ({ user }) => {
                     <Calendar size={18} className="text-slate-400" />
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <input 
-                            type="date" 
+                            type="text" 
+                            placeholder="dd/mm/yyyy"
                             value={dateRange.start}
                             onChange={(e) => setDateRange({...dateRange, start: e.target.value})}
-                            style={{ border: 'none', background: 'transparent', color: activeColors.textMain, fontWeight: '700', fontSize: '0.85rem', outline: 'none' }} 
+                            style={{ border: 'none', background: 'transparent', color: activeColors.textMain, fontWeight: '700', fontSize: '0.85rem', outline: 'none', width: '90px' }} 
                         />
                         <span className="text-slate-400 font-bold">→</span>
                         <input 
-                            type="date" 
+                            type="text" 
+                            placeholder="dd/mm/yyyy"
                             value={dateRange.end}
                             onChange={(e) => setDateRange({...dateRange, end: e.target.value})}
-                            style={{ border: 'none', background: 'transparent', color: activeColors.textMain, fontWeight: '700', fontSize: '0.85rem', outline: 'none' }} 
+                            style={{ border: 'none', background: 'transparent', color: activeColors.textMain, fontWeight: '700', fontSize: '0.85rem', outline: 'none', width: '90px' }} 
                         />
                     </div>
                 </div>
@@ -235,20 +237,22 @@ const Marcaciones = ({ user }) => {
                 {loading ? (
                     <div className="flex flex-col items-center justify-center h-[500px] gap-4">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-                        <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Cargando marcaciones...</p>
+                        <p className="text-slate-500 font-bold text-[10px] tracking-widest">Cargando marcaciones...</p>
                     </div>
                 ) : (
                     <>
                     <div style={{ overflowX: 'auto' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
+                            <thead>
                                 <tr style={{ background: isDarkMode ? '#1e293b' : '#f8fafc', textAlign: 'left', borderBottom: `1px solid ${activeColors.border}` }}>
-                                    <th style={{ padding: '1.5rem 2.5rem', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase', color: activeColors.textMuted, letterSpacing: '0.1em' }}>Colaborador / Número</th>
-                                    <th style={{ padding: '1.5rem', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase', color: activeColors.textMuted, letterSpacing: '0.1em' }}>Sede</th>
-                                    <th style={{ padding: '1.5rem', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase', color: activeColors.textMuted, letterSpacing: '0.1em' }}>Entrada</th>
-                                    <th style={{ padding: '1.5rem', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase', color: activeColors.textMuted, letterSpacing: '0.1em' }}>Salida</th>
-                                    <th style={{ padding: '1.5rem 2.5rem', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase', color: activeColors.textMuted, letterSpacing: '0.1em', textAlign: 'right' }}>Estado</th>
+                                    <th style={{ padding: '1.5rem 2.5rem', fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMuted, letterSpacing: '0.05em' }}>Colaborador / número</th>
+                                    <th style={{ padding: '1.5rem', fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMuted, letterSpacing: '0.05em' }}>Sede</th>
+                                    <th style={{ padding: '1.5rem', fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMuted, letterSpacing: '0.05em' }}>Entrada</th>
+                                    <th style={{ padding: '1.5rem', fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMuted, letterSpacing: '0.05em' }}>Salida</th>
+                                    <th style={{ padding: '1.5rem 2.5rem', fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMuted, letterSpacing: '0.05em', textAlign: 'right' }}>Estado</th>
                                 </tr>
+                            </thead>
                             </thead>
                             <tbody>
                                 {currentData.map(m => {
@@ -261,7 +265,7 @@ const Marcaciones = ({ user }) => {
                                                         {m.employeeName.split(' ')[0][0]}{m.employeeName.split(' ').pop()[0]}
                                                     </div>
                                                     <div>
-                                                        <div style={{ fontSize: '0.9rem', fontWeight: '900', color: activeColors.textMain, textTransform: 'uppercase' }}>{m.employeeName}</div>
+                                                        <div style={{ fontSize: '0.9rem', fontWeight: '900', color: activeColors.textMain }}>{m.employeeName}</div>
                                                         <p style={{ fontSize: '0.75rem', fontWeight: '600', color: activeColors.textMuted, margin: 0 }}>Número: {m.employeeId}</p>
                                                     </div>
                                                 </div>
@@ -275,17 +279,17 @@ const Marcaciones = ({ user }) => {
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: m.clockIn ? activeColors.success : activeColors.textMuted, fontWeight: '900', fontSize: '0.85rem' }}>
                                                     <ArrowUpRight size={16} /> {m.clockIn ? new Date(m.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                                                 </div>
-                                                {m.clockIn && <div className="text-[9px] font-black opacity-30 uppercase mt-0.5">{formatDate(m.clockIn)}</div>}
+                                                {m.clockIn && <div className="text-[9px] font-black opacity-30 mt-0.5">{formatDate(m.clockIn)}</div>}
                                             </td>
                                             <td style={{ padding: '1.5rem' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: m.clockOut ? activeColors.accent : activeColors.textMuted, fontWeight: '900', fontSize: '0.85rem' }}>
                                                     <ArrowDownLeft size={16} /> {m.clockOut ? new Date(m.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                                                 </div>
-                                                {m.clockOut && <div className="text-[9px] font-black opacity-30 uppercase mt-0.5">{formatDate(m.clockOut)}</div>}
+                                                {m.clockOut && <div className="text-[9px] font-black opacity-30 mt-0.5">{formatDate(m.clockOut)}</div>}
                                             </td>
                                             <td style={{ padding: '1.5rem 2.5rem', textAlign: 'right' }}>
                                                 <div className="flex flex-col items-end gap-1">
-                                                    <span style={{ padding: '6px 14px', borderRadius: '99px', background: st.bg, color: st.text, fontSize: '0.7rem', fontWeight: '950', textTransform: 'uppercase', border: `1px solid ${st.border}` }}>
+                                                    <span style={{ padding: '6px 14px', borderRadius: '99px', background: st.bg, color: st.text, fontSize: '0.7rem', fontWeight: '950', border: `1px solid ${st.border}` }}>
                                                         {st.label}
                                                     </span>
                                                     {m.statusObservation && <span className="text-[9px] font-bold text-slate-400 tracking-tight italic">{m.statusObservation}</span>}
@@ -299,7 +303,7 @@ const Marcaciones = ({ user }) => {
                                         <td colSpan="5" style={{ padding: '8rem 2rem', textAlign: 'center' }}>
                                             <div className="flex flex-col items-center gap-4 opacity-20">
                                                 <ListTodo size={64} />
-                                                <p className="font-black text-xl uppercase tracking-widest">Sin registros consolidados</p>
+                                                <p className="font-black text-xl tracking-widest">Sin registros consolidados</p>
                                             </div>
                                         </td>
                                     </tr>

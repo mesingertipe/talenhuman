@@ -105,10 +105,10 @@ const Jornadas = ({ user }) => {
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
                             <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
-                                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Nombre / Tipo</th>
-                                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Horas Diarias</th>
-                                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Horas Semanales</th>
-                                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', textAlign: 'right' }}>Gestión</th>
+                                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>Nombre / Tipo de jornada</th>
+                                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>Horas diarias</th>
+                                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>Horas semanales</th>
+                                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textAlign: 'right' }}>Gestión</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -183,7 +183,7 @@ const Jornadas = ({ user }) => {
                                     <h2 className="text-xl font-black text-slate-800" style={{ margin: 0, letterSpacing: '-0.02em' }}>
                                         {currentJornada ? 'Editar Jornada' : 'Nueva Jornada'}
                                     </h2>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Estándar de tiempos operativos</p>
+                                    <p className="text-[10px] font-bold text-slate-400 tracking-widest mt-0.5">Estándar de tiempos operativos</p>
                                 </div>
                             </div>
                             <button onClick={() => setShowModal(false)} 
@@ -205,7 +205,7 @@ const Jornadas = ({ user }) => {
 
                                 <div className="space-y-6">
                                     <div>
-                                        <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Nombre de la Jornada *</label>
+                                        <label className="block text-[11px] font-black text-slate-400 tracking-widest mb-3 px-1">Nombre de la jornada *</label>
                                         <input 
                                             required 
                                             value={formData.nombre} 
@@ -217,7 +217,7 @@ const Jornadas = ({ user }) => {
 
                                     <div className="grid grid-cols-2 gap-6">
                                         <div>
-                                            <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Horas Diarias *</label>
+                                            <label className="block text-[11px] font-black text-slate-400 tracking-widest mb-3 px-1">Horas diarias *</label>
                                             <div className="relative">
                                                 <Clock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
                                                 <input 
@@ -231,7 +231,7 @@ const Jornadas = ({ user }) => {
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Horas Semanales *</label>
+                                            <label className="block text-[11px] font-black text-slate-400 tracking-widest mb-3 px-1">Horas semanales *</label>
                                             <div className="relative">
                                                 <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
                                                 <input 

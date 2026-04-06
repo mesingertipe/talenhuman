@@ -244,11 +244,11 @@ const Stores = ({ user }) => {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Tienda / Local</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>ID / Ciudad / Distrito</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Estado</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Marca Asociada</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em', textAlign: 'right' }}>Gestión</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em' }}>Tienda / Local</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em' }}>Identificador / Ubicación</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em' }}>Estado</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em' }}>Marca Asociada</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em', textAlign: 'right' }}>Gestión</th>
               </tr>
             </thead>
             <tbody>
@@ -264,12 +264,12 @@ const Stores = ({ user }) => {
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: '900', color: '#4f46e5', textTransform: 'uppercase' }}>{store.externalId || '---'}</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#4f46e5' }}>{store.externalId || '---'}</span>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <MapPin size={12} /> {store.cityName || 'Sin ciudad'}
                       </span>
                       {store.districtId && (
-                        <span style={{ fontSize: '0.75rem', color: '#4f46e5', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px', textTransform: 'uppercase' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#4f46e5', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <Building size={12} /> {store.districtName || 'Distrito'}
                         </span>
                       )}
@@ -285,8 +285,7 @@ const Stores = ({ user }) => {
                       fontWeight: '800',
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '0.4rem',
-                      textTransform: 'uppercase'
+                      gap: '0.4rem'
                     }}>
                       {store.isActive !== false ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
                       {store.isActive !== false ? 'Activo' : 'Inactivo'}
@@ -375,8 +374,8 @@ const Stores = ({ user }) => {
                   <h2 style={{ fontSize: '1.8rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.03em' }}>
                     {currentStore ? 'Actualizar Sede' : 'Registrar Sede'}
                   </h2>
-                  <p style={{ fontSize: '0.85rem', color: activeColors.textMuted, fontWeight: '700', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Configuración Técnica Operativa V12
+                  <p style={{ fontSize: '0.85rem', color: activeColors.textMuted, fontWeight: '700', marginTop: '4px', letterSpacing: '0.02em' }}>
+                    Configuración técnica operativa v12
                   </p>
                 </div>
               </div>
@@ -397,12 +396,12 @@ const Stores = ({ user }) => {
                   <div style={{ position: 'relative' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '36px' }}>
                       <span style={{ fontSize: '12px', fontWeight: '950', color: activeColors.accent, background: activeColors.accentSoft, padding: '4px 12px', borderRadius: '8px' }}>01</span>
-                      <h3 style={{ fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMain, textTransform: 'uppercase', letterSpacing: '0.15em', margin: 0 }}>Identidad y Marca</h3>
+                      <h3 style={{ fontSize: '0.75rem', fontWeight: '800', color: activeColors.textMain, letterSpacing: '0.05em', margin: 0 }}>Identidad y Marca</h3>
                     </div>
                     
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px 36px' }}>
                       <div className="md:col-span-2 group">
-                        <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Nombre Comercial *</label>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em' }}>Nombre Comercial *</label>
                         <div style={{ position: 'relative' }}>
                           <Store size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                           <input 
@@ -415,7 +414,7 @@ const Stores = ({ user }) => {
                         </div>
                       </div>
                       <div className="group">
-                        <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>ID Externo (ERP) *</label>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em' }}>ID Externo (ERP) *</label>
                         <div style={{ position: 'relative' }}>
                           <Tag size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                           <input 
@@ -428,7 +427,7 @@ const Stores = ({ user }) => {
                         </div>
                       </div>
                       <div className="group">
-                        <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>ID Biométrico</label>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em' }}>ID Biométrico</label>
                         <div style={{ position: 'relative' }}>
                           <Hash size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                           <input 
@@ -458,7 +457,7 @@ const Stores = ({ user }) => {
                   <div style={{ position: 'relative' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '36px' }}>
                       <span style={{ fontSize: '12px', fontWeight: '950', color: activeColors.accent, background: activeColors.accentSoft, padding: '4px 12px', borderRadius: '8px' }}>02</span>
-                      <h3 style={{ fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMain, textTransform: 'uppercase', letterSpacing: '0.15em', margin: 0 }}>Localización y Ubicación</h3>
+                      <h3 style={{ fontSize: '0.75rem', fontWeight: '800', color: activeColors.textMain, letterSpacing: '0.05em', margin: 0 }}>Localización y Ubicación</h3>
                     </div>
                     
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px 36px' }}>
@@ -480,7 +479,7 @@ const Stores = ({ user }) => {
                         icon={Building}
                       />
                       <div className="md:col-span-2 group">
-                        <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Dirección Física *</label>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em' }}>Dirección Física *</label>
                         <div style={{ position: 'relative' }}>
                           <MapPin size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                           <input 
@@ -499,7 +498,7 @@ const Stores = ({ user }) => {
                   <div style={{ position: 'relative' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '36px' }}>
                       <span style={{ fontSize: '12px', fontWeight: '950', color: activeColors.accent, background: activeColors.accentSoft, padding: '4px 12px', borderRadius: '8px' }}>03</span>
-                      <h3 style={{ fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMain, textTransform: 'uppercase', letterSpacing: '0.15em', margin: 0 }}>Configuración Operativa</h3>
+                      <h3 style={{ fontSize: '0.75rem', fontWeight: '800', color: activeColors.textMain, letterSpacing: '0.05em', margin: 0 }}>Configuración Operativa</h3>
                     </div>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
@@ -513,7 +512,7 @@ const Stores = ({ user }) => {
                                         <div style={{ width: '22px', height: '22px', background: 'white', borderRadius: '50%', position: 'absolute', top: '3px', left: formData.isActive ? '31px' : '3px', transition: 'all 0.3s', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}></div>
                                     </div>
                                     <div>
-                                        <span style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase' }}>Estado de Tienda</span>
+                                        <span style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: activeColors.textMuted }}>Estado de Tienda</span>
                                         <span style={{ fontSize: '0.8rem', fontWeight: '950', color: formData.isActive ? '#10b981' : activeColors.textMuted }}>{formData.isActive ? 'TIENDA ACTIVA' : 'TIENDA CERRADA'}</span>
                                     </div>
                                 </div>
@@ -526,7 +525,7 @@ const Stores = ({ user }) => {
                                         <div style={{ width: '22px', height: '22px', background: 'white', borderRadius: '50%', position: 'absolute', top: '3px', left: formData.useSequentialPairing ? '31px' : '3px', transition: 'all 0.3s', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}></div>
                                     </div>
                                     <div>
-                                        <span style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase' }}>Mapeo de Marcaciones</span>
+                                        <span style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: activeColors.textMuted }}>Mapeo de Marcaciones</span>
                                         <span style={{ fontSize: '0.8rem', fontWeight: '950', color: formData.useSequentialPairing ? '#4f46e5' : '#10b981' }}>{formData.useSequentialPairing ? 'MODO SECUENCIAL' : 'MODO TURNOS'}</span>
                                     </div>
                                 </div>
@@ -535,7 +534,7 @@ const Stores = ({ user }) => {
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px 36px' }}>
                              <div className="group">
-                                <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Inicio Día Operativo</label>
+                                <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em' }}>Inicio Día Operativo</label>
                                 <div style={{ position: 'relative' }}>
                                     <Clock size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                                     <input 
@@ -556,10 +555,10 @@ const Stores = ({ user }) => {
 
                         {!formData.useSequentialPairing && (
                             <div style={{ padding: '40px', background: isDarkMode ? 'rgba(79, 70, 229, 0.05)' : '#f8faff', borderRadius: '32px', border: `1px dashed ${activeColors.border}`, animation: 'fadeIn 0.5s ease-out' }}>
-                                <h4 style={{ fontSize: '11px', fontWeight: '950', color: activeColors.accent, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '24px' }}>Horarios Base de la Sede</h4>
+                                <h4 style={{ fontSize: '11px', fontWeight: '900', color: activeColors.accent, letterSpacing: '0.05em', marginBottom: '24px' }}>Horarios base de la sede</h4>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '36px' }}>
                                     <div className="group">
-                                        <span style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '10px' }}>Entrada Teórica</span>
+                                        <span style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '10px' }}>Entrada teórica</span>
                                         <input 
                                             type="time" value={formData.defaultStartTime}
                                             onChange={(e) => setFormData({...formData, defaultStartTime: e.target.value})}
@@ -567,7 +566,7 @@ const Stores = ({ user }) => {
                                         />
                                     </div>
                                     <div className="group">
-                                        <span style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '10px' }}>Salida Teórica</span>
+                                        <span style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '10px' }}>Salida teórica</span>
                                         <input 
                                             type="time" value={formData.defaultEndTime}
                                             onChange={(e) => setFormData({...formData, defaultEndTime: e.target.value})}

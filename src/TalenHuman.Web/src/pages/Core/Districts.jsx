@@ -174,17 +174,17 @@ const Districts = ({ user }) => {
           <div style={{ padding: '6rem', textAlign: 'center' }}>
             <div className="flex flex-col items-center gap-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-              <p className="text-slate-500 font-medium tracking-widest uppercase text-[10px] font-black">Sincronizando zonas...</p>
+              <p className="text-slate-500 font-medium tracking-widest text-[10px] font-black">Sincronizando zonas...</p>
             </div>
           </div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Distrito / Zona</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Distrital a cargo</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Sedes Agrupadas</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em', textAlign: 'right' }}>Gestión</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em' }}>Distrito / Zona operativa</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em' }}>Distrital a cargo</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em' }}>Sedes agrupadas</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em', textAlign: 'right' }}>Gestión</th>
               </tr>
             </thead>
             <tbody>
@@ -207,18 +207,18 @@ const Districts = ({ user }) => {
                         <span className="font-bold text-slate-700 dark:text-slate-300">{d.supervisorName}</span>
                       </div>
                     ) : (
-                      <span className="font-black text-[10px] text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-700 italic">Sin distrital</span>
+                      <span className="font-black text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-700 italic">Sin distrital asignado</span>
                     )}
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
                     <div className="flex flex-wrap gap-2 items-center">
-                      <span className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 rounded-lg text-xs font-black uppercase tracking-wider border border-indigo-100 dark:border-indigo-500/20">
-                        {d.storeCount} Tiendas
+                      <span className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 rounded-lg text-xs font-black tracking-wider border border-indigo-100 dark:border-indigo-500/20">
+                        {d.storeCount} sedes
                       </span>
                       {d.storeNames && d.storeNames.slice(0, 2).map((s, idx) => (
-                        <span key={idx} className="text-[10px] text-slate-400 font-bold uppercase">• {s}</span>
+                        <span key={idx} className="text-[10px] text-slate-400 font-bold">• {s}</span>
                       ))}
-                      {d.storeCount > 2 && <span className="text-[10px] text-slate-400 font-bold uppercase">+{d.storeCount - 2} más</span>}
+                      {d.storeCount > 2 && <span className="text-[10px] text-slate-400 font-bold">+{d.storeCount - 2} más</span>}
                     </div>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
@@ -284,7 +284,7 @@ const Districts = ({ user }) => {
                   <h2 className="text-2xl font-black dark:text-white" style={{ margin: 0, letterSpacing: '-0.03em' }}>
                     {currentDistrict ? 'Editar Distrito' : 'Nuevo Distrito'}
                   </h2>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configuración regional de supervisión</p>
+                  <p className="text-[10px] font-bold text-slate-400 tracking-widest mt-1">Configuración regional de supervisión</p>
                 </div>
               </div>
               <button 
@@ -301,13 +301,13 @@ const Districts = ({ user }) => {
                   <div className="mb-4">
                     <div className="flex items-center gap-3 mb-6">
                       <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center font-bold text-xs">01</div>
-                      <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Identificación Regional</h3>
+                      <h3 className="text-sm font-black text-slate-800 dark:text-white tracking-wider">Identificación regional</h3>
                       <div className="h-[1px] flex-1 bg-slate-100 dark:bg-slate-800 ml-2"></div>
                     </div>
 
                     <div className="space-y-8">
                       <div>
-                        <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Nombre del Distrito *</label>
+                        <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 tracking-wide mb-2 px-1">Nombre del distrito *</label>
                         <div className="relative group">
                           <Building size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                           <input 
@@ -333,7 +333,7 @@ const Districts = ({ user }) => {
                   <div>
                     <div className="flex items-center gap-3 mb-6">
                       <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center font-bold text-xs">02</div>
-                      <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Sucursales Asociadas</h3>
+                      <h3 className="text-sm font-black text-slate-800 dark:text-white tracking-wider">Sucursales asociadas</h3>
                       <div className="h-[1px] flex-1 bg-slate-100 dark:bg-slate-800 ml-2"></div>
                     </div>
 
@@ -352,7 +352,7 @@ const Districts = ({ user }) => {
 
                 <div className="mt-8 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-start gap-3">
                   <MapPin size={18} className="text-indigo-400 mt-0.5 shrink-0" />
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tight leading-normal">
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold tracking-tight leading-normal">
                     La agrupación por distrito permite reportes consolidados y gestión directa por distrital de zona.
                   </p>
                 </div>

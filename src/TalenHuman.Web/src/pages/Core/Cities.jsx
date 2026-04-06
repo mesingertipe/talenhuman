@@ -142,8 +142,8 @@ const Cities = ({ user }) => {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Nombre de la Ciudad</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em', textAlign: 'right' }}>Gestión</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em' }}>Nombre de la ciudad</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em', textAlign: 'right' }}>Gestión</th>
               </tr>
             </thead>
             <tbody>
@@ -219,7 +219,7 @@ const Cities = ({ user }) => {
             <form onSubmit={handleSave}>
               <div className="modal-body space-y-6">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nombre de la Ciudad *</label>
+                  <label className="block text-xs font-bold text-slate-500 tracking-wider mb-2">Nombre de la ciudad *</label>
                   <div className="relative">
                     <MapPin size={18} className="absolute left-3 top-4 text-slate-400" />
                     <input 

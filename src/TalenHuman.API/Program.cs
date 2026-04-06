@@ -173,17 +173,22 @@ using (var scope = app.Services.CreateScope())
             try {
                 var settings = services.GetRequiredService<ISystemSettingsService>();
                 var projectId = await settings.GetSettingAsync("FIREBASE_PROJECT_ID");
-                if (!string.IsNullOrEmpty(projectId) && FirebaseAdmin.FirebaseApp.DefaultInstance == null)
+                
+                if (string.IsNullOrEmpty(projectId))
+                {
+                    logger.LogWarning("Firebase Admin SDK NOT initialized: FIREBASE_PROJECT_ID is empty in settings.");
+                }
+                else if (FirebaseAdmin.FirebaseApp.DefaultInstance == null)
                 {
                     FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions()
                     {
-                        Credential = Google.Apis.Auth.OAuth2.GoogleCredential.GetApplicationDefault(), // Or custom from settings
+                        Credential = Google.Apis.Auth.OAuth2.GoogleCredential.GetApplicationDefault(),
                         ProjectId = projectId
                     });
-                    logger.LogInformation("Firebase Admin SDK Initialized ✅");
+                    logger.LogInformation("Firebase Admin SDK Initialized for Project: {ProjectId} ✅", projectId);
                 }
             } catch (Exception ex) {
-                logger.LogWarning("Firebase Admin SDK Initialization skipped: {Message}", ex.Message);
+                logger.LogCritical(ex, "FATAL: Firebase Admin SDK Initialization FAILED. Check Application Default Credentials or Environment Variables. Error: {Message}", ex.Message);
             }
 
             break;

@@ -241,12 +241,30 @@ const CommunicationsCenter = ({ user }) => {
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
                                 <div>
-                                    <label className="label-lite">Fecha Inicio (dd/mm/yyyy)</label>
-                                    <input type="date" value={formData.fechaInicio} onChange={(e) => setFormData({ ...formData, fechaInicio: e.target.value })} className="input-lite" />
+                                    <label className="label-lite">Fecha inicio (dd/mm/yyyy)</label>
+                                    <div style={{ position: 'relative' }}>
+                                        <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                                        <input 
+                                            type="text" 
+                                            value={formData.fechaInicio} 
+                                            onChange={(e) => setFormData({ ...formData, fechaInicio: e.target.value })} 
+                                            className="input-lite pl-12" 
+                                            placeholder="dd/mm/yyyy"
+                                        />
+                                    </div>
                                 </div>
                                 <div>
-                                    <label className="label-lite">Fecha Fin (dd/mm/yyyy)</label>
-                                    <input type="date" value={formData.fechaFin} onChange={(e) => setFormData({ ...formData, fechaFin: e.target.value })} className="input-lite" />
+                                    <label className="label-lite">Fecha fin (dd/mm/yyyy)</label>
+                                    <div style={{ position: 'relative' }}>
+                                        <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                                        <input 
+                                            type="text" 
+                                            value={formData.fechaFin} 
+                                            onChange={(e) => setFormData({ ...formData, fechaFin: e.target.value })} 
+                                            className="input-lite pl-12" 
+                                            placeholder="dd/mm/yyyy"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
@@ -294,8 +312,9 @@ const CommunicationsCenter = ({ user }) => {
 
             {/* Styles Hook */}
             <style>{`
-                .label-lite { display: block; fontSize: 10px; fontWeight: 950; color: #94a3b8; textTransform: uppercase; marginBottom: 10px; letterSpacing: 0.1em; }
-                .input-lite { width: 100%; padding: 15px 20px; borderRadius: 16px; border: 2px solid ${colors.border}; background: ${colors.bg}; color: ${colors.textMain}; fontWeight: 700; outline: none; }
+                .label-lite { display: block; font-size: 10px; font-weight: 950; color: #94a3b8; margin-bottom: 10px; letter-spacing: 0.05em; }
+                .input-lite { width: 100%; padding: 15px 20px; border-radius: 16px; border: 2px solid ${colors.border}; background: ${colors.bg}; color: ${colors.textMain}; font-weight: 700; outline: none; transition: all 0.2s; }
+                .input-lite:focus { border-color: ${colors.accent}; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
                 @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
             `}</style>
 

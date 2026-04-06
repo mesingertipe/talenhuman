@@ -95,16 +95,17 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
     <button 
       key={item.label} 
       onClick={() => setPage(item.label)}
-      className={`nav-link-btn group ${activePage === item.label ? 'active bg-white/20 border-l-4 border-l-white' : 'hover:bg-white/10'}`}
+      className={`nav-link-btn group ${activePage === item.label ? 'active bg-indigo-500/10' : 'hover:bg-slate-800'}`}
       title={isCollapsed ? item.label : ''}
       style={{ 
         background: 'none', border: 'none', width: '100%', 
         display: 'flex', alignItems: 'center', gap: '0.75rem', 
         padding: isSubItem ? '0.6rem 1rem 0.6rem 2rem' : '0.85rem 1.25rem', 
-        color: activePage === item.label ? '#fff' : 'rgba(255, 255, 255, 0.7)', cursor: 'pointer',
-        borderRadius: '0 12px 12px 0', marginBottom: '0.25rem', textAlign: 'left',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        marginRight: '0.75rem'
+        color: activePage === item.label ? '#fff' : 'rgba(148, 163, 184, 0.7)', cursor: 'pointer',
+        borderRadius: '0 16px 16px 0', marginBottom: '0.25rem', textAlign: 'left',
+        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+        marginRight: '0.75rem',
+        borderLeft: activePage === item.label ? '4px solid #6366f1' : '4px solid transparent'
       }}
     >
       <span className={`${activePage === item.label ? 'text-white' : 'text-white/50 group-hover:text-white/80'}`}>{item.icon}</span>
@@ -115,7 +116,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
   return (
     <div 
       className={`sidebar border-r dark:border-slate-800 ${isCollapsed ? 'collapsed' : ''}`}
-      style={{ background: 'linear-gradient(180deg, #7c3aed 0%, #4f46e5 100%)' }}
+      style={{ background: '#0f172a', transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)' }}
       onMouseEnter={() => !isPinned && setIsCollapsed(false)}
       onMouseLeave={() => !isPinned && setIsCollapsed(true)}
     >
@@ -132,7 +133,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
               <div 
                 onClick={() => toggleHeader(section.label)}
                 style={{ 
-                  fontSize: '0.65rem', textTransform: 'uppercase', color: 'rgba(255, 255, 255, 0.5)', 
+                  fontSize: '0.65rem', textTransform: 'uppercase', color: 'rgba(148, 163, 184, 0.5)', 
                   margin: '1.5rem 1.25rem 0.5rem 1.25rem', fontWeight: '800', trackingWidest: '0.1em',
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   cursor: 'pointer', userSelect: 'none'
@@ -228,14 +229,14 @@ const Header = ({ user, activePage, currentCompanyName, tenantSettings, companie
               : pageInfo.title}
           </h1>
           {activePage !== 'Dashboard' && showTenantInfo && currentCompanyName && (
-             <span className="text-sm font-black uppercase tracking-widest opacity-80 ml-1"
+             <span className="text-sm font-black tracking-widest opacity-80 ml-1"
                    style={{ color: isDarkMode ? '#818cf8' : '#64748b' }}>
                @ {currentCompanyName}
              </span>
           )}
         </div>
         {pageInfo.subtitle && (
-            <p className="text-xs font-black uppercase tracking-widest mt-2 ml-0.5"
+            <p className="text-xs font-black tracking-widest mt-2 ml-0.5"
                style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
               {pageInfo.subtitle}
             </p>
@@ -302,11 +303,10 @@ const Header = ({ user, activePage, currentCompanyName, tenantSettings, companie
         </button>
 
         <div style={{ height: '32px', width: '1.5px', background: 'var(--border)', opacity: 0.5 }}></div>
-
         <div className="flex items-center gap-4">
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.85rem', fontWeight: '900', color: 'var(--text-main)', textTransform: 'uppercase', letterSpacing: '-0.01em' }}>{user?.fullName || 'Perfil'}</div>
-              <div style={{ fontSize: '0.65rem', fontWeight: 'bold', color: 'var(--text-muted)', textTransform: 'uppercase', trackingWidest: '0.05em' }}>{user?.roles?.join(' • ')}</div>
+              <div style={{ fontSize: '0.85rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.01em' }}>{user?.fullName || 'Perfil'}</div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 'bold', color: 'var(--text-muted)', trackingWidest: '0.05em' }}>{user?.roles?.join(' • ')}</div>
               
               {isSuperAdmin && companies.length > 0 && (
                 <div style={{ marginTop: '0.4rem', width: '210px', marginLeft: 'auto' }}>

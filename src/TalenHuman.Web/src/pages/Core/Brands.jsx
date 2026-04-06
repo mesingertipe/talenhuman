@@ -152,9 +152,9 @@ const Brands = ({ user }) => {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Nombre de la Marca</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Estado</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em', textAlign: 'right' }}>Gestión</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em' }}>Nombre de la marca</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em' }}>Estado de vigencia</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em', textAlign: 'right' }}>Gestión</th>
               </tr>
             </thead>
             <tbody>
@@ -178,8 +178,7 @@ const Brands = ({ user }) => {
                       fontWeight: '800',
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '0.4rem',
-                      textTransform: 'uppercase'
+                      gap: '0.4rem'
                     }}>
                       {brand.isActive !== false ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
                       {brand.isActive !== false ? 'Activo' : 'Inactivo'}
@@ -253,13 +252,13 @@ const Brands = ({ user }) => {
                 <div className="mb-8">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center font-bold text-xs">01</div>
-                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Identidad Visual</h3>
+                    <h3 className="text-sm font-black text-slate-800 dark:text-white tracking-wider">Identidad visual</h3>
                     <div className="h-[1px] flex-1 bg-slate-100 dark:bg-slate-800 ml-2"></div>
                   </div>
 
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Nombre de la Marca *</label>
+                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 tracking-wide mb-2 px-1">Nombre de la marca *</label>
                       <div className="relative group">
                         <Building2 size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                         <input 
@@ -274,7 +273,7 @@ const Brands = ({ user }) => {
                     
                     <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-[10px] text-slate-500 dark:text-slate-400 flex items-start gap-3">
                       <AlertCircle size={16} className="text-indigo-400 mt-0.5" />
-                      <p className="uppercase font-bold tracking-tight leading-normal">Las marcas permiten segmentar tiendas y catálogos de productos por franquicia o grupo empresarial.</p>
+                      <p className="font-bold tracking-tight leading-normal">Las marcas permiten segmentar tiendas y catálogos de productos por franquicia o grupo empresarial.</p>
                     </div>
                   </div>
                 </div>
@@ -286,8 +285,8 @@ const Brands = ({ user }) => {
                     </div>
                     <div>
                       <div className="font-bold text-sm dark:text-white leading-tight">Estado Vigencia</div>
-                      <div className="text-[10px] text-emerald-600 uppercase font-black tracking-widest mt-1">
-                        {formData.isActive ? 'Activa para Operación' : 'Fuera de Servicio'}
+                      <div className="text-[10px] text-emerald-600 font-black tracking-widest mt-1">
+                        {formData.isActive ? 'Activa para operación' : 'Fuera de servicio'}
                       </div>
                     </div>
                   </div>

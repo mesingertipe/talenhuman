@@ -10,21 +10,21 @@ const TalenHumanLogo = ({ size = 32, type = 'full', white = false }) => {
     <div style={{ 
       width: `${iconSize}px`, 
       height: `${iconSize}px`, 
-      background: (white || isHeader) ? 'rgba(255, 255, 255, 0.4)' : 'rgba(79, 70, 229, 0.25)', 
-      backdropFilter: 'blur(8px)',
-      borderRadius: isSmall ? '10px' : '20px', 
+      background: (white || isHeader) ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)', 
+      backdropFilter: 'blur(12px)',
+      borderRadius: isSmall ? '12px' : '22px', 
       display: 'flex', 
       alignItems: 'center', 
       justifyContent: 'center',
-      border: `1px solid ${(white || isHeader) ? 'rgba(255,255,255,0.4)' : 'rgba(79, 70, 229, 0.4)'}`,
+      border: `1px solid rgba(255,255,255,0.2)`,
       flexShrink: 0
     }}>
       <span style={{ 
-        color: (white || isHeader) ? 'white' : '#4f46e5', 
+        color: 'white', 
         fontSize: `${iconSize * 0.45}px`, 
         fontWeight: '950', 
         fontStyle: 'normal', 
-        letterSpacing: '-1px',
+        letterSpacing: '-1.5px',
         fontFamily: "'Outfit', sans-serif"
       }}>
         TH

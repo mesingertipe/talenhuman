@@ -4,6 +4,7 @@ using TalenHuman.Application.Common.Interfaces;
 using TalenHuman.Domain.Entities;
 using System.Net;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 
 namespace TalenHuman.Application.Services;
 
@@ -32,15 +33,18 @@ public class NotificationService
     private readonly IEmailService _emailService;
     private readonly IApplicationDbContext _context;
     private readonly ITenantProvider _tenantProvider;
+    private readonly ILogger<NotificationService> _logger;
 
     public NotificationService(
         IEmailService emailService, 
         IApplicationDbContext context,
-        ITenantProvider tenantProvider)
+        ITenantProvider tenantProvider,
+        ILogger<NotificationService> logger)
     {
         _emailService = emailService;
         _context = context;
         _tenantProvider = tenantProvider;
+        _logger = logger;
     }
 
     public static string SanitizePushText(string text)
@@ -60,6 +64,13 @@ public class NotificationService
         var clean = Regex.Replace(noNewLines, @"\s+", " ").Trim();
         
         return clean;
+    }
+
+    public static string? ExtractFirstImageUrl(string html)
+    {
+        if (string.IsNullOrEmpty(html)) return null;
+        var match = Regex.Match(html, "<img.+?src=[\"'](.+?)[\"'].*?>", RegexOptions.IgnoreCase);
+        return match.Success ? match.Groups[1].Value : null;
     }
 
     public async Task SendNotificationAsync(NotificationRequest request)
@@ -120,14 +131,15 @@ public class NotificationService
                         Notification = new FirebaseAdmin.Messaging.Notification()
                         {
                             Title = sanitizedTitle,
-                            Body = sanitizedBody
+                            Body = sanitizedBody,
+                            ImageUrl = ExtractFirstImageUrl(request.Message)
                         },
                         Data = data
                     };
 
                     await FirebaseMessaging.DefaultInstance.SendAsync(fcmMessage);
-                } catch (Exception) {
-                    // Suppress to avoid breaking background processes
+                } catch (Exception ex) {
+                    _logger.LogError(ex, "FCM Error sending notification to user {UserId}: {Message}", request.UserId, ex.Message);
                 }
                 break;
 
@@ -179,16 +191,17 @@ public class NotificationService
                 Notification = new FirebaseAdmin.Messaging.Notification()
                 {
                     Title = sanitizedTitle,
-                    Body = sanitizedBody
+                    Body = sanitizedBody,
+                    ImageUrl = ExtractFirstImageUrl(request.Message)
                 },
                 Data = data
             };
 
             await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(multicastMessage);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Suppress background errors
+            _logger.LogError(ex, "FCM Broadcast Error: {Message}", ex.Message);
         }
     }
 }

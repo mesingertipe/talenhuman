@@ -149,10 +149,10 @@ const Profiles = ({ user }) => {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Nombre del Cargo</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Estado</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em' }}>Descripción</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', trackingWider: '0.1em', textAlign: 'right' }}>Acciones</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em' }}>Nombre del cargo</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em' }}>Estado operativo</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em' }}>Descripción de funciones</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em', textAlign: 'right' }}>Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -176,8 +176,7 @@ const Profiles = ({ user }) => {
                       fontWeight: '800',
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '0.4rem',
-                      textTransform: 'uppercase'
+                      gap: '0.4rem'
                     }}>
                       {p.isActive !== false ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
                       {p.isActive !== false ? 'Activo' : 'Inactivo'}
@@ -248,13 +247,13 @@ const Profiles = ({ user }) => {
                 <div className="mb-8">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center font-bold text-xs">01</div>
-                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Definición de Perfil</h3>
+                    <h3 className="text-sm font-black text-slate-800 dark:text-white tracking-wider">Definición de perfil</h3>
                     <div className="h-[1px] flex-1 bg-slate-100 dark:bg-slate-800 ml-2"></div>
                   </div>
 
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Nombre del Perfil *</label>
+                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 tracking-wide mb-2 px-1">Nombre del perfil *</label>
                       <div className="relative group">
                         <Briefcase size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                         <input 
@@ -268,7 +267,7 @@ const Profiles = ({ user }) => {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 px-1">Descripción de Funciones</label>
+                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 tracking-wide mb-2 px-1">Descripción de funciones</label>
                       <div className="relative group">
                         <FileText size={18} className="absolute left-4 top-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                         <textarea 
@@ -291,8 +290,8 @@ const Profiles = ({ user }) => {
                     </div>
                     <div>
                       <div className="font-bold text-sm dark:text-white leading-tight">Estado del Cargo</div>
-                      <div className="text-[10px] text-emerald-600 uppercase font-black tracking-widest mt-1">
-                        {formData.isActive ? 'Perfil Activo' : 'Perfil Inactivo'}
+                      <div className="text-[10px] text-emerald-600 font-black tracking-widest mt-1">
+                        {formData.isActive ? 'Perfil activo para el sistema' : 'Perfil inactivo'}
                       </div>
                     </div>
                   </div>
@@ -308,7 +307,7 @@ const Profiles = ({ user }) => {
 
                 <div className="mt-6 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 text-[10px] text-slate-500 flex items-start gap-3">
                   <AlertCircle size={16} className="text-indigo-400 mt-0.5" />
-                  <p className="uppercase font-bold tracking-tight leading-normal">Los cargos permiten estructurar la jerarquía operativa y asignar permisos específicos.</p>
+                  <p className="font-bold tracking-tight leading-normal">Los cargos permiten estructurar la jerarquía operativa y asignar permisos específicos.</p>
                 </div>
               </div>
 

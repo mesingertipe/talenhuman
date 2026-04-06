@@ -244,21 +244,21 @@ const Employees = ({ user }) => {
           <div style={{ padding: '6rem', textAlign: 'center' }}>
             <div className="flex flex-col items-center gap-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-              <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Sincronizando Nómina...</p>
+              <p className="text-slate-500 font-bold text-[10px] tracking-widest">Sincronizando nómina...</p>
             </div>
           </div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
-                <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Colaborador</th>
-                <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Género</th>
-                <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Identificación</th>
-                <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>F. Ingreso</th>
-                <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Ubicación y Cargo</th>
-                {isAdmin && <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Salario</th>}
-                <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Estado</th>
-                <th style={{ padding: '20px 24px', textAlign: 'right', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Gestión</th>
+                <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', letterSpacing: '0.02em', color: activeColors.textMuted }}>Colaborador</th>
+                <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', letterSpacing: '0.02em', color: activeColors.textMuted }}>Género</th>
+                <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', letterSpacing: '0.02em', color: activeColors.textMuted }}>Identificación</th>
+                <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', letterSpacing: '0.02em', color: activeColors.textMuted }}>F. Ingreso</th>
+                <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', letterSpacing: '0.02em', color: activeColors.textMuted }}>Ubicación y Cargo</th>
+                {isAdmin && <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', letterSpacing: '0.02em', color: activeColors.textMuted }}>Salario</th>}
+                <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', letterSpacing: '0.02em', color: activeColors.textMuted }}>Estado</th>
+                <th style={{ padding: '20px 24px', textAlign: 'right', fontSize: '0.85rem', fontWeight: '800', letterSpacing: '0.02em', color: activeColors.textMuted }}>Gestión</th>
               </tr>
             </thead>
             <tbody>
@@ -266,7 +266,7 @@ const Employees = ({ user }) => {
                 <tr key={emp.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
                   <td style={{ padding: '1.25rem 1.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div className="w-11 h-11 rounded-2xl bg-indigo-600 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white flex items-center justify-center font-black text-xs shadow-lg shadow-indigo-500/20 uppercase">
+                      <div className="w-11 h-11 rounded-2xl bg-indigo-600 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white flex items-center justify-center font-black text-xs shadow-lg shadow-indigo-500/20">
                         {emp.firstName[0]}{emp.lastName[0]}
                       </div>
                       <div>
@@ -296,11 +296,11 @@ const Employees = ({ user }) => {
                   <td style={{ padding: '1.25rem 1.5rem' }}>
                     <div className="font-bold text-slate-700 dark:text-slate-200 text-sm leading-none mb-1.5">{emp.storeName || 'Sede no asignada'}</div>
                     <div className="flex flex-col gap-1.5 mt-1">
-                        <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+                        <div className="flex items-center gap-2 text-[11px] font-black tracking-widest text-indigo-600 dark:text-indigo-400">
                           <Briefcase size={12} className="opacity-70" />
                           {emp.profileName || 'Sin cargo'}
                         </div>
-                        <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                        <div className="flex items-center gap-2 text-[11px] font-black tracking-widest text-emerald-600 dark:text-emerald-400">
                           <Calendar size={12} className="opacity-70" />
                           {emp.jornadaNombre || 'Sin jornada'}
                         </div>
@@ -311,7 +311,7 @@ const Employees = ({ user }) => {
                       <div className="font-black text-indigo-600 dark:text-indigo-400 text-sm">
                         ${emp.dailySalary?.toLocaleString('es-CO')}
                       </div>
-                      <div className="text-[10px] uppercase font-black opacity-40">Salario Diario</div>
+                      <div className="text-[10px] font-black opacity-40">Salario diario</div>
                     </td>
                   )}
                   <td style={{ padding: '1.25rem 1.5rem' }}>
@@ -324,8 +324,7 @@ const Employees = ({ user }) => {
                       fontWeight: '800',
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '0.4rem',
-                      textTransform: 'uppercase'
+                      gap: '0.4rem'
                     }}>
                       {emp.isActive ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
                       {emp.isActive ? 'Activo' : 'Inactivo'}
@@ -401,8 +400,8 @@ const Employees = ({ user }) => {
                   <h2 style={{ fontSize: '1.8rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.03em' }}>
                     {currentEmployee ? 'Actualizar Colaborador' : 'Vincular Colaborador'}
                   </h2>
-                  <p style={{ fontSize: '0.85rem', color: activeColors.textMuted, fontWeight: '700', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Gestión de Talento y Nómina Administrativa
+                  <p style={{ fontSize: '0.85rem', color: activeColors.textMuted, fontWeight: '700', marginTop: '4px', letterSpacing: '0.02em' }}>
+                    Gestión de talento y nómina administrativa
                   </p>
                 </div>
               </div>
@@ -422,12 +421,12 @@ const Employees = ({ user }) => {
                 <div style={{ position: 'relative' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '36px' }}>
                     <span style={{ fontSize: '12px', fontWeight: '950', color: activeColors.accent, background: activeColors.accentSoft, padding: '4px 12px', borderRadius: '8px' }}>01</span>
-                    <h3 style={{ fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMain, textTransform: 'uppercase', letterSpacing: '0.15em', margin: 0 }}>Identificación y Datos Personales</h3>
+                    <h3 style={{ fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMain, letterSpacing: '0.05em', margin: 0 }}>Identificación y Datos Personales</h3>
                   </div>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px 36px' }}>
                     <div className="group">
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Nombres *</label>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em' }}>Nombres completo *</label>
                       <div style={{ position: 'relative' }}>
                         <UserIcon size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                         <input 
@@ -440,7 +439,7 @@ const Employees = ({ user }) => {
                       </div>
                     </div>
                     <div className="group">
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Apellidos *</label>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em' }}>Apellidos completo *</label>
                       <div style={{ position: 'relative' }}>
                         <UserIcon size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                         <input 
@@ -453,7 +452,7 @@ const Employees = ({ user }) => {
                       </div>
                     </div>
                     <div className="group">
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Número *</label>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em' }}>Número de Identificación *</label>
                       <div style={{ position: 'relative' }}>
                         <Hash size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                         <input 
@@ -466,7 +465,7 @@ const Employees = ({ user }) => {
                       </div>
                     </div>
                     <div className="group">
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Género *</label>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em' }}>Género *</label>
                       <div style={{ position: 'relative' }}>
                         <UserIcon size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                         <select 
@@ -482,13 +481,14 @@ const Employees = ({ user }) => {
                       </div>
                     </div>
                     <div className="group">
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Cumpleaños (dd/mm/yyyy)</label>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em' }}>Cumpleaños (dd/mm/yyyy)</label>
                       <div style={{ position: 'relative' }}>
                         <Calendar size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                         <input 
-                          type="date"
+                          type="text"
                           value={formData.birthDate ? formData.birthDate.split('T')[0] : ''}
                           onChange={(e) => setFormData({...formData, birthDate: e.target.value})}
+                          placeholder="dd/mm/yyyy"
                           style={{ width: '100%', padding: '22px 24px 22px 60px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', fontSize: '0.95rem', outline: 'none', transition: 'all 0.3s' }}
                           className="focus:border-indigo-500 focus:shadow-xl"
                         />
@@ -501,13 +501,13 @@ const Employees = ({ user }) => {
                 <div style={{ position: 'relative' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '36px' }}>
                     <span style={{ fontSize: '12px', fontWeight: '950', color: activeColors.accent, background: activeColors.accentSoft, padding: '4px 12px', borderRadius: '8px' }}>02</span>
-                    <h3 style={{ fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMain, textTransform: 'uppercase', letterSpacing: '0.15em', margin: 0 }}>Cargos, Sedes y Nómina</h3>
+                    <h3 style={{ fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMain, letterSpacing: '0.05em', margin: 0 }}>Cargos, Sedes y Nómina</h3>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px 36px' }}>
                     {isAdmin && (
                       <div className="group">
-                        <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Salario Diario</label>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em' }}>Salario Diario</label>
                         <div style={{ position: 'relative' }}>
                           <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
                           <input 
@@ -521,12 +521,13 @@ const Employees = ({ user }) => {
                       </div>
                     )}
                     <div className="group">
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Fecha de Ingreso (dd/mm/yyyy) *</label>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em' }}>Fecha de Ingreso (dd/mm/yyyy) *</label>
                       <div style={{ position: 'relative' }}>
                         <Calendar size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input 
-                          type="date" value={formData.dateOfEntry?.split('T')[0] || ''}
+                          type="text" value={formData.dateOfEntry?.split('T')[0] || ''}
                           onChange={(e) => setFormData({...formData, dateOfEntry: e.target.value})}
+                          placeholder="dd/mm/yyyy"
                           style={{ width: '100%', padding: '22px 24px 22px 60px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700' }}
                           className="focus:border-indigo-500"
                         />
@@ -573,7 +574,7 @@ const Employees = ({ user }) => {
                         <div style={{ width: '22px', height: '22px', background: 'white', borderRadius: '50%', position: 'absolute', top: '3px', left: formData.isActive ? '31px' : '3px', transition: 'all 0.3s', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}></div>
                       </div>
                       <div>
-                        <span style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase' }}>Estado Activo</span>
+                        <span style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: activeColors.textMuted }}>Estado Activo</span>
                         <span style={{ fontSize: '0.8rem', fontWeight: '950', color: formData.isActive ? '#10b981' : activeColors.textMuted }}>{formData.isActive ? 'VIGENCIA EN NÓMINA' : 'RETIRADO / INACTIVO'}</span>
                       </div>
                     </div>
@@ -586,7 +587,7 @@ const Employees = ({ user }) => {
                           <div style={{ width: '22px', height: '22px', background: 'white', borderRadius: '50%', position: 'absolute', top: '3px', left: formData.mustChangePassword ? '31px' : '3px', transition: 'all 0.3s', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}></div>
                         </div>
                         <div>
-                          <span style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase' }}>Reset de Clave</span>
+                          <span style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: activeColors.textMuted }}>Reset de Clave</span>
                           <span style={{ fontSize: '0.8rem', fontWeight: '950', color: formData.mustChangePassword ? '#4f46e5' : activeColors.textMuted }}>{formData.mustChangePassword ? 'SOLICITAR AL INGRESAR' : 'MANTENER ACTUAL'}</span>
                         </div>
                     </div>
@@ -603,13 +604,14 @@ const Employees = ({ user }) => {
                 {/* Baja Date picker if inactive */}
                 {!formData.isActive && (
                   <div style={{ padding: '30px', background: isDarkMode ? '#451a1a' : '#fef2f2', borderRadius: '24px', border: '1px solid #fee2e2', animation: 'fadeIn 0.4s' }}>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: '#ef4444', textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Fecha de Baja / Desvinculación (dd/mm/yyyy) *</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: '#ef4444', marginBottom: '14px', letterSpacing: '0.05em' }}>Fecha de baja / desvinculación (dd/mm/yyyy) *</label>
                     <div style={{ position: 'relative' }}>
                       <Calendar size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-red-400" />
                       <input 
                         required={!formData.isActive}
-                        type="date" value={formData.dateOfTermination?.split('T')[0] || ''}
+                        type="text" value={formData.dateOfTermination?.split('T')[0] || ''}
                         onChange={(e) => setFormData({...formData, dateOfTermination: e.target.value})}
+                        placeholder="dd/mm/yyyy"
                         style={{ width: '100%', padding: '20px 24px 20px 60px', borderRadius: '20px', border: '2px solid #fecaca', background: 'white', color: '#b91c1c', fontWeight: '700' }}
                       />
                     </div>

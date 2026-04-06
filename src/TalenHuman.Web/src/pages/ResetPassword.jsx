@@ -131,8 +131,8 @@ const ResetPassword = ({ user, setPage, theme }) => {
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Input Group */}
-            <EliteInput 
-                label="Clave Actual" 
+            <SecurityInput 
+                label="Clave actual" 
                 icon={<Lock size={18} />} 
                 value={currentPassword} 
                 onChange={setCurrentPassword} 
@@ -141,8 +141,8 @@ const ResetPassword = ({ user, setPage, theme }) => {
                 isDark={isDark}
             />
 
-            <EliteInput 
-                label="Nueva Contraseña" 
+            <SecurityInput 
+                label="Nueva contraseña" 
                 icon={<ShieldCheck size={18} />} 
                 value={newPassword} 
                 onChange={setNewPassword} 
@@ -156,8 +156,8 @@ const ResetPassword = ({ user, setPage, theme }) => {
                 isDark={isDark}
             />
 
-            <EliteInput 
-                label="Confirmar Nueva Clave" 
+            <SecurityInput 
+                label="Confirmar nueva clave" 
                 icon={<Shield size={18} />} 
                 value={confirmPassword} 
                 onChange={setConfirmPassword} 
@@ -189,7 +189,7 @@ const ResetPassword = ({ user, setPage, theme }) => {
                     <Loader2 className="animate-spin" size={24} />
                 ) : (
                     <>
-                        <span>ACTUALIZAR ACCESO</span>
+                        <span>Actualizar acceso</span>
                         <ShieldCheck size={20} />
                     </>
                 )}
@@ -204,9 +204,9 @@ const ResetPassword = ({ user, setPage, theme }) => {
   );
 };
 
-const EliteInput = ({ label, icon, value, onChange, type, placeholder, suffix, isDark }) => (
+const SecurityInput = ({ label, icon, value, onChange, type, placeholder, suffix, isDark }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <label style={{ fontSize: '11px', fontWeight: '900', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em', paddingLeft: '4px' }}>
+        <label style={{ fontSize: '11px', fontWeight: '900', color: '#64748b', letterSpacing: '0.05em', paddingLeft: '4px' }}>
             {label}
         </label>
         <div style={{ 
