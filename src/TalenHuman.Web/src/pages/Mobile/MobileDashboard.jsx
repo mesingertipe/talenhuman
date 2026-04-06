@@ -92,14 +92,7 @@ const MobileDashboard = ({ user, theme, setPage }) => {
   return (
     <div className="animate-in fade-in slide-in-from-bottom-10 duration-700">
       
-      {/* 🚀 BIOMETRIC MODAL (V63.1 SECURE) */}
-      {showBiometrics && (
-        <BiometricEnrollModal 
-          theme={theme}
-          onComplete={() => setShowBiometrics(false)} 
-          onCancel={() => setShowBiometrics(false)} 
-        />
-      )}
+      {/* 🚀 REMOVED BIOMETRIC MODAL (V65.2.12 CLEANUP) */}
 
       {/* 🏔️ DASHBOARD HEADER */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', padding: '0 8px' }}>
@@ -120,8 +113,7 @@ const MobileDashboard = ({ user, theme, setPage }) => {
              </div>
           </div>
           
-          <button 
-             onClick={() => setShowBiometrics(true)}
+          <div 
              style={{
                 width: '50px', height: '50px', borderRadius: '18px',
                 background: isDark ? 'rgba(79, 70, 229, 0.1)' : 'rgba(79, 70, 229, 0.05)',
@@ -129,8 +121,8 @@ const MobileDashboard = ({ user, theme, setPage }) => {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5'
              }}
           >
-             <Fingerprint size={24} />
-          </button>
+             <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#4f46e5', opacity: 0.2 }} />
+          </div>
        </div>
 
        {/* 📅 DYNAMIC SHIFT CARD (PREMIUM GLASS) */}

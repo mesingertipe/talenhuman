@@ -515,3 +515,230 @@
 .login-footer a:hover {
   text-decoration: underline;
 }
+
+/* 🚀 V65.2.12 ELITE EXTREME PREMIUM FLOW */
+.mobile-premium-flow {
+    font-family: 'Outfit', sans-serif !important;
+    background: #f8fafc;
+    min-height: 100vh;
+    padding-top: 2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.mobile-brand-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    animation: fadeInDown 0.8s ease;
+}
+
+.brand-name-text {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: #1e293b;
+    letter-spacing: -0.02em;
+}
+
+.premium-recovery-card {
+    background: #ffffff;
+    margin: 0 1.25rem 2rem;
+    padding: 2.5rem 1.75rem;
+    border-radius: 40px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0,0,0,0.02);
+}
+
+.back-control-premium {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-weight: 900;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    padding: 0;
+    margin-bottom: 2.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.back-control-premium:hover {
+    color: #4f46e5;
+}
+
+.premium-title {
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+}
+
+.premium-subtitle {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 2.5rem;
+}
+
+.premium-field-group {
+    margin-bottom: 1.5rem;
+}
+
+.premium-field-label {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 900;
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.1em;
+    padding-left: 2px;
+}
+
+.premium-input-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.premium-field-input {
+    width: 100%;
+    padding: 1.1rem 1.25rem 1.1rem 3.25rem;
+    border-radius: 20px;
+    background: #f1f5f9;
+    border: 2px solid transparent;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1e293b;
+    transition: all 0.3s ease;
+}
+
+.premium-field-input:focus {
+    background: #ffffff;
+    border-color: #4f46e5;
+    outline: none;
+    box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.1);
+}
+
+.field-icon {
+    position: absolute;
+    left: 1.15rem;
+    color: #94a3b8;
+    transition: all 0.3s ease;
+}
+
+.premium-field-input:focus + .field-icon,
+.premium-input-box:focus-within .field-icon {
+    color: #4f46e5;
+}
+
+.field-toggle-btn {
+    position: absolute;
+    right: 1.15rem;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    padding: 0;
+    cursor: pointer;
+}
+
+.divider-premium {
+    height: 1px;
+    background: #f1f5f9;
+    margin: 2rem 0;
+}
+
+.login-submit-premium {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: white;
+    border: none;
+    padding: 1.25rem;
+    border-radius: 22px;
+    font-weight: 800;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    box-shadow: 0 15px 30px -5px rgba(79, 70, 229, 0.35);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.login-submit-premium:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -5px rgba(79, 70, 229, 0.5);
+}
+
+.login-submit-premium:active {
+    transform: translateY(-1px);
+}
+
+.premium-error-toast {
+    background: #fff1f2;
+    color: #e11d48;
+    padding: 1rem;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+.success-icon-box {
+    width: 80px;
+    height: 80px;
+    background: #f0fdf4;
+    color: #10b981;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+}
+
+.premium-footer-note {
+    padding: 2rem 1.25rem;
+}
+
+.footer-label {
+    font-size: 0.6rem;
+    font-weight: 900;
+    color: #94a3b8;
+    letter-spacing: 0.15em;
+    margin-bottom: 0.75rem;
+}
+
+.elite-tag {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: #1e293b;
+    color: white;
+    font-size: 0.55rem;
+    font-weight: 900;
+    border-radius: 100px;
+    letter-spacing: 0.05em;
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.loader-white {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
