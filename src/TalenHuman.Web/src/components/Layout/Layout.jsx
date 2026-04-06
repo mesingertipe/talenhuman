@@ -208,7 +208,7 @@ const getPageInfo = (page) => {
     case 'Auditoría': return { title: 'Auditoría del Sistema', subtitle: 'Trazabilidad y control de movimientos críticos' };
     case 'Configuración Sistema': return { title: 'Parámetros del Sistema', subtitle: 'Configuración de infraestructura y servicios core' };
     case 'Diseñador de Plantillas': return { title: 'Catálogo de Plantillas', subtitle: 'Diseño de novedades globales para el ecosistema' };
-    case 'Centro de Comunicados': return { title: 'Centro de Comunicados Elite', subtitle: 'Difusión estratégica y masiva de cultura corporativa' };
+    case 'Centro de Comunicados': return { title: 'Centro de Comunicados', subtitle: 'Difusión estratégica y masiva de cultura corporativa' };
     default: return { title: page, subtitle: '' };
   }
 };

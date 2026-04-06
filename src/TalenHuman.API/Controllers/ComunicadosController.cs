@@ -25,19 +25,22 @@ public class ComunicadosController : ControllerBase
     private readonly ISystemSettingsService _settings;
     private readonly ILogger<ComunicadosController> _logger;
     private readonly NotificationService _notificationService;
+    private readonly ITenantProvider _tenantProvider;
 
     public ComunicadosController(
         IApplicationDbContext context, 
         IAuditService auditService, 
         ISystemSettingsService settings, 
         ILogger<ComunicadosController> logger,
-        NotificationService notificationService)
+        NotificationService notificationService,
+        ITenantProvider tenantProvider)
     {
         _context = context;
         _auditService = auditService;
         _settings = settings;
         _logger = logger;
         _notificationService = notificationService;
+        _tenantProvider = tenantProvider;
     }
 
     [AllowAnonymous]
@@ -59,8 +62,8 @@ public class ComunicadosController : ControllerBase
         var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null) return Unauthorized();
 
-        var query = _context.Comunicados.AsQueryable();
-        query = query.Where(c => c.CompanyId == user.CompanyId);
+        var companyId = _tenantProvider.GetTenantId();
+        var query = _context.Comunicados.Where(c => c.CompanyId == companyId).AsQueryable();
 
         return await query
             .Include(c => c.CreatedByUser)
@@ -135,7 +138,7 @@ public class ComunicadosController : ControllerBase
         var admin = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
         if (admin == null) return NotFound();
 
-        var companyId = admin.CompanyId;
+        var companyId = _tenantProvider.GetTenantId();
 
         // 1. Create Comunicado record
         var comunicado = new Comunicado
