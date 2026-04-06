@@ -31,6 +31,7 @@ public class NotificationRequest
 
 public class NotificationService
 {
+    private static readonly System.Threading.SemaphoreSlim _semaphore = new System.Threading.SemaphoreSlim(1, 1);
     private readonly IEmailService _emailService;
     private readonly IApplicationDbContext _context;
     private readonly ITenantProvider _tenantProvider;
@@ -85,12 +86,24 @@ public class NotificationService
         var app = FirebaseApp.GetInstance(appName);
         if (app == null)
         {
-            _logger.LogInformation("🚀 Initializing Firebase App for Project: {ProjectId} (Instance: {AppName})", projectId, appName);
-            app = FirebaseApp.Create(new AppOptions
+            await _semaphore.WaitAsync();
+            try
             {
-                ProjectId = projectId,
-                Credential = Google.Apis.Auth.OAuth2.GoogleCredential.GetApplicationDefault(),
-            }, appName);
+                app = FirebaseApp.GetInstance(appName);
+                if (app == null)
+                {
+                    _logger.LogInformation("🚀 Initializing Multi-tenant Firebase: {ProjectId}", projectId);
+                    app = FirebaseApp.Create(new AppOptions
+                    {
+                        ProjectId = projectId,
+                        Credential = Google.Apis.Auth.OAuth2.GoogleCredential.GetApplicationDefault(),
+                    }, appName);
+                }
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
         }
 
         return FirebaseMessaging.GetMessaging(app);
@@ -169,8 +182,8 @@ public class NotificationService
 
                     var messaging = await GetMessagingAsync();
                     var response = await messaging.SendAsync(fcmMessage);
-                    _logger.LogInformation("V12.30: FCM Push SENT successfully to user {UserId}. Message ID: {Response}. Token: {TokenPreview}", 
-                        request.UserId, response, request.To.Substring(0, 10) + "...");
+                    _logger.LogInformation("FCM Push SENT successfully to user {UserId}. Message ID: {Response}", 
+                        request.UserId, response);
                 } catch (Exception ex) {
                     _logger.LogError(ex, "FCM Error sending notification to user {UserId}: {Message}", request.UserId, ex.Message);
                 }
