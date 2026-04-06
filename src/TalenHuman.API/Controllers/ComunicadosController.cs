@@ -49,7 +49,7 @@ public class ComunicadosController : ControllerBase
     }
 
     [HttpPost("sync-token")]
-    public async Task<IActionResult> UpdateFirebaseToken([FromBody] TokenUpdateDto dto)
+    public async Task<IActionResult> UpdateFirebaseToken([FromBody] ComunicadoTokenUpdateDto dto)
     {
         _logger.LogInformation("FCM Sync: Request received (V65.1.25)");
 
@@ -77,7 +77,7 @@ public class ComunicadosController : ControllerBase
         return Ok(new { status = "success", version = "V65.1.25" });
     }
 
-    public class TokenUpdateDto { public string Token { get; set; } = string.Empty; }
+    public class ComunicadoTokenUpdateDto { public string Token { get; set; } = string.Empty; }
 
     private async Task<string> EnsureFirebaseInitializedAsync()
     {

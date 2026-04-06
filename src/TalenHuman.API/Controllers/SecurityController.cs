@@ -134,7 +134,7 @@ public class SecurityController : ControllerBase
         }
     }
     [HttpPost("sync-token")]
-    public async Task<IActionResult> UpdateFirebaseToken([FromBody] TokenUpdateDto dto)
+    public async Task<IActionResult> UpdateFirebaseToken([FromBody] SecurityTokenUpdateDto dto)
     {
         var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
@@ -151,7 +151,7 @@ public class SecurityController : ControllerBase
         return Ok(new { status = "success", version = "V65.1.39" });
     }
 
-    public class TokenUpdateDto
+    public class SecurityTokenUpdateDto
     {
         public string Token { get; set; } = string.Empty;
     }
