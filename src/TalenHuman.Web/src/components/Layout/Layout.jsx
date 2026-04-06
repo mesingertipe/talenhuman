@@ -366,13 +366,17 @@ const Layout = ({ children, activePage, setPage, user, onLogout }) => {
 
   const handleTenantChange = (e) => {
     const newId = e.target.value;
+    if (!newId) return;
+
+    // 🛡️ ATOMIC PERSISTENCE V12.96
+    console.log(`[TENANT-SWITCH] Changing to: ${newId}`);
     setSelectedTenant(newId);
     localStorage.setItem('tenantId', newId);
     
-    // Pequeño delay de 500ms para estabilizar estados antes del flash de recarga
+    // Forced delay to ensure storage is flushed and state is stable
     setTimeout(() => {
-      window.location.reload();
-    }, 500);
+      window.location.reload(true); // Force reload from server
+    }, 300);
   };
 
   const effectiveTenantId = selectedTenant || user?.companyId;

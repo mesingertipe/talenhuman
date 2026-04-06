@@ -63,6 +63,8 @@ public class ComunicadosController : ControllerBase
         if (user == null) return Unauthorized();
 
         var companyId = _tenantProvider.GetTenantId();
+        _logger.LogInformation("[TENANT-CHECK] GET Comunicados | User: {User} | CompanyId: {CompanyId}", user.NormalizedUserName, companyId);
+        
         var query = _context.Comunicados.Where(c => c.CompanyId == companyId).AsQueryable();
 
         return await query
@@ -139,6 +141,7 @@ public class ComunicadosController : ControllerBase
         if (admin == null) return NotFound();
 
         var companyId = _tenantProvider.GetTenantId();
+        _logger.LogInformation("[TENANT-CHECK] POST Broadcast | User: {User} | CompanyId: {CompanyId}", admin.NormalizedUserName, companyId);
 
         // 1. Create Comunicado record
         var comunicado = new Comunicado
