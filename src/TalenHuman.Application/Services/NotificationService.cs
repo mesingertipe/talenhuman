@@ -1,3 +1,4 @@
+using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using Microsoft.EntityFrameworkCore;
 using TalenHuman.Application.Common.Interfaces;
@@ -33,17 +34,20 @@ public class NotificationService
     private readonly IEmailService _emailService;
     private readonly IApplicationDbContext _context;
     private readonly ITenantProvider _tenantProvider;
+    private readonly ISystemSettingsService _settingsService;
     private readonly ILogger<NotificationService> _logger;
 
     public NotificationService(
         IEmailService emailService, 
         IApplicationDbContext context,
         ITenantProvider tenantProvider,
+        ISystemSettingsService settingsService,
         ILogger<NotificationService> logger)
     {
         _emailService = emailService;
         _context = context;
         _tenantProvider = tenantProvider;
+        _settingsService = settingsService;
         _logger = logger;
     }
 
@@ -71,6 +75,25 @@ public class NotificationService
         if (string.IsNullOrEmpty(html)) return null;
         var match = Regex.Match(html, "<img.+?src=[\"'](.+?)[\"'].*?>", RegexOptions.IgnoreCase);
         return match.Success ? match.Groups[1].Value : null;
+    }
+
+    private async Task<FirebaseMessaging> GetMessagingAsync()
+    {
+        var projectId = await _settingsService.GetSettingAsync("FIREBASE_PROJECT_ID") ?? "talenhuman";
+        var appName = $"App_{projectId}";
+
+        var app = FirebaseApp.GetInstance(appName);
+        if (app == null)
+        {
+            _logger.LogInformation("🚀 Initializing Firebase App for Project: {ProjectId} (Instance: {AppName})", projectId, appName);
+            app = FirebaseApp.Create(new AppOptions
+            {
+                ProjectId = projectId,
+                Credential = Google.Apis.Auth.OAuth2.GoogleCredential.GetApplicationDefault(),
+            }, appName);
+        }
+
+        return FirebaseMessaging.GetMessaging(app);
     }
 
     public async Task SendNotificationAsync(NotificationRequest request)
@@ -144,7 +167,8 @@ public class NotificationService
                         }
                     };
 
-                    var response = await FirebaseMessaging.DefaultInstance.SendAsync(fcmMessage);
+                    var messaging = await GetMessagingAsync();
+                    var response = await messaging.SendAsync(fcmMessage);
                     _logger.LogInformation("FCM Push SENT successfully to user {UserId}. Message ID: {Response}. Token: {TokenPreview}", 
                         request.UserId, response, request.To.Substring(0, 10) + "...");
                 } catch (Exception ex) {
@@ -206,7 +230,8 @@ public class NotificationService
                 Data = data
             };
 
-            await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(multicastMessage);
+            var messaging = await GetMessagingAsync();
+            await messaging.SendEachForMulticastAsync(multicastMessage);
         }
         catch (Exception ex)
         {
