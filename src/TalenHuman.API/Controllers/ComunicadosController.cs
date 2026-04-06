@@ -250,12 +250,15 @@ public class ComunicadosController : ControllerBase
 
         try
         {
-            await _notificationService.SendNotificationAsync(new NotificationRequest
+            var projectId = await _settingsService.GetSettingAsync("FIREBASE_PROJECT_ID") ?? "talenhuman (fallback)";
+            var senderId = await _settingsService.GetSettingAsync("FIREBASE_MESSAGING_SENDER_ID") ?? "---";
+
+            var responseId = await _notificationService.SendNotificationAsync(new NotificationRequest
             {
                 To = user.FirebaseToken,
                 UserId = user.Id,
                 Subject = "🚀 Prueba Real de Nube",
-                Message = $"Hola {user.FullName.Split(' ')[0]}, si recibes esto, la conexión entre TalenHuman y Google Firebase está ACTIVA. (V12.25)",
+                Message = $"Hola {user.FullName.Split(' ')[0]}, si recibes esto, la conexión entre TalenHuman y Google Firebase está ACTIVA. (V12.60)",
                 Type = NotificationType.Push,
                 Category = "diagnostic",
                 Metadata = new Dictionary<string, string> { { "type", "test" } }
@@ -263,6 +266,9 @@ public class ComunicadosController : ControllerBase
 
             return Ok(new { 
                 message = "Orden de Push enviada correctamente a tu dispositivo",
+                responseId = responseId,
+                projectId = projectId,
+                senderId = senderId,
                 tokenPreview = user.FirebaseToken.Length > 15 ? user.FirebaseToken.Substring(0, 15) + "..." : user.FirebaseToken
             });
         }

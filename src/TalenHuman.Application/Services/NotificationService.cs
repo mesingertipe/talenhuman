@@ -123,8 +123,9 @@ public class NotificationService
         return FirebaseMessaging.GetMessaging(app);
     }
 
-    public async Task SendNotificationAsync(NotificationRequest request)
+    public async Task<string?> SendNotificationAsync(NotificationRequest request)
     {
+        string? messageId = null;
         // 1. Database Logging (Persistent History)
         if (request.UserId.HasValue && request.UserId != Guid.Empty)
         {
@@ -157,11 +158,12 @@ public class NotificationService
                 if (!string.IsNullOrEmpty(request.To))
                 {
                     await _emailService.SendEmailAsync(request.To, request.Subject, request.Message, request.Attachments);
+                    messageId = "email_sent";
                 }
                 break;
             
             case NotificationType.Push:
-                if (string.IsNullOrEmpty(request.To)) return;
+                if (string.IsNullOrEmpty(request.To)) return null;
 
                 try {
                     var data = request.Metadata != null 
@@ -200,18 +202,21 @@ public class NotificationService
                         request.To.Length > 10 ? request.To.Substring(0, 10) : "short", 
                         (await GetMessagingAsync()).GetType().Name); // Logging the instance type
 
-                    var response = await messaging.SendAsync(fcmMessage);
+                    messageId = await messaging.SendAsync(fcmMessage);
                     
-                    _logger.LogInformation("✅ [V12.50-FCM-STEP-2] Respuesta de Google FCM: {ResponseID}. Usuario: {UserId}", 
-                        response, request.UserId);
+                    _logger.LogInformation("✅ [V12.60-FCM-STEP-2] Respuesta de Google FCM: {ResponseID}. Usuario: {UserId}", 
+                        messageId, request.UserId);
                 } catch (Exception ex) {
                     _logger.LogError(ex, "FCM Error sending notification to user {UserId}: {Message}", request.UserId, ex.Message);
+                    throw; // Re-throw to allow controller to catch it
                 }
                 break;
 
             default:
                 throw new NotSupportedException($"Notification type {request.Type} not implemented yet.");
         }
+
+        return messageId;
     }
 
     public async Task SendBroadcastAsync(IEnumerable<Guid> userIds, IEnumerable<string> tokens, NotificationRequest request)
