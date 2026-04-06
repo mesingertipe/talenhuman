@@ -366,17 +366,21 @@ const Layout = ({ children, activePage, setPage, user, onLogout }) => {
 
   const handleTenantChange = (e) => {
     const newId = e.target.value;
-    if (!newId) return;
+    
+    // 🛡️ LOOP PROTECTION V12.99
+    if (!newId || newId === selectedTenant) {
+        console.log(`[TENANT-SWITCH] Cancelled: Identity or empty ID.`);
+        return;
+    }
 
-    // 🛡️ ATOMIC PERSISTENCE V12.96
     console.log(`[TENANT-SWITCH] Changing to: ${newId}`);
     setSelectedTenant(newId);
     localStorage.setItem('tenantId', newId);
     
-    // Forced delay to ensure storage is flushed and state is stable
+    // Smooth reload to avoid browser cache loops
     setTimeout(() => {
-      window.location.reload(true); // Force reload from server
-    }, 300);
+      window.location.reload(); 
+    }, 100);
   };
 
   const effectiveTenantId = selectedTenant || user?.companyId;
