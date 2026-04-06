@@ -169,28 +169,6 @@ using (var scope = app.Services.CreateScope())
             await TalenHuman.Infrastructure.Persistence.DbInitializer.SeedAsync(context, userManager, roleManager);
             logger.LogInformation("Database seed check completed.");
 
-            // 🚀 ELITE V65.1: Proactive Firebase Admin Initialization
-            try {
-                var settings = services.GetRequiredService<ISystemSettingsService>();
-                var projectId = await settings.GetSettingAsync("FIREBASE_PROJECT_ID");
-                
-                if (string.IsNullOrEmpty(projectId))
-                {
-                    logger.LogWarning("Firebase Admin SDK NOT initialized: FIREBASE_PROJECT_ID is empty in settings.");
-                }
-                else if (FirebaseAdmin.FirebaseApp.DefaultInstance == null)
-                {
-                    FirebaseAdmin.FirebaseApp.Create(new FirebaseAdmin.AppOptions()
-                    {
-                        Credential = Google.Apis.Auth.OAuth2.GoogleCredential.GetApplicationDefault(),
-                        ProjectId = projectId
-                    });
-                    logger.LogInformation("Firebase Admin SDK Initialized for Project: {ProjectId} ✅", projectId);
-                }
-            } catch (Exception ex) {
-                logger.LogCritical(ex, "FATAL: Firebase Admin SDK Initialization FAILED. Check Application Default Credentials or Environment Variables. Error: {Message}", ex.Message);
-            }
-
             break;
         }
         catch (Exception ex)

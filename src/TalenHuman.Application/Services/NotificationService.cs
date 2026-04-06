@@ -202,7 +202,7 @@ public class NotificationService
 
                     var response = await messaging.SendAsync(fcmMessage);
                     
-                    _logger.LogInformation("✅ [FCM-STEP-2] Respuesta de Google FCM Recibida: {ResponseID}. Usuario: {UserId}", 
+                    _logger.LogInformation("✅ [V12.50-FCM-STEP-2] Respuesta de Google FCM: {ResponseID}. Usuario: {UserId}", 
                         response, request.UserId);
                 } catch (Exception ex) {
                     _logger.LogError(ex, "FCM Error sending notification to user {UserId}: {Message}", request.UserId, ex.Message);
