@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   User, Mail, Phone, Calendar, MapPin, 
   ChevronRight, ArrowLeft, Camera, Edit2,
-  Bell, CreditCard, Droplets, LogOut, Key, Sun, Moon
+  Bell, CreditCard, Droplets, LogOut, Key, Sun, Moon, Lock
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -99,6 +99,23 @@ const MobileProfile = ({ user, setPage, onLogout }) => {
 
       {/* 🏔️ SETTINGS SECTIONS */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <SectionHeader title="Seguridad" isDark={isDark} />
+          <div style={{ 
+             background: cardBg, borderRadius: '28px', 
+             border: `1px solid ${cardBorder}`, overflow: 'hidden',
+             boxShadow: shadow
+          }}>
+             <ProfileItem 
+                 icon={<Lock size={20} />} 
+                 label="Contraseña" 
+                 value="Cambiar clave actual" 
+                 isDark={isDark} 
+                 onClick={() => setPage('ResetPassword')} 
+                 showChevron
+                 showLast
+             />
+          </div>
+
           <SectionHeader title="Preferencias" isDark={isDark} />
           <div style={{ 
              background: cardBg, borderRadius: '28px', 
@@ -154,6 +171,37 @@ const SectionHeader = ({ title, isDark }) => (
     }}>
         {title}
     </h3>
+);
+
+const ProfileItem = ({ icon, label, value, isDark, showChevron, onClick, showLast }) => (
+    <div 
+        onClick={onClick}
+        style={{
+            padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            borderBottom: showLast ? 'none' : `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'}`,
+            cursor: onClick ? 'pointer' : 'default',
+            transition: 'all 0.3s'
+        }}
+    >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ 
+                width: '44px', height: '44px', borderRadius: '15px', 
+                background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(79, 70, 229, 0.05)', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' 
+            }}>
+                {icon}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '11px', color: isDark ? 'rgba(255,255,255,0.4)' : '#64748b', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    {label}
+                </span>
+                <span style={{ fontSize: '15px', color: isDark ? '#ffffff' : '#1e293b', fontWeight: '700' }}>
+                    {value}
+                </span>
+            </div>
+        </div>
+        {showChevron && <ChevronRight size={18} strokeWidth={2.5} color={isDark ? 'rgba(255,255,255,0.2)' : '#cbd5e1'} />}
+    </div>
 );
 
 const InteractiveItem = ({ icon, label, value, isDark, active, onClick, showLast }) => (

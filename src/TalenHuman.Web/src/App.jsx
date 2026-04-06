@@ -65,6 +65,7 @@ function App() {
   const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [currentPage, setCurrentPage] = useState('Dashboard');
   const [booting, setBooting] = useState(true); 
+  const [authView, setAuthView] = useState('login'); // 'login', 'forgot', 'self-service'
   const { isDarkMode, toggleTheme } = useTheme();
   const theme = isDarkMode ? 'dark' : 'light';
 
@@ -247,6 +248,10 @@ function App() {
   // toggleTheme is now from useTheme() context
 
   const handleLogout = () => {
+    // 🛡️ SYNC STATE CLEAR (V65.2.6)
+    // Clear state before redirect to prevent layout crashes by unmounting complex children
+    setToken(null);
+    setUser(null);
     localStorage.clear();
     sessionStorage.clear();
     window.location.replace('/');
@@ -270,7 +275,23 @@ function App() {
       </div>
     );
 
-    if (!token) return <Login onLogin={handleLogin} version={APP_VERSION} theme={theme} onForgotPassword={() => {}} onSelfServiceReset={() => {}} />;
+    if (!token) {
+        if (authView === 'forgot') {
+            return <ForgotPassword onBack={() => setAuthView('login')} />;
+        }
+        if (authView === 'self-service') {
+            return <SelfServiceReset onBack={() => setAuthView('login')} />;
+        }
+        return (
+            <Login 
+                onLogin={handleLogin} 
+                version={APP_VERSION} 
+                theme={theme} 
+                onForgotPassword={() => setAuthView('forgot')} 
+                onSelfServiceReset={() => setAuthView('self-service')} 
+            />
+        );
+    }
 
     // 🔒 STRICTOR Gating: Only Employee profiles see Mobile experience/modals
     if (isEmployee && isMobileDevice && !isStandalone) {
