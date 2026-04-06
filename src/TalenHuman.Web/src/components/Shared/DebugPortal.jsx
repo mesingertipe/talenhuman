@@ -81,6 +81,7 @@ const DebugPortal = ({ isOpen, onClose }) => {
                     <span className="font-black text-[10px] uppercase tracking-widest text-slate-400">Elite Diagnostic Hub V65.6.0</span>
                 </div>
                 <div className="flex gap-2">
+                    <button 
                         onClick={async () => {
                             if (window.confirm('¿Enviar prueba REAL desde la nube?')) {
                                 try {
