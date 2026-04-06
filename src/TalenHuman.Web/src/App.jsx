@@ -46,7 +46,7 @@ import DebugPortal from './components/Shared/DebugPortal'
 import MobileCommunicationModal from './components/Mobile/MobileCommunicationModal'
 
 // V65.2.18 STABILITY UPDATE
-const APP_VERSION = "V12.66";
+const APP_VERSION = "V12.70";
 
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION
@@ -75,7 +75,7 @@ function App() {
   const [showPRModal, setShowPRModal] = useState(false);
   const [notification, setNotification] = useState({ show: false, title: '', body: '' });
 
-  const CURRENT_VERSION = "V65.6.0";
+  const CURRENT_VERSION = "V65.7.0";
   
   
   useEffect(() => {
@@ -164,6 +164,25 @@ function App() {
         checkActiveCommunication();
     }
   }, [user]);
+
+  // 🔄 RE-SYNC ON FOCUS (V12.70 - Final Stabilization)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible' && isEmployee && isMobileDevice && user) {
+            console.log('👁️ [UI Sync] App back to focus. Refreshing active content...');
+            checkActiveCommunication();
+        }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // Also sync on window focus
+    window.addEventListener('focus', handleVisibilityChange);
+
+    return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        window.removeEventListener('focus', handleVisibilityChange);
+    };
+  }, [user, isEmployee, isMobileDevice]);
 
   const checkActiveCommunication = async () => {
     try {
