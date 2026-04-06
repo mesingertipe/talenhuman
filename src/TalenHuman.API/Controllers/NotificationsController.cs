@@ -134,7 +134,13 @@ public class NotificationsController : ControllerBase
         user.FirebaseToken = dto.Token;
         await _context.SaveChangesAsync(default);
 
-        return Ok();
+        return Ok(new { 
+            status = "Sync OK", 
+            message = "Token registrado en el núcleo de seguridad",
+            timestamp = DateTime.UtcNow,
+            userId = user.Id,
+            tokenPreview = dto.Token.Length > 20 ? dto.Token.Substring(0, 20) + "..." : dto.Token
+        });
     }
 }
 
