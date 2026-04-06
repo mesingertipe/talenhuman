@@ -81,9 +81,19 @@ public class NotificationService
     private async Task<FirebaseMessaging> GetMessagingAsync()
     {
         var projectId = await _settingsService.GetSettingAsync("FIREBASE_PROJECT_ID") ?? "talenhuman";
-        var appName = $"App_{projectId}";
+        var senderId = await _settingsService.GetSettingAsync("FIREBASE_MESSAGING_SENDER_ID") ?? "---";
 
+        // 🛡️ ELITE V12.33: Prioritize DefaultInstance if ProjectId matches 
+        // This ensures maximum compatibility with Environment-level credentials
+        if (FirebaseApp.DefaultInstance != null && FirebaseApp.DefaultInstance.Options.ProjectId == projectId)
+        {
+            _logger.LogTrace("🎯 [FCM] Using DefaultInstance for {ProjectId}", projectId);
+            return FirebaseMessaging.DefaultInstance;
+        }
+
+        var appName = $"App_{projectId}";
         var app = FirebaseApp.GetInstance(appName);
+        
         if (app == null)
         {
             await _semaphore.WaitAsync();
@@ -92,7 +102,7 @@ public class NotificationService
                 app = FirebaseApp.GetInstance(appName);
                 if (app == null)
                 {
-                    _logger.LogInformation("🚀 Initializing Multi-tenant Firebase: {ProjectId}", projectId);
+                    _logger.LogInformation("🚀 [FCM] Initializing Named Instance: {ProjectId} (Sender: {SenderId})", projectId, senderId);
                     app = FirebaseApp.Create(new AppOptions
                     {
                         ProjectId = projectId,
