@@ -255,7 +255,7 @@ public class ComunicadosController : ControllerBase
                 To = user.FirebaseToken,
                 UserId = user.Id,
                 Subject = "🚀 Prueba Real de Nube",
-                Message = $"Hola {user.FirstName}, si recibes esto, la conexión entre TalenHuman y Google Firebase está ACTIVA. (V12.25)",
+                Message = $"Hola {user.FullName.Split(' ')[0]}, si recibes esto, la conexión entre TalenHuman y Google Firebase está ACTIVA. (V12.25)",
                 Type = NotificationType.Push,
                 Category = "diagnostic",
                 Metadata = new Dictionary<string, string> { { "type", "test" } }
