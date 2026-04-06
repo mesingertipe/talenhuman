@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Shield, User, Calendar, Lock, ArrowLeft, CheckCircle, AlertCircle, Eye, EyeOff, ShieldCheck, ArrowRight, Bell } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Shield, User, Calendar, Lock, ArrowLeft, CheckCircle, AlertCircle, Eye, EyeOff, ShieldCheck, ArrowRight, Bell, Sparkles, Check, X } from 'lucide-react';
 import api from '../services/api';
 import TalenHumanLogo from '../components/Shared/TalenHumanLogo';
 import './Login.css';
@@ -16,17 +16,21 @@ const SelfServiceReset = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  
+  // ⚡️ Elite Indicators Logic (V12 Premium)
+  const isMatch = formData.newPassword && formData.newPassword === formData.confirmPassword;
+  const isLongEnough = formData.newPassword.length >= 6;
+  const strengthPercent = Math.min((formData.newPassword.length / 8) * 100, 100);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-
-    if (formData.newPassword !== formData.confirmPassword) {
-      setError('Las contraseñas no coinciden');
+    if (!isMatch) {
+      setError('Las contraseñas deben coincidir perfectamente.');
       return;
     }
 
     setLoading(true);
+    setError('');
     try {
       await api.post('/auth/self-service-reset', {
         identificationNumber: formData.identificationNumber,
@@ -53,41 +57,45 @@ const SelfServiceReset = ({ onBack }) => {
                 <TalenHumanLogo size={24} white={true} />
                 <span>TALENHUMAN</span>
             </div>
-            <div style={{ width: 40 }} /> {/* Spacer for balance */}
+            <div style={{ width: 40 }} /> 
         </header>
 
         <main className="elite-mobile-content">
-            <div className="premium-recovery-card-v2">
+            <div className="premium-recovery-card-v2 animate-in slide-in-from-bottom-10">
                 
                 {success ? (
                 <div className="success-state-premium text-center py-8">
                     <div className="success-icon-box">
                         <CheckCircle size={44} />
                     </div>
-                    <h3 className="premium-title">¡Contraseña Actualizada!</h3>
-                    <p className="premium-subtitle">
-                        Tu acceso ha sido restablecido con éxito. Ya puedes ingresar al sistema.
-                    </p>
-                    <button onClick={onBack} className="login-submit-premium w-full mt-6">
-                        <span>IR AL LOGIN</span>
+                    <h2 className="premium-title">¡Éxito Total!</h2>
+                    <p className="premium-subtitle">Tu contraseña ha sido actualizada. Ingresa con tus nuevos datos.</p>
+                    <button onClick={onBack} className="login-submit-premium-v2 w-full mt-6">
+                        <span>ENTRAR AL LOGIN</span>
                         <ArrowRight size={20} />
                     </button>
                 </div>
                 ) : (
                 <div className="form-state-premium">
-                    <div className="header-section-premium">
-                        <h2 className="premium-title">Auto-Servicio</h2>
-                        <p className="premium-subtitle">Valida tu identidad para definir una nueva contraseña sin depender de un correo corporativo.</p>
+                    <div className="header-section-premium mb-10">
+                        <div className="flex items-center gap-3 mb-2">
+                           <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+                               <Sparkles size={18} />
+                           </div>
+                           <h2 className="premium-title" style={{ margin: 0 }}>AUTO-SERVICIO</h2>
+                        </div>
+                        <p className="premium-subtitle">Valida tu identidad de forma segura para definir tu nueva clave.</p>
                     </div>
 
                     {error && (
-                    <div className="premium-error-toast">
+                    <div className="premium-error-toast mb-8">
                         <AlertCircle size={18} />
                         <span>{error}</span>
                     </div>
                     )}
 
                     <form onSubmit={handleSubmit} className="premium-form-layout">
+                        {/* 🆔 IDENTIFICACIÓN */}
                         <div className="premium-field-group">
                             <label className="premium-field-label">NÚMERO DE CÉDULA</label>
                             <div className="premium-input-box-v2">
@@ -96,13 +104,14 @@ const SelfServiceReset = ({ onBack }) => {
                                     required
                                     type="text"
                                     className="premium-field-input-v2"
-                                    placeholder="Identificación del empleado"
+                                    placeholder="ID del empleado"
                                     value={formData.identificationNumber}
                                     onChange={(e) => setFormData({ ...formData, identificationNumber: e.target.value })}
                                 />
                             </div>
                         </div>
 
+                        {/* 📅 NACIMIENTO */}
                         <div className="premium-field-group">
                             <label className="premium-field-label">FECHA DE NACIMIENTO</label>
                             <div className="premium-input-box-v2">
@@ -119,8 +128,12 @@ const SelfServiceReset = ({ onBack }) => {
 
                         <div className="divider-premium" />
 
+                        {/* 🔒 NUEVA CLAVE */}
                         <div className="premium-field-group">
-                            <label className="premium-field-label">NUEVA CONTRASEÑA</label>
+                            <div className="flex justify-between items-center mb-1">
+                                <label className="premium-field-label">NUEVA CONTRASEÑA</label>
+                                {isLongEnough && <span className="text-[10px] text-emerald-600 font-bold tracking-widest flex items-center gap-1"><Check size={10} /> SEGURA</span>}
+                            </div>
                             <div className="premium-input-box-v2">
                                 <Lock className="field-icon-v2" size={20} />
                                 <input 
@@ -135,25 +148,49 @@ const SelfServiceReset = ({ onBack }) => {
                                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                 </button>
                             </div>
+                            {/* Strength Bar */}
+                            <div className="w-full h-1 bg-slate-100 rounded-full mt-3 overflow-hidden">
+                                <div 
+                                   className="h-full bg-indigo-500 transition-all duration-500" 
+                                   style={{ width: `${strengthPercent}%`, opacity: formData.newPassword ? 1 : 0 }} 
+                                />
+                            </div>
                         </div>
 
+                        {/* 🔒 CONFIRMAR CLAVE */}
                         <div className="premium-field-group">
-                            <label className="premium-field-label">CONFIRMAR CONTRASEÑA</label>
-                            <div className="premium-input-box-v2">
+                            <div className="flex justify-between items-center mb-1">
+                                <label className="premium-field-label">CONFIRMAR CLAVE</label>
+                                {formData.confirmPassword && (
+                                    isMatch ? 
+                                    <span className="text-[10px] text-emerald-600 font-black flex items-center gap-1 animate-in zoom-in"><Check size={10} /> COINCIDE</span> : 
+                                    <span className="text-[10px] text-rose-600 font-black flex items-center gap-1 animate-in zoom-in"><X size={10} /> NO COINCIDE</span>
+                                )}
+                            </div>
+                            <div className={`premium-input-box-v2 ${formData.confirmPassword && !isMatch ? 'border-rose-300' : ''}`}>
                                 <Lock className="field-icon-v2" size={20} />
                                 <input 
                                     required
                                     type={showPassword ? "text" : "password"}
                                     className="premium-field-input-v2"
-                                    placeholder="Repite la nueva clave"
+                                    placeholder="Repite la clave"
                                     value={formData.confirmPassword}
                                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                                 />
                             </div>
                         </div>
 
-                        <button type="submit" disabled={loading} className="login-submit-premium-v2 w-full mt-8">
-                            {loading ? <div className="loader-white"></div> : <span>ACTUALIZAR CONTRASEÑA</span>}
+                        <button 
+                           type="submit" 
+                           disabled={loading || !isMatch || !isLongEnough} 
+                           className="login-submit-premium-v2 w-full mt-10"
+                        >
+                            {loading ? <div className="loader-white"></div> : (
+                                <div className="flex items-center gap-3">
+                                    <span>ACTUALIZAR ACCESO</span>
+                                    <ArrowRight size={20} />
+                                </div>
+                            )}
                         </button>
                     </form>
                 </div>
@@ -161,8 +198,8 @@ const SelfServiceReset = ({ onBack }) => {
             </div>
             
             <footer className="elite-mobile-footer">
-                <p>GESTIÓN HUMANA DE ÚLTIMA GENERACIÓN</p>
-                <div className="elite-version">V65.2.13-ELITE</div>
+                <p>PROTECCIÓN DE DATOS BAJO TLS 1.3</p>
+                <div className="elite-version">V65.2.14-ELITE</div>
             </footer>
         </main>
     </div>

@@ -574,20 +574,20 @@
 }
 
 .premium-title {
-    font-size: 1.75rem;
-    font-weight: 900;
-    color: #1e293b;
-    margin-bottom: 0.75rem;
-    letter-spacing: -0.03em;
-    line-height: 1.1;
+    font-size: 1.75rem !important;
+    font-weight: 900 !important;
+    color: #1e293b !important; /* ULTRA FORCE DARK TEXT ON WHITE CARD */
+    margin-bottom: 0.75rem !important;
+    letter-spacing: -0.03em !important;
+    line-height: 1.1 !important;
 }
 
 .premium-subtitle {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #64748b;
-    line-height: 1.6;
-    margin-bottom: 2.5rem;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    color: #475569 !important; /* Force darker slate */
+    line-height: 1.6 !important;
+    margin-bottom: 2.5rem !important;
 }
 
 .premium-field-group {
@@ -595,13 +595,12 @@
 }
 
 .premium-field-label {
-    display: block;
-    font-size: 0.65rem;
-    font-weight: 900;
-    color: #1e293b;
-    margin-bottom: 0.75rem;
-    letter-spacing: 0.1em;
-    padding-left: 2px;
+    display: block !important;
+    font-size: 0.7rem !important;
+    font-weight: 900 !important;
+    color: #1e293b !important; /* Force visibility */
+    margin-bottom: 0.75rem !important;
+    letter-spacing: 0.1em !important;
 }
 
 .premium-input-box {
