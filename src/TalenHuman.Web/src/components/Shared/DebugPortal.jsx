@@ -15,7 +15,7 @@ const DebugPortal = ({ isOpen, onClose }) => {
         if (!isOpen) return;
 
         // 📝 CAPTURE CONSOLE
-        const HUB_VERSION = "V65.5.0";
+        const HUB_VERSION = "V65.6.0";
         const originalLog = console.log;
         const originalError = console.error;
         const addLog = (type, args) => {
@@ -78,18 +78,17 @@ const DebugPortal = ({ isOpen, onClose }) => {
             <div className="flex items-center justify-between p-2 bg-slate-900 border-b border-slate-800 h-10">
                 <div className="flex items-center gap-2">
                     <Zap size={14} className="text-amber-400" />
-                    <span className="font-black text-[10px] uppercase tracking-widest text-slate-400">Elite Diagnostic Hub V65.5.0</span>
+                    <span className="font-black text-[10px] uppercase tracking-widest text-slate-400">Elite Diagnostic Hub V65.6.0</span>
                 </div>
                 <div className="flex gap-2">
-                    <button 
                         onClick={async () => {
                             if (window.confirm('¿Enviar prueba REAL desde la nube?')) {
                                 try {
                                     const res = await api.post('/comunicados/test-fcm');
-                                    alert('✅ Orden enviada a la nube: ' + (res.data?.message || 'OK'));
+                                    window.alert(`✅ ORDEN RECIBIDA\n\nGoogle Msg ID: ${res.data.responseId}\nServer Project: ${res.data.projectId}\nToken Preview: ${res.data.tokenPreview}\n\nSi no llega el toast, verifica que el SENDER_ID en el móvil coincida con el del servidor.`);
                                 } catch (err) {
                                     const errorMsg = err.response?.data?.message || err.response?.data?.error || err.message;
-                                    alert('❌ Error de nube: ' + errorMsg);
+                                    window.alert('❌ Error de nube: ' + errorMsg);
                                 }
                             }
                         }} 

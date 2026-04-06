@@ -193,13 +193,6 @@ public class NotificationService
                             ImageUrl = ExtractFirstImageUrl(request.Message)
                         },
                         Data = data,
-                        Webpush = new WebpushConfig()
-                        {
-                            FcmOptions = new WebpushFcmOptions()
-                            {
-                                Link = data.ContainsKey("comunicadoId") ? $"/comunicados/{data["comunicadoId"]}" : "/"
-                            }
-                        }
                     };
 
                     var messaging = await GetMessagingAsync();

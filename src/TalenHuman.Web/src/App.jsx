@@ -46,7 +46,7 @@ import DebugPortal from './components/Shared/DebugPortal'
 import MobileCommunicationModal from './components/Mobile/MobileCommunicationModal'
 
 // V65.2.18 STABILITY UPDATE
-const APP_VERSION = "V12.65";
+const APP_VERSION = "V12.66";
 
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION
@@ -75,7 +75,8 @@ function App() {
   const [showPRModal, setShowPRModal] = useState(false);
   const [notification, setNotification] = useState({ show: false, title: '', body: '' });
 
-  const CURRENT_VERSION = "V65.5.0";
+  const CURRENT_VERSION = "V65.6.0";
+  
   
   useEffect(() => {
       const lastVersion = localStorage.getItem('app_version');
