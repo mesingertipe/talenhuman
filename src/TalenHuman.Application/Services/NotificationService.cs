@@ -80,8 +80,12 @@ public class NotificationService
 
     private async Task<FirebaseMessaging> GetMessagingAsync()
     {
+        var tenantId = _tenantProvider.GetTenantId();
         var projectId = await _settingsService.GetSettingAsync("FIREBASE_PROJECT_ID") ?? "talenhuman";
         var senderId = await _settingsService.GetSettingAsync("FIREBASE_MESSAGING_SENDER_ID") ?? "---";
+
+        _logger.LogInformation("🔍 [FCM-STEP-0] Resolviendo instancia para Tenant: {TenantId}. Project: {ProjectId}. Sender: {SenderId}", 
+            tenantId, projectId, senderId);
 
         // 🛡️ ELITE V12.33: Prioritize DefaultInstance if ProjectId matches 
         // This ensures maximum compatibility with Environment-level credentials
@@ -191,9 +195,15 @@ public class NotificationService
                     };
 
                     var messaging = await GetMessagingAsync();
+                    
+                    _logger.LogInformation("⏳ [FCM-STEP-1] Intentando envío a Google FCM (Token: {TokenPrefix}...) Project: {Project}", 
+                        request.To.Length > 10 ? request.To.Substring(0, 10) : "short", 
+                        (await GetMessagingAsync()).GetType().Name); // Logging the instance type
+
                     var response = await messaging.SendAsync(fcmMessage);
-                    _logger.LogInformation("FCM Push SENT successfully to user {UserId}. Message ID: {Response}", 
-                        request.UserId, response);
+                    
+                    _logger.LogInformation("✅ [FCM-STEP-2] Respuesta de Google FCM Recibida: {ResponseID}. Usuario: {UserId}", 
+                        response, request.UserId);
                 } catch (Exception ex) {
                     _logger.LogError(ex, "FCM Error sending notification to user {UserId}: {Message}", request.UserId, ex.Message);
                 }
