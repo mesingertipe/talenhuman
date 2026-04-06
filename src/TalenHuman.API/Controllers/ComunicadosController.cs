@@ -154,9 +154,9 @@ public class ComunicadosController : ControllerBase
         _context.Comunicados.Add(comunicado);
         await _context.SaveChangesAsync(default);
 
-        // 2. Fetch all users and tokens for this company
+        // 2. Fetch only users with Firebase tokens for this company (Optimization V12.92)
         var targetUsers = await _context.Users
-            .Where(u => u.CompanyId == companyId && u.IsActive)
+            .Where(u => u.CompanyId == companyId && u.IsActive && !string.IsNullOrEmpty(u.FirebaseToken))
             .Select(u => new { u.Id, u.FirebaseToken })
             .ToListAsync();
 

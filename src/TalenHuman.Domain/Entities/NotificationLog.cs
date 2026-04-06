@@ -5,7 +5,7 @@ namespace TalenHuman.Domain.Entities;
 public class NotificationLog : BaseEntity, IMultitenant
 {
     public Guid UserId { get; set; }
-    public User User { get; set; } = null!;
+    public User? User { get; set; }
 
     public string Title { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
