@@ -156,14 +156,14 @@ const MobileDashboard = ({ user, theme, setPage }) => {
                         shiftData ? `${new Date(shiftData.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 
                         'Sin Turno Hoy'}
                     </h3>
-                    <p style={{ fontSize: '15px', fontWeight: '600', opacity: 0.8, margin: 0, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                    <p style={{ fontSize: '15px', fontWeight: '600', opacity: 0.8, margin: 0, textTransform: 'capitalize', letterSpacing: '0.1em' }}>
                        {status.sub || (shiftData?.isDescanso ? 'Disfruta tu jornada ✨' : 'Valida con tu gerente')}
                     </p>
                     
                     <div style={{ 
                        marginTop: '20px', padding: '6px 16px', borderRadius: '100px', 
                        background: 'rgba(255,255,255,0.2)', fontSize: '11px', fontWeight: '900',
-                       textTransform: 'uppercase', letterSpacing: '0.05em'
+                       textTransform: 'capitalize', letterSpacing: '0.05em'
                     }}>
                        {status.label}
                     </div>
@@ -218,7 +218,7 @@ const MobileDashboard = ({ user, theme, setPage }) => {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
            <ActionCard 
               icon={<CheckCircle2 size={24} />} 
-              label="ASISTENCIA" 
+              label="Asistencia" 
               color="#10b981" 
               isDark={isDark} 
               cardBg={cardBg}
@@ -228,7 +228,7 @@ const MobileDashboard = ({ user, theme, setPage }) => {
            />
            <ActionCard 
               icon={<MessageSquare size={24} />} 
-              label="COMUNICADOS" 
+              label="Comunicados" 
               color="#f59e0b" 
               isDark={isDark} 
               cardBg={cardBg}
@@ -239,7 +239,7 @@ const MobileDashboard = ({ user, theme, setPage }) => {
         </div>
 
        <div style={{ marginTop: '32px' }}>
-          <SectionHeader title="NOTIFICACIONES" isDark={isDark} />
+          <SectionHeader title="Notificaciones" isDark={isDark} />
           <div style={{ 
              background: cardBg, borderRadius: '32px', padding: '28px', 
              ...glassEffect, boxShadow: shadow,
@@ -280,7 +280,7 @@ const ActionCard = ({ icon, label, color, isDark, onClick, cardBg, glassEffect, 
 const SectionHeader = ({ title, isDark }) => (
     <h3 style={{ 
         fontSize: '12px', fontWeight: '900', color: isDark ? 'rgba(255,255,255,0.4)' : '#64748b', 
-        textTransform: 'uppercase', letterSpacing: '0.1em', paddingLeft: '8px', marginBottom: '16px' 
+        textTransform: 'capitalize', letterSpacing: '0.1em', paddingLeft: '8px', marginBottom: '16px' 
     }}>
         {title}
     </h3>

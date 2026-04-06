@@ -42,6 +42,9 @@ const ResetForgottenPassword = ({ email, onBack }) => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
+  const pinLength = 6;
+  const pinArray = Array(pinLength).fill('');
+
   // ⚡️ Elite Validations
   const [validations, setValidations] = useState({
     minChar: false,
@@ -61,7 +64,7 @@ const ResetForgottenPassword = ({ email, onBack }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!allValid) return;
+    if (token.length !== 6 || !allValid) return;
     setLoading(true);
     setError('');
     try {
@@ -83,7 +86,7 @@ const ResetForgottenPassword = ({ email, onBack }) => {
             </button>
             <div className="elite-header-title">
                 <TalenHumanLogo size={24} white={true} />
-                <span>SEGURIDAD TALENHUMAN</span>
+                <span>Seguridad TalenHuman</span>
             </div>
             <div style={{ width: 40 }} />
         </header>
@@ -93,8 +96,8 @@ const ResetForgottenPassword = ({ email, onBack }) => {
                 <div className="form-state-premium">
                     <div className="header-section-premium mb-8 text-center">
                         <div className="key-icon-box"><KeyRound size={30} /></div>
-                        <h2 className="premium-title">Nueva Clave</h2>
-                        <p className="premium-subtitle">Ingresa el PIN de 6 dígitos.</p>
+                        <h2 className="premium-title">Nueva clave</h2>
+                        <p className="premium-subtitle">Ingresa el PIN de 6 dígitos enviado.</p>
                     </div>
 
                     {error && <div className="premium-error-toast mb-6"><ShieldAlert size={18} /><span>{error}</span></div>}
@@ -103,18 +106,34 @@ const ResetForgottenPassword = ({ email, onBack }) => {
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <div className="elite-field-group">
                             <label className="elite-field-label">Código PIN</label>
-                            <input 
-                                type="text" required maxLength={6} value={token}
-                                onChange={(e) => setToken(e.target.value.replace(/\D/g, ''))}
-                                className="premium-field-input-v2"
-                                style={{ letterSpacing: '0.4em', textAlign: 'center', fontSize: '1.4rem', fontWeight: '900', color: '#1E293B', WebkitTextFillColor: '#1E293B' }}
-                            />
+                            <div className="pin-segmented-container">
+                                {pinArray.map((_, i) => (
+                                    <div 
+                                        key={i} 
+                                        className={`pin-box ${token.length === i ? 'active' : ''} ${token.length > i ? 'filled' : ''}`}
+                                    >
+                                        {token[i] || ''}
+                                    </div>
+                                ))}
+                                <input 
+                                    type="tel"
+                                    pattern="[0-9]*"
+                                    inputMode="numeric"
+                                    autoComplete="one-time-code"
+                                    required 
+                                    maxLength={6} 
+                                    value={token}
+                                    onChange={(e) => setToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                    className="hidden-pin-input"
+                                    autoFocus
+                                />
+                            </div>
                         </div>
 
                         <div className="divider-premium" />
 
-                        <EliteInput label="Nueva Clave" icon={<Lock size={18} />} value={newPassword} onChange={(v) => setNewPassword(v)} type={showPass ? "text" : "password"} placeholder="Min 6" suffix={<button type="button" onClick={() => setShowPass(!showPass)} className="field-toggle-btn-v2">{showPass ? <EyeOff size={18}/> : <Eye size={18}/>}</button>} />
-                        <EliteInput label="Confirmar" icon={<ShieldCheck size={18} />} value={confirmPassword} onChange={(v) => setConfirmPassword(v)} type="password" />
+                        <EliteInput label="Nueva clave" icon={<Lock size={18} />} value={newPassword} onChange={(v) => setNewPassword(v)} type={showPass ? "text" : "password"} placeholder="Mínimo 6" suffix={<button type="button" onClick={() => setShowPass(!showPass)} className="field-toggle-btn-v2">{showPass ? <EyeOff size={18}/> : <Eye size={18}/>}</button>} />
+                        <EliteInput label="Confirmar clave" icon={<ShieldCheck size={18} />} value={confirmPassword} onChange={(v) => setConfirmPassword(v)} type="password" />
 
                         <div className="validation-panel">
                             <ValidationItem label="Mínimo 6" passed={validations.minChar} />
@@ -122,14 +141,14 @@ const ResetForgottenPassword = ({ email, onBack }) => {
                             <ValidationItem label="Coinciden" passed={validations.match} />
                         </div>
 
-                        <button type="submit" disabled={loading || !allValid} className={`login-submit-premium-v2 w-full mt-8 ${!allValid ? 'btn-disabled' : ''}`}>
-                            {loading ? <div className="loader-white" /> : <span>ACTUALIZAR ACCESO</span>}
+                        <button type="submit" disabled={loading || !allValid || token.length !== 6} className={`login-submit-premium-v2 w-full mt-8 ${(!allValid || token.length !== 6) ? 'btn-disabled' : ''}`}>
+                            {loading ? <div className="loader-white" /> : <span>Actualizar acceso</span>}
                         </button>
                     </form>
                 </div>
             </div>
             <footer className="elite-mobile-footer text-center mt-4">
-                <div className="elite-version">V65.2.18</div>
+                <div className="elite-version">V12.19</div>
             </footer>
         </main>
     </div>

@@ -88,7 +88,7 @@ const SelfServiceReset = ({ onBack }) => {
             <button onClick={onBack} className="elite-back-btn"><ArrowLeft size={22} /></button>
             <div className="elite-header-title">
                 <TalenHumanLogo size={24} white={true} />
-                <span>ACCESO SEGURO</span>
+                <span>Acceso seguro</span>
             </div>
             <div style={{ width: 40 }} />
         </header>
@@ -98,15 +98,15 @@ const SelfServiceReset = ({ onBack }) => {
                 {success ? (
                 <div className="success-state-premium text-center py-8">
                     <div className="success-icon-box"><CheckCircle size={44} /></div>
-                    <h2 className="premium-title">¡Éxito Total!</h2>
+                    <h2 className="premium-title">¡Éxito total!</h2>
                     <p className="premium-subtitle">Clave actualizada.</p>
-                    <button onClick={onBack} className="login-submit-premium-v2 w-full mt-6">ENTRAR</button>
+                    <button onClick={onBack} className="login-submit-premium-v2 w-full mt-6">Entrar</button>
                 </div>
                 ) : (
                 <div className="form-state-premium">
                     <div className="header-section-premium mb-8 text-center">
                         <div className="key-icon-box"><Key size={30} /></div>
-                        <h2 className="premium-title">Auto-Servicio</h2>
+                        <h2 className="premium-title">Auto-servicio</h2>
                         <p className="premium-subtitle">Restablece tu sesión.</p>
                     </div>
 
@@ -116,8 +116,8 @@ const SelfServiceReset = ({ onBack }) => {
         <EliteInput label="Número de Identificación" icon={<User size={18} />} value={formData.identificationNumber} onChange={(v) => setFormData({...formData, identificationNumber:v})} type="text" placeholder="Número de Identificación" />
                         <EliteInput label="Nacimiento" icon={<Calendar size={18} />} value={formData.birthDate} onChange={(v) => setFormData({...formData, birthDate:v})} type="date" />
                         <div className="divider-premium" />
-                        <EliteInput label="Nueva Clave" icon={<Lock size={18} />} value={formData.newPassword} onChange={(v) => setFormData({...formData, newPassword:v})} type={showPassword ? "text" : "password"} placeholder="Min 6" suffix={<button type="button" onClick={() => setShowPassword(!showPassword)} className="field-toggle-btn-v2">{showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}</button>} />
-                        <EliteInput label="Confirmar" icon={<ShieldCheck size={18} />} value={formData.confirmPassword} onChange={(v) => setFormData({...formData, confirmPassword:v})} type="password" />
+                        <EliteInput label="Nueva clave" icon={<Lock size={18} />} value={formData.newPassword} onChange={(v) => setFormData({...formData, newPassword:v})} type={showPassword ? "text" : "password"} placeholder="Mínimo 6" suffix={<button type="button" onClick={() => setShowPassword(!showPassword)} className="field-toggle-btn-v2">{showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}</button>} />
+                        <EliteInput label="Confirmar clave" icon={<ShieldCheck size={18} />} value={formData.confirmPassword} onChange={(v) => setFormData({...formData, confirmPassword:v})} type="password" />
                         
                         <div className="validation-panel">
                             <ValidationItem label="Mínimo 6" passed={validations.minChar} />
@@ -126,14 +126,14 @@ const SelfServiceReset = ({ onBack }) => {
                         </div>
 
                         <button type="submit" disabled={loading || !allValid} className={`login-submit-premium-v2 w-full mt-6 ${!allValid ? 'btn-disabled' : ''}`}>
-                            {loading ? <div className="loader-white" /> : <div className="flex items-center gap-3"><span>ACTUALIZAR</span><ShieldCheck size={20} /></div>}
+                            {loading ? <div className="loader-white" /> : <div className="flex items-center gap-3"><span>Actualizar</span><ShieldCheck size={20} /></div>}
                         </button>
                     </form>
                 </div>
                 )}
             </div>
             <footer className="elite-mobile-footer text-center mt-4">
-                <div className="elite-version">V65.2.18</div>
+                <div className="elite-version">V12.19</div>
             </footer>
         </main>
     </div>

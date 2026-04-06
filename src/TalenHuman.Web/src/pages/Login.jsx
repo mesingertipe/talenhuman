@@ -105,7 +105,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
 
                   <form onSubmit={handleSubmit} className="login-form">
                     <div className="form-group">
-                      <label className="form-label">Usuario o Correo Corporativo</label>
+                      <label className="form-label">Usuario o correo corporativo</label>
                       <div className="input-wrapper">
                         <Mail className="input-icon" size={18} />
                         <input 
@@ -114,7 +114,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           className="login-input"
-                          placeholder="Identificación o Usuario"
+                          placeholder="Identificación o usuario"
                         />
                       </div>
                     </div>
@@ -188,7 +188,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                   <div className="login-footer">
                       <p>¿Necesitas ayuda? <a href="#">Soporte</a></p>
                       <div className="version-tag">
-                         {version || 'V65.2.10-ELITE'}
+                         {version || 'V12.19'}
                       </div>
                   </div>
                 </div>

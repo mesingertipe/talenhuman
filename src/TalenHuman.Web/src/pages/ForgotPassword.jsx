@@ -64,7 +64,7 @@ const ForgotPassword = ({ onBack, onNext }) => {
 
                     <form onSubmit={handleSubmit} className="premium-form-layout">
                         <div className="elite-field-group">
-                            <label className="elite-field-label">EMAIL CORPORATIVO</label>
+                            <label className="elite-field-label">Correo corporativo</label>
                             <div className="elite-input-container">
                                 <Mail className="elite-input-icon" size={18} />
                                 <input 
@@ -96,7 +96,7 @@ const ForgotPassword = ({ onBack, onNext }) => {
             </div>
             
             <footer className="elite-mobile-footer text-center mt-4">
-                <div className="elite-version">V65.2.18</div>
+                <div className="elite-version">V12.19</div>
             </footer>
         </main>
     </div>

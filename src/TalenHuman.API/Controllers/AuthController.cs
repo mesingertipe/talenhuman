@@ -255,7 +255,7 @@ public class AuthController : ControllerBase
         <div style='font-family: sans-serif; color: #1e293b; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 24px; padding: 40px;'>
             <div style='margin-bottom: 30px;'>
                 <h2 style='color: #4f46e5; margin: 0;'>TalenHuman</h2>
-                <p style='color: #64748b; font-size: 14px; font-weight: 600;'>ELITE V12 - SEGURIDAD</p>
+                <p style='color: #64748b; font-size: 14px; font-weight: 600;'>Seguridad TalenHuman</p>
             </div>
             <h1 style='font-size: 24px; font-weight: 950; letter-spacing: -0.02em;'>Recupera tu acceso</h1>
             <p style='line-height: 1.6;'>Hola {user.FullName}, hemos recibido una solicitud para restablecer tu contraseña. Ingresa el siguiente código de seguridad en la aplicación para continuar:</p>
@@ -265,10 +265,10 @@ public class AuthController : ControllerBase
             <p style='font-size: 13px; color: #94a3b8; text-align: center;'>Este código vencerá en 15 minutos.</p>
             <p style='font-size: 13px; color: #94a3b8;'>Si no solicitaste este cambio, puedes ignorar este correo con seguridad.</p>
             <hr style='border: none; border-top: 1px solid #f1f5f9; margin: 30px 0;' />
-            <p style='font-size: 12px; font-weight: 700; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.05em;'>© 2026 TalenHuman Platform - Gestión Elite de Talento Humano</p>
+            <p style='font-size: 12px; font-weight: 700; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.05em;'>© 2026 TalenHuman Platform - Gestión de Talento Humano</p>
         </div>";
 
-        await _emailService.SendEmailAsync(user.Email!, "Código de Recuperación - TalenHuman", emailBody);
+        await _emailService.SendEmailAsync(user.Email!, "Código de recuperación - TalenHuman", emailBody);
         
         return Ok(new { 
             message = "Código enviado a tu correo exitosamente."

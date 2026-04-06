@@ -327,14 +327,12 @@
 }
 
 .form-label {
-  display: block;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #1e293b !important;
-  margin-bottom: 0.5rem;
-  margin-left: 0.25rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+    display: block;
+    font-size: 0.725rem;
+    font-weight: 700;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.025em;
 }
 
 .input-wrapper {
@@ -907,13 +905,13 @@
 }
 
 .elite-field-label {
-    font-size: 11px !important;
-    font-weight: 900 !important;
-    color: #64748b !important;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    display: block;
+    font-size: 0.725rem;
+    font-weight: 800;
+    color: #64748b;
+    margin-bottom: 0.6rem;
+    letter-spacing: 0.05em;
     padding-left: 4px;
-    display: block !important;
 }
 
 .elite-input-container {
