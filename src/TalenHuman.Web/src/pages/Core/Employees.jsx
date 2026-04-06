@@ -14,6 +14,7 @@ import { useTheme } from '../../context/ThemeContext';
 import HelpIcon from '../../components/Shared/HelpIcon';
 import PermissionGate from '../../components/Shared/PermissionGate';
 import { formatDate } from '../../utils/formatters';
+import TalenHumanDatePicker from '../../components/Shared/TalenHumanDatePicker';
 
 const Employees = ({ user }) => {
   const { isDarkMode } = useTheme();
@@ -481,18 +482,13 @@ const Employees = ({ user }) => {
                       </div>
                     </div>
                     <div className="group">
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em' }}>Cumpleaños (dd/mm/yyyy)</label>
-                      <div style={{ position: 'relative' }}>
-                        <Calendar size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                        <input 
-                          type="text"
-                          value={formData.birthDate ? formData.birthDate.split('T')[0] : ''}
-                          onChange={(e) => setFormData({...formData, birthDate: e.target.value})}
-                          placeholder="dd/mm/yyyy"
-                          style={{ width: '100%', padding: '22px 24px 22px 60px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', fontSize: '0.95rem', outline: 'none', transition: 'all 0.3s' }}
-                          className="focus:border-indigo-500 focus:shadow-xl"
-                        />
-                      </div>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em' }}>Cumpleaños *</label>
+                      <TalenHumanDatePicker 
+                        value={formData.birthDate || ''}
+                        onChange={(iso) => setFormData({...formData, birthDate: iso})}
+                        isDarkMode={isDarkMode}
+                        required
+                      />
                     </div>
                   </div>
                 </div>
@@ -521,17 +517,13 @@ const Employees = ({ user }) => {
                       </div>
                     )}
                     <div className="group">
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em' }}>Fecha de Ingreso (dd/mm/yyyy) *</label>
-                      <div style={{ position: 'relative' }}>
-                        <Calendar size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input 
-                          type="text" value={formData.dateOfEntry?.split('T')[0] || ''}
-                          onChange={(e) => setFormData({...formData, dateOfEntry: e.target.value})}
-                          placeholder="dd/mm/yyyy"
-                          style={{ width: '100%', padding: '22px 24px 22px 60px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700' }}
-                          className="focus:border-indigo-500"
-                        />
-                      </div>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em' }}>Fecha de Ingreso *</label>
+                      <TalenHumanDatePicker 
+                        value={formData.dateOfEntry || ''}
+                        onChange={(iso) => setFormData({...formData, dateOfEntry: iso})}
+                        isDarkMode={isDarkMode}
+                        required
+                      />
                     </div>
                     
                     <SearchableSelect
@@ -604,17 +596,13 @@ const Employees = ({ user }) => {
                 {/* Baja Date picker if inactive */}
                 {!formData.isActive && (
                   <div style={{ padding: '30px', background: isDarkMode ? '#451a1a' : '#fef2f2', borderRadius: '24px', border: '1px solid #fee2e2', animation: 'fadeIn 0.4s' }}>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: '#ef4444', marginBottom: '14px', letterSpacing: '0.05em' }}>Fecha de baja / desvinculación (dd/mm/yyyy) *</label>
-                    <div style={{ position: 'relative' }}>
-                      <Calendar size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-red-400" />
-                      <input 
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: '#ef4444', marginBottom: '14px', letterSpacing: '0.05em' }}>Fecha de baja / desvinculación *</label>
+                    <TalenHumanDatePicker 
+                        value={formData.dateOfTermination || ''}
+                        onChange={(iso) => setFormData({...formData, dateOfTermination: iso})}
+                        isDarkMode={isDarkMode}
                         required={!formData.isActive}
-                        type="text" value={formData.dateOfTermination?.split('T')[0] || ''}
-                        onChange={(e) => setFormData({...formData, dateOfTermination: e.target.value})}
-                        placeholder="dd/mm/yyyy"
-                        style={{ width: '100%', padding: '20px 24px 20px 60px', borderRadius: '20px', border: '2px solid #fecaca', background: 'white', color: '#b91c1c', fontWeight: '700' }}
-                      />
-                    </div>
+                    />
                   </div>
                 )}
 

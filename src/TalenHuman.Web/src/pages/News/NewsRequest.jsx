@@ -7,6 +7,7 @@ import {
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
+import TalenHumanDatePicker from '../../components/Shared/TalenHumanDatePicker';
 
 const NewsRequest = ({ onComplete, onCancel, user }) => {
     const [step, setStep] = useState(1); 
@@ -395,11 +396,21 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                                 <div>
                                     <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '10px' }}>Desde *</label>
-                                    <input type="date" value={formData.fechaInicio} onChange={(e) => setFormData({...formData, fechaInicio: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontWeight: '800' }} />
+                                    <TalenHumanDatePicker 
+                                        value={formData.fechaInicio}
+                                        onChange={(iso) => setFormData({...formData, fechaInicio: iso})}
+                                        isDarkMode={isDarkMode}
+                                        required
+                                    />
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '10px' }}>Hasta *</label>
-                                    <input type="date" value={formData.fechaFin} onChange={(e) => setFormData({...formData, fechaFin: e.target.value})} style={{ width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontWeight: '800' }} />
+                                    <TalenHumanDatePicker 
+                                        value={formData.fechaFin}
+                                        onChange={(iso) => setFormData({...formData, fechaFin: iso})}
+                                        isDarkMode={isDarkMode}
+                                        required
+                                    />
                                 </div>
                             </div>
 

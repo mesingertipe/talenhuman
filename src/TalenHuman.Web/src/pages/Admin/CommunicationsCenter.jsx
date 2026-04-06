@@ -9,6 +9,7 @@ import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import EliteRichEditor from '../../components/Shared/EliteRichEditor';
 import { formatDate } from '../../utils/formatters';
+import TalenHumanDatePicker from '../../components/Shared/TalenHumanDatePicker';
 
 const CommunicationsCenter = ({ user }) => {
     const [communications, setCommunications] = useState([]);
@@ -241,30 +242,20 @@ const CommunicationsCenter = ({ user }) => {
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
                                 <div>
-                                    <label className="label-lite">Fecha inicio (dd/mm/yyyy)</label>
-                                    <div style={{ position: 'relative' }}>
-                                        <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
-                                        <input 
-                                            type="text" 
-                                            value={formData.fechaInicio} 
-                                            onChange={(e) => setFormData({ ...formData, fechaInicio: e.target.value })} 
-                                            className="input-lite pl-12" 
-                                            placeholder="dd/mm/yyyy"
-                                        />
-                                    </div>
+                                    <label className="label-lite">Fecha inicio</label>
+                                    <TalenHumanDatePicker 
+                                        value={formData.fechaInicio || ''}
+                                        onChange={(iso) => setFormData({...formData, fechaInicio: iso})}
+                                        isDarkMode={isDarkMode}
+                                    />
                                 </div>
                                 <div>
-                                    <label className="label-lite">Fecha fin (dd/mm/yyyy)</label>
-                                    <div style={{ position: 'relative' }}>
-                                        <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
-                                        <input 
-                                            type="text" 
-                                            value={formData.fechaFin} 
-                                            onChange={(e) => setFormData({ ...formData, fechaFin: e.target.value })} 
-                                            className="input-lite pl-12" 
-                                            placeholder="dd/mm/yyyy"
-                                        />
-                                    </div>
+                                    <label className="label-lite">Fecha fin</label>
+                                    <TalenHumanDatePicker 
+                                        value={formData.fechaFin || ''}
+                                        onChange={(iso) => setFormData({...formData, fechaFin: iso})}
+                                        isDarkMode={isDarkMode}
+                                    />
                                 </div>
                             </div>
 

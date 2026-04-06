@@ -128,7 +128,10 @@ public class NotificationsController : ControllerBase
         if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
 
         var userId = Guid.Parse(userIdString);
-        var user = await _context.Users.FindAsync(userId);
+        var user = await _context.Users
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.Id == userId);
+            
         if (user == null) return NotFound();
 
         user.FirebaseToken = dto.Token;

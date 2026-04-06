@@ -6,6 +6,7 @@ import {
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 import { formatTenantDate } from '../../utils/localization';
+import TalenHumanDatePicker from '../../components/Shared/TalenHumanDatePicker';
 
 const AttendanceMonitoring = ({ user: sessionUser }) => {
     const { isDarkMode } = useTheme();
@@ -234,20 +235,18 @@ const AttendanceMonitoring = ({ user: sessionUser }) => {
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
                                 <div>
                                     <label style={{ display: 'block', fontSize: '0.65rem', fontWeight: '900', textTransform: 'uppercase', color: activeColors.textMuted, marginBottom: '6px' }}>Desde</label>
-                                    <input 
-                                        type="date" 
+                                    <TalenHumanDatePicker 
                                         value={dateRange.start}
-                                        onChange={e => setDateRange(prev => ({...prev, start: e.target.value}))}
-                                        style={{ width: '100%', padding: '10px 14px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, outline: 'none', fontWeight: '700' }}
+                                        onChange={val => setDateRange(prev => ({...prev, start: val}))}
+                                        isDarkMode={isDarkMode}
                                     />
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', fontSize: '0.65rem', fontWeight: '900', textTransform: 'uppercase', color: activeColors.textMuted, marginBottom: '6px' }}>Hasta</label>
-                                    <input 
-                                        type="date" 
+                                    <TalenHumanDatePicker 
                                         value={dateRange.end}
-                                        onChange={e => setDateRange(prev => ({...prev, end: e.target.value}))}
-                                        style={{ width: '100%', padding: '10px 14px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, outline: 'none', fontWeight: '700' }}
+                                        onChange={val => setDateRange(prev => ({...prev, end: val}))}
+                                        isDarkMode={isDarkMode}
                                     />
                                 </div>
                             </div>

@@ -9,6 +9,7 @@ import {
 } from 'recharts';
 import api from '../services/api';
 import SearchableSelect from '../components/Shared/SearchableSelect';
+import TalenHumanDatePicker from '../components/Shared/TalenHumanDatePicker';
 
 const StatCard = ({ title, value, subValue, icon: Icon, color, trend }) => (
   <div className="bg-white dark:bg-slate-800 p-6 rounded-[32px] shadow-sm border border-slate-100 dark:border-slate-800 flex items-center gap-5 transition-all hover:shadow-xl hover:-translate-y-1 group">
@@ -141,28 +142,18 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 px-2 uppercase tracking-widest">Desde</label>
-                <div className="relative">
-                    <Calendar size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input 
-                        type="date" 
-                        value={filters.start}
-                        onChange={(e) => handleFilterChange('start', e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 text-sm font-bold focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none"
-                    />
-                </div>
+                <TalenHumanDatePicker 
+                    value={filters.start}
+                    onChange={(val) => handleFilterChange('start', val)}
+                />
             </div>
 
             <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 px-2 uppercase tracking-widest">Hasta</label>
-                <div className="relative">
-                    <Calendar size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input 
-                        type="date" 
-                        value={filters.end}
-                        onChange={(e) => handleFilterChange('end', e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 text-sm font-bold focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none"
-                    />
-                </div>
+                <TalenHumanDatePicker 
+                    value={filters.end}
+                    onChange={(val) => handleFilterChange('end', val)}
+                />
             </div>
 
             <div className="md:mt-2">

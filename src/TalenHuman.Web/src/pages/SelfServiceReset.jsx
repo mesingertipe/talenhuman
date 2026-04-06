@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CheckCircle, AlertCircle, Eye, EyeOff, ShieldCheck, ArrowRight, Key, Check, ArrowLeft, User, Calendar, Lock } from 'lucide-react';
 import api from '../services/api';
 import TalenHumanLogo from '../components/Shared/TalenHumanLogo';
+import TalenHumanDatePicker from '../components/Shared/TalenHumanDatePicker';
 import './Login.css';
 
 // 🏗️ ELITE SUB-COMPONENTS (Defined OUTSIDE to prevent focus loss)
@@ -113,8 +114,16 @@ const SelfServiceReset = ({ onBack }) => {
                     {error && <div className="premium-error-toast mb-6"><AlertCircle size={18} /><span>{error}</span></div>}
 
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <TalenHumanInput label="Número de Identificación" icon={<User size={18} />} value={formData.identificationNumber} onChange={(v) => setFormData({...formData, identificationNumber:v})} type="text" placeholder="Número de Identificación" />
-                        <TalenHumanInput label="Nacimiento (dd/mm/yyyy)" icon={<Calendar size={18} />} value={formData.birthDate} onChange={(v) => setFormData({...formData, birthDate:v})} type="date" />
+                        <TalenHumanInput label="Número de Identificación" icon={<User size={18} />} value={formData.identificationNumber} onChange={(v) => setFormData({...formData, identificationNumber:v})} type="text" placeholder="Número de Identificación" />
+                        
+                        <div className="elite-field-group">
+                            <label className="elite-field-label">Fecha de Nacimiento *</label>
+                            <TalenHumanDatePicker 
+                                value={formData.birthDate || ''}
+                                onChange={(iso) => setFormData({...formData, birthDate: iso})}
+                                style={{ borderRadius: '24px' }}
+                            />
+                        </div>
                         
                         <TalenHumanInput label="Nueva clave" icon={<Lock size={18} />} value={formData.newPassword} onChange={(v) => setFormData({...formData, newPassword:v})} type={showPassword ? "text" : "password"} placeholder="Mínimo 6" suffix={<button type="button" onClick={() => setShowPassword(!showPassword)} className="field-toggle-btn-v2">{showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}</button>} />
                         <TalenHumanInput label="Confirmar clave" icon={<ShieldCheck size={18} />} value={formData.confirmPassword} onChange={(v) => setFormData({...formData, confirmPassword:v})} type="password" />
@@ -133,7 +142,7 @@ const SelfServiceReset = ({ onBack }) => {
                 )}
             </div>
             <footer className="elite-mobile-footer text-center mt-4">
-                <div className="version-tag-subtle">V12.20</div>
+                <div className="version-tag-subtle">V12.24</div>
             </footer>
         </main>
     </div>

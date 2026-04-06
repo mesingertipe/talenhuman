@@ -6,6 +6,7 @@ import {
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 import * as XLSX from 'xlsx';
+import TalenHumanDatePicker from '../../components/Shared/TalenHumanDatePicker';
 
 const AuditLogs = ({ user }) => {
     const { isDarkMode } = useTheme();
@@ -193,20 +194,18 @@ const AuditLogs = ({ user }) => {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                     <div>
                         <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: '800', color: activeColors.textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Desde</label>
-                        <input 
-                            type="date"
+                        <TalenHumanDatePicker 
                             value={filters.startDate}
-                            onChange={e => setFilters(prev => ({...prev, startDate: e.target.value}))}
-                            style={{ width: '100%', padding: '12px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: activeColors.bg, color: activeColors.textMain, outline: 'none' }}
+                            onChange={val => setFilters(prev => ({...prev, startDate: val}))}
+                            isDarkMode={isDarkMode}
                         />
                     </div>
                     <div>
                         <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: '800', color: activeColors.textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Hasta</label>
-                        <input 
-                            type="date"
+                        <TalenHumanDatePicker 
                             value={filters.endDate}
-                            onChange={e => setFilters(prev => ({...prev, endDate: e.target.value}))}
-                            style={{ width: '100%', padding: '12px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: activeColors.bg, color: activeColors.textMain, outline: 'none' }}
+                            onChange={val => setFilters(prev => ({...prev, endDate: val}))}
+                            isDarkMode={isDarkMode}
                         />
                     </div>
                     <div>

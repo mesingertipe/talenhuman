@@ -10,6 +10,7 @@ import * as XLSX from 'xlsx';
 import Pagination from '../../components/Shared/Pagination';
 import { formatDate } from '../../utils/formatters';
 import { useTableData } from '../../hooks/useTableData';
+import TalenHumanDatePicker from '../../components/Shared/TalenHumanDatePicker';
 
 const Marcaciones = ({ user }) => {
     const { isDarkMode } = useTheme();
@@ -211,22 +212,19 @@ const Marcaciones = ({ user }) => {
                 </div>
                 
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center', background: activeColors.card, padding: '8px 20px', borderRadius: '24px', border: `2px solid ${activeColors.border}` }}>
-                    <Calendar size={18} className="text-slate-400" />
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <input 
-                            type="text" 
-                            placeholder="dd/mm/yyyy"
+                        <TalenHumanDatePicker 
                             value={dateRange.start}
-                            onChange={(e) => setDateRange({...dateRange, start: e.target.value})}
-                            style={{ border: 'none', background: 'transparent', color: activeColors.textMain, fontWeight: '700', fontSize: '0.85rem', outline: 'none', width: '90px' }} 
+                            onChange={(iso) => setDateRange({...dateRange, start: iso})}
+                            isDarkMode={isDarkMode}
+                            style={{ width: '200px' }}
                         />
                         <span className="text-slate-400 font-bold">→</span>
-                        <input 
-                            type="text" 
-                            placeholder="dd/mm/yyyy"
+                        <TalenHumanDatePicker 
                             value={dateRange.end}
-                            onChange={(e) => setDateRange({...dateRange, end: e.target.value})}
-                            style={{ border: 'none', background: 'transparent', color: activeColors.textMain, fontWeight: '700', fontSize: '0.85rem', outline: 'none', width: '90px' }} 
+                            onChange={(iso) => setDateRange({...dateRange, end: iso})}
+                            isDarkMode={isDarkMode}
+                            style={{ width: '200px' }}
                         />
                     </div>
                 </div>
