@@ -120,6 +120,27 @@ public class NotificationsController : ControllerBase
 
         return Ok();
     }
+
+    [HttpPost("token")]
+    public async Task<IActionResult> UpdateToken([FromBody] TokenUpdateDto dto)
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
+
+        var userId = Guid.Parse(userIdString);
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return NotFound();
+
+        user.FirebaseToken = dto.Token;
+        await _context.SaveChangesAsync(default);
+
+        return Ok();
+    }
+}
+
+public class TokenUpdateDto
+{
+    public string? Token { get; set; }
 }
 
 public class NotificationLogDto

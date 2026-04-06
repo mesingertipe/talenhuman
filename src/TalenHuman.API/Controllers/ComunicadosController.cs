@@ -45,73 +45,7 @@ public class ComunicadosController : ControllerBase
     public IActionResult Ping()
     {
         _logger.LogInformation("FCM Diagnostic: Ping received at {Time}", DateTime.UtcNow);
-        return Ok(new { message = "Pong", version = "V65.1.25-ELITE", timestamp = DateTime.UtcNow });
-    }
-
-    [HttpPost("sync-token")]
-    public async Task<IActionResult> UpdateFirebaseToken([FromBody] ComunicadoTokenUpdateDto dto)
-    {
-        _logger.LogInformation("FCM Sync: Request received (V65.1.25)");
-
-        var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdString)) 
-        {
-            _logger.LogWarning("FCM Sync: Unauthorized (No NameIdentifier)");
-            return Unauthorized();
-        }
-
-        var userId = Guid.Parse(userIdString);
-        var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
-        if (user == null) 
-        {
-            _logger.LogWarning("FCM Sync: User {UserId} not found", userId);
-            return NotFound();
-        }
-
-        user.FirebaseToken = dto.Token;
-        await _context.SaveChangesAsync(default);
-
-        _logger.LogInformation("FCM Sync: Token updated for user {User}", user.UserName);
-        await _auditService.LogAsync("FCM_SYNC", "User", userId.ToString(), $"Token sync V65.1.25 para {user.UserName}");
-
-        return Ok(new { status = "success", version = "V65.1.25" });
-    }
-
-    public class ComunicadoTokenUpdateDto { public string Token { get; set; } = string.Empty; }
-
-    private async Task<string> EnsureFirebaseInitializedAsync()
-    {
-        if (FirebaseAdmin.FirebaseApp.DefaultInstance != null) return "OK";
-
-        var projectId = await _settings.GetSettingAsync("FIREBASE_PROJECT_ID");
-        var json = await _settings.GetSettingAsync("FIREBASE_S_ACCOUNT") 
-                   ?? Environment.GetEnvironmentVariable("FIREBASE_S_ACCOUNT");
-        
-        if (string.IsNullOrEmpty(projectId)) 
-            throw new Exception("FIREBASE_PROJECT_ID no configurado en ajustes del sistema.");
-
-        try {
-            FirebaseAdmin.AppOptions options;
-            if (!string.IsNullOrEmpty(json))
-            {
-                options = new FirebaseAdmin.AppOptions() {
-                    Credential = Google.Apis.Auth.OAuth2.GoogleCredential.FromJson(json),
-                    ProjectId = projectId
-                };
-            }
-            else
-            {
-                options = new FirebaseAdmin.AppOptions() {
-                    Credential = Google.Apis.Auth.OAuth2.GoogleCredential.GetApplicationDefault(),
-                    ProjectId = projectId
-                };
-            }
-
-            FirebaseAdmin.FirebaseApp.Create(options);
-            return "INITIALIZED";
-        } catch (Exception ex) {
-            throw new Exception($"Error inicializando Firebase SDK: {ex.Message}");
-        }
+        return Ok(new { message = "Pong", version = "V12.20", timestamp = DateTime.UtcNow });
     }
 
     [HttpGet]
@@ -194,7 +128,6 @@ public class ComunicadosController : ControllerBase
     [Authorize(Roles = "Admin,SuperAdmin")]
     public async Task<IActionResult> Broadcast([FromBody] BroadcastDto dto)
     {
-        await EnsureFirebaseInitializedAsync();
         var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
         
@@ -203,7 +136,6 @@ public class ComunicadosController : ControllerBase
         if (admin == null) return NotFound();
 
         var companyId = admin.CompanyId;
-        _logger.LogInformation("Elite Broadcast: Starting for CompanyId {CompanyId}", companyId);
 
         // 1. Create Comunicado record
         var comunicado = new Comunicado
@@ -235,15 +167,11 @@ public class ComunicadosController : ControllerBase
             .Distinct()
             .ToList();
 
-        // 3. Send via optimized NotificationService
-        var plainBody = System.Text.RegularExpressions.Regex.Replace(dto.Body ?? "", "<.*?>", string.Empty).Trim();
-        if (string.IsNullOrWhiteSpace(plainBody)) plainBody = "Nuevo comunicado disponible";
-        if (plainBody.Length > 160) plainBody = plainBody.Substring(0, 157) + "...";
-
+        // 3. Send via optimized Centralized NotificationService (V12.20)
         await _notificationService.SendBroadcastAsync(userIds, tokens, new NotificationRequest
         {
             Subject = "📢 " + dto.Title,
-            Message = plainBody,
+            Message = dto.Body,
             Type = NotificationType.Push,
             Category = "broadcast",
             Metadata = new Dictionary<string, string>
@@ -257,7 +185,7 @@ public class ComunicadosController : ControllerBase
 
         return Ok(new { 
             status = tokens.Any() ? "success" : "warning", 
-            message = tokens.Any() ? "Comunicado enviado a la nube e historial actualizado" : "Comunicado guardado e historial actualizado, pero no hay dispositivos registrados",
+            message = tokens.Any() ? "Comunicado enviado e historial actualizado" : "Comunicado guardado, pero no hay dispositivos registrados",
             id = comunicado.Id
         });
     }
@@ -293,53 +221,13 @@ public class ComunicadosController : ControllerBase
         var comunicado = await _context.Comunicados.FindAsync(id);
         if (comunicado == null) return NotFound();
 
-        // 🛡️ SECURITY: Even SuperAdmin can only delete if CompanyId matches (Current Tenant)
-        if (comunicado.CompanyId != admin.CompanyId)
-        {
-            // Even if they are SuperAdmin, they must be in the correct tenant context
-            return Forbid();
-        }
+        if (comunicado.CompanyId != admin.CompanyId) return Forbid();
 
         _context.Comunicados.Remove(comunicado);
         await _context.SaveChangesAsync(default);
         
         await _auditService.LogAsync("DELETE", "Comunicado", id.ToString(), $"Comunicado eliminado: {comunicado.Titulo}");
         return Ok();
-    }
-
-    [HttpPost("test-fcm")]
-    public async Task<IActionResult> TestFcm()
-    {
-        var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
-
-        try {
-            await EnsureFirebaseInitializedAsync();
-            
-            var userId = Guid.Parse(userIdString);
-            var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
-            if (user == null || string.IsNullOrEmpty(user.FirebaseToken)) 
-                return BadRequest(new { status = "error", message = "No tienes token FCM registrado. Intenta refrescar la App." });
-
-            var message = new Message()
-            {
-                Token = user.FirebaseToken,
-                Notification = new Notification()
-                {
-                    Title = "⚡️ Prueba de Nube Elite",
-                    Body = $"Enviado el {DateTime.Now:HH:mm:ss} desde V65.1.16"
-                },
-                Data = new Dictionary<string, string>() {
-                    { "type", "test" },
-                    { "version", "V65.1.16" }
-                }
-            };
-
-            var response = await FirebaseMessaging.DefaultInstance.SendAsync(message);
-            return Ok(new { status = "success", message = "Orden enviada a la nube", response });
-        } catch (Exception ex) {
-            return BadRequest(new { status = "error", message = ex.Message });
-        }
     }
 }
 

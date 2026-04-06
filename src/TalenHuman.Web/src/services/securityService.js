@@ -91,10 +91,11 @@ const SecurityService = {
   },
 
   /**
-   * Sincroniza el token FCM en el núcleo de seguridad (V65.1.34)
+   * Sincroniza el token FCM en el núcleo de notificaciones centralizado (V12.20)
    */
   async syncFcmToken(token) {
-    const response = await api.post('/Security/sync-token', { Token: token });
+    if (!token) return { status: 'skipped', reason: 'No token provided' };
+    const response = await api.post('/notifications/token', { Token: token });
     return response.data;
   }
 };

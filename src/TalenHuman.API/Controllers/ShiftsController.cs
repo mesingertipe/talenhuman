@@ -20,11 +20,16 @@ public class ShiftsController : ControllerBase
 {
     private readonly IApplicationDbContext _context;
     private readonly IAuditService _auditService;
+    private readonly Application.Services.NotificationService _notificationService;
 
-    public ShiftsController(IApplicationDbContext context, IAuditService auditService)
+    public ShiftsController(
+        IApplicationDbContext context, 
+        IAuditService auditService,
+        Application.Services.NotificationService notificationService)
     {
         _context = context;
         _auditService = auditService;
+        _notificationService = notificationService;
     }
 
     [HttpGet]
@@ -115,37 +120,33 @@ public class ShiftsController : ControllerBase
 
         await _context.SaveChangesAsync(default);
 
-        // 5. Notify Employees via Firebase Push (Elite V65.1)
+        // 5. Notify Employees via Centralized Notification Service (V12.20)
         try {
             var employeeIds = dto.Shifts.Select(s => s.EmployeeId).Distinct().ToList();
-            var usersWithTokens = await _context.Users
+            var users = await _context.Users
                 .Where(u => _context.Employees.Where(e => employeeIds.Contains(e.Id)).Select(e => e.UserId).Contains(u.Id))
-                .Where(u => !string.IsNullOrEmpty(u.FirebaseToken))
-                .Select(u => new { u.FirebaseToken, u.CompanyId })
+                .Select(u => new { u.Id, u.FirebaseToken })
                 .ToListAsync();
 
-            var tokens = usersWithTokens.Select(u => u.FirebaseToken).ToList();
+            var uIds = users.Select(u => u.Id).ToList();
+            var tokens = users.Select(u => u.FirebaseToken).Where(t => !string.IsNullOrEmpty(t)).ToList()!;
+
             if (tokens.Any())
             {
-                var message = new MulticastMessage()
+                await _notificationService.SendBroadcastAsync(uIds, tokens, new Application.Services.NotificationRequest
                 {
-                    Tokens = tokens,
-                    Notification = new Notification()
-                    {
-                        Title = "📅 Nuevos Turnos Programados",
-                        Body = $"Se han actualizado tus turnos en {dto.StoreId}. Revisa tu aplicación Elite para ver los detalles."
-                    },
-                    Data = new Dictionary<string, string>()
-                    {
-                        { "type", "shift_update" },
-                        { "storeId", dto.StoreId.ToString() }
+                    Subject = "📅 ¡Nuevos horarios disponibles!",
+                    Message = $"Tu horario para la semana del {start:dd/MM} al {end:dd/MM} ha sido actualizado. Revisa la aplicación TalenHuman para ver los detalles. {dto.Comment}",
+                    Category = "shift_update",
+                    Type = Application.Services.NotificationType.Push,
+                    Metadata = new Dictionary<string, string> { 
+                        { "storeId", dto.StoreId.ToString() },
+                        { "startDate", start.ToString("yyyy-MM-dd") }
                     }
-                };
-                await FirebaseMessaging.DefaultInstance.SendMulticastAsync(message);
+                });
             }
         } catch (Exception ex) {
-            // Log but don't fail the request
-            Console.WriteLine($"FCM Shift Notification Error: {ex.Message}");
+            Console.WriteLine($"Shift Notification Error: {ex.Message}");
         }
 
         await _auditService.LogAsync("MASS_UPDATE", "Shifts", dto.StoreId.ToString(), $"Actualizados {dto.Shifts.Count} turnos. Motivo/Comentario: {dto.Comment}");

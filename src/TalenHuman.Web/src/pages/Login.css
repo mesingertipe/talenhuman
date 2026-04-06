@@ -760,6 +760,7 @@
     font-family: 'Outfit', sans-serif !important;
     display: flex;
     flex-direction: column;
+    align-items: center; /* Centrar en pantallas anchas */
 }
 
 .elite-mobile-header {
@@ -794,7 +795,8 @@
 }
 
 .elite-mobile-content {
-    flex: 1;
+    width: 100%;
+    max-width: 500px; /* Limitar ancho del contenido móvil incluso en PC */
     padding: 2.5rem 1.25rem;
     display: flex;
     flex-direction: column;
@@ -807,6 +809,9 @@
     box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(0,0,0,0.03);
     margin-bottom: 2rem;
+    max-width: 450px;
+    margin: 0 auto;
+    width: 100%;
 }
 
 .premium-input-box-v2 {
@@ -1058,4 +1063,52 @@
 .dark .mobile-premium-flow-root .elite-native-input {
     color: #1e293b !important;
     -webkit-text-fill-color: #1e293b !important;
+}
+
+/* 🔢 PIN SEGMENTED PRO FIX (V12.20) */
+.pin-segmented-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    margin: 10px 0;
+}
+
+.pin-box {
+    width: 50px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    font-size: 24px;
+    font-weight: 800;
+    color: #4f46e5;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pin-box.active {
+    border-color: #4f46e5;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    transform: translateY(-2px);
+}
+
+.pin-box.filled {
+    border-color: #4f46e5;
+    background: white;
+}
+
+.hidden-pin-input {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    opacity: 0 !important;
+    cursor: pointer;
+    z-index: 10;
 }

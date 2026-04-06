@@ -2,6 +2,8 @@ using FirebaseAdmin.Messaging;
 using Microsoft.EntityFrameworkCore;
 using TalenHuman.Application.Common.Interfaces;
 using TalenHuman.Domain.Entities;
+using System.Net;
+using System.Text.RegularExpressions;
 
 namespace TalenHuman.Application.Services;
 
@@ -39,6 +41,25 @@ public class NotificationService
         _emailService = emailService;
         _context = context;
         _tenantProvider = tenantProvider;
+    }
+
+    private string SanitizePushText(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return string.Empty;
+        
+        // 1. Decode HTML entities (&amp; -> &, &quot; -> ", etc.)
+        var decoded = WebUtility.HtmlDecode(text);
+        
+        // 2. Remove HTML tags if any residual exist
+        var noHtml = Regex.Replace(decoded, "<.*?>", string.Empty);
+        
+        // 3. Remove newlines and carriage returns (replace with space)
+        var noNewLines = noHtml.Replace("\n", " ").Replace("\r", " ");
+        
+        // 4. Shrink multiple spaces into one
+        var clean = Regex.Replace(noNewLines, @"\s+", " ").Trim();
+        
+        return clean;
     }
 
     public async Task SendNotificationAsync(NotificationRequest request)
@@ -88,19 +109,19 @@ public class NotificationService
 
                     // Ensure basic info is always in Data for the Service Worker
                     data["title"] = request.Subject;
-                    data["body"] = request.Message;
-                    data["type"] = request.Category;
+                    var sanitizedBody = SanitizePushText(request.Message);
 
                     var fcmMessage = new Message()
                     {
                         Token = request.To,
-                        Notification = new Notification()
+                        Notification = new FirebaseAdmin.Messaging.Notification()
                         {
                             Title = request.Subject,
-                            Body = request.Message
+                            Body = sanitizedBody
                         },
                         Data = data
                     };
+                    data["body"] = sanitizedBody;
 
                     await FirebaseMessaging.DefaultInstance.SendAsync(fcmMessage);
                 } catch (Exception) {
@@ -145,19 +166,19 @@ public class NotificationService
 
             // Ensure basic info in Data
             data["title"] = request.Subject;
-            data["body"] = request.Message;
-            data["type"] = request.Category;
+            var sanitizedBody = SanitizePushText(request.Message);
 
             var multicastMessage = new MulticastMessage()
             {
                 Tokens = activeTokens,
-                Notification = new Notification()
+                Notification = new FirebaseAdmin.Messaging.Notification()
                 {
                     Title = request.Subject,
-                    Body = request.Message
+                    Body = sanitizedBody
                 },
                 Data = data
             };
+            data["body"] = sanitizedBody;
 
             await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(multicastMessage);
         }

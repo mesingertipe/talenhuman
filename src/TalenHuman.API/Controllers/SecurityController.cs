@@ -133,29 +133,6 @@ public class SecurityController : ControllerBase
             return BadRequest(new { status = "error", message = ex.Message });
         }
     }
-    [HttpPost("sync-token")]
-    public async Task<IActionResult> UpdateFirebaseToken([FromBody] SecurityTokenUpdateDto dto)
-    {
-        var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
-
-        var userId = Guid.Parse(userIdString);
-        var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
-        if (user == null) return NotFound();
-
-        user.FirebaseToken = dto.Token;
-        await _context.SaveChangesAsync();
-
-        await _auditService.LogAsync("FCM_SYNC", "User", userId.ToString(), $"Token sync V65.1.36 para {user.UserName}");
-
-        return Ok(new { status = "success", version = "V65.1.39" });
-    }
-
-    public class SecurityTokenUpdateDto
-    {
-        public string Token { get; set; } = string.Empty;
-    }
-
     [AllowAnonymous]
     [HttpPost("assertion/options")]
     public async Task<IActionResult> GetAssertionOptions([FromBody] AssertionRequest request)

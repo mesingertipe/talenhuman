@@ -187,9 +187,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
 
                   <div className="login-footer">
                       <p>¿Necesitas ayuda? <a href="#">Soporte</a></p>
-                      <div className="version-tag">
-                         {version || 'V12.19'}
-                      </div>
+                      <div className="version-tag">V12.20</div>
                   </div>
                 </div>
             </div>
