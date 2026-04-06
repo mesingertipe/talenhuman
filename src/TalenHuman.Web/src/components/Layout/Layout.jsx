@@ -116,7 +116,10 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
   return (
     <div 
       className={`sidebar border-r dark:border-slate-800 ${isCollapsed ? 'collapsed' : ''}`}
-      style={{ background: '#0f172a', transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)' }}
+      style={{ 
+        background: 'linear-gradient(180deg, #4f46e5 0%, #312e81 100%)', 
+        transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)' 
+      }}
       onMouseEnter={() => !isPinned && setIsCollapsed(false)}
       onMouseLeave={() => !isPinned && setIsCollapsed(true)}
     >
