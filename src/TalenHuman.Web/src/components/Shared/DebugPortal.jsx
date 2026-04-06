@@ -9,6 +9,7 @@ const DebugPortal = ({ isOpen, onClose }) => {
     const [isMinimized, setIsMinimized] = useState(false);
     const [fcmToken, setFcmToken] = useState('Checking...');
     const [swStatus, setSwStatus] = useState('Detecting...');
+    const [activeConfig, setActiveConfig] = useState({ projectId: '---', senderId: '---' });
 
     useEffect(() => {
         if (!isOpen) return;
@@ -40,6 +41,18 @@ const DebugPortal = ({ isOpen, onClose }) => {
                 // Check Token
                 const token = await requestForToken();
                 setFcmToken(token || 'Failed to retrieve token');
+
+                // 🔍 Active Config Check (V12.26)
+                if ('serviceWorker' in navigator) {
+                    const reg = await navigator.serviceWorker.getRegistration();
+                    if (reg && reg.active) {
+                        const url = new URL(reg.active.scriptURL);
+                        setActiveConfig({
+                            projectId: url.searchParams.get('projectId') || 'Default (talenhuman)',
+                            senderId: url.searchParams.get('messagingSenderId') || 'Default'
+                        });
+                    }
+                }
             } catch (err) {
                 setFcmToken(`Error: ${err.message}`);
             }
@@ -126,6 +139,8 @@ const DebugPortal = ({ isOpen, onClose }) => {
                     <div className="grid grid-cols-2 gap-2 mb-4">
                         <StatusBox label="FCM TOKEN" value={fcmToken} color={fcmToken.includes('Checking') ? 'amber' : 'green'} />
                         <StatusBox label="SW STATUS" value={swStatus} color={swStatus.includes('Active') ? 'blue' : 'red'} />
+                        <StatusBox label="FIREBASE PROJECT" value={activeConfig.projectId} color="blue" />
+                        <StatusBox label="MESSAGING SENDER ID" value={activeConfig.senderId} color="blue" />
                     </div>
 
                     <div className="flex gap-2 mb-4">
