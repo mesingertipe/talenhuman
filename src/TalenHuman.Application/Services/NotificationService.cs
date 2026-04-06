@@ -43,20 +43,20 @@ public class NotificationService
         _tenantProvider = tenantProvider;
     }
 
-    private string SanitizePushText(string text)
+    public static string SanitizePushText(string text)
     {
         if (string.IsNullOrEmpty(text)) return string.Empty;
         
         // 1. Decode HTML entities (&amp; -> &, &quot; -> ", etc.)
         var decoded = WebUtility.HtmlDecode(text);
         
-        // 2. Remove HTML tags if any residual exist
-        var noHtml = Regex.Replace(decoded, "<.*?>", string.Empty);
+        // 2. Remove all HTML tags (including attributes like src for images)
+        var noHtml = Regex.Replace(decoded, "<[^>]*>", string.Empty);
         
-        // 3. Remove newlines and carriage returns (replace with space)
-        var noNewLines = noHtml.Replace("\n", " ").Replace("\r", " ");
+        // 3. Remove newlines and carriage returns
+        var noNewLines = noHtml.Replace("\n", " ").Replace("\r", " ").Replace("\\n", " ").Replace("\\r", " ");
         
-        // 4. Shrink multiple spaces into one
+        // 4. Shrink multiple spaces and trim
         var clean = Regex.Replace(noNewLines, @"\s+", " ").Trim();
         
         return clean;
@@ -108,20 +108,22 @@ public class NotificationService
                         : new Dictionary<string, string>();
 
                     // Ensure basic info is always in Data for the Service Worker
-                    data["title"] = request.Subject;
+                    var sanitizedTitle = SanitizePushText(request.Subject);
                     var sanitizedBody = SanitizePushText(request.Message);
+
+                    data["title"] = sanitizedTitle;
+                    data["body"] = sanitizedBody;
 
                     var fcmMessage = new Message()
                     {
                         Token = request.To,
                         Notification = new FirebaseAdmin.Messaging.Notification()
                         {
-                            Title = request.Subject,
+                            Title = sanitizedTitle,
                             Body = sanitizedBody
                         },
                         Data = data
                     };
-                    data["body"] = sanitizedBody;
 
                     await FirebaseMessaging.DefaultInstance.SendAsync(fcmMessage);
                 } catch (Exception) {
@@ -165,20 +167,22 @@ public class NotificationService
                 : new Dictionary<string, string>();
 
             // Ensure basic info in Data
-            data["title"] = request.Subject;
+            var sanitizedTitle = SanitizePushText(request.Subject);
             var sanitizedBody = SanitizePushText(request.Message);
+
+            data["title"] = sanitizedTitle;
+            data["body"] = sanitizedBody;
 
             var multicastMessage = new MulticastMessage()
             {
                 Tokens = activeTokens,
                 Notification = new FirebaseAdmin.Messaging.Notification()
                 {
-                    Title = request.Subject,
+                    Title = sanitizedTitle,
                     Body = sanitizedBody
                 },
                 Data = data
             };
-            data["body"] = sanitizedBody;
 
             await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(multicastMessage);
         }

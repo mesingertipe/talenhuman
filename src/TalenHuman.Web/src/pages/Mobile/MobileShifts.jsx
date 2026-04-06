@@ -5,6 +5,7 @@ import {
   CalendarDays, CalendarRange, CalendarCheck,
   LayoutGrid, List, Sparkles, Filter
 } from 'lucide-react';
+import { formatDate } from '../../utils/formatters';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -242,7 +243,7 @@ const ShiftCard = ({ shift, isDark, primaryText, mutedText, cardBg, glassEffect,
                      {isDescanso ? 'Día de Descanso' : 'Turno Operativo'}
                   </p>
                   <p style={{ fontSize: '10px', color: mutedText, fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '2px 0 0' }}>
-                     {startTime.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric' })}
+                     {formatDate(startTime)}
                   </p>
                </div>
             </div>

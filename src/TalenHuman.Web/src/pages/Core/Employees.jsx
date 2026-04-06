@@ -13,6 +13,7 @@ import Pagination from '../../components/Shared/Pagination';
 import { useTheme } from '../../context/ThemeContext';
 import HelpIcon from '../../components/Shared/HelpIcon';
 import PermissionGate from '../../components/Shared/PermissionGate';
+import { formatDate } from '../../utils/formatters';
 
 const Employees = ({ user }) => {
   const { isDarkMode } = useTheme();
@@ -159,7 +160,7 @@ const Employees = ({ user }) => {
       Sede: emp.storeName,
       Cargo: emp.profileName,
       Jornada: emp.jornadaNombre,
-      'F. Ingreso': emp.dateOfEntry?.split('T')[0],
+      'F. Ingreso': formatDate(emp.dateOfEntry),
       Género: emp.gender || 'N/A',
       Estado: emp.isActive ? 'Activo' : 'Inactivo',
       Email: emp.email || 'N/A'
@@ -253,6 +254,7 @@ const Employees = ({ user }) => {
                 <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Colaborador</th>
                 <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Género</th>
                 <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Identificación</th>
+                <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>F. Ingreso</th>
                 <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Ubicación y Cargo</th>
                 {isAdmin && <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Salario</th>}
                 <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em', color: activeColors.textMuted }}>Estado</th>
@@ -287,6 +289,9 @@ const Employees = ({ user }) => {
                   </td>
                   <td style={{ padding: '20px 24px' }}>
                     <div className="font-bold text-slate-800 dark:text-slate-100">{emp.identificationNumber}</div>
+                  </td>
+                  <td style={{ padding: '20px 24px' }}>
+                    <div className="font-bold text-indigo-600 dark:text-indigo-400 text-sm">{formatDate(emp.dateOfEntry)}</div>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
                     <div className="font-bold text-slate-700 dark:text-slate-200 text-sm leading-none mb-1.5">{emp.storeName || 'Sede no asignada'}</div>
@@ -477,7 +482,7 @@ const Employees = ({ user }) => {
                       </div>
                     </div>
                     <div className="group">
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Cumpleaños</label>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Cumpleaños (dd/mm/yyyy)</label>
                       <div style={{ position: 'relative' }}>
                         <Calendar size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                         <input 
@@ -516,7 +521,7 @@ const Employees = ({ user }) => {
                       </div>
                     )}
                     <div className="group">
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Fecha de Ingreso *</label>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Fecha de Ingreso (dd/mm/yyyy) *</label>
                       <div style={{ position: 'relative' }}>
                         <Calendar size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input 
@@ -598,7 +603,7 @@ const Employees = ({ user }) => {
                 {/* Baja Date picker if inactive */}
                 {!formData.isActive && (
                   <div style={{ padding: '30px', background: isDarkMode ? '#451a1a' : '#fef2f2', borderRadius: '24px', border: '1px solid #fee2e2', animation: 'fadeIn 0.4s' }}>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: '#ef4444', textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Fecha de Baja / Desvinculación *</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '900', color: '#ef4444', textTransform: 'uppercase', marginBottom: '14px', letterSpacing: '0.1em' }}>Fecha de Baja / Desvinculación (dd/mm/yyyy) *</label>
                     <div style={{ position: 'relative' }}>
                       <Calendar size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-red-400" />
                       <input 

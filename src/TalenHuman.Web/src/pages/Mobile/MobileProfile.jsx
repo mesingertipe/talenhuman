@@ -5,6 +5,7 @@ import {
   Bell, CreditCard, Droplets, LogOut, Key, Sun, Moon, Lock
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { formatDate } from '../../utils/formatters';
 
 const MobileProfile = ({ user, setPage, onLogout }) => {
   const { isDarkMode, toggleTheme } = useTheme();
@@ -92,7 +93,7 @@ const MobileProfile = ({ user, setPage, onLogout }) => {
                     <Calendar size={14} strokeWidth={2.5} />
                     <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ingreso</span>
                 </div>
-                <p style={{ fontSize: '14px', fontWeight: '700', color: primaryText }}>{user?.joinDate ? new Date(user.joinDate).toLocaleDateString() : 'N/A'}</p>
+                <p style={{ fontSize: '14px', fontWeight: '700', color: primaryText }}>{formatDate(user.joinDate)}</p>
             </div>
          </div>
       </div>

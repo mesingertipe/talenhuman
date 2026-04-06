@@ -4,6 +4,7 @@ import {
   ChevronLeft, ChevronRight, 
   CalendarDays, CalendarRange, ListTodo, Sparkles 
 } from 'lucide-react';
+import { formatDate } from '../../utils/formatters';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -175,7 +176,7 @@ const AttendanceCard = ({ item, isDark, primaryText, mutedText, cardBg, glassEff
             </div>
             <div>
                <p style={{ fontSize: '15px', fontWeight: '900', color: primaryText, margin: 0 }}>{item.storeName || 'Sede Principal'}</p>
-               <p style={{ fontSize: '9px', fontWeight: '800', color: mutedText, textTransform: 'uppercase', opacity: 0.6 }}>{new Date(item.clockIn).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}</p>
+               <p style={{ fontSize: '9px', fontWeight: '800', color: mutedText, textTransform: 'uppercase', opacity: 0.6 }}>{formatDate(item.clockIn)}</p>
             </div>
          </div>
          <div style={{ 

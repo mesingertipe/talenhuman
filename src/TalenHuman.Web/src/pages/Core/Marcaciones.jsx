@@ -8,6 +8,7 @@ import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 import * as XLSX from 'xlsx';
 import Pagination from '../../components/Shared/Pagination';
+import { formatDate } from '../../utils/formatters';
 import { useTableData } from '../../hooks/useTableData';
 
 const Marcaciones = ({ user }) => {
@@ -274,13 +275,13 @@ const Marcaciones = ({ user }) => {
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: m.clockIn ? activeColors.success : activeColors.textMuted, fontWeight: '900', fontSize: '0.85rem' }}>
                                                     <ArrowUpRight size={16} /> {m.clockIn ? new Date(m.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                                                 </div>
-                                                {m.clockIn && <div className="text-[9px] font-black opacity-30 uppercase mt-0.5">{new Date(m.clockIn).toLocaleDateString()}</div>}
+                                                {m.clockIn && <div className="text-[9px] font-black opacity-30 uppercase mt-0.5">{formatDate(m.clockIn)}</div>}
                                             </td>
                                             <td style={{ padding: '1.5rem' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: m.clockOut ? activeColors.accent : activeColors.textMuted, fontWeight: '900', fontSize: '0.85rem' }}>
                                                     <ArrowDownLeft size={16} /> {m.clockOut ? new Date(m.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                                                 </div>
-                                                {m.clockOut && <div className="text-[9px] font-black opacity-30 uppercase mt-0.5">{new Date(m.clockOut).toLocaleDateString()}</div>}
+                                                {m.clockOut && <div className="text-[9px] font-black opacity-30 uppercase mt-0.5">{formatDate(m.clockOut)}</div>}
                                             </td>
                                             <td style={{ padding: '1.5rem 2.5rem', textAlign: 'right' }}>
                                                 <div className="flex flex-col items-end gap-1">

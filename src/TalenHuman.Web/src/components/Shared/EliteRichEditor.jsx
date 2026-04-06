@@ -98,7 +98,7 @@ const EliteRichEditor = ({ value, onChange, placeholder, isDarkMode, accentColor
                 >
                     {isUploading ? <Loader2 size={18} className="animate-spin" /> : <ImageIcon size={18} />}
                     <span style={{ fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>
-                        {isUploading ? 'Subiendo...' : 'Media Ocean'}
+                        {isUploading ? 'Subiendo...' : 'Adjuntar Imagen'}
                     </span>
                 </button>
 

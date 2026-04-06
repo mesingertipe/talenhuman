@@ -14,7 +14,7 @@ const ValidationItem = ({ label, passed }) => (
   </div>
 );
 
-const EliteInput = ({ label, icon, value, onChange, type, placeholder, suffix }) => (
+const TalenHumanInput = ({ label, icon, value, onChange, type, placeholder, suffix }) => (
   <div className="elite-field-group">
       <label className="elite-field-label">{label}</label>
       <div className="elite-input-container">
@@ -113,11 +113,11 @@ const SelfServiceReset = ({ onBack }) => {
                     {error && <div className="premium-error-toast mb-6"><AlertCircle size={18} /><span>{error}</span></div>}
 
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <EliteInput label="Número de Identificación" icon={<User size={18} />} value={formData.identificationNumber} onChange={(v) => setFormData({...formData, identificationNumber:v})} type="text" placeholder="Número de Identificación" />
-                        <EliteInput label="Nacimiento" icon={<Calendar size={18} />} value={formData.birthDate} onChange={(v) => setFormData({...formData, birthDate:v})} type="date" />
-                        <div className="divider-premium" />
-                        <EliteInput label="Nueva clave" icon={<Lock size={18} />} value={formData.newPassword} onChange={(v) => setFormData({...formData, newPassword:v})} type={showPassword ? "text" : "password"} placeholder="Mínimo 6" suffix={<button type="button" onClick={() => setShowPassword(!showPassword)} className="field-toggle-btn-v2">{showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}</button>} />
-                        <EliteInput label="Confirmar clave" icon={<ShieldCheck size={18} />} value={formData.confirmPassword} onChange={(v) => setFormData({...formData, confirmPassword:v})} type="password" />
+        <TalenHumanInput label="Número de Identificación" icon={<User size={18} />} value={formData.identificationNumber} onChange={(v) => setFormData({...formData, identificationNumber:v})} type="text" placeholder="Número de Identificación" />
+                        <TalenHumanInput label="Nacimiento (dd/mm/yyyy)" icon={<Calendar size={18} />} value={formData.birthDate} onChange={(v) => setFormData({...formData, birthDate:v})} type="date" />
+                        
+                        <TalenHumanInput label="Nueva clave" icon={<Lock size={18} />} value={formData.newPassword} onChange={(v) => setFormData({...formData, newPassword:v})} type={showPassword ? "text" : "password"} placeholder="Mínimo 6" suffix={<button type="button" onClick={() => setShowPassword(!showPassword)} className="field-toggle-btn-v2">{showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}</button>} />
+                        <TalenHumanInput label="Confirmar clave" icon={<ShieldCheck size={18} />} value={formData.confirmPassword} onChange={(v) => setFormData({...formData, confirmPassword:v})} type="password" />
                         
                         <div className="validation-panel">
                             <ValidationItem label="Mínimo 6" passed={validations.minChar} />
@@ -133,7 +133,7 @@ const SelfServiceReset = ({ onBack }) => {
                 )}
             </div>
             <footer className="elite-mobile-footer text-center mt-4">
-                <div className="elite-version">V12.19</div>
+                <div className="version-tag-subtle">V12.20</div>
             </footer>
         </main>
     </div>

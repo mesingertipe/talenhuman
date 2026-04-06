@@ -7,6 +7,7 @@ import {
     ChevronRight, LayoutGrid, ListTodo, ClipboardList, Download, ExternalLink
 } from 'lucide-react';
 import api from '../../services/api';
+import { formatDate } from '../../utils/formatters';
 import NewsRequest from './NewsRequest';
 import { useTheme } from '../../context/ThemeContext';
 import HelpIcon from '../../components/Shared/HelpIcon';
@@ -210,7 +211,7 @@ const NewsInbox = ({ user }) => {
                                         <span style={{ fontSize: '9px', color: activeColors.textMuted, fontWeight: '900', textTransform: 'uppercase' }}>#{n.idSolicitud}</span>
                                     </div>
                                     <div style={{ color: activeColors.textMuted, fontSize: '10px', fontWeight: '800' }}>
-                                        {new Date(n.fechaInicio).toLocaleDateString()}
+                                        {formatDate(n.fechaInicio)}
                                     </div>
                                 </div>
 
@@ -298,11 +299,11 @@ const NewsInbox = ({ user }) => {
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <span style={{ fontSize: '11px', fontWeight: '900', color: activeColors.textMuted }}>Fecha Inicio</span>
-                                        <span style={{ fontSize: '11px', fontWeight: '950', color: activeColors.textMain }}>{new Date(selectedNews.fechaInicio).toLocaleDateString()}</span>
+                                        <span style={{ fontSize: '11px', fontWeight: '950', color: activeColors.textMain }}>{formatDate(selectedNews.fechaInicio)}</span>
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <span style={{ fontSize: '11px', fontWeight: '900', color: activeColors.textMuted }}>Fecha Fin</span>
-                                        <span style={{ fontSize: '11px', fontWeight: '950', color: activeColors.textMain }}>{new Date(selectedNews.fechaFin).toLocaleDateString()}</span>
+                                        <span style={{ fontSize: '11px', fontWeight: '950', color: activeColors.textMain }}>{formatDate(selectedNews.fechaFin)}</span>
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <span style={{ fontSize: '11px', fontWeight: '900', color: activeColors.textMuted }}>Radicado por</span>

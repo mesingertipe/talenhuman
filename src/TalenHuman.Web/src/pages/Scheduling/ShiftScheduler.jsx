@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
 import { createPortal } from 'react-dom';
 import api from '../../services/api';
+import { formatDate } from '../../utils/formatters';
 import {
     Calendar,
     Clock,
@@ -623,7 +624,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
             const storeNameOrg = stores.find(s => s.id === selectedStore)?.name || 'Sede';
             const safeStoreName = storeNameOrg.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20);
             const fileNameExcel = `Programacion_${safeStoreName}.xlsx`;
-            const dateRange = `${currentWeekStart.toLocaleDateString()} — ${new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString()}`;
+            const dateRange = `${formatDate(currentWeekStart)} — ${formatDate(new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000))}`;
 
             // Configuración de Columnas
             worksheet.columns = [
@@ -637,10 +638,10 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                 { header: 'TOTAL HRS', key: 'total', width: 15 }
             ];
 
-            // 1. Título V12
+            // 1. Título TalenHuman
             worksheet.mergeCells('A1:J1');
             const titleRow = worksheet.getRow(1);
-            titleRow.getCell(1).value = 'PROGRAMACION DE TURNOS ELITE';
+            titleRow.getCell(1).value = 'PROGRAMACION DE TURNOS TALENHUMAN';
             titleRow.getCell(1).font = { name: 'Segoe UI', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
             titleRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
             titleRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
@@ -744,9 +745,9 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                         .grid-event-fuera { background: #9333ea !important; color: #ffffff !important; border: none !important; }
                         .grid-event-incapacidad { background: #f1f7ff !important; color: #3b82f6 !important; border: 1px solid #3b82f6 !important; }
                         
-                        .v12-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-weight: 950; font-size: 9px; text-transform: uppercase; }
-                        .v12-badge-hours { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
-                        .dark .v12-badge-hours { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+                        .th-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-weight: 950; font-size: 9px; text-transform: uppercase; }
+                        .th-badge-hours { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+                        .dark .th-badge-hours { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
                     `}
                 </style>
 
@@ -762,15 +763,15 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                         <div className="text-right">
                             <p className="text-xl font-[950] text-slate-900">{stores.find(s => s.id === selectedStore)?.name}</p>
                             <p className="text-slate-500 font-black text-xs uppercase tracking-widest mt-1">
-                                {currentWeekStart.toLocaleDateString()} — {new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                                {formatDate(currentWeekStart)} — {formatDate(new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000))}
                             </p>
                         </div>
                     </div>
                 </div>
 
-                {/* 2. UI Principal (V12 Elite Command Center) */}
+                {/* 2. UI Principal (V12.20 Command Center) */}
                 <div className="no-print space-y-32 mb-32">
-                    {/* 2. UI Principal: COMANDO CENTRAL V12 (Floating Glassmorphism Dock) */}
+                    {/* 2. UI Principal: COMANDO CENTRAL V12.20 (Floating Glassmorphism Dock) */}
                     <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-8 sticky top-4 z-[50] transition-all duration-500">
                         
                         {/* 2.1 Dock de Filtros (Glassmorphism) */}
@@ -873,7 +874,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                 </button>
 
                                 <div className="hidden xl:flex items-center">
-                                    <HelpIcon text="Comando Central V12: Configure filtros, navegue por semanas y use acciones masivas para optimizar tiempos operativos." />
+                                    <HelpIcon text="Comando Central V12.20: Configure filtros, navegue por semanas y use acciones masivas para optimizar tiempos operativos." />
                                 </div>
                             </div>
                         </div>
@@ -908,7 +909,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                         </div>
                     )}
 
-                    {/* Fila 2: Command Center Ultra-Visibilidad V12 (Espaciado e Impacto) */}
+                    {/* Fila 2: Command Center Ultra-Visibilidad V12.20 (Espaciado e Impacto) */}
                     <div className="no-print w-full flex flex-col xl:flex-row items-center justify-between gap-16 bg-white dark:bg-slate-900 shadow-xl p-8 border-[1px] border-slate-200 dark:border-slate-800" style={{ borderRadius: '48px' }}>
                         {/* Izquierda: Toolkit de Operaciones (Ultra-Espaciado) */}
                         <div className="flex flex-wrap items-center justify-center lg:justify-start p-8 bg-slate-50/50 dark:bg-slate-800/20 border-[1px] border-slate-200 dark:border-slate-700/50" 
@@ -978,15 +979,18 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                         </div>
                     </div>
                 
-                {/* 3. Grid V12 Elite Classic */}
+                {/* 3. Grid V12.20 Elite Classic */}
                 <div className="card shadow-[0_40px_100px_rgba(0,0,0,0.12)] bg-white dark:bg-slate-900 border-2 dark:border-slate-800" style={{ borderRadius: '48px', overflow: 'hidden' }}>
                     {loading ? (
                         <div className="py-48 text-center text-slate-400">
                             <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-indigo-600 mx-auto mb-8"></div>
-                            <p className="font-black text-[12px] uppercase tracking-[0.4em] animate-pulse">Sincronizando Nómina V12...</p>
+                            <p className="font-black text-[12px] uppercase tracking-[0.4em] animate-pulse">Sincronizando Nómina V12.20...</p>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
+                            <footer className="mt-8 mb-4">
+                                <div className="version-tag-subtle">V12.20</div>
+                            </footer>
                             <table className="w-full border-collapse">
                                 <thead>
                                     <tr className="bg-slate-50 dark:bg-slate-800 border-b-2 dark:border-indigo-500/20">
@@ -1583,7 +1587,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                             <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 animate-pulse"></div>
                             <div className="w-20 h-20 border-4 border-slate-100 dark:border-slate-800 border-t-indigo-600 rounded-full animate-spin relative z-10"></div>
                         </div>
-                        <h3 className="text-xl font-[950] text-slate-800 dark:text-white mb-2 uppercase tracking-tight">Generando Reporte Elite</h3>
+                        <h3 className="text-xl font-[950] text-slate-800 dark:text-white mb-2 uppercase tracking-tight">Generando Reporte TalenHuman</h3>
                         <p className="text-sm font-bold text-slate-400 leading-relaxed px-4">Optimizando calidad HD y preparando datos seguros. Esto puede tardar unos segundos...</p>
                     </div>
                 </div>

@@ -5,6 +5,7 @@ import {
   Search, Filter, Plus, Inbox 
 } from 'lucide-react';
 import api from '../../services/api';
+import { formatDate } from '../../utils/formatters';
 
 const MobileNews = ({ user, theme }) => {
   const [loading, setLoading] = React.useState(true);
@@ -142,7 +143,7 @@ const MobileNews = ({ user, theme }) => {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: mutedText }}>
                             <Calendar size={12} />
                             <span style={{ fontSize: '10px', fontWeight: '700' }}>
-                              {item.fechaInicio ? new Date(item.fechaInicio).toLocaleDateString() : 'Fecha N/A'}
+                              {formatDate(item.fechaInicio)}
                             </span>
                         </div>
                      </div>

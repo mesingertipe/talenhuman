@@ -8,6 +8,7 @@ import {
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import EliteRichEditor from '../../components/Shared/EliteRichEditor';
+import { formatDate } from '../../utils/formatters';
 
 const CommunicationsCenter = ({ user }) => {
     const [communications, setCommunications] = useState([]);
@@ -142,7 +143,7 @@ const CommunicationsCenter = ({ user }) => {
                         <div style={{ width: '40px', height: '40px', background: colors.accent, color: 'white', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 20px rgba(79, 70, 229, 0.2)' }}>
                             <Megaphone size={22} />
                         </div>
-                        <h1 style={{ fontSize: '2.4rem', fontWeight: '950', color: colors.textMain, margin: 0, letterSpacing: '-0.03em' }}>Comunicaciones PR</h1>
+                        <h1 style={{ fontSize: '2.4rem', fontWeight: '950', color: colors.textMain, margin: 0, letterSpacing: '-0.03em' }}>Comunicaciones Corporativas</h1>
                     </div>
                     <p style={{ color: colors.textMuted, fontWeight: '700', fontSize: '1rem' }}>Gestión estratégica de vigencia y visibilidad corporativa</p>
                 </div>
@@ -177,8 +178,8 @@ const CommunicationsCenter = ({ user }) => {
                                 <div>
                                     <h4 style={{ fontSize: '1.1rem', fontWeight: '950', color: colors.textMain, margin: '0 0 4px' }}>{c.titulo}</h4>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                        <Badge icon={<Clock size={12}/>} text={new Date(c.fechaEnvio).toLocaleDateString()} />
-                                        {c.fechaFin && <Badge icon={<Calendar size={12}/>} text={`Hasta: ${new Date(c.fechaFin).toLocaleDateString()}`} color="#4f46e5" />}
+                                        <Badge icon={<Clock size={12}/>} text={formatDate(c.fechaEnvio)} />
+                                        {c.fechaFin && <Badge icon={<Calendar size={12}/>} text={`Hasta: ${formatDate(c.fechaFin)}`} color="#4f46e5" />}
                                         <Badge icon={<UserIcon size={12}/>} text={c.isActive ? 'ACTIVO' : 'INACTIVO'} color={c.isActive ? '#10b981' : '#ef4444'} />
                                     </div>
                                 </div>
@@ -210,7 +211,7 @@ const CommunicationsCenter = ({ user }) => {
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.85)', backdropFilter: 'blur(20px)', zIndex: 11000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
                     <div style={{ background: colors.card, width: '100%', maxWidth: '850px', borderRadius: '48px', border: `1px solid ${colors.border}`, boxShadow: '0 50px 100px rgba(0,0,0,0.5)', animation: 'scaleIn 0.3s ease', overflow: 'hidden' }}>
                         <div style={{ padding: '30px 40px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                             <h3 style={{ fontSize: '1.4rem', fontWeight: '950', color: colors.textMain, margin: 0 }}>{isEditing ? 'Editar Comunicación' : 'Nueva Difusión Elite'}</h3>
+                             <h3 style={{ fontSize: '1.4rem', fontWeight: '950', color: colors.textMain, margin: 0 }}>{isEditing ? 'Editar Comunicación' : 'Nueva Difusión TalenHuman'}</h3>
                              <button onClick={() => setShowModal(false)} style={{ border: 'none', background: 'none', color: colors.textMuted }}><X size={28} /></button>
                         </div>
                         
@@ -240,11 +241,11 @@ const CommunicationsCenter = ({ user }) => {
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
                                 <div>
-                                    <label className="label-lite">Fecha Inicio (Vigencia)</label>
+                                    <label className="label-lite">Fecha Inicio (dd/mm/yyyy)</label>
                                     <input type="date" value={formData.fechaInicio} onChange={(e) => setFormData({ ...formData, fechaInicio: e.target.value })} className="input-lite" />
                                 </div>
                                 <div>
-                                    <label className="label-lite">Fecha Fin (Expiración)</label>
+                                    <label className="label-lite">Fecha Fin (dd/mm/yyyy)</label>
                                     <input type="date" value={formData.fechaFin} onChange={(e) => setFormData({ ...formData, fechaFin: e.target.value })} className="input-lite" />
                                 </div>
                             </div>

@@ -4,7 +4,7 @@ import api from '../services/api';
 import TalenHumanLogo from '../components/Shared/TalenHumanLogo';
 import './Login.css';
 
-// 🏗️ ELITE SUB-COMPONENTS (Defined OUTSIDE to prevent focus loss)
+// 🏗️ TALENHUMAN SUB-COMPONENTS (Defined OUTSIDE to prevent focus loss)
 const ValidationItem = ({ label, passed }) => (
   <div className={`validation-pill ${passed ? 'passed' : 'pending'}`}>
     <div className="status-dot">
@@ -14,7 +14,7 @@ const ValidationItem = ({ label, passed }) => (
   </div>
 );
 
-const EliteInput = ({ label, icon, value, onChange, type, placeholder, suffix }) => (
+const TalenHumanInput = ({ label, icon, value, onChange, type, placeholder, suffix }) => (
   <div className="elite-field-group">
       <label className="elite-field-label">{label}</label>
       <div className="elite-input-container">
@@ -132,8 +132,8 @@ const ResetForgottenPassword = ({ email, onBack }) => {
 
                         <div className="divider-premium" />
 
-                        <EliteInput label="Nueva clave" icon={<Lock size={18} />} value={newPassword} onChange={(v) => setNewPassword(v)} type={showPass ? "text" : "password"} placeholder="Mínimo 6" suffix={<button type="button" onClick={() => setShowPass(!showPass)} className="field-toggle-btn-v2">{showPass ? <EyeOff size={18}/> : <Eye size={18}/>}</button>} />
-                        <EliteInput label="Confirmar clave" icon={<ShieldCheck size={18} />} value={confirmPassword} onChange={(v) => setConfirmPassword(v)} type="password" />
+                        <TalenHumanInput label="Nueva clave" icon={<Lock size={18} />} value={newPassword} onChange={(v) => setNewPassword(v)} type={showPass ? "text" : "password"} placeholder="Mínimo 6" suffix={<button type="button" onClick={() => setShowPass(!showPass)} className="field-toggle-btn-v2">{showPass ? <EyeOff size={18}/> : <Eye size={18}/>}</button>} />
+                        <TalenHumanInput label="Confirmar clave" icon={<ShieldCheck size={18} />} value={confirmPassword} onChange={(v) => setConfirmPassword(v)} type="password" />
 
                         <div className="validation-panel">
                             <ValidationItem label="Mínimo 6" passed={validations.minChar} />
@@ -147,8 +147,9 @@ const ResetForgottenPassword = ({ email, onBack }) => {
                     </form>
                 </div>
             </div>
-            <footer className="elite-mobile-footer text-center mt-4">
-                <div className="elite-version">V12.19</div>
+
+            <footer className="mt-8 mb-4">
+                <div className="version-tag-subtle">V12.20</div>
             </footer>
         </main>
     </div>
