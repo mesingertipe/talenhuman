@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Mail, Eye, EyeOff, Users, ArrowRight, ShieldAlert, Bell, Calendar, Fingerprint, ShieldCheck } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff, ArrowRight, ShieldAlert, Bell, Calendar } from 'lucide-react';
 import api from '../services/api';
-import SecurityService from '../services/securityService';
-import { get } from '@github/webauthn-json';
 import TalenHumanLogo from '../components/Shared/TalenHumanLogo';
 import './Login.css';
 
@@ -12,11 +10,10 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
   const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [biometricLoading, setBiometricLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const saved = localStorage.getItem('rememberedEmail') || localStorage.getItem('lastIdentifier');
+    const saved = localStorage.getItem('rememberedEmail');
     if (saved) {
       setEmail(saved);
       setRememberMe(true);
@@ -38,7 +35,6 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       localStorage.setItem('tenantId', res.data.user.companyId);
-      localStorage.setItem('lastIdentifier', email); // 🛡️ Save for next time
       onLogin(res.data.user, res.data.token);
     } catch (err) {
       setError('Credenciales inválidas. Por favor intenta de nuevo.');
@@ -48,86 +44,32 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
     }
   };
 
-  const handleBiometricLogin = async () => {
-    let identifier = email;
-    if (!identifier) {
-        identifier = localStorage.getItem('lastIdentifier') || localStorage.getItem('rememberedEmail');
-    }
-
-    if (!identifier) {
-      setError('Escribe tu usuario para usar biometría.');
-      return;
-    }
-
-    if (!email) setEmail(identifier); // Show what we found
-
-    setBiometricLoading(true);
-    setError('');
-
-    try {
-      const options = await SecurityService.getAssertionOptions(identifier);
-      const assertion = await get({ publicKey: options });
-      const res = await SecurityService.completeAssertion(assertion);
-
-      if (res.status === 'success') {
-        localStorage.setItem('token', res.token);
-        localStorage.setItem('user', JSON.stringify(res.user));
-        onLogin(res.user, res.token);
-      }
-    } catch (err) {
-      setError('Biometría no reconocida en este dispositivo.');
-      console.error(err);
-    } finally {
-      setBiometricLoading(false);
-    }
-  };
-
   return (
     <div className="login-container">
-      <div className="login-card">
-        
-        {/* Left Side: Professional Sidebar */}
+        {/* Sidebar */}
         <div className="login-sidebar">
-          <div className="login-sidebar-content text-center xs:text-left">
+          <div className="login-sidebar-content">
             <div className="login-brand mb-12">
               <TalenHumanLogo size={48} />
             </div>
-            
             <h1 className="login-hero-title">
               Gestiona tu talento <br />
-              <span className="text-indigo-200 underline decoration-indigo-400">sin fronteras.</span>
+              <span className="text-indigo-200 underline">sin fronteras.</span>
             </h1>
-
             <div className="login-features">
               <div className="login-feature-item">
-                <div className="login-feature-icon">
-                  <Bell size={18} />
-                </div>
-                <span>Novedades en tiempo real</span>
+                <Bell size={18} /> <span>Novedades en tiempo real</span>
               </div>
               <div className="login-feature-item">
-                <div className="login-feature-icon">
-                  <Calendar size={18} />
-                </div>
-                <span>Gestión de Horarios</span>
-              </div>
-              <div className="login-feature-item">
-                <div className="login-feature-icon">
-                  <Fingerprint size={18} />
-                </div>
-                <span>Marcaciones Seguras</span>
+                <Calendar size={18} /> <span>Gestión de Horarios</span>
               </div>
             </div>
           </div>
-
-          <div className="login-decoration-1"></div>
-          <div className="login-decoration-2"></div>
         </div>
 
-        {/* Right Side: Login Form */}
+        {/* Form area */}
         <div className="login-form-side">
             <div className="login-form-container">
-              {/* 🏠 Mobile Brand Header (Clean Version) */}
               <div className="login-mobile-brand">
                 <TalenHumanLogo size={36} />
               </div>
@@ -144,7 +86,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="login-form" autoComplete="off">
+              <form onSubmit={handleSubmit} className="login-form">
                 <div className="form-group">
                   <label className="form-label">Usuario o Correo Corporativo</label>
                   <div className="input-wrapper">
@@ -152,12 +94,10 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                     <input 
                       type="text" 
                       required
-                      name="talen-user"
-                      autoComplete="off"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="login-input"
-                      placeholder="Usuario o Identificación"
+                      placeholder="Identificación o Usuario"
                     />
                   </div>
                 </div>
@@ -167,7 +107,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                   <div className="input-wrapper">
                     <Lock className="input-icon" size={18} />
                     <input 
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? "text" : "password"} 
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -175,89 +115,59 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
                       placeholder="••••••••"
                     />
                     <button 
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
+                      type="button" 
                       className="password-toggle"
+                      onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
                 </div>
 
-                <div className="form-options flex flex-col gap-5 mt-4">
-                  <div className="flex items-center justify-between w-full">
-                    <label className="remember-me flex items-center gap-2 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        className="w-4 h-4 rounded border-slate-300 accent-indigo-600"
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                      />
-                      <span className="text-[10px] font-bold text-slate-400 tracking-widest">Recordarme</span>
-                    </label>
-                    <button 
-                      type="button" 
-                      className="forgot-password text-[10px] font-bold text-indigo-600 tracking-widest"
-                      onClick={onForgotPassword}
-                    >
-                      ¿Olvidaste tu contraseña?
-                    </button>
-                  </div>
-
-                  <div className="text-center pt-2">
-                    <button 
-                      type="button" 
-                      className="link-sutil text-[10px] font-bold text-indigo-600 tracking-[0.15em]"
-                      onClick={onSelfServiceReset}
-                    >
-                      No tengo correo corporativo
-                    </button>
-                  </div>
-                </div>
-
-                <div className="login-actions-row">
+                <div className="login-utils">
+                  <label className="remember-me">
+                    <input 
+                      type="checkbox" 
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                    />
+                    <span>Recordarme</span>
+                  </label>
                   <button 
-                    type="submit" 
-                    disabled={loading || biometricLoading}
-                    className="login-submit"
+                    type="button" 
+                    className="forgot-password"
+                    onClick={onForgotPassword}
                   >
-                    {loading ? (
-                      <div className="loader"></div>
-                    ) : (
-                      <>
-                        <span>Ingresar</span>
-                        <ArrowRight size={20} />
-                      </>
-                    )}
+                    ¿Olvidaste tu contraseña?
                   </button>
-
-                  {/* 🛡️ SMART BIOMETRIC BUTTON (V65.1.39) */}
-                  {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && 
-                   localStorage.getItem('hasBiometrics') === 'true' && (
-                    <button 
-                        type="button"
-                        disabled={loading || biometricLoading}
-                        onClick={handleBiometricLogin}
-                        className="login-biometric-btn"
-                        title="Usar Biometría"
-                    >
-                        {biometricLoading ? <div className="loader loader-indigo"></div> : <Fingerprint size={28} />}
-                    </button>
-                  )}
                 </div>
+
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className="login-submit w-full"
+                >
+                  {loading ? (
+                    <div className="loader"></div>
+                  ) : (
+                    <>
+                      <span>Ingresar</span>
+                      <ArrowRight size={20} />
+                    </>
+                  )}
+                </button>
               </form>
 
               <div className="login-footer">
-                 <p className="text-slate-600 font-bold">
-                   ¿Necesitas ayuda? <a href="#" className="ml-1">Soporte</a>
-                 </p>
-                 <div className="version-tag">
-                    {version || 'V13.0.0-RESTORED'}
-                 </div>
+                  <p className="text-slate-600 font-bold">
+                    ¿Necesitas ayuda? <a href="#" className="ml-1">Soporte</a>
+                  </p>
+                  <div className="version-tag">
+                     {version || 'V65.2.5'}
+                  </div>
               </div>
             </div>
         </div>
-      </div>
     </div>
   );
 };

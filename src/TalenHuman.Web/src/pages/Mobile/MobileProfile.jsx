@@ -1,34 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   User, Mail, Phone, Calendar, MapPin, 
   ChevronRight, ArrowLeft, Camera, Edit2,
-  Shield, Bell, CreditCard, Droplets, Fingerprint, LogOut, Key, Sun, Moon, Trash2
+  Bell, CreditCard, Droplets, LogOut, Key, Sun, Moon
 } from 'lucide-react';
-import BiometricEnrollModal from '../../components/Biometrics/BiometricEnrollModal';
 import { useTheme } from '../../context/ThemeContext';
-import SecurityService from '../../services/securityService';
 
 const MobileProfile = ({ user, setPage, onLogout }) => {
   const { isDarkMode, toggleTheme } = useTheme();
   const isDark = isDarkMode;
-  const [showBiometrics, setShowBiometrics] = useState(false);
-  const [biometricsEnabled, setBiometricsEnabled] = useState(() => localStorage.getItem('biometrics_enabled') === 'true');
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => localStorage.getItem('notifications_enabled') !== 'false');
   
-  // 🛡️ SYNC BIOMETRIC STATUS WITH SERVER (V65.1.33)
-  useEffect(() => {
-    const checkStatus = async () => {
-        try {
-            const hasBio = await SecurityService.getBiometricStatus();
-            setBiometricsEnabled(hasBio);
-            localStorage.setItem('biometrics_enabled', String(hasBio));
-            localStorage.setItem('hasBiometrics', String(hasBio));
-        } catch (err) {
-            console.error('Failed to sync biometric status:', err);
-        }
-    };
-    checkStatus();
-  }, []);
+  const handleToggleNotifications = () => {
+    const newState = !notificationsEnabled;
+    localStorage.setItem('notifications_enabled', String(newState));
+    setNotificationsEnabled(newState);
+    if (window.navigator && window.navigator.vibrate) {
+        window.navigator.vibrate(5);
+    }
+  };
 
   const primaryText = isDark ? '#ffffff' : '#1e293b';
   const mutedText = isDark ? 'rgba(255, 255, 255, 0.4)' : '#64748b';
@@ -37,42 +27,9 @@ const MobileProfile = ({ user, setPage, onLogout }) => {
   const accentColor = '#4f46e5';
   const shadow = isDark ? '0 20px 40px rgba(0,0,0,0.4)' : '0 10px 25px rgba(0,0,0,0.04)';
 
-  const handleToggleBiometrics = async () => {
-    if (!biometricsEnabled) {
-       setShowBiometrics(true);
-    } else {
-       localStorage.setItem('biometrics_enabled', 'false');
-       setBiometricsEnabled(false);
-    }
-  };
-
-  const handleToggleNotifications = () => {
-    const newState = !notificationsEnabled;
-    localStorage.setItem('notifications_enabled', String(newState));
-    setNotificationsEnabled(newState);
-    if (window.navigator && window.navigator.vibrate) {
-      window.navigator.vibrate([15]); 
-    }
-  };
-
-  const handleBiometricsComplete = () => {
-     localStorage.setItem('biometrics_enabled', 'true');
-     setBiometricsEnabled(true);
-     setShowBiometrics(false);
-  };
-
   return (
     <div className="animate-in fade-in slide-in-from-bottom-10 duration-700">
       
-      {/* 🚀 BIOMETRIC MODAL INTEGRATION */}
-      {showBiometrics && (
-        <BiometricEnrollModal 
-          theme={isDark ? 'dark' : 'light'}
-          onComplete={handleBiometricsComplete} 
-          onCancel={() => setShowBiometrics(false)} 
-        />
-      )}
-
       {/* 🚀 PROFILE HEADER */}
       <div style={{
         display: 'flex',
@@ -116,7 +73,7 @@ const MobileProfile = ({ user, setPage, onLogout }) => {
             background: 'rgba(79, 70, 229, 0.1)', padding: '6px 18px', 
             borderRadius: '20px', marginTop: '12px', textTransform: 'uppercase', letterSpacing: '0.1em' 
          }}>
-            {user?.jobTitle || user?.roles?.[0] || 'Gerente General'}
+            {user?.jobTitle || user?.roles?.[0] || 'Usuario'}
          </span>
 
          <div style={{ width: '80%', height: '1px', background: cardBorder, margin: '24px 0' }} />
@@ -142,60 +99,6 @@ const MobileProfile = ({ user, setPage, onLogout }) => {
 
       {/* 🏔️ SETTINGS SECTIONS */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-         <SectionHeader title="Seguridad & Acceso" isDark={isDark} />
-         
-         <div style={{ 
-            background: cardBg, borderRadius: '28px', 
-            border: `1px solid ${cardBorder}`, overflow: 'hidden',
-            boxShadow: shadow
-         }}>
-            {/* 🛡️ BIOMETRICS SWITCH */}
-            <div style={{
-                padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'}`
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(79, 70, 229, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: accentColor }}>
-                        <Fingerprint size={20} />
-                    </div>
-                    <div>
-                        <p style={{ fontSize: '14px', fontWeight: '800', color: primaryText, margin: 0 }}>
-                            {biometricsEnabled ? 'Huella Activada' : 'Huella / Biometría'}
-                        </p>
-                        <p style={{ fontSize: '11px', color: biometricsEnabled ? '#10b981' : mutedText, margin: 0, fontWeight: biometricsEnabled ? '700' : '500' }}>
-                            {biometricsEnabled ? 'Detección segura activa' : 'Acceso rápido y seguro'}
-                        </p>
-                    </div>
-                </div>
-                <div 
-                    onClick={handleToggleBiometrics}
-                    style={{
-                        width: '56px', height: '28px', borderRadius: '14px',
-                        background: biometricsEnabled ? accentColor : (isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0'),
-                        position: 'relative', cursor: 'pointer', transition: 'all 0.4s'
-                    }}
-                >
-                    <div style={{
-                        width: '20px', height: '20px', borderRadius: '50%', background: 'white',
-                        position: 'absolute', top: '4px', left: biometricsEnabled ? '32px' : '4px',
-                        transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-                    }} />
-                </div>
-            </div>
-
-            {/* 🔑 PASSWORD CHANGE */}
-            <ProfileItem 
-                icon={<Key size={20} />} 
-                label="Contraseña" 
-                value="Cambiar clave actual" 
-                isDark={isDark} 
-                onClick={() => setPage('ResetPassword')} 
-                showChevron
-                showLast
-            />
-         </div>
-
           <SectionHeader title="Preferencias" isDark={isDark} />
           <div style={{ 
              background: cardBg, borderRadius: '28px', 
@@ -238,7 +141,7 @@ const MobileProfile = ({ user, setPage, onLogout }) => {
       </button>
 
       <div style={{ textAlign: 'center', marginTop: '24px', opacity: 0.3 }}>
-         <span style={{ fontSize: '10px', fontWeight: '800', letterSpacing: '0.2em' }}>TALENHUMAN V63.6</span>
+         <span style={{ fontSize: '10px', fontWeight: '800', letterSpacing: '0.2em' }}>TALENHUMAN V65.2.5</span>
       </div>
     </div>
   );
@@ -251,37 +154,6 @@ const SectionHeader = ({ title, isDark }) => (
     }}>
         {title}
     </h3>
-);
-
-const ProfileItem = ({ icon, label, value, isDark, showChevron, onClick, showLast }) => (
-    <div 
-        onClick={onClick}
-        style={{
-            padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            borderBottom: showLast ? 'none' : `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'}`,
-            cursor: onClick ? 'pointer' : 'default',
-            transition: 'all 0.3s'
-        }}
-    >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ 
-                width: '44px', height: '44px', borderRadius: '15px', 
-                background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(79, 70, 229, 0.05)', 
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' 
-            }}>
-                {icon}
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '11px', color: isDark ? 'rgba(255,255,255,0.4)' : '#64748b', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    {label}
-                </span>
-                <span style={{ fontSize: '15px', color: isDark ? '#ffffff' : '#1e293b', fontWeight: '700' }}>
-                    {value}
-                </span>
-            </div>
-        </div>
-        {showChevron && <ChevronRight size={18} strokeWidth={2.5} color={isDark ? 'rgba(255,255,255,0.2)' : '#cbd5e1'} />}
-    </div>
 );
 
 const InteractiveItem = ({ icon, label, value, isDark, active, onClick, showLast }) => (
