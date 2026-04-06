@@ -65,7 +65,10 @@ public class ComunicadosController : ControllerBase
         var companyId = _tenantProvider.GetTenantId();
         _logger.LogInformation("[TENANT-CHECK] GET Comunicados | User: {User} | CompanyId: {CompanyId}", user.NormalizedUserName, companyId);
         
-        var query = _context.Comunicados.Where(c => c.CompanyId == companyId).AsQueryable();
+        var query = _context.Comunicados
+            .IgnoreQueryFilters()
+            .Where(c => c.CompanyId == companyId)
+            .AsQueryable();
 
         return await query
             .Include(c => c.CreatedByUser)
