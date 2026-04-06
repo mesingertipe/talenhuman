@@ -229,6 +229,51 @@ public class ComunicadosController : ControllerBase
         await _auditService.LogAsync("DELETE", "Comunicado", id.ToString(), $"Comunicado eliminado: {comunicado.Titulo}");
         return Ok();
     }
+
+    [HttpPost("test-fcm")]
+    public async Task<IActionResult> TestFcm()
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
+
+        var userId = Guid.Parse(userIdString);
+        var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null) return NotFound("Usuario no encontrado");
+
+        if (string.IsNullOrEmpty(user.FirebaseToken))
+        {
+            return BadRequest(new { 
+                error = "Dispositivo no registrado", 
+                message = "Tu usuario no tiene un token de Firebase asignado. Por favor, recarga la aplicación y acepta los permisos de notificación." 
+            });
+        }
+
+        try
+        {
+            await _notificationService.SendNotificationAsync(new NotificationRequest
+            {
+                To = user.FirebaseToken,
+                UserId = user.Id,
+                Subject = "🚀 Prueba Real de Nube",
+                Message = $"Hola {user.FirstName}, si recibes esto, la conexión entre TalenHuman y Google Firebase está ACTIVA. (V12.25)",
+                Type = NotificationType.Push,
+                Category = "diagnostic",
+                Metadata = new Dictionary<string, string> { { "type", "test" } }
+            });
+
+            return Ok(new { 
+                message = "Orden de Push enviada correctamente a tu dispositivo",
+                tokenPreview = user.FirebaseToken.Length > 15 ? user.FirebaseToken.Substring(0, 15) + "..." : user.FirebaseToken
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { 
+                error = "Error en el servidor de Google/Firebase", 
+                message = ex.Message 
+            });
+        }
+    }
 }
 
 public class ComunicadoDto
