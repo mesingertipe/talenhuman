@@ -47,14 +47,12 @@ const ForgotPassword = ({ onBack, onNext }) => {
             <div className="premium-recovery-card-v2 animate-in slide-in-from-bottom-10">
                 
                 <div className="form-state-premium">
-                    <div className="header-section-premium mb-10">
-                        <div className="flex items-center gap-3 mb-2">
-                           <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
-                               <MailCheck size={18} />
-                           </div>
-                           <h2 className="premium-title" style={{ margin: 0 }}>OLVIDÉ MI CLAVE</h2>
+                    <div className="header-section-premium mb-10 text-center">
+                        <div className="key-icon-box">
+                            <MailCheck size={30} />
                         </div>
-                        <p className="premium-subtitle">Ingresa tu correo corporativo para recibir un código de seguridad instantáneo.</p>
+                        <h2 className="premium-title">Olvidé mi clave</h2>
+                        <p className="premium-subtitle">Ingresa tu correo para recibir las instrucciones de seguridad.</p>
                     </div>
 
                     {error && (
@@ -64,27 +62,19 @@ const ForgotPassword = ({ onBack, onNext }) => {
                     </div>
                     )}
 
-                    {message && (
-                    <div className="success-state-premium text-center py-4 mb-6">
-                        <div className="success-icon-box" style={{ width: '50px', height: '50px', borderRadius: '15px' }}>
-                            <ShieldCheck size={28} />
-                        </div>
-                        <p className="text-xs font-black text-emerald-600 mt-2">{message}</p>
-                    </div>
-                    )}
-
                     <form onSubmit={handleSubmit} className="premium-form-layout">
-                        <div className="premium-field-group">
-                            <label className="premium-field-label">CORREO CORPORATIVO</label>
-                            <div className="premium-input-box-v2">
-                                <Mail className="field-icon-v2" size={20} />
+                        <div className="elite-field-group">
+                            <label className="elite-field-label">EMAIL CORPORATIVO</label>
+                            <div className="elite-input-container">
+                                <Mail className="elite-input-icon" size={18} />
                                 <input 
                                     required
                                     type="email"
-                                    className="premium-field-input-v2"
+                                    className="elite-native-input"
                                     placeholder="nombre@empresa.com"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
+                                    style={{ color: '#1E293B', WebkitTextFillColor: '#1E293B' }}
                                 />
                             </div>
                         </div>
@@ -92,7 +82,7 @@ const ForgotPassword = ({ onBack, onNext }) => {
                         <button 
                             type="submit" 
                             disabled={loading}
-                            className="login-submit-premium-v2 w-full mt-10"
+                            className={`login-submit-premium-v2 w-full mt-10 ${loading ? 'btn-disabled' : ''}`}
                         >
                             {loading ? <div className="loader-white"></div> : (
                                 <div className="flex items-center gap-3">
@@ -105,10 +95,9 @@ const ForgotPassword = ({ onBack, onNext }) => {
                 </div>
             </div>
             
-            <footer className="elite-mobile-footer">
-                <p>SEGURIDAD AVANZADA TALENHUMAN</p>
-                <div className="elite-version">V65.2.14-ELITE</div>
-            </footer>
+            <p className="security-engine-footer">
+                TALENHUMAN SECURITY ENGINE
+            </p>
         </main>
     </div>
   );

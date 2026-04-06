@@ -78,6 +78,7 @@ const SelfServiceReset = ({ onBack }) => {
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
                 className="elite-native-input"
+                style={{ color: '#1E293B', WebkitTextFillColor: '#1E293B' }}
             />
             {suffix}
         </div>

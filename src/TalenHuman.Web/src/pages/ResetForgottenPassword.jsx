@@ -77,6 +77,7 @@ const ResetForgottenPassword = ({ email, onBack }) => {
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
                 className="elite-native-input"
+                style={{ color: '#1E293B', WebkitTextFillColor: '#1E293B' }}
             />
             {suffix}
         </div>
@@ -128,13 +129,22 @@ const ResetForgottenPassword = ({ email, onBack }) => {
 
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         
-                        <EliteInput 
-                            label="Código de Seguridad"
-                            icon={<Key size={18} />}
+                        <input 
+                            type="text" 
+                            required
+                            maxLength={6}
                             value={token}
-                            onChange={(val) => setToken(val.replace(/\D/g, ''))}
-                            type="text"
-                            placeholder="PIN de 6 dígitos"
+                            onChange={(e) => setToken(e.target.value.replace(/\D/g, ''))}
+                            className="premium-field-input-v2"
+                            placeholder="000000"
+                            style={{ 
+                                letterSpacing: '0.4em', 
+                                textAlign: 'center', 
+                                fontSize: '1.4rem', 
+                                fontWeight: '900',
+                                color: '#1E293B',
+                                WebkitTextFillColor: '#1E293B'
+                            }}
                         />
 
                         <div className="divider-premium" style={{ margin: '10px 0' }} />
