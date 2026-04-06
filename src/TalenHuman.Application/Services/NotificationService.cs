@@ -134,7 +134,14 @@ public class NotificationService
                             Body = sanitizedBody,
                             ImageUrl = ExtractFirstImageUrl(request.Message)
                         },
-                        Data = data
+                        Data = data,
+                        Webpush = new WebpushConfig()
+                        {
+                            FcmOptions = new WebpushFcmOptions()
+                            {
+                                Link = data.ContainsKey("comunicadoId") ? $"/comunicados/{data["comunicadoId"]}" : "/"
+                            }
+                        }
                     };
 
                     var response = await FirebaseMessaging.DefaultInstance.SendAsync(fcmMessage);
