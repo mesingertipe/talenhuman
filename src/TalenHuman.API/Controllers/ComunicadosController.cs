@@ -250,8 +250,8 @@ public class ComunicadosController : ControllerBase
 
         try
         {
-            var projectId = await _settingsService.GetSettingAsync("FIREBASE_PROJECT_ID") ?? "talenhuman (fallback)";
-            var senderId = await _settingsService.GetSettingAsync("FIREBASE_MESSAGING_SENDER_ID") ?? "---";
+            var projectId = await _settings.GetSettingAsync("FIREBASE_PROJECT_ID") ?? "talenhuman (fallback)";
+            var senderId = await _settings.GetSettingAsync("FIREBASE_MESSAGING_SENDER_ID") ?? "---";
 
             var responseId = await _notificationService.SendNotificationAsync(new NotificationRequest
             {
