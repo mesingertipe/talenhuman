@@ -139,7 +139,7 @@ public class NotificationService
             {
                 UserId = request.UserId.Value,
                 Title = request.Subject,
-                Body = request.Message,
+                Body = SanitizePushText(request.Message),
                 Type = request.Category,
                 IsRead = false,
                 CompanyId = _tenantProvider.GetTenantId(),
@@ -182,6 +182,7 @@ public class NotificationService
 
                     data["title"] = sanitizedTitle;
                     data["body"] = sanitizedBody;
+                    data["category"] = request.Category;
 
                     var fcmMessage = new Message()
                     {
@@ -222,7 +223,7 @@ public class NotificationService
         {
             UserId = uid,
             Title = request.Subject,
-            Body = request.Message,
+            Body = SanitizePushText(request.Message),
             Type = request.Category,
             IsRead = false,
             CompanyId = companyId,
@@ -248,6 +249,7 @@ public class NotificationService
 
             data["title"] = sanitizedTitle;
             data["body"] = sanitizedBody;
+            data["category"] = request.Category;
 
             var multicastMessage = new MulticastMessage()
             {

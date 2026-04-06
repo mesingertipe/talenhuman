@@ -94,6 +94,11 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
     }
   };
 
+  const stripHtml = (text) => {
+    if (!text) return "";
+    return text.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').trim();
+  };
+
   const handleNotificationClick = async (notif) => {
     // 1. Mark as read if needed
     if (!notif.isRead) {
@@ -104,12 +109,20 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
     }
 
     // 2. Deep Linking logic
-    if (notif.metadata?.comunicadoId) {
+    const category = notif.metadata?.category || notif.type || '';
+    const comunicadoId = notif.metadata?.comunicadoId;
+
+    if (category === 'broadcast' || category === 'comunicado' || comunicadoId) {
         setShowNotifications(false);
-        // Custom event or state update to open the communication in App.jsx
         window.dispatchEvent(new CustomEvent('open-communication', { 
-            detail: { id: notif.metadata.comunicadoId } 
+            detail: { id: comunicadoId || notif.id } 
         }));
+    } else if (category === 'shift_reminder' || category === 'horarios' || notif.title?.toLowerCase().includes('horario')) {
+        setShowNotifications(false);
+        setPage('Horarios');
+    } else {
+        // Fallback: just close
+        setShowNotifications(false);
     }
   };
 
@@ -391,7 +404,7 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
                                     <Info size={18} color="#4f46e5" />
                                 } 
                                 title={n.title} 
-                                desc={n.body} 
+                                desc={stripHtml(n.body)} 
                                 time={new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} 
                                 isDark={isDark} 
                                 unread={!n.isRead}
