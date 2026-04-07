@@ -101,7 +101,9 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
     // V13.0 PREMIUM STATES
     const [weeklyStatus, setWeeklyStatus] = useState({ status: 'Empty', message: '', comment: '' });
     const [showRejectionModal, setShowRejectionModal] = useState(false);
+    const [showApprovalModal, setShowApprovalModal] = useState(false);
     const [rejectionComment, setRejectionComment] = useState('');
+    const [approvalComment, setApprovalComment] = useState('');
     const [isProcessingStatus, setIsProcessingStatus] = useState(false);
 
     const getMonday = (offset = 0) => {
@@ -547,21 +549,28 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
         } catch (err) { showToast(err.response?.data?.message || "Error al guardar", "error"); } finally { setIsSaving(false); }
     };
 
-    const handleApproveAll = async () => {
+    const handleApproveAll = () => {
+        setApprovalComment('');
+        setShowApprovalModal(true);
+    };
+
+    const confirmApprove = async () => {
         try {
             setLoading(true);
             const endDate = new Date(currentWeekStart);
             endDate.setDate(endDate.getDate() + 7);
 
-            await api.post('/shiftapproval/approve', {
+            await api.post('/ShiftApproval/approve', {
                 storeId: selectedStore,
                 startDate: toLocalISO(currentWeekStart),
                 endDate: toLocalISO(endDate),
-                comment: "Aprobado por panel administrativo"
+                comment: approvalComment || "Aprobado por panel administrativo"
             });
 
             showToast("Semana aprobada correctamente");
+            setShowApprovalModal(false);
             fetchData();
+            fetchWeeklyStatus();
         } catch (err) {
             showToast("Error al aprobar la semana", "error");
         } finally {
@@ -585,7 +594,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
             const endDate = new Date(currentWeekStart);
             endDate.setDate(endDate.getDate() + 7);
 
-            await api.post('/shiftapproval/reject', {
+            await api.post('/ShiftApproval/reject', {
                 storeId: selectedStore,
                 startDate: toLocalISO(currentWeekStart),
                 endDate: toLocalISO(endDate),
@@ -1396,7 +1405,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                     <div className="flex items-center gap-2 bg-emerald-50/50 dark:bg-emerald-900/20 px-3 py-1 rounded-full border border-emerald-100 dark:border-emerald-800/50 animate-in slide-in-from-bottom-1 duration-300">
                                                                         <Clock size={12} className="text-emerald-500" strokeWidth={3} />
                                                                         <div className="flex flex-col items-start leading-[1] py-0.5">
-                                                                            <strong className="text-[11px] font-[950] text-emerald-700 dark:text-emerald-300">
+                                                                            <strong className="text-[11px] font-[950] text-emerald-700 dark:emerald-300">
                                                                                 {(() => {
                                                                                     const h = Math.floor(workedTotal);
                                                                                     const m = Math.round((workedTotal - h) * 60);
@@ -1471,7 +1480,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                     <XCircle size={18} /> Rechazar Malla
                                 </button>
                                 <button 
-                                    onClick={() => handleApproveAll()}
+                                    onClick={handleApproveAll}
                                     className="btn-premium"
                                     style={{ background: activeColors.accent, color: 'white', border: 'none', height: '48px', padding: '0 25px', borderRadius: '14px', boxShadow: '0 10px 20px rgba(79, 70, 229, 0.3)', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '10px' }}
                                 >
@@ -1481,10 +1490,46 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                         </div>
                     )}
 
+                    {/* V13.0 ELITE APPROVAL MODAL */}
+                    {showApprovalModal && (
+                        <div style={{ position: 'fixed', inset: 0, zIndex: 200000, background: 'rgba(6, 9, 20, 0.6)', backdropFilter: 'blur(15px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} className="animate-in fade-in duration-300">
+                            <div style={{ background: activeColors.card, width: '100%', maxWidth: '500px', borderRadius: '40px', padding: '50px', border: `1px solid ${activeColors.border}`, boxShadow: '0 30px 100px rgba(0,0,0,0.4)', textAlign: 'center' }} className="animate-in zoom-in-95 duration-500">
+                                <div style={{ width: '80px', height: '80px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', margin: '0 auto 30px' }}>
+                                    <ShieldCheck size={40} />
+                                </div>
+                                <h3 style={{ fontSize: '1.8rem', fontWeight: '950', color: activeColors.textMain, marginBottom: '15px' }}>Confirmar Aprobación</h3>
+                                <p style={{ color: activeColors.textMuted, fontSize: '0.95rem', fontWeight: '600', marginBottom: '35px', lineHeight: '1.6' }}>
+                                    Estás a punto de validar administrativamente la programación de la sede <span style={{ color: activeColors.accent, fontWeight: '900' }}>{stores.find(s => s.id === selectedStore)?.name}</span>. Una vez aprobado, los colaboradores podrán ver sus turnos de forma oficial.
+                                </p>
+                                
+                                <div style={{ marginBottom: '35px' }}>
+                                    <textarea 
+                                        placeholder="Comentarios opcionales para el gerente..."
+                                        value={approvalComment}
+                                        onChange={(e) => setApprovalComment(e.target.value)}
+                                        style={{ width: '100%', padding: '20px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc', color: activeColors.textMain, fontSize: '0.9rem', fontWeight: '700', minHeight: '100px', outline: 'none', resize: 'none' }}
+                                    />
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '15px' }}>
+                                    <button 
+                                        onClick={() => setShowApprovalModal(false)}
+                                        style={{ flex: 1, padding: '20px', borderRadius: '20px', border: `2px solid ${activeColors.border}`, background: 'transparent', color: activeColors.textMuted, fontWeight: '900', fontSize: '0.8rem', uppercase: 'true', letterSpacing: '1px' }}
+                                    >CANCELAR</button>
+                                    <button 
+                                        onClick={confirmApprove}
+                                        disabled={loading}
+                                        style={{ flex: 2, padding: '20px', borderRadius: '20px', border: 'none', background: activeColors.accent, color: 'white', fontWeight: '950', fontSize: '0.8rem', boxShadow: '0 15px 30px rgba(79, 70, 229, 0.4)' }}
+                                    >{loading ? 'PROCESANDO...' : 'APROBAR SEMANA'}</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* V13.0 ELITE REJECTION MODAL */}
                     {showRejectionModal && (
-                        <div className="no-print" style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 15, 0.9)', backdropFilter: 'blur(40px)', zIndex: 1000000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-                            <div style={{ background: isDarkMode ? '#1e293b' : '#ffffff', width: '100%', maxWidth: '500px', borderRadius: '48px', overflow: 'hidden', border: isDarkMode ? '1px solid #334155' : 'none', boxShadow: '0 50px 100px rgba(0,0,0,0.5)', animation: 'modalSlideUp 0.4s cubic-bezier(0.165, 0.84, 0.44, 1)' }}>
+                        <div style={{ position: 'fixed', inset: 0, zIndex: 200000, background: 'rgba(6, 9, 20, 0.6)', backdropFilter: 'blur(15px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} className="animate-in fade-in duration-300">
+                             <div style={{ background: isDarkMode ? '#1e293b' : '#ffffff', width: '100%', maxWidth: '500px', borderRadius: '48px', overflow: 'hidden', border: isDarkMode ? '1px solid #334155' : 'none', boxShadow: '0 50px 100px rgba(0,0,0,0.5)', animation: 'modalSlideUp 0.4s cubic-bezier(0.165, 0.84, 0.44, 1)' }}>
                                 <div style={{ padding: '50px', textAlign: 'center' }}>
                                     <div style={{ width: '84px', height: '84px', background: '#fee2e2', color: '#ef4444', borderRadius: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 30px', transform: 'rotate(-5deg)', boxShadow: '0 20px 40px rgba(239, 68, 68, 0.15)' }}>
                                         <XCircle size={44} strokeWidth={2.5} />
@@ -1527,6 +1572,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                             </div>
                         </div>
                     )}
+
                     {/* Guardar Cambios Elite Modal */}
                     {showSaveModal && (
                         <div className="no-print" style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 15, 0.85)', backdropFilter: 'blur(30px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>

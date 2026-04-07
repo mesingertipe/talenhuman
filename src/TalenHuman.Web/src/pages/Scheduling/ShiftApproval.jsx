@@ -14,7 +14,9 @@ const ShiftApproval = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStores, setSelectedStores] = useState([]);
   const [showCommentModal, setShowCommentModal] = useState(false);
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [rejectionComment, setRejectionComment] = useState('');
+  const [approvalComment, setApprovalComment] = useState('');
   const [processing, setProcessing] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
@@ -34,7 +36,7 @@ const ShiftApproval = ({ user }) => {
   const fetchPendingStores = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/ShiftApproval/stores');
+      const res = await api.get('/ShiftApproval/pending-stores');
       setStores(res.data);
     } catch (err) {
       console.error(err);
@@ -59,7 +61,7 @@ const ShiftApproval = ({ user }) => {
     if (selectedStores.length === filteredStores.length) {
       setSelectedStores([]);
     } else {
-      setSelectedStores(filteredStores.map(s => s.id));
+      setSelectedStores(filteredStores.map(s => s.storeId));
     }
   };
 
@@ -67,9 +69,23 @@ const ShiftApproval = ({ user }) => {
     if (selectedStores.length === 0) return;
     try {
       setProcessing(true);
-      await api.post('/ShiftApproval/approve', selectedStores);
+      // Backend expects a single store approval per request
+      // We will loop through selected stores
+      for (const storeId of selectedStores) {
+        const storeData = stores.find(s => s.storeId === storeId);
+        if (storeData) {
+          await api.post('/ShiftApproval/approve', {
+            storeId: storeId,
+            startDate: storeData.minDate,
+            endDate: storeData.maxDate,
+            comment: approvalComment || "Aprobación masiva desde consola"
+          });
+        }
+      }
       showToast(`Se han aprobado ${selectedStores.length} mallas exitosamente`);
       setSelectedStores([]);
+      setApprovalComment('');
+      setShowApprovalModal(false);
       fetchPendingStores();
     } catch (err) {
       showToast('Error en la aprobación masiva', 'error');
@@ -82,10 +98,17 @@ const ShiftApproval = ({ user }) => {
     if (selectedStores.length === 0 || !rejectionComment.trim()) return;
     try {
       setProcessing(true);
-      await api.post('/ShiftApproval/reject', { 
-        storeIds: selectedStores, 
-        comment: rejectionComment 
-      });
+      for (const storeId of selectedStores) {
+        const storeData = stores.find(s => s.storeId === storeId);
+        if (storeData) {
+          await api.post('/ShiftApproval/reject', { 
+            storeId: storeId, 
+            startDate: storeData.minDate,
+            endDate: storeData.maxDate,
+            comment: rejectionComment 
+          });
+        }
+      }
       showToast(`${selectedStores.length} mallas han sido rechazadas`);
       setSelectedStores([]);
       setRejectionComment('');
@@ -142,13 +165,13 @@ const ShiftApproval = ({ user }) => {
           </button>
           <button 
             disabled={selectedStores.length === 0 || processing}
-            onClick={handleApprove}
+            onClick={() => setShowApprovalModal(true)}
             style={{ 
               padding: '14px 28px', 
               borderRadius: '18px', 
               border: 'none', 
               background: activeColors.accent, 
-              color: '#white', 
+              color: 'white', 
               fontWeight: '900', 
               fontSize: '0.9rem', 
               display: 'flex', 
@@ -234,12 +257,12 @@ const ShiftApproval = ({ user }) => {
                 </td>
               </tr>
             ) : filteredStores.map(store => (
-              <tr key={store.id} style={{ borderBottom: `1px solid ${activeColors.border}`, transition: 'all 0.2s' }} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+              <tr key={store.storeId} style={{ borderBottom: `1px solid ${activeColors.border}`, transition: 'all 0.2s' }} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                 <td style={{ padding: '24px' }}>
                   <input 
                     type="checkbox" 
-                    checked={selectedStores.includes(store.id)}
-                    onChange={() => handleSelectStore(store.id)}
+                    checked={selectedStores.includes(store.storeId)}
+                    onChange={() => handleSelectStore(store.storeId)}
                     style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: activeColors.accent }}
                   />
                 </td>
@@ -330,7 +353,7 @@ const ShiftApproval = ({ user }) => {
 
                  <div style={{ display: 'flex', gap: '16px', marginTop: '40px' }}>
                     <button 
-                      onClick={() => setShowCommentModal(false)}
+                      onClick={() => { setShowCommentModal(false); setRejectionComment(''); }}
                       style={{ flex: 1, padding: '18px', borderRadius: '20px', border: `2px solid ${activeColors.border}`, background: 'transparent', color: activeColors.textMuted, fontWeight: '800', cursor: 'pointer' }}
                     >
                       Cancelar
@@ -353,6 +376,23 @@ const ShiftApproval = ({ user }) => {
                       {processing ? 'Procesando...' : 'Confirmar Rechazo'}
                     </button>
                  </div>
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* Modal de Aprobación */}
+      {showApprovalModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+           <div style={{ background: activeColors.card, width: '100%', maxWidth: '400px', borderRadius: '32px', padding: '40px', textAlign: 'center' }}>
+              <div style={{ width: '64px', height: '64px', background: '#dcfce7', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a', margin: '0 auto 24px' }}>
+                 <CheckCircle size={32} />
+              </div>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '950', color: activeColors.textMain, marginBottom: '12px' }}>¿Aprobar mallas?</h3>
+              <p style={{ color: activeColors.textMuted, marginBottom: '32px' }}>Se aprobarán {selectedStores.length} sedes seleccionadas.</p>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                 <button onClick={() => setShowApprovalModal(false)} style={{ flex: 1, padding: '16px', borderRadius: '16px', border: `1px solid ${activeColors.border}`, background: 'transparent', fontWeight: '800' }}>Cancelar</button>
+                 <button onClick={handleApprove} style={{ flex: 1, padding: '16px', borderRadius: '16px', background: activeColors.accent, color: 'white', fontWeight: '950' }}>Confirmar</button>
               </div>
            </div>
         </div>

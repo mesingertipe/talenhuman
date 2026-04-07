@@ -11,7 +11,7 @@ namespace TalenHuman.API.Controllers;
 
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/ShiftApproval")]
 public class ShiftApprovalController : ControllerBase
 {
     private readonly IApplicationDbContext _context;
@@ -32,7 +32,8 @@ public class ShiftApprovalController : ControllerBase
     }
 
     [HttpGet("pending-stores")]
-    [Authorize(Roles = "Admin,SuperAdmin,RH,Supervisor")] // Added Supervisor role
+    [HttpGet("stores")]
+    [Authorize(Roles = "Admin,SuperAdmin,RH,Supervisor")]
     public async Task<IActionResult> GetPendingStores()
     {
         var companyId = _tenantProvider.GetTenantId();
@@ -81,7 +82,7 @@ public class ShiftApprovalController : ControllerBase
     }
 
     [HttpPost("approve")]
-    [Authorize(Roles = "Admin,SuperAdmin,RH")]
+    [Authorize(Roles = "Admin,SuperAdmin,RH,Supervisor")]
     public async Task<IActionResult> ApproveShifts([FromBody] ApprovalRequest request)
     {
         var companyId = _tenantProvider.GetTenantId();
@@ -163,7 +164,7 @@ public class ShiftApprovalController : ControllerBase
     }
 
     [HttpPost("reject")]
-    [Authorize(Roles = "Admin,SuperAdmin,RH")]
+    [Authorize(Roles = "Admin,SuperAdmin,RH,Supervisor")]
     public async Task<IActionResult> RejectShifts([FromBody] ApprovalRequest request)
     {
         if (string.IsNullOrEmpty(request.Comment)) 
