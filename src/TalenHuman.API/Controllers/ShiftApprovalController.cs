@@ -130,6 +130,38 @@ public class ShiftApprovalController : ControllerBase
         return Ok(new { Message = "Turnos aprobados y notificaciones enviadas." });
     }
 
+    [HttpGet("status")]
+    [Authorize]
+    public async Task<IActionResult> GetStatus([FromQuery] Guid storeId, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+    {
+        var companyId = _tenantProvider.GetTenantId();
+        
+        var shifts = await _context.Shifts
+            .Where(s => s.CompanyId == companyId && 
+                        s.StoreId == storeId && 
+                        s.StartTime.Date >= startDate.Date && 
+                        s.StartTime.Date <= endDate.Date)
+            .ToListAsync();
+
+        if (!shifts.Any()) 
+            return Ok(new { Status = "Empty", Message = "No hay turnos cargados" });
+
+        if (shifts.Any(s => s.Status == ShiftStatus.Rejected))
+        {
+            var firstRejection = shifts.FirstOrDefault(s => s.Status == ShiftStatus.Rejected);
+            return Ok(new { 
+                Status = "Rejected", 
+                Comment = firstRejection?.ApprovalComment, 
+                Date = firstRejection?.ApprovedAt 
+            });
+        }
+
+        if (shifts.All(s => s.Status == ShiftStatus.Approved))
+            return Ok(new { Status = "Approved", Date = shifts.First().ApprovedAt });
+
+        return Ok(new { Status = "Pending", Message = "Pendiente de validación por RH/Distrital" });
+    }
+
     [HttpPost("reject")]
     [Authorize(Roles = "Admin,SuperAdmin,RH")]
     public async Task<IActionResult> RejectShifts([FromBody] ApprovalRequest request)

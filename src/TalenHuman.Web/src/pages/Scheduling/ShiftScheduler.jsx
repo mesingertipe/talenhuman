@@ -98,6 +98,12 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
         days: [true, true, true, true, true, true, false] // Mon-Sun
     });
 
+    // V13.0 PREMIUM STATES
+    const [weeklyStatus, setWeeklyStatus] = useState({ status: 'Empty', message: '', comment: '' });
+    const [showRejectionModal, setShowRejectionModal] = useState(false);
+    const [rejectionComment, setRejectionComment] = useState('');
+    const [isProcessingStatus, setIsProcessingStatus] = useState(false);
+
     const getMonday = (offset = 0) => {
         const now = new Date();
         const day = now.getDay() || 7;
@@ -152,8 +158,26 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
     }, []);
 
     useEffect(() => {
-        if (selectedStore) fetchData();
+        if (selectedStore) {
+            fetchData();
+            fetchWeeklyStatus();
+        }
     }, [selectedStore, currentWeekStart]);
+
+    const fetchWeeklyStatus = async () => {
+        if (!selectedStore) return;
+        try {
+            setIsProcessingStatus(true);
+            const endDate = new Date(currentWeekStart); 
+            endDate.setDate(endDate.getDate() + 7);
+            const res = await api.get(`/ShiftApproval/status?storeId=${selectedStore}&startDate=${toLocalISO(currentWeekStart)}&endDate=${toLocalISO(endDate)}`);
+            setWeeklyStatus(res.data);
+        } catch (err) {
+            console.error("Error fetching status", err);
+        } finally {
+            setIsProcessingStatus(false);
+        }
+    };
 
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });
@@ -545,10 +569,14 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
         }
     };
 
-    const handleRejectAll = async () => {
-        const reason = prompt("Indica el motivo del rechazo (obligatorio):");
-        if (!reason || reason.trim().length < 5) {
-            showToast("Debes indicar un motivo válido", "warning");
+    const handleRejectAll = () => {
+        setRejectionComment('');
+        setShowRejectionModal(true);
+    };
+
+    const confirmReject = async () => {
+        if (!rejectionComment || rejectionComment.trim().length < 5) {
+            showToast("Debes indicar un motivo válido (mínimo 5 caracteres)", "warning");
             return;
         }
 
@@ -561,11 +589,13 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                 storeId: selectedStore,
                 startDate: toLocalISO(currentWeekStart),
                 endDate: toLocalISO(endDate),
-                comment: reason
+                comment: rejectionComment
             });
 
             showToast("Malla rechazada y gerente notificado");
+            setShowRejectionModal(false);
             fetchData();
+            fetchWeeklyStatus();
         } catch (err) {
             showToast("Error al procesar el rechazo", "error");
         } finally {
@@ -907,6 +937,31 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                     variant="minimal"
                                 />
                             </div>
+
+                            {/* V13.0 ELITE STATUS BADGE */}
+                            <div className="hidden xl:flex items-center gap-3 px-6 py-3 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm animate-in zoom-in duration-500">
+                                {isProcessingStatus ? (
+                                    <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                    <>
+                                        <div className={`w-3 h-3 rounded-full animate-pulse ${weeklyStatus.status === 'Approved' ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : (weeklyStatus.status === 'Rejected' ? 'bg-rose-500 shadow-[0_0_10px_#f43f5e]' : (weeklyStatus.status === 'Empty' ? 'bg-slate-300' : 'bg-amber-500 shadow-[0_0_10px_#f59e0b]'))}`}></div>
+                                        <div className="flex flex-col leading-none">
+                                            <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">Estado de Malla</span>
+                                            <span className={`text-[11px] font-[1000] uppercase tracking-tight ${weeklyStatus.status === 'Approved' ? 'text-emerald-600' : (weeklyStatus.status === 'Rejected' ? 'text-rose-600' : 'text-amber-600')}`}>
+                                                {weeklyStatus.status === 'Approved' ? 'Semana Aprobada' : (weeklyStatus.status === 'Rejected' ? 'Malla Rechazada' : (weeklyStatus.status === 'Empty' ? 'Sin Programación' : 'Pendiente de Validación'))}
+                                            </span>
+                                        </div>
+                                        {weeklyStatus.status === 'Rejected' && weeklyStatus.comment && (
+                                            <div className="group relative ml-2">
+                                                <AlertCircle size={14} className="text-rose-400 cursor-help" />
+                                                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-3 hidden group-hover:block w-48 p-3 bg-slate-900 text-white text-[10px] font-bold rounded-xl shadow-2xl z-[100] border border-white/10 animate-in fade-in slide-in-from-bottom-2">
+                                                    Motivo: {weeklyStatus.comment}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
                         </div>
 
                         {/* 2.2 Comando Central Unificado (Smart Center) */}
@@ -995,8 +1050,8 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                 {employees.length} Colaboradores Activos en esta Sede
                             </span>
                         </div>
-                        </div>
                     </div>
+                </div>
 
                     {lastSaveComment && (
                         <div className="no-print flex items-center gap-4 p-5 bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/50 rounded-3xl animate-in slide-in-from-top-2 duration-500">
@@ -1411,17 +1466,64 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                 <button 
                                     onClick={() => handleRejectAll()}
                                     className="btn-premium"
-                                    style={{ background: '#fee2e2', color: '#ef4444', border: 'none', height: '48px', padding: '0 25px', borderRadius: '14px' }}
+                                    style={{ background: '#fee2e2', color: '#ef4444', border: 'none', height: '48px', padding: '0 25px', borderRadius: '14px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '10px' }}
                                 >
-                                    <XCircle size={18} className="mr-2" /> Rechazar Malla
+                                    <XCircle size={18} /> Rechazar Malla
                                 </button>
                                 <button 
                                     onClick={() => handleApproveAll()}
                                     className="btn-premium"
-                                    style={{ background: activeColors.accent, color: 'white', border: 'none', height: '48px', padding: '0 25px', borderRadius: '14px', boxShadow: '0 10px 20px rgba(79, 70, 229, 0.3)' }}
+                                    style={{ background: activeColors.accent, color: 'white', border: 'none', height: '48px', padding: '0 25px', borderRadius: '14px', boxShadow: '0 10px 20px rgba(79, 70, 229, 0.3)', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '10px' }}
                                 >
-                                    <CheckCircle size={18} className="mr-2" /> Aprobar Todo
+                                    <CheckCircle size={18} /> Aprobar Todo
                                 </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* V13.0 ELITE REJECTION MODAL */}
+                    {showRejectionModal && (
+                        <div className="no-print" style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 15, 0.9)', backdropFilter: 'blur(40px)', zIndex: 1000000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                            <div style={{ background: isDarkMode ? '#1e293b' : '#ffffff', width: '100%', maxWidth: '500px', borderRadius: '48px', overflow: 'hidden', border: isDarkMode ? '1px solid #334155' : 'none', boxShadow: '0 50px 100px rgba(0,0,0,0.5)', animation: 'modalSlideUp 0.4s cubic-bezier(0.165, 0.84, 0.44, 1)' }}>
+                                <div style={{ padding: '50px', textAlign: 'center' }}>
+                                    <div style={{ width: '84px', height: '84px', background: '#fee2e2', color: '#ef4444', borderRadius: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 30px', transform: 'rotate(-5deg)', boxShadow: '0 20px 40px rgba(239, 68, 68, 0.15)' }}>
+                                        <XCircle size={44} strokeWidth={2.5} />
+                                    </div>
+                                    <h2 style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', letterSpacing: '-0.03em', margin: '0 0 10px' }}>Rechazar Malla</h2>
+                                    <p style={{ color: '#94a3b8', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Solicitar corrección inmediata</p>
+                                </div>
+                                <div style={{ padding: '0 50px 50px' }}>
+                                    <div style={{ marginBottom: '35px' }}>
+                                        <label style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '15px', letterSpacing: '0.1em' }}>Motivo del rechazo (obligatorio) *</label>
+                                        <textarea
+                                            value={rejectionComment}
+                                            onChange={e => setRejectionComment(e.target.value)}
+                                            placeholder="Indica qué debe corregir el gerente..."
+                                            rows={4}
+                                            style={{ width: '100%', padding: '24px', borderRadius: '24px', border: `2px solid ${isDarkMode ? '#334155' : '#f1f5f9'}`, background: isDarkMode ? '#0f172a' : '#f8fafc', color: isDarkMode ? 'white' : '#1e293b', fontWeight: '700', minHeight: '130px', boxSizing: 'border-box', outline: 'none', resize: 'none', transition: 'border-color 0.3s' }}
+                                            className="focus:border-rose-500"
+                                        />
+                                        {rejectionComment.length > 0 && rejectionComment.length < 5 && (
+                                            <p className="text-rose-500 text-[10px] font-black uppercase mt-2 px-2 tracking-widest">Mínimo 5 caracteres</p>
+                                        )}
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                        <button 
+                                            onClick={confirmReject}
+                                            disabled={loading}
+                                            style={{ width: '100%', padding: '24px', borderRadius: '22px', border: 'none', background: '#ef4444', color: 'white', fontWeight: '950', fontSize: '12px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 35px rgba(239, 68, 68, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', transition: 'all 0.2s' }}
+                                            className="hover:scale-[1.02] active:scale-95"
+                                        >
+                                            {loading ? <div className="loader !w-5 !h-5 !border-white"></div> : 'Confirmar Rechazo'}
+                                        </button>
+                                        <button 
+                                            onClick={() => setShowRejectionModal(false)}
+                                            style={{ width: '100%', padding: '15px', borderRadius: '20px', border: 'none', background: 'transparent', color: '#94a3b8', fontWeight: '800', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', letterSpacing: '0.2em' }}
+                                        >
+                                            Cancelar
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}

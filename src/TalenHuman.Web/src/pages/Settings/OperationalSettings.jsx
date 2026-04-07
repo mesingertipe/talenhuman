@@ -25,7 +25,7 @@ const OperationalSettings = () => {
     const fetchSettings = async () => {
         try {
             setLoading(true);
-            const res = await api.get('/operationalsettings');
+            const res = await api.get('/OperationalSettings');
             setSettings(res.data);
         } catch (err) {
             console.error("Error al cargar configuraciones", err);
@@ -37,7 +37,7 @@ const OperationalSettings = () => {
     const handleSave = async () => {
         try {
             setSaving(true);
-            await api.post('/operationalsettings', settings);
+            await api.post('/OperationalSettings', settings);
             showToast("Configuraciones guardadas con éxito");
         } catch (err) {
             showToast("Error al guardar configuraciones", "error");
@@ -60,21 +60,27 @@ const OperationalSettings = () => {
 
     return (
         <div className="max-w-4xl mx-auto py-12 px-6 animate-in fade-in duration-700">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
-                <div>
-                    <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-                        Configuraciones <span className="text-indigo-600">Operativas</span>
-                    </h1>
-                    <p className="text-slate-500 dark:text-slate-400 font-medium mt-2">Versión 13.0 Evolution: Control de asistencia y aprobación</p>
+            {/* Elite Header V13.0 */}
+            <div className="bg-white dark:bg-slate-800 rounded-[40px] p-10 mb-12 border border-indigo-100 dark:border-slate-700/50 shadow-xl shadow-indigo-100/20 dark:shadow-none flex flex-col md:flex-row items-center justify-between gap-8 animate-in slide-in-from-top-6 duration-700">
+                <div className="flex items-center gap-8">
+                    <div className="w-20 h-20 bg-indigo-600 rounded-[28px] flex items-center justify-center text-white shadow-2xl shadow-indigo-500/40 transform -rotate-3">
+                        <Settings size={36} strokeWidth={2.5} />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-[950] tracking-tight text-slate-900 dark:text-white leading-none">
+                            Configuraciones <span className="text-indigo-600">Operativas</span>
+                        </h1>
+                        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 mt-3">Elite V13.0 Evolution: Control de asistencia</p>
+                    </div>
                 </div>
+                
                 <button 
                     onClick={handleSave}
                     disabled={saving}
-                    className="flex items-center justify-center gap-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white px-8 py-5 rounded-3xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-indigo-200 dark:shadow-none hover:scale-105 active:scale-95"
+                    className="group flex items-center justify-center gap-4 bg-indigo-600 hover:bg-black disabled:bg-slate-300 text-white px-10 py-5 rounded-[22px] font-black text-xs uppercase tracking-widest transition-all shadow-2xl shadow-indigo-200 dark:shadow-none hover:scale-105 active:scale-95"
                 >
-                    {saving ? <div className="animate-spin h-4 w-4 border-2 border-white rounded-full border-t-transparent"></div> : <Save size={18} />}
-                    {saving ? 'Guardando' : 'Guardar cambios'}
+                    {saving ? <div className="animate-spin h-5 w-5 border-3 border-white rounded-full border-t-transparent"></div> : <Save size={20} className="group-hover:rotate-12 transition-transform" />}
+                    {saving ? 'Sincronizando' : 'Guardar Cambios'}
                 </button>
             </div>
 
