@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
     Settings, Shield, Bell, Mail, Smartphone, Save, 
     CheckCircle, Clock, ListOrdered, UserCheck, Users, Info, AlertCircle,
-    Zap, Sparkles, AlertTriangle, ArrowRight, ShieldCheck
+    Zap, Sparkles, AlertTriangle, ShieldCheck, ArrowRight
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
@@ -13,6 +13,7 @@ const OperationalSettings = () => {
     const [saving, setSaving] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [settings, setSettings] = useState({
+        id: null,
         attendanceMode: 0, 
         shiftApprovalMode: 0, 
         enablePushNotifications: true,
@@ -36,9 +37,7 @@ const OperationalSettings = () => {
         }
     };
 
-    const handleSaveRequest = () => {
-        setShowConfirm(true);
-    };
+    const handleSaveRequest = () => setShowConfirm(true);
 
     const confirmSave = async () => {
         setShowConfirm(false);
@@ -51,10 +50,11 @@ const OperationalSettings = () => {
                 enablePushNotifications: settings.enablePushNotifications,
                 enableEmailNotifications: settings.enableEmailNotifications
             };
-            await api.post('/OperationalSettings', payload);
-            showToast("Protocolos sincronizados exitosamente", "success");
+            const res = await api.post('/OperationalSettings', payload);
+            setSettings(res.data);
+            showToast("Protocolos Elite V13.0 Sincronizados", "success");
         } catch (err) {
-            showToast("Fallo en la comunicación con el servidor", "error");
+            showToast("Error crítico de comunicación con el núcleo", "error");
         } finally {
             setSaving(false);
         }
@@ -67,214 +67,229 @@ const OperationalSettings = () => {
 
     if (loading) return (
         <div className="flex flex-col items-center justify-center min-h-[70vh] gap-8">
-            <div className="relative">
-                <div className="w-20 h-20 border-[3px] border-slate-100 dark:border-white/5 rounded-full"></div>
-                <div className="absolute inset-0 border-[3px] border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
+            <div className="relative w-24 h-24">
+                <div className="absolute inset-0 border-[6px] border-indigo-600/10 rounded-full"></div>
+                <div className="absolute inset-0 border-[6px] border-t-indigo-600 rounded-full animate-spin"></div>
+                <div className="absolute inset-4 bg-indigo-600/5 rounded-full flex items-center justify-center text-indigo-600">
+                    <Settings className="animate-pulse" size={32} />
+                </div>
             </div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] animate-pulse">Sincronizando Elite V13.0</p>
+            <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] animate-pulse">Iniciando Kernel Elite V13.0</p>
         </div>
     );
 
     return (
-        <div className={`min-h-screen ${isDarkMode ? 'dark' : ''} bg-[#f8fafc] dark:bg-[#06080f] transition-colors duration-700`}>
+        <div className={`min-h-screen ${isDarkMode ? 'dark' : ''} bg-[#fafbfc] dark:bg-[#070a13] transition-colors duration-700 font-inter`}>
             
-            {/* Header Action Bar (Floating Luxury Bar) */}
-            <div className="sticky top-0 z-[100] backdrop-blur-xl bg-white/70 dark:bg-[#06080f]/70 border-b border-slate-200/60 dark:border-white/5 px-6 py-4">
-                <div className="max-w-6xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-600/20">
-                            <Settings size={20} />
+            {/* Header Action Bar (God-Tier Luxury) */}
+            <div className="sticky top-0 z-[100] backdrop-blur-xl bg-white/80 dark:bg-[#070a13]/80 border-b border-slate-200/60 dark:border-white/5 py-6 px-10 shadow-sm transition-all duration-500">
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="flex items-center gap-6">
+                        <div className="relative group">
+                            <div className="absolute inset-[-4px] bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-2xl blur-md opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                            <div className="relative w-14 h-14 bg-white dark:bg-slate-900 rounded-2xl flex items-center justify-center text-indigo-600 border border-slate-200/60 dark:border-white/10 shadow-2xl transition-transform hover:scale-105 active:scale-95 cursor-pointer">
+                                <Settings size={28} strokeWidth={2.5} />
+                            </div>
                         </div>
                         <div>
-                            <h1 className="text-xl font-[1000] text-slate-900 dark:text-white tracking-tight leading-none">Configuraciones Operativas</h1>
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Sincronización en Tiempo Real</p>
+                            <div className="flex items-center gap-3 mb-1">
+                                <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-[0.3em] bg-indigo-600/10 dark:bg-indigo-400/10 px-2 py-0.5 rounded-md">Precision System</span>
+                                <div className="h-px w-4 bg-slate-200 dark:bg-slate-800"></div>
+                            </div>
+                            <h1 className="text-3xl font-[1000] text-slate-900 dark:text-white tracking-tight leading-none">
+                                Configuraciones <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-500">Operativas</span>
+                            </h1>
                         </div>
                     </div>
                     
                     <button 
                         onClick={handleSaveRequest}
                         disabled={saving}
-                        className="group flex items-center gap-3 bg-slate-900 dark:bg-white text-white dark:text-slate-950 px-8 py-3 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all hover:scale-[1.03] active:scale-95 shadow-2xl disabled:grayscale"
+                        className="group relative flex items-center gap-4 bg-gradient-to-r from-indigo-600 to-violet-500 hover:from-indigo-500 hover:to-violet-400 text-white px-12 py-5 rounded-[22px] font-black text-[13px] uppercase tracking-[0.2em] transition-all overflow-hidden shadow-[0_20px_50px_-15px_rgba(79,70,229,0.5)] active:scale-95 disabled:grayscale"
                     >
-                        {saving ? <div className="animate-spin h-4 w-4 border-2 border-current rounded-full border-t-transparent"></div> : <Save size={16} />}
-                        {saving ? 'Guardando...' : 'Aplicar Cambios'}
+                         <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/15 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out"></div>
+                        {saving ? (
+                            <div className="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"></div>
+                        ) : (
+                            <Save size={20} className="relative z-10 transition-transform group-hover:rotate-12" />
+                        )}
+                        <span className="relative z-10">{saving ? 'Guardando...' : 'Aplicar Cambios'}</span>
                     </button>
                 </div>
             </div>
 
-            <div className="max-w-5xl mx-auto py-16 px-6">
-                
+            <div className="max-w-6xl mx-auto py-16 px-10 relative z-10">
                 <div className="grid lg:grid-cols-12 gap-12">
                     
-                    {/* Main Settings Column */}
+                    {/* Main Regulations Section */}
                     <div className="lg:col-span-8 space-y-16">
                         
                         {/* 1. MOTOR DE ASISTENCIA */}
-                        <div className="space-y-10">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-indigo-600/5 dark:bg-indigo-400/5 rounded-2xl border border-indigo-600/10 dark:border-indigo-400/10">
-                                    <Clock className="text-indigo-600 dark:text-indigo-400" size={24} />
+                        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-10 duration-500">
+                            <div className="flex items-center gap-5">
+                                <div className="w-14 h-14 bg-indigo-600/5 dark:bg-indigo-400/5 rounded-3xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-indigo-600/10 dark:border-indigo-400/10">
+                                    <Clock size={30} strokeWidth={2.5} />
                                 </div>
                                 <div>
                                     <h2 className="text-2xl font-[1000] text-slate-900 dark:text-white tracking-tight">Motor de Asistencia</h2>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                        <div className="h-px w-4 bg-slate-200 dark:bg-slate-800"></div>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Protocolo de Identidad Biométrica</p>
-                                    </div>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em] mt-1">Sincronización Transaccional de Marcas</p>
                                 </div>
                             </div>
 
-                            <div className="grid sm:grid-cols-2 gap-6">
-                                <ArchitectureCard 
+                            <div className="grid sm:grid-cols-2 gap-8">
+                                <GodTierCard 
                                     active={settings.attendanceMode === 0}
                                     onClick={() => setSettings({...settings, attendanceMode: 0})}
                                     icon={<Smartphone />}
                                     title="Protocolo Min-Max"
-                                    description="Algoritmo inteligente de optimización de marcas principales."
-                                    color="indigo"
+                                    description="Algoritmo jerárquico que procesa los extremos de la jornada laboral."
                                 />
-                                <ArchitectureCard 
+                                <GodTierCard 
                                     active={settings.attendanceMode === 1}
                                     onClick={() => setSettings({...settings, attendanceMode: 1})}
                                     icon={<ListOrdered />}
                                     title="Modo Secuencial"
-                                    description="Auditoría total cronológica de todos los registros intermedios."
-                                    color="slate"
+                                    description="Auditoría cronológica completa para colaboradores multimarca."
                                 />
                             </div>
                         </div>
 
-                        {/* 2. FLUJO DE APROBACIÓN */}
-                        <div className="space-y-10">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-amber-600/5 dark:bg-amber-400/5 rounded-2xl border border-amber-600/10 dark:border-amber-400/10">
-                                    <Shield className="text-amber-600 dark:text-amber-400" size={24} />
+                         {/* 2. FLUJO DE APROBACIÓN */}
+                         <div className="space-y-10 animate-in fade-in slide-in-from-bottom-10 duration-700">
+                            <div className="flex items-center gap-5">
+                                <div className="w-14 h-14 bg-amber-500/5 dark:bg-amber-400/5 rounded-3xl flex items-center justify-center text-amber-600 dark:text-amber-500 border border-amber-500/10 dark:border-amber-400/10">
+                                    <Shield size={30} strokeWidth={2.5} />
                                 </div>
                                 <div>
                                     <h2 className="text-2xl font-[1000] text-slate-900 dark:text-white tracking-tight">Flujo de Aprobación</h2>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                        <div className="h-px w-4 bg-slate-200 dark:bg-slate-800"></div>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Validación de Autoridad Operativa</p>
-                                    </div>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em] mt-1">Autoridad Normativa de Validaciones</p>
                                 </div>
                             </div>
 
-                            <div className="grid sm:grid-cols-2 gap-6">
-                                <ArchitectureCard 
+                            <div className="grid sm:grid-cols-2 gap-8">
+                                <GodTierCard 
                                     active={settings.shiftApprovalMode === 0}
                                     onClick={() => setSettings({...settings, shiftApprovalMode: 0})}
                                     icon={<Users />}
                                     title="Nivel Central (RH)"
-                                    description="Unificación total de aprobaciones bajo un único equipo gestor."
-                                    color="amber"
+                                    description="Criterio unificado bajo un único equipo de Gestión Humana."
                                 />
-                                <ArchitectureCard 
+                                <GodTierCard 
                                     active={settings.shiftApprovalMode === 1}
                                     onClick={() => setSettings({...settings, shiftApprovalMode: 1})}
                                     icon={<UserCheck />}
                                     title="Nivel Distrital"
-                                    description="Delegación de autoridad a niveles regionales y supervisores."
-                                    color="emerald"
+                                    description="Delegación de autoridad a cada Supervisor Regional."
                                 />
                             </div>
                         </div>
                     </div>
 
-                    {/* Sidebar Column */}
+                    {/* Notification & Intelligence Section */}
                     <div className="lg:col-span-4 space-y-10">
                         
-                        {/* 3. NOTIFICACIONES */}
-                        <div className="bg-white dark:bg-slate-900/50 p-10 rounded-[40px] border border-slate-200/60 dark:border-white/5 shadow-xl transition-all">
-                            <div className="flex items-center gap-4 mb-10">
-                                <div className="w-12 h-12 bg-indigo-600/5 rounded-2xl flex items-center justify-center text-indigo-600 border border-indigo-600/10">
-                                    <Bell size={24} />
+                        {/* 3. ALERTAS SMART */}
+                        <div className="bg-white dark:bg-slate-900/50 p-10 rounded-[48px] border border-slate-200 dark:border-white/5 shadow-2xl relative overflow-hidden group transition-all duration-500 hover:shadow-indigo-500/10">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-600/5 blur-3xl pointer-events-none group-hover:bg-indigo-600/10 transition-all"></div>
+                            
+                            <div className="flex items-center gap-5 mb-12">
+                                <div className="w-14 h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/30">
+                                    <Bell size={28} />
                                 </div>
-                                <h3 className="text-xl font-[1000] text-slate-900 dark:text-white tracking-tight">Alertas Smart</h3>
+                                <div>
+                                    <h3 className="text-xl font-[1000] text-slate-900 dark:text-white tracking-tight">Alertas Smart</h3>
+                                    <p className="text-[9px] text-indigo-600 dark:text-indigo-400/60 font-black uppercase tracking-widest mt-0.5">Push & Email Sync</p>
+                                </div>
                             </div>
 
-                            <div className="space-y-8">
-                                <LuxuryToggle 
-                                    icon={<Mail size={18} />}
+                            <div className="space-y-10">
+                                <PremiumSwitch 
+                                    icon={<Mail size={20} />}
                                     title="Reporte vía Email"
                                     active={settings.enableEmailNotifications}
                                     onChange={(val) => setSettings({...settings, enableEmailNotifications: val})}
                                 />
                                 <div className="h-px bg-slate-100 dark:bg-white/5"></div>
-                                <LuxuryToggle 
-                                    icon={<Smartphone size={18} />}
+                                <PremiumSwitch 
+                                    icon={<Smartphone size={20} />}
                                     title="Push App Móvil"
                                     active={settings.enablePushNotifications}
                                     onChange={(val) => setSettings({...settings, enablePushNotifications: val})}
                                 />
                             </div>
                             
-                            <div className="mt-12 p-6 bg-slate-50 dark:bg-indigo-400/[0.03] rounded-3xl border border-slate-100 dark:border-indigo-400/10">
+                            <div className="mt-12 p-6 bg-slate-50 dark:bg-indigo-500/5 rounded-3xl border border-slate-100 dark:border-indigo-500/10 transition-colors">
                                 <div className="flex gap-4">
-                                    <Zap size={18} className="text-indigo-600 flex-shrink-0 mt-0.5" />
-                                    <p className="text-[11px] font-bold text-slate-500 leading-relaxed uppercase tracking-wider">
-                                        Las alertas se emiten instantáneamente tras cada validación.
+                                    <Zap size={20} className="text-indigo-600 flex-shrink-0 mt-0.5 animate-pulse" />
+                                    <p className="text-[10px] font-bold text-slate-500 leading-relaxed uppercase tracking-wider">
+                                        Latencia mínima: Configuración propagada en milisegundos.
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Audit Note */}
-                        <div className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 p-8 rounded-[40px] shadow-2xl relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-600/20 blur-3xl group-hover:bg-indigo-600/30 transition-all"></div>
-                            <div className="relative z-10 space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <ShieldCheck size={20} className="text-indigo-400 dark:text-indigo-600" />
-                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Security Core</h4>
+                        {/* Audit Log Branding */}
+                        <div className="bg-slate-900 dark:bg-white p-10 rounded-[48px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] dark:shadow-xl relative overflow-hidden group">
+                           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-600/30 dark:bg-indigo-600/5 blur-3xl pointer-events-none group-hover:scale-125 transition-transform duration-1000"></div>
+                           <div className="relative z-10 space-y-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center">
+                                        <ShieldCheck size={20} />
+                                    </div>
+                                    <h4 className="text-[11px] font-black text-white dark:text-slate-900 uppercase tracking-[0.2em] opacity-80">Security Core</h4>
                                 </div>
-                                <p className="text-xs font-bold leading-relaxed">
-                                    Cualquier modificación genera una entrada irreversible en el Log de Auditoría.
+                                <p className="text-xs font-black text-white/70 dark:text-slate-500 leading-relaxed italic">
+                                    "Los cambios operativos son inyectados irreversiblemente en la cadena de auditoría."
                                 </p>
-                            </div>
+                           </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Confirmation Modal: Cinematic Blur */}
+            {/* Confirmation Modal (Elite Grade) */}
             {showConfirm && (
-                <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-2xl animate-in fade-in duration-500">
-                    <div className="bg-white dark:bg-[#0f172a] w-full max-w-lg rounded-[48px] shadow-[0_50px_120px_-20px_rgba(0,0,0,0.6)] overflow-hidden border border-white/20">
-                        <div className="p-12 text-center">
-                            <div className="w-24 h-24 bg-amber-500/10 text-amber-500 rounded-[34px] flex items-center justify-center mx-auto mb-10 shadow-inner">
-                                <AlertTriangle size={48} strokeWidth={2.5} />
+                <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6 bg-[#000000]/40 backdrop-blur-3xl animate-in fade-in duration-500">
+                    <div className="bg-white dark:bg-[#0c1221] w-full max-w-lg rounded-[56px] shadow-[0_60px_150px_-20px_rgba(0,0,0,0.7)] overflow-hidden border border-white/20 relative">
+                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-600 via-violet-500 to-amber-500 animate-gradient"></div>
+                        
+                        <div className="p-16 text-center">
+                            <div className="w-24 h-24 bg-amber-500/10 text-amber-500 rounded-[38px] flex items-center justify-center mx-auto mb-10 shadow-inner">
+                                <AlertTriangle size={50} strokeWidth={2.5} className="animate-pulse" />
                             </div>
-                            <h3 className="text-3xl font-[1000] dark:text-white tracking-tight mb-4">¿Confirmar Actualización?</h3>
-                            <p className="text-base font-bold text-slate-400 leading-relaxed px-4">
-                                Esta acción modificará los protocolos de procesamiento de asistencia para toda la organización.
+                            <h3 className="text-3xl font-[1000] dark:text-white tracking-tight mb-5 leading-tight">¿Confirmar Kernel Sync?</h3>
+                            <p className="text-base font-bold text-slate-400 leading-relaxed">
+                                Esta acción re-calibrará el procesamiento de asistencia corporativa de forma instantánea.
                             </p>
                         </div>
-                        <div className="flex p-8 gap-5 bg-slate-50 dark:bg-slate-900/50">
+                        
+                        <div className="flex p-10 gap-6 bg-slate-50 dark:bg-slate-900/50">
                             <button 
                                 onClick={() => setShowConfirm(false)}
-                                className="flex-1 px-8 py-5 rounded-2xl font-black text-[12px] uppercase tracking-widest text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 shadow-sm"
+                                className="flex-1 px-8 py-5 rounded-3xl font-black text-[12px] uppercase tracking-widest text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 active:scale-95"
                             >
-                                Cancelar
+                                Abortar
                             </button>
                             <button 
                                 onClick={confirmSave}
-                                className="flex-1 px-8 py-5 rounded-2xl bg-indigo-600 text-white font-black text-[12px] uppercase tracking-widest shadow-[0_20px_40px_-10px_rgba(79,70,229,0.5)] hover:bg-indigo-500 transition-all active:scale-95"
+                                className="flex-1 px-8 py-5 rounded-3xl bg-indigo-600 text-white font-black text-[12px] uppercase tracking-widest shadow-2xl hover:bg-slate-900 hover:scale-[1.03] transition-all active:scale-95"
                             >
-                                Confirmar
+                                Confirmar Cambio
                             </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Toast System */}
+            {/* Corporate System Toast */}
             {toast.show && (
-                <div className={`fixed bottom-10 right-10 flex items-center gap-5 px-10 py-6 rounded-3xl backdrop-blur-xl shadow-[0_30px_70px_rgba(0,0,0,0.3)] animate-in slide-in-from-right-10 z-[3000] border border-white/20 ${toast.type === 'error' ? 'bg-rose-600/90 text-white' : 'bg-slate-900/90 text-white'}`}>
-                    <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center">
-                        {toast.type === 'error' ? <AlertCircle size={22} /> : <CheckCircle size={22} className="text-emerald-400" />}
+                <div className={`fixed bottom-12 right-12 flex items-center gap-6 px-10 py-7 rounded-[32px] backdrop-blur-2xl shadow-[0_40px_100px_rgba(0,0,0,0.4)] animate-in slide-in-from-right-10 z-[3000] border border-white/20 ${toast.type === 'error' ? 'bg-rose-600/90 text-white' : 'bg-slate-900/95 text-white'}`}>
+                    <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center shadow-inner">
+                        {toast.type === 'error' ? <AlertCircle size={26} /> : <CheckCircle size={26} className="text-emerald-400" />}
                     </div>
                     <div>
-                        <p className="text-[11px] font-[1000] text-white/50 uppercase tracking-widest mb-0.5">Sistema</p>
-                        <p className="text-xs font-black tracking-widest uppercase">{toast.message}</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-1 opacity-50">Sincronización Exitosa</p>
+                        <p className="text-sm font-black tracking-[0.1em] uppercase">{toast.message}</p>
                     </div>
                 </div>
             )}
@@ -282,54 +297,55 @@ const OperationalSettings = () => {
     );
 };
 
-const ArchitectureCard = ({ active, onClick, icon, title, description, color }) => {
-    const activeBorder = {
-        indigo: 'border-indigo-600 ring-[6px] ring-indigo-500/5',
-        amber: 'border-amber-500 ring-[6px] ring-amber-500/5',
-        emerald: 'border-emerald-600 ring-[6px] ring-emerald-500/5',
-        slate: 'border-slate-800 ring-[6px] ring-slate-800/5'
-    };
-
+const GodTierCard = ({ active, onClick, icon, title, description }) => {
     return (
         <div 
             onClick={onClick}
-            className={`group relative p-8 rounded-[36px] border-2 cursor-pointer transition-all duration-500 ${active ? activeBorder[color] + ' bg-white dark:bg-white/5 shadow-2xl' : 'border-slate-100 dark:border-white/5 bg-transparent dark:hover:bg-white/[0.02]'}`}
+            className={`group relative p-10 rounded-[44px] border-2 cursor-pointer transition-all duration-500 overflow-hidden ${active ? 'border-indigo-600 bg-white dark:bg-white/5 shadow-[0_30px_70px_-20px_rgba(79,70,229,0.15)] ring-4 ring-indigo-600/5' : 'border-slate-100 dark:border-white/5 bg-transparent opacity-60 hover:opacity-100 shadow-sm'}`}
         >
-            <div className="flex flex-col gap-6 relative z-10">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${active ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-600/30' : 'bg-slate-100 dark:bg-white/5 text-slate-400'}`}>
-                    {React.cloneElement(icon, { size: 28, strokeWidth: active ? 2.5 : 2 })}
+            {active && (
+                <div className="absolute top-[-20%] right-[-10%] w-40 h-40 bg-indigo-600/5 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
+            )}
+            
+            <div className="flex flex-col gap-8 relative z-10">
+                <div className="flex justify-between items-start">
+                    <div className={`w-16 h-16 rounded-[24px] flex items-center justify-center transition-all duration-500 ${active ? 'bg-indigo-600 text-white shadow-2xl scale-110' : 'bg-slate-100 dark:bg-white/5 text-slate-400'}`}>
+                        {React.cloneElement(icon, { size: 30, strokeWidth: 2.5 })}
+                    </div>
+                    {active && <div className="text-indigo-600 animate-bounce"><Sparkles size={20} /></div>}
                 </div>
+                
                 <div>
-                    <h3 className={`text-lg font-black tracking-tight mb-3 ${active ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-400'}`}>{title}</h3>
-                    <p className={`text-xs font-bold leading-relaxed ${active ? 'text-slate-500 dark:text-slate-500' : 'text-slate-400 dark:text-slate-600'}`}>{description}</p>
+                  <h3 className={`text-xl font-black tracking-tight mb-3 ${active ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>{title}</h3>
+                  <p className={`text-xs font-bold leading-relaxed pr-4 ${active ? 'text-slate-500 dark:text-slate-400' : 'text-slate-400 dark:text-slate-600'}`}>{description}</p>
                 </div>
-                <div className="flex justify-end pt-2">
-                    <div className={`w-10 h-10 rounded-2xl border-2 transition-all duration-500 flex items-center justify-center ${active ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' : 'border-slate-100 dark:border-white/5'}`}>
-                        {active ? <CheckCircle size={20} strokeWidth={3} /> : <div className="w-1.5 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full"></div>}
+
+                <div className="flex items-center gap-3">
+                    <div className={`h-1.5 rounded-full transition-all duration-1000 ${active ? 'bg-indigo-600 w-16' : 'bg-slate-100 dark:bg-white/5 w-6'}`}></div>
+                    <div className={`w-10 h-10 rounded-2xl border-2 flex items-center justify-center transition-all duration-500 ${active ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-transparent'}`}>
+                        <CheckCircle size={20} strokeWidth={3} />
                     </div>
                 </div>
             </div>
-            
-            {active && (
-                <div className="absolute -top-3 -right-3 text-indigo-600 dark:text-indigo-400 animate-bounce">
-                    <Sparkles size={24} />
-                </div>
-            )}
         </div>
     );
 };
 
-const LuxuryToggle = ({ icon, title, active, onChange }) => {
+const PremiumSwitch = ({ icon, title, active, onChange }) => {
     return (
         <div className="flex items-center justify-between group cursor-pointer" onClick={() => onChange(!active)}>
             <div className="flex items-center gap-5">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${active ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-600/30' : 'bg-slate-50 dark:bg-white/5 text-slate-400 group-hover:text-slate-600'}`}>
+                <div className={`w-14 h-14 rounded-3xl flex items-center justify-center transition-all duration-700 ${active ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xl scale-105' : 'bg-slate-50 dark:bg-white/5 text-slate-400 border border-slate-100 dark:border-white/5'}`}>
                     {icon}
                 </div>
-                <span className={`text-[13px] font-black tracking-[0.05em] uppercase transition-colors ${active ? 'text-slate-900 dark:text-white' : 'text-slate-400 group-hover:text-slate-600'}`}>{title}</span>
+                <span className={`text-[14px] font-[1000] tracking-[0.05em] uppercase transition-colors ${active ? 'text-slate-900 dark:text-white' : 'text-slate-400 group-hover:text-slate-600'}`}>{title}</span>
             </div>
-            <div className={`w-16 h-8 rounded-full p-1.5 transition-all duration-500 relative ${active ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-white/10 shadow-inner'}`}>
-                <div className={`w-5 h-5 rounded-full bg-white shadow-2xl transition-all duration-500 transform ${active ? 'translate-x-8 scale-110' : 'translate-x-0'}`}></div>
+            
+            <div className={`w-18 h-10 rounded-full p-1.5 transition-all duration-500 relative shadow-inner ${active ? 'bg-indigo-600' : 'bg-slate-100 dark:bg-white/5'}`}>
+                <div className={`w-7 h-7 rounded-full bg-white shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-all duration-500 transform ${active ? 'translate-x-8 scale-110' : 'translate-x-[0px]'}`}></div>
+                {active && (
+                   <div className="absolute inset-0 rounded-full animate-pulse ring-4 ring-indigo-600/30 pointer-events-none"></div>
+                )}
             </div>
         </div>
     );
