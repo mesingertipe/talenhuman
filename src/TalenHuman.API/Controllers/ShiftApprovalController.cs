@@ -62,7 +62,6 @@ public class ShiftApprovalController : ControllerBase
 
         // Security logic: If District mode is active, filter by user's assigned district
         // unless the user is a top-level Admin/SuperAdmin
-        bool isTopAdmin = User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
         
         if (approvalMode == ShiftApprovalMode.District && !isTopAdmin) {
             if (user != null && user.DistrictId.HasValue) {
