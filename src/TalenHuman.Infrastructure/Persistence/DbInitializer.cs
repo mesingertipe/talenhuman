@@ -151,8 +151,7 @@ public static class DbInitializer
         var companyIds = await context.Companies.IgnoreQueryFilters().Select(c => c.Id).ToListAsync();
         foreach (var cId in companyIds) 
         {
-            var companyRoles = roles.Where(r => r.CompanyId == cId || r.Name == "SuperAdmin").ToList();
-            foreach (var role in companyRoles)
+            foreach (var role in roles)
             {
                 foreach (var item in subModules)
                 {
