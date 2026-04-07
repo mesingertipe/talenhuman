@@ -63,15 +63,21 @@ public class AttendanceService
                     .ToListAsync();
                 _context.Attendances.RemoveRange(existingAttendances);
 
-                currentStep = $"[{store.Name}] Consultando DB BiometricRecords para empleado {employee.IdentificationNumber}.";
+                // 2. Normalización de ID (Caso Josefina)
+                var normalizedId = employee.IdentificationNumber.TrimStart('0');
+
+                currentStep = $"[{store.Name}] Consultando DB BiometricRecords para empleado {employee.IdentificationNumber} (Normalizado: {normalizedId}).";
                 // Get All Biometric Records for this employee in this window
+                // Match normalized IDs to fix leading zero issues
                 var rawRecords = await _context.BiometricRecords
                     .Where(r => r.CompanyId == companyId && 
-                                r.DeviceUser == employee.IdentificationNumber &&
                                 r.RecordDate >= windowStart && 
                                 r.RecordDate <= windowEnd)
                     .OrderBy(r => r.RecordDate)
                     .ToListAsync();
+
+                // Client-side filtering to handle non-SQL compatible normalization in where clause
+                rawRecords = rawRecords.Where(r => r.DeviceUser.TrimStart('0') == normalizedId).ToList();
 
                 totalRawRecords += rawRecords.Count;
 
@@ -89,15 +95,22 @@ public class AttendanceService
                     .OrderBy(s => s.StartTime)
                     .ToListAsync();
 
-                currentStep = $"[{store.Name}] Ejecutando lógica de emparejamiento {(store.UseSequentialPairing ? "Secuencial" : "Estándar")} para {employee.IdentificationNumber}.";
-                if (store.UseSequentialPairing)
+                // V13.0 Logic: Global Operational Preference
+                var opSetting = await _context.OperationalSettings.FirstOrDefaultAsync(os => os.CompanyId == companyId);
+                var mode = opSetting?.AttendanceMode ?? (store.UseSequentialPairing ? AttendanceMode.Sequential : AttendanceMode.ShiftCentric);
+
+                currentStep = $"[{store.Name}] Ejecutando lógica {mode} para {employee.IdentificationNumber}.";
+                
+                if (mode == AttendanceMode.MinMax)
                 {
-                    // MODE: SEQUENTIAL PAIRING (Airport Style)
+                    await ProcessMinMaxPairingAsync(employee, store, shifts, filteredRecords, companyId);
+                }
+                else if (mode == AttendanceMode.Sequential)
+                {
                     await ProcessSequentialPairingAsync(employee, store, shifts, filteredRecords, companyId);
                 }
                 else
                 {
-                    // MODE: SHIFT-CENTRIC (Standard Style)
                     await ProcessStandardPairingAsync(employee, store, shifts, filteredRecords, companyId);
                 }
                 currentStep = $"[{store.Name}] Finalizando emparejamiento para {employee.FirstName} {employee.LastName}. Preparando guardado.";
@@ -255,6 +268,70 @@ public class AttendanceService
                 });
             }
         }
+    }
+
+    private async Task ProcessMinMaxPairingAsync(Employee emp, Store store, List<Shift> shifts, List<BiometricRecord> records, Guid companyId)
+    {
+        if (records.Count == 0)
+        {
+            // Handle shifts with no markings (Mark all as Absent)
+            foreach (var s in shifts)
+            {
+                _context.Attendances.Add(new Attendance
+                {
+                    EmployeeId = emp.Id,
+                    StoreId = store.Id,
+                    CompanyId = companyId,
+                    Shift = s,
+                    ClockIn = s.StartTime,
+                    Status = AttendanceStatus.SinMarcacion,
+                    StatusObservation = "Sin registros biométricos."
+                });
+            }
+            return;
+        }
+
+        // ABSOLUTE MIN-MAX LOGIC
+        var firstRecord = records.OrderBy(r => r.RecordDate).First();
+        var lastRecord = records.OrderBy(r => r.RecordDate).Last();
+
+        var attendance = new Attendance
+        {
+            EmployeeId = emp.Id,
+            StoreId = store.Id,
+            CompanyId = companyId,
+            ClockIn = firstRecord.RecordDate,
+            ClockOut = (firstRecord.Id != lastRecord.Id) ? lastRecord.RecordDate : null,
+            StatusObservation = "Consolidación Min-Max Activa. "
+        };
+
+        // Link with the main shift of the day (usually the first one)
+        var mainShift = shifts.OrderBy(s => s.StartTime).FirstOrDefault();
+        if (mainShift != null)
+        {
+            attendance.Shift = mainShift;
+            var diffStart = Math.Abs((attendance.ClockIn - mainShift.StartTime).TotalMinutes);
+            
+            if (attendance.ClockOut.HasValue)
+            {
+                var diffEnd = Math.Abs((attendance.ClockOut.Value - mainShift.EndTime).TotalMinutes);
+                attendance.Status = (diffStart <= 15 && diffEnd <= 15) ? AttendanceStatus.Correcto : AttendanceStatus.Desfasado;
+                if (attendance.Status == AttendanceStatus.Desfasado)
+                    attendance.StatusObservation += $"Desfase E:{diffStart:F0}m, S:{diffEnd:F0}m.";
+            }
+            else
+            {
+                attendance.Status = AttendanceStatus.MarcacionErrada;
+                attendance.StatusObservation += "Falta marcación de salida.";
+            }
+        }
+        else
+        {
+            attendance.Status = attendance.ClockOut.HasValue ? AttendanceStatus.Correcto : AttendanceStatus.MarcacionErrada;
+            attendance.StatusObservation += "Sin turno agendado.";
+        }
+
+        _context.Attendances.Add(attendance);
     }
 
     private async Task ProcessStandardPairingAsync(Employee emp, Store store, List<Shift> shifts, List<BiometricRecord> records, Guid companyId)

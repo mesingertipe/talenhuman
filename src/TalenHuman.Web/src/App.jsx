@@ -18,6 +18,7 @@ import NewsInbox from './pages/News/NewsInbox';
 import NewsDesigner from './pages/Admin/NewsDesigner';
 import ShiftScheduler from './pages/Scheduling/ShiftScheduler';
 import Marcaciones from './pages/Core/Marcaciones';
+import OperationalSettings from './pages/Settings/OperationalSettings';
 import AttendanceMonitoring from './pages/Core/AttendanceMonitoring';
 import Cities from './pages/Core/Cities';
 import Districts from './pages/Core/Districts';
@@ -365,6 +366,7 @@ function App() {
       // 🚀 V62.8: PERFECTION SYNC (Matching Sidebar Labels exactly)
       switch(currentPage) {
         case 'Marcaciones': return <Marcaciones user={user} />;
+        case 'Configuraciones operativas': return <OperationalSettings user={user} />;
         case 'Monitoreo Asistencia': return <AttendanceMonitoring user={user} />;
         case 'Tiendas': return <Stores user={user} />;
         case 'Empresas': return <Companies user={user} />;

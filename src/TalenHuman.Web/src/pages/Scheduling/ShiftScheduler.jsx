@@ -72,6 +72,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
     const [jornadas, setJornadas] = useState([]);
     const [weekOffset, setWeekOffset] = useState(0);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+    const [operationalSettings, setOperationalSettings] = useState(null);
 
     const [showTimeModal, setShowTimeModal] = useState(false);
     const [showNovModal, setShowNovModal] = useState(false);
@@ -133,6 +134,9 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
         });
 
         api.get('/profiles').then(res => setProfiles(res.data));
+        
+        // Load Operational Settings (V13.0)
+        api.get('/operationalsettings').then(res => setOperationalSettings(res.data)).catch(() => {});
 
         const loadScript = (src) => {
             if (document.querySelector(`script[src="${src}"]`)) return;
@@ -168,6 +172,23 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
         const m = Math.round((hours - h) * 60);
         return `${h}h ${String(m).padStart(2, '0')}m`;
     };
+
+    const isApprover = useMemo(() => {
+        if (!user || !operationalSettings) return false;
+        
+        // Admin / SuperAdmin can always approve
+        if (user.roles?.includes('Admin') || user.roles?.includes('SuperAdmin')) return true;
+
+        const mode = operationalSettings.shiftApprovalMode; // 0: HR, 1: District
+
+        if (mode === 0) { // HR Mode
+            return user.roles?.includes('RH');
+        } else { // District Mode
+            // User must be a Supervisor and belong to the same district as the selected store
+            const currentStoreObj = stores.find(s => s.id === selectedStore);
+            return user.roles?.includes('Supervisor') && user.districtId === currentStoreObj?.districtId;
+        }
+    }, [user, operationalSettings, selectedStore, stores]);
 
     const fetchData = async () => {
         try {
@@ -298,6 +319,41 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
     };
 
     const handleDragStart = (e, source, data) => {
+        setIsDragging(true);
+        setDragSource(source);
+        setDraggedData(data); // data contains {type, id, ...}
+
+        // V13.0 PREMIUM GHOST IMAGE
+        // Create a clean, minimal preview for the drag operation
+        const ghost = document.createElement('div');
+        ghost.style.width = '100px';
+        ghost.style.height = '40px';
+        ghost.style.backgroundColor = source === 'PANEL' 
+            ? (data.type === 'Descanso' ? '#94a3b8' : (data.type === 'TurnoFuera' ? '#8b5cf6' : '#4f46e5')) 
+            : '#4f46e5';
+        ghost.style.borderRadius = '12px';
+        ghost.style.position = 'absolute';
+        ghost.style.top = '-1000px'; // Hide it from view
+        ghost.style.display = 'flex';
+        ghost.style.alignItems = 'center';
+        ghost.style.justifyContent = 'center';
+        ghost.style.color = 'white';
+        ghost.style.fontSize = '10px';
+        ghost.style.fontWeight = '900';
+        ghost.style.textTransform = 'uppercase';
+        ghost.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
+        ghost.style.border = '2px solid rgba(255,255,255,0.3)';
+        ghost.innerHTML = data.type || 'Moviendo';
+        
+        document.body.appendChild(ghost);
+        e.dataTransfer.setDragImage(ghost, 50, 20);
+        
+        // Cleanup ghost element after start
+        setTimeout(() => document.body.removeChild(ghost), 0);
+
+        if (source === 'GRID') {
+            e.dataTransfer.setData('shiftId', data.id);
+        }
         e.dataTransfer.setData("source", source);
         e.dataTransfer.setData("payload", JSON.stringify(data));
         e.dataTransfer.effectAllowed = source === 'GRID' ? "copy" : "move";
@@ -465,6 +521,56 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
             showToast("Programación guardada exitosamente");
             setShowSaveModal(false); fetchData();
         } catch (err) { showToast(err.response?.data?.message || "Error al guardar", "error"); } finally { setIsSaving(false); }
+    };
+
+    const handleApproveAll = async () => {
+        try {
+            setLoading(true);
+            const endDate = new Date(currentWeekStart);
+            endDate.setDate(endDate.getDate() + 7);
+
+            await api.post('/shiftapproval/approve', {
+                storeId: selectedStore,
+                startDate: toLocalISO(currentWeekStart),
+                endDate: toLocalISO(endDate),
+                comment: "Aprobado por panel administrativo"
+            });
+
+            showToast("Semana aprobada correctamente");
+            fetchData();
+        } catch (err) {
+            showToast("Error al aprobar la semana", "error");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRejectAll = async () => {
+        const reason = prompt("Indica el motivo del rechazo (obligatorio):");
+        if (!reason || reason.trim().length < 5) {
+            showToast("Debes indicar un motivo válido", "warning");
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const endDate = new Date(currentWeekStart);
+            endDate.setDate(endDate.getDate() + 7);
+
+            await api.post('/shiftapproval/reject', {
+                storeId: selectedStore,
+                startDate: toLocalISO(currentWeekStart),
+                endDate: toLocalISO(endDate),
+                comment: reason
+            });
+
+            showToast("Malla rechazada y gerente notificado");
+            fetchData();
+        } catch (err) {
+            showToast("Error al procesar el rechazo", "error");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const copyFromPreviousWeek = async () => {
@@ -1153,10 +1259,14 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                                                   background: bgColor, 
                                                                                   minWidth: '85px', 
                                                                                   minHeight: '42px', 
-                                                                                  filter: isLocked ? 'contrast(0.9) saturate(0.8)' : 'none'
+                                                                                  filter: isLocked ? 'contrast(0.9) saturate(0.8)' : 'none',
+                                                                                  borderLeft: shift.status === 1 ? '4px solid #10b981' : (shift.status === 2 ? '4px solid #ef4444' : 'none')
                                                                               }}
                                                                          >
                                                                              <div className="flex items-center gap-2 mb-0.5">
+                                                                                 {shift.status === 1 && <CheckCircle size={10} className="text-white" />}
+                                                                                 {shift.status === 2 && <XCircle size={10} className="text-white" />}
+                                                                                 {shift.status === 0 && <Clock size={10} className="text-white opacity-70" />}
                                                                                  {isLocked && <Lock size={11} className="text-white opacity-70" />}
                                                                                  {att && <Activity size={12} className="text-white opacity-100 animate-pulse" />}
                                                                                  <span className="text-[7px] font-black uppercase tracking-[0.1em] opacity-80 leading-none">
@@ -1285,6 +1395,36 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
             {/* Global Portals */}
             {createPortal(
                 <>
+                    {/* V13.0 APPROVAL BAR */}
+                    {isApprover && shifts.some(s => s.status === 0) && (
+                        <div style={{ background: activeColors.accentSoft, border: `1px solid ${activeColors.accent}`, borderRadius: '24px', padding: '20px 30px', marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} className="animate-in slide-in-from-top-4 duration-500">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                <div style={{ width: '44px', height: '44px', background: 'white', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.accent, boxShadow: '0 5px 15px rgba(0,0,0,0.05)' }}>
+                                    <ShieldCheck size={24} />
+                                </div>
+                                <div>
+                                    <p style={{ margin: 0, fontWeight: '950', color: activeColors.accent, fontSize: '0.95rem' }}>Aprobaciones Pendientes</p>
+                                    <p style={{ margin: 0, fontWeight: '700', color: activeColors.textMuted, fontSize: '0.75rem' }}>Revisa la malla de turnos y toma una decisión administrativa.</p>
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <button 
+                                    onClick={() => handleRejectAll()}
+                                    className="btn-premium"
+                                    style={{ background: '#fee2e2', color: '#ef4444', border: 'none', height: '48px', padding: '0 25px', borderRadius: '14px' }}
+                                >
+                                    <XCircle size={18} className="mr-2" /> Rechazar Malla
+                                </button>
+                                <button 
+                                    onClick={() => handleApproveAll()}
+                                    className="btn-premium"
+                                    style={{ background: activeColors.accent, color: 'white', border: 'none', height: '48px', padding: '0 25px', borderRadius: '14px', boxShadow: '0 10px 20px rgba(79, 70, 229, 0.3)' }}
+                                >
+                                    <CheckCircle size={18} className="mr-2" /> Aprobar Todo
+                                </button>
+                            </div>
+                        </div>
+                    )}
                     {/* Guardar Cambios Elite Modal */}
                     {showSaveModal && (
                         <div className="no-print" style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 15, 0.85)', backdropFilter: 'blur(30px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>

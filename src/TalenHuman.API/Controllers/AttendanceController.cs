@@ -264,6 +264,7 @@ public class AttendanceController : ControllerBase
         
         var query = _context.Attendances
             .Include(a => a.Employee)
+                .ThenInclude(e => e.Profile)
             .Include(a => a.Store)
             .Where(a => a.CompanyId == companyId);
 
@@ -360,7 +361,9 @@ public class AttendanceController : ControllerBase
             employeesQuery = employeesQuery.Where(e => managedStoreIds.Contains(e.StoreId));
         }
 
-        var employees = await employeesQuery.ToListAsync();
+        var employees = await employeesQuery
+            .Include(e => e.Profile)
+            .ToListAsync();
 
         // Match Raw Marks first (IDs that don't match employees or entries not yet consolidated)
         var groupedRaw = rawRecords.GroupBy(r => new { r.DeviceUser, Date = r.RecordDate.Date });
@@ -429,7 +432,8 @@ public class AttendanceController : ControllerBase
                 a.ShiftId, 
                 a.ClockIn, a.ClockOut, Status = (int)a.Status,
                 a.StatusObservation,
-                StatusText = statusText
+                StatusText = statusText,
+                EmployeeJobTitle = a.Employee?.Profile?.Name ?? "N/A"
             };
         }));
 

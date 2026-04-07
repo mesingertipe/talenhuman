@@ -110,7 +110,7 @@ public class ShiftsController : ControllerBase
                 StoreId = dto.StoreId,
                 StartTime = DateTime.SpecifyKind(sDto.StartTime, DateTimeKind.Unspecified),
                 EndTime = DateTime.SpecifyKind(sDto.EndTime, DateTimeKind.Unspecified),
-                Status = sDto.Status,
+                Status = ShiftStatus.PendingApproval, // V13.0 Requirement: All new shifts start as pending
                 IsDescanso = sDto.IsDescanso,
                 IsFuera = sDto.IsFuera,
                 Observation = dto.Comment, // Use the bulk comment
@@ -120,33 +120,50 @@ public class ShiftsController : ControllerBase
 
         await _context.SaveChangesAsync(default);
 
-        // 5. Notify Employees via Centralized Notification Service (V12.20)
+        // 5. Audit Trace (Replacing previous PUSH logic)
+        await _auditService.LogAsync("MASS_UPLOAD", "Shifts", dto.StoreId.ToString(), $"Malla cargada para periodo {start:dd/MM} - {end:dd/MM}. Pendiente de aprobación.");
+
+        // 6. Notify Approvers based on Configuration (V13.0 Requirement: RH vs Distrital)
         try {
-            var employeeIds = dto.Shifts.Select(s => s.EmployeeId).Distinct().ToList();
-            var users = await _context.Users
-                .Where(u => _context.Employees.Where(e => employeeIds.Contains(e.Id)).Select(e => e.UserId).Contains(u.Id))
-                .Select(u => new { u.Id, u.FirebaseToken })
-                .ToListAsync();
+            var userClaimIdString = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var userClaimId = Guid.Parse(userClaimIdString);
+            var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userClaimId);
+            var companyId = currentUser?.CompanyId;
+            
+            // 6.1 Get operational settings for the company
+            var settings = await _context.OperationalSettings
+                .FirstOrDefaultAsync(o => o.CompanyId == companyId);
+            
+            var approvalMode = settings?.ShiftApprovalMode ?? ShiftApprovalMode.HR;
+            var approvers = new List<User>();
 
-            var uIds = users.Select(u => u.Id).ToList();
-            var tokens = users.Select(u => u.FirebaseToken).Where(t => !string.IsNullOrEmpty(t)).ToList()!;
+            if (approvalMode == ShiftApprovalMode.District) {
+                // District Mode: Only notify Supervisors assigned to that specific store's district
+                var store = await _context.Stores.FindAsync(dto.StoreId);
+                if (store != null && store.DistrictId.HasValue) {
+                    approvers = await _context.Users
+                        .Where(u => u.CompanyId == companyId && u.DistrictId == store.DistrictId && u.IsActive)
+                        .ToListAsync();
+                }
+            } else {
+                // HR Mode: Notify ONLY the RH team or Admins of the company
+                approvers = await _context.Users
+                    .Where(u => u.CompanyId == companyId && u.IsActive)
+                    .ToListAsync();
+            }
 
-            if (tokens.Any())
-            {
-                await _notificationService.SendBroadcastAsync(uIds, tokens, new Application.Services.NotificationRequest
-                {
-                    Subject = "📅 ¡Nuevos horarios disponibles!",
-                    Message = $"Tu horario para la semana del {start:dd/MM} al {end:dd/MM} ha sido actualizado. Revisa la aplicación TalenHuman para ver los detalles. {dto.Comment}",
-                    Category = "shift_update",
-                    Type = Application.Services.NotificationType.Push,
-                    Metadata = new Dictionary<string, string> { 
-                        { "storeId", dto.StoreId.ToString() },
-                        { "startDate", start.ToString("yyyy-MM-dd") }
-                    }
-                });
+            foreach (var app in approvers) {
+                if (!string.IsNullOrEmpty(app.Email)) {
+                    await _notificationService.SendNotificationAsync(new Application.Services.NotificationRequest {
+                        To = app.Email,
+                        Subject = "⚠️ Nueva Malla de Turnos para Aprobar",
+                        Message = $"Se ha cargado una nueva malla de turnos para la tienda '{dto.StoreId}' para el periodo {start:dd/MM} al {end:dd/MM}.\n\nPor favor, ingresa al panel administrativo para revisarla.",
+                        Type = Application.Services.NotificationType.Email
+                    });
+                }
             }
         } catch (Exception ex) {
-            Console.WriteLine($"Shift Notification Error: {ex.Message}");
+            Console.WriteLine($"Shift Notification Error (EMAIL-APPROVER): {ex.Message}");
         }
 
         await _auditService.LogAsync("MASS_UPDATE", "Shifts", dto.StoreId.ToString(), $"Actualizados {dto.Shifts.Count} turnos. Motivo/Comentario: {dto.Comment}");

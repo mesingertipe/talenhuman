@@ -201,6 +201,7 @@ const getPageInfo = (page) => {
     case 'Usuarios': return { title: 'Usuarios', subtitle: 'Administración de accesos y roles' };
     case 'Novedades': return { title: 'Bandeja de Novedades', subtitle: 'Trazabilidad y auditoría de solicitudes' };
     case 'Configuración novedades': return { title: 'Configuración novedades', subtitle: 'Configuración dinámica de tipos de novedad' };
+    case 'Configuraciones operativas': return { title: 'Configuraciones operativas', subtitle: 'Ajustes y parámetros de operación' };
     case 'Turnos': return { title: 'Turnos', subtitle: 'Programación inteligente y cobertura' };
     case 'Marcaciones': return { title: 'Asistencia', subtitle: 'Trazabilidad de ingresos y salidas' };
     case 'Monitoreo Asistencia': return { title: 'Monitoreo Asistencia', subtitle: 'Gestión de procesos y consolidación de datos' };

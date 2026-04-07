@@ -56,6 +56,12 @@ public class Shift : BaseEntity, IMultitenant
     public bool IsDescanso { get; set; }
     public bool IsFuera { get; set; }
     public string? Observation { get; set; }
+
+    // V13.0 Approval Workflow
+    public string? ApprovalComment { get; set; }
+    public Guid? ApprovedByUserId { get; set; }
+    public User? ApprovedByUser { get; set; }
+    public DateTime? ApprovedAt { get; set; }
 }
 
 public enum ShiftStatus
@@ -64,7 +70,10 @@ public enum ShiftStatus
     Ongoing,
     Completed,
     Cancelled,
-    Missed
+    Missed,
+    PendingApproval, // V13.0
+    Approved,        // V13.0
+    Rejected         // V13.0
 }
 
 public enum AttendanceStatus

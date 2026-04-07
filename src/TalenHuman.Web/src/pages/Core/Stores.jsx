@@ -41,7 +41,6 @@ const Stores = ({ user }) => {
     externalId: '', 
     biometricId: '', 
     isActive: true,
-    useSequentialPairing: true,
     operationalDayStart: '05:00',
     defaultStartTime: '08:00',
     defaultEndTime: '17:00'
@@ -214,7 +213,6 @@ const Stores = ({ user }) => {
                     externalId: '', 
                     biometricId: '', 
                     isActive: true,
-                    useSequentialPairing: true,
                     operationalDayStart: '05:00',
                     defaultStartTime: '08:00',
                     defaultEndTime: '17:00'
@@ -310,7 +308,6 @@ const Stores = ({ user }) => {
                             biometricId: store.biometricId || '',
                             districtId: store.districtId || '',
                             isActive: store.isActive !== false,
-                            useSequentialPairing: !!store.useSequentialPairing,
                             operationalDayStart: store.operationalDayStart || '05:00',
                             defaultStartTime: store.defaultStartTime || '08:00',
                             defaultEndTime: store.defaultEndTime || '17:00'
@@ -516,18 +513,6 @@ const Stores = ({ user }) => {
                                         <span style={{ fontSize: '0.8rem', fontWeight: '950', color: formData.isActive ? '#10b981' : activeColors.textMuted }}>{formData.isActive ? 'TIENDA ACTIVA' : 'TIENDA CERRADA'}</span>
                                     </div>
                                 </div>
-
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                    <div 
-                                        onClick={() => setFormData({...formData, useSequentialPairing: !formData.useSequentialPairing})}
-                                        style={{ width: '56px', height: '28px', background: formData.useSequentialPairing ? '#4f46e5' : '#10b981', borderRadius: '20px', position: 'relative', cursor: 'pointer', transition: 'all 0.3s' }}
-                                    >
-                                        <div style={{ width: '22px', height: '22px', background: 'white', borderRadius: '50%', position: 'absolute', top: '3px', left: formData.useSequentialPairing ? '31px' : '3px', transition: 'all 0.3s', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}></div>
-                                    </div>
-                                    <div>
-                                        <span style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: activeColors.textMuted }}>Mapeo de Marcaciones</span>
-                                        <span style={{ fontSize: '0.8rem', fontWeight: '950', color: formData.useSequentialPairing ? '#4f46e5' : '#10b981' }}>{formData.useSequentialPairing ? 'MODO SECUENCIAL' : 'MODO TURNOS'}</span>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -553,8 +538,7 @@ const Stores = ({ user }) => {
                             </div>
                         </div>
 
-                        {!formData.useSequentialPairing && (
-                            <div style={{ padding: '40px', background: isDarkMode ? 'rgba(79, 70, 229, 0.05)' : '#f8faff', borderRadius: '32px', border: `1px dashed ${activeColors.border}`, animation: 'fadeIn 0.5s ease-out' }}>
+                        <div style={{ padding: '40px', background: isDarkMode ? 'rgba(79, 70, 229, 0.05)' : '#f8faff', borderRadius: '32px', border: `1px dashed ${activeColors.border}`, animation: 'fadeIn 0.5s ease-out' }}>
                                 <h4 style={{ fontSize: '11px', fontWeight: '900', color: activeColors.accent, letterSpacing: '0.05em', marginBottom: '24px' }}>Horarios base de la sede</h4>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '36px' }}>
                                     <div className="group">
@@ -575,9 +559,9 @@ const Stores = ({ user }) => {
                                     </div>
                                 </div>
                             </div>
-                        )}
+                        </div>
                     </div>
-                  </div>
+                </div>
 
                   {/* Sección Footer de Seguridad */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '30px', background: isDarkMode ? 'rgba(79, 70, 229, 0.1)' : '#f1f5f9', borderRadius: '32px', color: activeColors.textMuted }}>
@@ -607,11 +591,10 @@ const Stores = ({ user }) => {
                     {isSubmitting ? 'Sincronizando...' : currentStore ? 'Guardar Cambios' : 'Confirmar Registro'}
                   </button>
                 </div>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {showConfirm && (
         <div className="modal-overlay">
