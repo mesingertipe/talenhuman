@@ -145,7 +145,9 @@ public static class DbInitializer
             new { Module = "SYSTEM", Sub = "COMPANIES" },
             new { Module = "SYSTEM", Sub = "SYSTEM_CONFIG" },
             new { Module = "SYSTEM", Sub = "OPERATIONAL_SETTINGS" }
-        }        // Seed Permission Matrix for EACH company to ensure new sub-modules are included
+        };
+
+        // Seed Permission Matrix for EACH company to ensure new sub-modules are included
         var companyIds = await context.Companies.IgnoreQueryFilters().Select(c => c.Id).ToListAsync();
         foreach (var cId in companyIds) 
         {
