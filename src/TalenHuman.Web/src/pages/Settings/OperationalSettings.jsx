@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
     Settings, Shield, Bell, Mail, Smartphone, Save, 
-    CheckCircle, Clock, ListOrdered, UserCheck, Users, Info, AlertCircle
+    CheckCircle, Clock, ListOrdered, UserCheck, Users, Info, AlertCircle,
+    Zap, Sparkles, Layout, Database
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
@@ -38,9 +39,9 @@ const OperationalSettings = () => {
         try {
             setSaving(true);
             await api.post('/OperationalSettings', settings);
-            showToast("Configuraciones guardadas con éxito");
+            showToast("Sincronización Cloud exitosa", "success");
         } catch (err) {
-            showToast("Error al guardar configuraciones", "error");
+            showToast("Fallo en sincronización", "error");
         } finally {
             setSaving(false);
         }
@@ -51,212 +52,266 @@ const OperationalSettings = () => {
         setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
     };
 
+    const activeColors = {
+        accent: '#4f46e5',
+        accentGlow: 'rgba(79, 70, 229, 0.4)',
+        bg: isDarkMode ? '#0f172a' : '#f8fafc',
+        card: isDarkMode ? 'rgba(30, 41, 59, 0.7)' : 'rgba(255, 255, 255, 0.8)',
+        border: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+    };
+
     if (loading) return (
-        <div className="flex flex-col items-center justify-center h-96 gap-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Cargando reglas operativas...</p>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
+            <div className="relative w-20 h-20">
+                <div className="absolute inset-0 border-4 border-indigo-500/20 rounded-full"></div>
+                <div className="absolute inset-0 border-4 border-t-indigo-600 rounded-full animate-spin"></div>
+                <div className="absolute inset-4 bg-indigo-600/10 rounded-full animate-pulse"></div>
+            </div>
+            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500 animate-pulse">
+                Iniciando Kernel Elite...
+            </p>
         </div>
     );
 
     return (
-        <div className="max-w-4xl mx-auto py-12 px-6 animate-in fade-in duration-700">
-            {/* Elite Header V13.0 */}
-            <div className="bg-white dark:bg-slate-800 rounded-[40px] p-10 mb-12 border border-indigo-100 dark:border-slate-700/50 shadow-xl shadow-indigo-100/20 dark:shadow-none flex flex-col md:flex-row items-center justify-between gap-8 animate-in slide-in-from-top-6 duration-700">
-                <div className="flex items-center gap-8">
-                    <div className="w-20 h-20 bg-indigo-600 rounded-[28px] flex items-center justify-center text-white shadow-2xl shadow-indigo-500/40 transform -rotate-3">
-                        <Settings size={36} strokeWidth={2.5} />
+        <div className={`min-h-screen ${isDarkMode ? 'dark' : ''} transition-colors duration-500`} style={{ background: activeColors.bg }}>
+            
+            {/* Ambient Glows */}
+            <div className="fixed top-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-500/10 dark:bg-indigo-500/5 blur-[120px] pointer-events-none rounded-full"></div>
+            <div className="fixed bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-rose-500/10 dark:bg-rose-500/5 blur-[120px] pointer-events-none rounded-full"></div>
+
+            <div className="max-w-5xl mx-auto py-16 px-6 relative z-10">
+                
+                {/* Header Premium V13.0 */}
+                <div className="flex flex-col md:flex-row items-center justify-between mb-16 gap-10">
+                    <div className="flex items-center gap-10">
+                        <div className="relative group">
+                            <div className="absolute inset-0 bg-indigo-600 blur-2xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                            <div className="relative w-24 h-24 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-[32px] flex items-center justify-center text-white shadow-2xl shadow-indigo-500/40 transform -rotate-3 transition-transform hover:rotate-0 duration-500">
+                                <Settings size={44} strokeWidth={2.2} />
+                            </div>
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-3 mb-3">
+                                <span className="px-3 py-1 bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase tracking-widest rounded-lg border border-indigo-500/10">V13.0 ELITE</span>
+                                <div className="h-px w-8 bg-slate-200 dark:bg-slate-700"></div>
+                            </div>
+                            <h1 className="text-4xl font-[1000] tracking-tight text-slate-900 dark:text-white leading-tight">
+                                Reglas <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-indigo-400">Operativas</span>
+                            </h1>
+                            <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest">
+                                Gestión Centralizada de Inteligencia de Negocio
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <button 
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="group relative flex items-center gap-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-12 py-6 rounded-[28px] font-black text-[11px] uppercase tracking-[0.2em] transition-all overflow-hidden shadow-2xl hover:scale-105 active:scale-95 disabled:grayscale"
+                    >
+                        <div className="absolute inset-0 bg-indigo-600 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
+                        <span className="relative z-10 flex items-center gap-5">
+                            {saving ? <div className="animate-spin h-5 w-5 border-3 border-current rounded-full border-t-transparent"></div> : <Save size={20} className="group-hover:rotate-12 transition-transform" />}
+                            {saving ? 'Sincronizando' : 'Sincronizar Cloud'}
+                        </span>
+                    </button>
+                </div>
+
+                <div className="grid lg:grid-cols-12 gap-10">
+                    
+                    {/* Left Column (Main Rules) */}
+                    <div className="lg:col-span-8 space-y-10">
+                        {/* 1. MOTOR DE ASISTENCIA */}
+                        <div className="backdrop-blur-xl bg-white/40 dark:bg-slate-800/40 p-10 md:p-14 rounded-[50px] border border-white/20 dark:border-white/5 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.1)] relative overflow-hidden group">
+                           <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
+                                <Database size={150} />
+                           </div>
+                           
+                           <div className="flex items-center gap-6 mb-12">
+                                <div className="w-16 h-16 bg-indigo-600/10 dark:bg-indigo-400/10 rounded-3xl flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                                    <Clock size={32} />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black dark:text-white tracking-tight">Motor de Asistencia</h2>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">Consolidación de Identidad Biométrica</p>
+                                </div>
+                           </div>
+
+                           <div className="grid sm:grid-cols-2 gap-8">
+                                <ModeOption 
+                                    active={settings.attendanceMode === 0}
+                                    onClick={() => setSettings({...settings, attendanceMode: 0})}
+                                    icon={<Smartphone />}
+                                    title="Protocolo Min-Max"
+                                    description="Algoritmo balanceado que prioriza la primera y última marca. Filtra duplicados orgánicos."
+                                    badge="Smart Choice"
+                                    color="indigo"
+                                />
+                                <ModeOption 
+                                    active={settings.attendanceMode === 1}
+                                    onClick={() => setSettings({...settings, attendanceMode: 1})}
+                                    icon={<ListOrdered />}
+                                    title="Modo Secuencial"
+                                    description="Auditoría total de cada marca. Incluye almuerzos y permisos intermedios en reporte."
+                                    color="slate"
+                                />
+                           </div>
+                        </div>
+
+                         {/* 2. FLUJO DE APROBACIÓN */}
+                        <div className="backdrop-blur-xl bg-white/40 dark:bg-slate-800/40 p-10 md:p-14 rounded-[50px] border border-white/20 dark:border-white/5 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.1)]">
+                           <div className="flex items-center gap-6 mb-12">
+                                <div className="w-16 h-16 bg-amber-600/10 dark:bg-amber-400/10 rounded-3xl flex items-center justify-center text-amber-600 dark:text-amber-400">
+                                    <Shield size={32} />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black dark:text-white tracking-tight">Flujo de Aprobación</h2>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">Autoridad Normativa de Turnos</p>
+                                </div>
+                           </div>
+
+                           <div className="grid sm:grid-cols-2 gap-8">
+                                <ModeOption 
+                                    active={settings.shiftApprovalMode === 0}
+                                    onClick={() => setSettings({...settings, shiftApprovalMode: 0})}
+                                    icon={<Users />}
+                                    title="RH Central"
+                                    description="Control descentralizado total. Un único equipo de gestión aprueba toda la compañía."
+                                    color="amber"
+                                />
+                                <ModeOption 
+                                    active={settings.shiftApprovalMode === 1}
+                                    onClick={() => setSettings({...settings, shiftApprovalMode: 1})}
+                                    icon={<UserCheck />}
+                                    title="Nivel Distrital"
+                                    description="Escalamiento por jerarquía. Los supervisores validan su propio distrito operativo."
+                                    badge="Agile Flow"
+                                    color="emerald"
+                                />
+                           </div>
+                        </div>
+                    </div>
+
+                    {/* Right Column (Side Rules) */}
+                    <div className="lg:col-span-4 space-y-10">
+                        
+                        {/* 3. NOTIFICACIONES SMART */}
+                        <div className="backdrop-blur-xl bg-slate-900/90 dark:bg-slate-800/80 p-10 rounded-[50px] border border-white/10 shadow-2xl text-white">
+                            <div className="flex items-center gap-5 mb-10">
+                                <div className="w-14 h-14 bg-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-400 shadow-inner">
+                                    <Bell size={28} />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black tracking-tight">Alertas</h3>
+                                    <p className="text-[9px] text-indigo-400/60 font-black uppercase tracking-widest mt-0.5">Notificaciones Push/Email</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-10">
+                                <GlassToggle 
+                                    icon={<Mail size={20} />}
+                                    title="Reporte vía Email"
+                                    active={settings.enableEmailNotifications}
+                                    onChange={(val) => setSettings({...settings, enableEmailNotifications: val})}
+                                />
+                                <div className="h-px bg-white/5"></div>
+                                <GlassToggle 
+                                    icon={<Smartphone size={20} />}
+                                    title="Push App Móvil"
+                                    active={settings.enablePushNotifications}
+                                    onChange={(val) => setSettings({...settings, enablePushNotifications: val})}
+                                />
+                            </div>
+                            
+                            <div className="mt-12 p-6 bg-indigo-600/10 rounded-3xl border border-indigo-500/10">
+                                <div className="flex gap-4">
+                                    <Zap size={18} className="text-indigo-400 flex-shrink-0" />
+                                    <p className="text-[10px] font-bold text-indigo-200/50 leading-relaxed uppercase tracking-wider">
+                                        Las notificaciones se envían en milisegundos tras la aprobación de RH.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Audit Note */}
+                        <div className="bg-gradient-to-br from-indigo-600/5 to-transparent p-10 rounded-[50px] border border-indigo-500/5">
+                            <div className="flex items-start gap-5">
+                                <Info className="text-indigo-500 flex-shrink-0" size={24} />
+                                <div>
+                                    <h4 className="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest mb-3">Auditoría Inteligente</h4>
+                                    <p className="text-[11px] font-medium text-slate-400 leading-relaxed italic">
+                                        "Cualquier modificación en estos parámetros genera una entrada irreversible en el Log de Auditoría para trazabilidad legal."
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Premium Toast */}
+            {toast.show && (
+                <div className={`fixed bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-5 px-10 py-6 rounded-[30px] backdrop-blur-2xl shadow-[0_30px_100px_rgba(0,0,0,0.3)] animate-in slide-in-from-bottom-10 z-[10000] border border-white/20 ${toast.type === 'error' ? 'bg-rose-600/90 text-white' : 'bg-emerald-600/90 text-white'}`}>
+                    <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center">
+                        {toast.type === 'error' ? <AlertCircle size={22} /> : <CheckCircle size={22} />}
                     </div>
                     <div>
-                        <h1 className="text-3xl font-[950] tracking-tight text-slate-900 dark:text-white leading-none">
-                            Configuraciones <span className="text-indigo-600">Operativas</span>
-                        </h1>
-                        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 mt-3">Elite V13.0 Evolution: Control de asistencia</p>
+                        <p className="text-[11px] font-black uppercase tracking-[0.2em] mb-0.5">{toast.type === 'error' ? 'Fallo de Sistema' : 'Completado'}</p>
+                        <p className="text-xs font-bold opacity-90">{toast.message}</p>
                     </div>
-                </div>
-                
-                <button 
-                    onClick={handleSave}
-                    disabled={saving}
-                    className="group flex items-center justify-center gap-4 bg-indigo-600 hover:bg-black disabled:bg-slate-300 text-white px-10 py-5 rounded-[22px] font-black text-xs uppercase tracking-widest transition-all shadow-2xl shadow-indigo-200 dark:shadow-none hover:scale-105 active:scale-95"
-                >
-                    {saving ? <div className="animate-spin h-5 w-5 border-3 border-white rounded-full border-t-transparent"></div> : <Save size={20} className="group-hover:rotate-12 transition-transform" />}
-                    {saving ? 'Sincronizando' : 'Guardar Cambios'}
-                </button>
-            </div>
-
-            <div className="grid gap-10">
-                {/* Attendance Mode Section */}
-                <div className="bg-white dark:bg-slate-800 p-8 md:p-12 rounded-[40px] border border-slate-100 dark:border-slate-700/50 shadow-sm">
-                    <div className="flex items-center gap-5 mb-10">
-                        <div className="p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-3xl">
-                            <Clock className="text-indigo-600 dark:text-indigo-400" size={28} />
-                        </div>
-                        <div>
-                            <h2 className="text-2xl font-black dark:text-white tracking-tight">Motor de Asistencia</h2>
-                            <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">Algoritmo de consolidación de marcaciones</p>
-                        </div>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <ModeCard 
-                            active={settings.attendanceMode === 0}
-                            onClick={() => setSettings({...settings, attendanceMode: 0})}
-                            icon={<Smartphone size={28} />}
-                            title="Resumen Min-Max Absoluto"
-                            description="Toma solo la primera y última marca. Ideal para ignorar marcas de almuerzos o salidas cortas."
-                            badge="Recomendado"
-                            color="indigo"
-                        />
-                        <ModeCard 
-                            active={settings.attendanceMode === 1}
-                            onClick={() => setSettings({...settings, attendanceMode: 1})}
-                            icon={<ListOrdered size={28} />}
-                            title="Consolidación Secuencial"
-                            description="Registra cada par de entrada y salida cronológicamente. Reporte de tiempo total detallado."
-                            color="slate"
-                        />
-                    </div>
-                </div>
-
-                {/* Approval Flow Section */}
-                <div className="bg-white dark:bg-slate-800 p-8 md:p-12 rounded-[40px] border border-slate-100 dark:border-slate-700/50 shadow-sm">
-                    <div className="flex items-center gap-5 mb-10">
-                        <div className="p-4 bg-amber-50 dark:bg-amber-900/30 rounded-3xl">
-                            <Shield className="text-amber-600 dark:text-amber-400" size={28} />
-                        </div>
-                        <div>
-                            <h2 className="text-2xl font-black dark:text-white tracking-tight">Flujo de Aprobación</h2>
-                            <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">Autoridad validante de la programación semanal</p>
-                        </div>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <ModeCard 
-                            active={settings.shiftApprovalMode === 0}
-                            onClick={() => setSettings({...settings, shiftApprovalMode: 0})}
-                            icon={<Users size={28} />}
-                            title="RH Nacional"
-                            description="Un único usuario o equipo de Recursos Humanos aprueba los turnos de todas las sedes."
-                            color="amber"
-                        />
-                        <ModeCard 
-                            active={settings.shiftApprovalMode === 1}
-                            onClick={() => setSettings({...settings, shiftApprovalMode: 1})}
-                            icon={<UserCheck size={28} />}
-                            title="Gerencia Distrital"
-                            description="Cada supervisor de distrito valida exclusivamente la malla de sus tiendas asignadas."
-                            color="emerald"
-                        />
-                    </div>
-                </div>
-
-                {/* Notifications Section */}
-                <div className="bg-white dark:bg-slate-800 p-8 md:p-12 rounded-[40px] border border-slate-100 dark:border-slate-700/50 shadow-sm">
-                    <div className="flex items-center gap-5 mb-10">
-                        <div className="p-4 bg-emerald-50 dark:bg-emerald-900/30 rounded-3xl">
-                            <Bell className="text-emerald-600 dark:text-emerald-400" size={28} />
-                        </div>
-                        <div>
-                            <h2 className="text-2xl font-black dark:text-white tracking-tight">Reglas de Notificación</h2>
-                            <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">Automatización de correos y alertas push</p>
-                        </div>
-                    </div>
-
-                    <div className="space-y-8">
-                        <ToggleItem 
-                            icon={<Mail size={22} />}
-                            title="Notificaciones vía Email"
-                            description="Aviso inmediato a gerentes al momento de aprobación o rechazo de su programación."
-                            active={settings.enableEmailNotifications}
-                            onChange={(val) => setSettings({...settings, enableEmailNotifications: val})}
-                        />
-                        <div className="h-px bg-slate-100 dark:bg-slate-700/50"></div>
-                        <ToggleItem 
-                            icon={<Smartphone size={22} />}
-                            title="Push Masivo (App Mobile)"
-                            description="Envío de alerta inmediata a los empleados cuando sus turnos han sido aprobados."
-                            active={settings.enablePushNotifications}
-                            onChange={(val) => setSettings({...settings, enablePushNotifications: val})}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* Help Note Case Josefina */}
-            <div className="mt-12 p-8 bg-slate-900 text-slate-400 rounded-[32px] flex items-start gap-5 border-l-8 border-indigo-500">
-                <Info size={32} className="text-indigo-400 flex-shrink-0" />
-                <div>
-                    <h4 className="text-white font-black text-xs uppercase tracking-widest mb-1">Match Inteligente V13 Activo</h4>
-                    <p className="text-[11px] font-medium leading-relaxed opacity-80 uppercase tracking-tight">
-                        El sistema normaliza automáticamente las identificaciones (Cédulas) eliminando ceros redundantes. 
-                        Esto asegura que colaboradores como Josefine (ID 97707) sincronicen correctamente aunque el biométrico envíe 097707.
-                    </p>
-                </div>
-            </div>
-
-            {/* Toast System */}
-            {toast.show && (
-                <div className={`fixed bottom-12 right-12 flex items-center gap-4 px-10 py-6 rounded-[32px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] animate-in slide-in-from-bottom-10 font-black text-[11px] uppercase tracking-widest z-[9999] ${toast.type === 'error' ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'}`}>
-                    {toast.type === 'error' ? <AlertCircle size={20} /> : <CheckCircle size={20} />}
-                    {toast.message}
                 </div>
             )}
         </div>
     );
 };
 
-const ModeCard = ({ active, onClick, icon, title, description, badge, color }) => {
-    const themeCols = {
-        indigo: 'border-indigo-600 bg-indigo-500/5 ring-8 ring-indigo-500/5 text-indigo-600',
-        amber: 'border-amber-500 bg-amber-500/5 ring-8 ring-amber-500/5 text-amber-600',
-        emerald: 'border-emerald-500 bg-emerald-500/5 ring-8 ring-emerald-500/5 text-emerald-600',
-        slate: 'border-slate-500 bg-slate-500/5 ring-8 ring-slate-500/5 text-slate-600'
+const ModeOption = ({ active, onClick, icon, title, description, badge, color }) => {
+    const variants = {
+        indigo: 'border-indigo-500/50 bg-indigo-600 shadow-[0_15px_40px_rgba(79,70,229,0.3)] text-white',
+        amber: 'border-amber-500/50 bg-amber-500 shadow-[0_15px_40px_rgba(245,158,11,0.3)] text-white',
+        emerald: 'border-emerald-500/50 bg-emerald-600 shadow-[0_15px_40px_rgba(16,185,129,0.3)] text-white',
+        slate: 'border-slate-800 bg-slate-900 shadow-[0_15px_40px_rgba(15,23,42,0.3)] text-white'
     };
 
     return (
         <div 
             onClick={onClick}
-            className={`group relative p-8 rounded-[35px] border-3 cursor-pointer transition-all duration-500 hover:scale-[1.02] ${active ? themeCols[color] : 'border-slate-100 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-800/20'}`}
+            className={`group relative p-8 rounded-[40px] border-2 cursor-pointer transition-all duration-500 hover:scale-[1.03] ${active ? variants[color] : 'border-slate-100 dark:border-white/5 bg-white/50 dark:bg-slate-800/30'}`}
         >
             {badge && (
-                <span className="absolute -top-4 left-6 px-4 py-2 bg-indigo-600 text-[9px] font-black tracking-widest text-white rounded-xl shadow-lg shadow-indigo-500/30 z-10">
+                <div className={`absolute -top-3 left-8 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest z-10 shadow-xl ${active ? 'bg-white text-indigo-600' : 'bg-indigo-600 text-white'}`}>
                     {badge}
-                </span>
+                </div>
             )}
             <div className="flex flex-col gap-6">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform duration-500 group-hover:scale-110 flex-shrink-0 ${active ? 'bg-current text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-400'}`}>
-                    {icon}
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${active ? 'bg-white/20 scale-110' : 'bg-slate-100 dark:bg-slate-700/50 text-slate-400'}`}>
+                    {React.cloneElement(icon, { size: 28, strokeWidth: active ? 2.5 : 2 })}
                 </div>
                 <div>
-                    <h3 className={`text-lg font-black tracking-tight mb-2 ${active ? 'text-slate-900 dark:text-white' : 'text-slate-500'}`}>{title}</h3>
-                    <p className={`text-xs font-bold leading-relaxed ${active ? 'text-slate-700 dark:text-slate-400' : 'text-slate-500'}`}>{description}</p>
+                    <h3 className={`text-lg font-[950] tracking-tight mb-2 ${active ? 'text-white' : 'text-slate-800 dark:text-slate-200'}`}>{title}</h3>
+                    <p className={`text-[11px] font-bold leading-relaxed opacity-60 ${active ? 'text-white' : 'text-slate-500'}`}>{description}</p>
                 </div>
-                <div className={`w-6 h-6 rounded-full border-2 transition-all flex items-center justify-center ${active ? 'bg-current border-current' : 'border-slate-300 dark:border-slate-600'}`}>
-                    {active && <CheckCircle size={14} className="text-white" />}
+                <div className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center ${active ? 'border-white bg-white text-indigo-600' : 'border-slate-200 dark:border-white/10'}`}>
+                    {active && <CheckCircle size={16} strokeWidth={3} />}
                 </div>
             </div>
         </div>
     );
 };
 
-const ToggleItem = ({ icon, title, description, active, onChange }) => {
+const GlassToggle = ({ icon, title, active, onChange }) => {
     return (
-        <div className="flex items-center justify-between gap-6 group w-full">
-            <div className="flex items-center gap-4 flex-1 min-w-0">
-                <div className={`p-4 rounded-2xl transition-all duration-300 flex-shrink-0 ${active ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-500/20 scale-105' : 'bg-slate-100 dark:bg-slate-700 text-slate-400'}`}>
+        <div className="flex items-center justify-between group cursor-pointer" onClick={() => onChange(!active)}>
+            <div className="flex items-center gap-5">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${active ? 'bg-indigo-500 text-white shadow-xl shadow-indigo-500/40 scale-110' : 'bg-white/5 text-slate-500'}`}>
                     {icon}
                 </div>
-                <div className="flex-1 min-w-0">
-                    <h3 className="font-[950] text-slate-900 dark:text-white text-base tracking-tight mb-0.5 truncate">{title}</h3>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest line-clamp-2">{description}</p>
-                </div>
+                <span className={`text-[13px] font-black tracking-tight transition-colors ${active ? 'text-white' : 'text-slate-500'}`}>{title}</span>
             </div>
-            <button 
-                onClick={() => onChange(!active)}
-                className={`w-20 h-10 rounded-full p-1.5 transition-all duration-500 shadow-inner relative flex-shrink-0 ${active ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'}`}
-            >
-                <div className={`w-7 h-7 rounded-full bg-white shadow-2xl transition-all duration-500 transform ${active ? 'translate-x-10 scale-110' : 'translate-x-0'}`}></div>
-            </button>
+            <div className={`w-16 h-8 rounded-full p-1.5 transition-all duration-500 relative ${active ? 'bg-indigo-500 shadow-lg shadow-indigo-500/30' : 'bg-white/10 bg-inner'}`}>
+                <div className={`w-5 h-5 rounded-full bg-white shadow-xl transition-all duration-500 transform ${active ? 'translate-x-8 scale-110' : 'translate-x-0'}`}></div>
+            </div>
         </div>
     );
 };

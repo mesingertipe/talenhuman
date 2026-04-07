@@ -1049,6 +1049,49 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                             </div>
                         </div>
 
+                        {/* V13.0 TOP APPROVAL BAR - REUBICADA POR UX */}
+                        {isApprover && shifts.some(s => s.status === 0) && (
+                            <div style={{ 
+                                background: isDarkMode ? 'rgba(79, 70, 229, 0.1)' : 'rgba(79, 70, 229, 0.05)', 
+                                backdropFilter: 'blur(10px)',
+                                border: `1px solid ${activeColors.accent}30`, 
+                                borderRadius: '32px', 
+                                padding: '16px 24px', 
+                                marginTop: '24px',
+                                display: 'flex', 
+                                justifyContent: 'space-between', 
+                                alignItems: 'center',
+                                boxShadow: '0 15px 35px rgba(79, 70, 229, 0.08)' 
+                            }} className="animate-in slide-in-from-top-6 duration-700">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                    <div style={{ width: '48px', height: '48px', background: activeColors.accent, borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 8px 20px rgba(79, 70, 229, 0.3)' }}>
+                                        <ShieldCheck size={24} strokeWidth={2.5} />
+                                    </div>
+                                    <div>
+                                        <p style={{ margin: 0, fontWeight: '950', color: activeColors.textMain, fontSize: '0.9rem', letterSpacing: '-0.02em' }}>Pendiente de Aprobación</p>
+                                        <p style={{ margin: 0, fontWeight: '700', color: activeColors.textMuted, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Malla lista para validación administrativa</p>
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: '12px' }}>
+                                    <button 
+                                        onClick={() => handleRejectAll()}
+                                        className="btn-premium"
+                                        style={{ background: isDarkMode ? 'rgba(239, 68, 68, 0.15)' : '#fee2e2', color: '#ef4444', border: 'none', height: '44px', padding: '0 20px', borderRadius: '16px', fontWeight: '950', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }}
+                                    >
+                                        <XCircle size={16} strokeWidth={2.5} /> RECHAZAR
+                                    </button>
+                                    <button 
+                                        onClick={handleApproveAll}
+                                        className="btn-premium"
+                                        style={{ background: activeColors.accent, color: 'white', border: 'none', height: '44px', padding: '0 24px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(79, 70, 229, 0.4)', fontWeight: '950', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }}
+                                    >
+                                        <CheckCircle size={16} strokeWidth={2.5} /> APROBAR SEMANA
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+
                     </div>
 
                     {/* Fila Opcional: Contador Flotante Minimalista */}
@@ -1459,37 +1502,6 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
             {/* Global Portals */}
             {createPortal(
                 <>
-                    {/* V13.0 APPROVAL BAR */}
-                    {isApprover && shifts.some(s => s.status === 0) && (
-                        <div style={{ background: activeColors.accentSoft, border: `1px solid ${activeColors.accent}`, borderRadius: '24px', padding: '20px 30px', marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} className="animate-in slide-in-from-top-4 duration-500">
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                <div style={{ width: '44px', height: '44px', background: 'white', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.accent, boxShadow: '0 5px 15px rgba(0,0,0,0.05)' }}>
-                                    <ShieldCheck size={24} />
-                                </div>
-                                <div>
-                                    <p style={{ margin: 0, fontWeight: '950', color: activeColors.accent, fontSize: '0.95rem' }}>Aprobaciones Pendientes</p>
-                                    <p style={{ margin: 0, fontWeight: '700', color: activeColors.textMuted, fontSize: '0.75rem' }}>Revisa la malla de turnos y toma una decisión administrativa.</p>
-                                </div>
-                            </div>
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <button 
-                                    onClick={() => handleRejectAll()}
-                                    className="btn-premium"
-                                    style={{ background: '#fee2e2', color: '#ef4444', border: 'none', height: '48px', padding: '0 25px', borderRadius: '14px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '10px' }}
-                                >
-                                    <XCircle size={18} /> Rechazar Malla
-                                </button>
-                                <button 
-                                    onClick={handleApproveAll}
-                                    className="btn-premium"
-                                    style={{ background: activeColors.accent, color: 'white', border: 'none', height: '48px', padding: '0 25px', borderRadius: '14px', boxShadow: '0 10px 20px rgba(79, 70, 229, 0.3)', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '10px' }}
-                                >
-                                    <CheckCircle size={18} /> Aprobar Todo
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
                     {/* V13.0 ELITE APPROVAL MODAL */}
                     {showApprovalModal && (
                         <div style={{ position: 'fixed', inset: 0, zIndex: 200000, background: 'rgba(6, 9, 20, 0.6)', backdropFilter: 'blur(15px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} className="animate-in fade-in duration-300">
