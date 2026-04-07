@@ -145,12 +145,12 @@ public static class DbInitializer
             new { Module = "SYSTEM", Sub = "COMPANIES" },
             new { Module = "SYSTEM", Sub = "SYSTEM_CONFIG" },
             new { Module = "SYSTEM", Sub = "OPERATIONAL_SETTINGS" }
-        };
-
-        // Seed Permission Matrix for Company if it doesn't have any
-        if (!await context.ModulePermissions.IgnoreQueryFilters().AnyAsync(p => p.CompanyId == companyId))
+        }        // Seed Permission Matrix for EACH company to ensure new sub-modules are included
+        var companyIds = await context.Companies.IgnoreQueryFilters().Select(c => c.Id).ToListAsync();
+        foreach (var cId in companyIds) 
         {
-            foreach (var role in roles)
+            var companyRoles = roles.Where(r => r.CompanyId == cId || r.Name == "SuperAdmin").ToList();
+            foreach (var role in companyRoles)
             {
                 foreach (var item in subModules)
                 {
@@ -164,50 +164,27 @@ public static class DbInitializer
 
                     if (mid == Guid.Empty) continue;
 
-                    if (role.Name == "SuperAdmin" || role.Name == "Admin")
+                    // 1. Grant ALL to Admin/SuperAdmin/RH (V13.0 Policy)
+                    if (role.Name == "SuperAdmin" || role.Name == "Admin" || role.Name == "RH")
                     {
                         foreach (PermissionAction action in Enum.GetValues(typeof(PermissionAction)))
                         {
-                            context.ModulePermissions.Add(new ModulePermission { 
-                                RoleId = role.Id, ModuleId = mid, SubModuleCode = item.Sub,
-                                Action = action, IsAllowed = true, 
-                                CompanyId = companyId 
-                            });
-                        }
-                    }
-                    else if (role.Name == "Gerente")
-                    {
-                        if (item.Sub == "EMPLOYEES" || item.Module == "OPERATIONS")
-                        {
-                             context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mid, SubModuleCode = item.Sub, Action = PermissionAction.Read, IsAllowed = true, CompanyId = companyId });
-                             if (item.Module == "OPERATIONS")
-                                context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mid, SubModuleCode = item.Sub, Action = PermissionAction.Create, IsAllowed = true, CompanyId = companyId });
-                        }
-                    }
-                    else if (role.Name == "Distrital")
-                    {
-                        if (item.Sub == "EMPLOYEES" || item.Module == "OPERATIONS")
-                        {
-                             context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mid, SubModuleCode = item.Sub, Action = PermissionAction.Read, IsAllowed = true, CompanyId = companyId });
-                             context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mid, SubModuleCode = item.Sub, Action = PermissionAction.Export, IsAllowed = true, CompanyId = companyId });
-                             
-                             if (item.Sub == "SHIFT_APPROVAL")
-                                context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mid, SubModuleCode = item.Sub, Action = PermissionAction.Update, IsAllowed = true, CompanyId = companyId });
-                        }
-                    }
-                    else if (role.Name == "RH")
-                    {
-                        if (item.Sub == "EMPLOYEES" || item.Module == "OPERATIONS" || item.Sub == "OPERATIONAL_SETTINGS")
-                        {
-                             context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mid, SubModuleCode = item.Sub, Action = PermissionAction.Read, IsAllowed = true, CompanyId = companyId });
-                             
-                             if (item.Sub == "SHIFT_APPROVAL" || item.Sub == "OPERATIONAL_SETTINGS")
-                                context.ModulePermissions.Add(new ModulePermission { RoleId = role.Id, ModuleId = mid, SubModuleCode = item.Sub, Action = PermissionAction.Update, IsAllowed = true, CompanyId = companyId });
+                            var exists = await context.ModulePermissions.IgnoreQueryFilters()
+                                .AnyAsync(p => p.CompanyId == cId && p.RoleId == role.Id && p.ModuleId == mid && p.SubModuleCode == item.Sub && p.Action == action);
+                            
+                            if (!exists) 
+                            {
+                                context.ModulePermissions.Add(new ModulePermission { 
+                                    RoleId = role.Id, ModuleId = mid, SubModuleCode = item.Sub,
+                                    Action = action, IsAllowed = true, 
+                                    CompanyId = cId 
+                                });
+                            }
                         }
                     }
                 }
             }
-            await context.SaveChangesAsync();
         }
+        await context.SaveChangesAsync();
     }
 }

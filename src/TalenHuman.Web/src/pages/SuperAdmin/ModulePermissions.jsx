@@ -32,6 +32,7 @@ const ModulePermissions = ({ user }) => {
     ],
     'OPERATIONS': [
       { code: 'SHIFTS', name: 'Programación Turnos', icon: Activity, desc: 'Malla horaria y asignaciones' },
+      { code: 'SHIFT_APPROVAL', name: 'Aprobación de Turnos', icon: CheckCircle, desc: 'Flujo jerárquico de validación (RH/Distrital)' },
       { code: 'RECORDS', name: 'Marcaciones/Asistencia', icon: Fingerprint, desc: 'Registro de entradas y salidas' },
       { code: 'NOVELTIES', name: 'Gestión Novedades', icon: FileText, desc: 'Procesamiento de novedades e incidencias' }
     ],
@@ -49,6 +50,7 @@ const ModulePermissions = ({ user }) => {
     'SYSTEM': [
       { code: 'USERS', name: 'Usuarios Sistema', icon: Users, desc: 'Cuentas de acceso a la plataforma' },
       { code: 'PERMISSIONS', name: 'Matriz Permisos', icon: Shield, desc: 'Configuración de seguridad granular' },
+      { code: 'OPERATIONAL_SETTINGS', name: 'Configuraciones Operativas', icon: Settings, desc: 'Reglas de negocio (Min-Max, Flujos Aprobación)' },
       { code: 'AUDIT', name: 'Logs Auditoría', icon: Terminal, desc: 'Trazabilidad de acciones del sistema' },
       { code: 'COMPANIES', name: 'Gestión Empresas', icon: Building2, desc: 'Configuración de tenants multi-empresa' },
       { code: 'SYSTEM_CONFIG', name: 'Configuración Global', icon: Settings, desc: 'Parámetros técnicos del núcleo' }
