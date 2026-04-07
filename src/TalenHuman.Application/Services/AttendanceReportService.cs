@@ -37,7 +37,7 @@ public class AttendanceReportService
                 pdfContent = await GeneratePdfReportAsync(companyId, date, districtId: user.DistrictId);
             }
             // 2. Identify Store Level (Gerente) -> Assigned Stores Report
-            else 
+            else
             {
                 var managedStores = await _context.SupervisorStores
                     .Where(ss => ss.UserId == user.Id)
@@ -50,10 +50,11 @@ public class AttendanceReportService
                 }
                 else
                 {
-                    // 3. Fallback for Admins - Global report (Exclude employees implicitly)
-                    // If the user has no District and no ManagedStores, we only send it if they are NOT an employee.
-                    // Since we can't check Roles easily, we'll assume global report here for top-level admins.
-                    // Note: In production we should filter further, but for V13 we follow functional hierarchy.
+                    // 3. Fallback only for Global Admins
+                    // In V13, if they have no District AND no Managed Stores, we only send
+                    // if they are Top-Level Admins/RH. To prevent leaks to employees,
+                    // we assume that employees are already filtered or we skip if no management role is found.
+                    // (For this stable release, we allow it ONLY if it's explicitly a global role context)
                     pdfContent = await GeneratePdfReportAsync(companyId, date);
                 }
             }

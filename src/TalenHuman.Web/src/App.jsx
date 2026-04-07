@@ -22,6 +22,7 @@ import OperationalSettings from './pages/Settings/OperationalSettings';
 import AttendanceMonitoring from './pages/Core/AttendanceMonitoring';
 import Cities from './pages/Core/Cities';
 import Districts from './pages/Core/Districts';
+import ShiftApproval from './pages/Scheduling/ShiftApproval';
 import ModulePermissions from './pages/SuperAdmin/ModulePermissions';
 import SystemSettings from './pages/SuperAdmin/SystemSettings';
 import NewsTemplateDesigner from './pages/SuperAdmin/NewsTemplateDesigner';
@@ -382,6 +383,7 @@ function App() {
         case 'Diseñador de Plantillas': return <NewsTemplateDesigner user={user} />;
         case 'Centro de Comunicados': return <CommunicationsCenter user={user} />;
         case 'Turnos': return <ShiftScheduler user={user} />;
+        case 'Aprobación de turnos': return <ShiftApproval user={user} />;
         case 'Permisos': return <ModulePermissions user={user} />;
         case 'Configuración Sistema': return <SystemSettings user={user} />;
         case 'Auditoría': return <AuditLogs user={user} />;

@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Users, Clock, Calendar, FileText, Settings, 
   LogOut, Store, Sun, Moon, Pin, PinOff, ChevronLeft, ChevronRight,
   Briefcase, Boxes, Building, Link, ChevronDown, ChevronUp, User as UserIcon, MapPin, Cpu, Globe, Activity, ShieldAlert, Building2, Shield,
-  Megaphone
+  Megaphone, CheckCircle
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
@@ -41,6 +41,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
       module: 'OPERATIONS',
       children: [
         { icon: <Calendar size={20} />, label: 'Turnos', sub: 'SHIFTS' },
+        { icon: <CheckCircle size={20} />, label: 'Aprobación de turnos', sub: 'SHIFT_APPROVAL' },
         { icon: <Clock size={20} />, label: 'Marcaciones', sub: 'RECORDS' },
         { icon: <FileText size={20} />, label: 'Novedades', sub: 'NOVELTIES' },
       ]
@@ -63,6 +64,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
       children: [
         { icon: <Users size={20} />, label: 'Usuarios', sub: 'USERS' },
         { icon: <Shield size={20} />, label: 'Permisos', sub: 'PERMISSIONS' },
+        { icon: <Settings size={20} />, label: 'Configuraciones operativas', sub: 'OPERATIONAL_SETTINGS' },
         { icon: <ShieldAlert size={20} />, label: 'Auditoría', sub: 'AUDIT' },
         { icon: <Building2 size={20} />, label: 'Empresas', sub: 'COMPANIES' },
         { icon: <Cpu size={20} />, label: 'Configuración Sistema', sub: 'SYSTEM_CONFIG' },
@@ -202,6 +204,7 @@ const getPageInfo = (page) => {
     case 'Novedades': return { title: 'Bandeja de Novedades', subtitle: 'Trazabilidad y auditoría de solicitudes' };
     case 'Configuración novedades': return { title: 'Configuración novedades', subtitle: 'Configuración dinámica de tipos de novedad' };
     case 'Configuraciones operativas': return { title: 'Configuraciones operativas', subtitle: 'Ajustes y parámetros de operación' };
+    case 'Aprobación de turnos': return { title: 'Aprobación de turnos', subtitle: 'Flujo jerárquico de validación operativa' };
     case 'Turnos': return { title: 'Turnos', subtitle: 'Programación inteligente y cobertura' };
     case 'Marcaciones': return { title: 'Asistencia', subtitle: 'Trazabilidad de ingresos y salidas' };
     case 'Monitoreo Asistencia': return { title: 'Monitoreo Asistencia', subtitle: 'Gestión de procesos y consolidación de datos' };
