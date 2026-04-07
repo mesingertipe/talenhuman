@@ -570,8 +570,6 @@ const Stores = ({ user }) => {
                        <span style={{ fontWeight: '950', color: activeColors.textMain }}>ALERTA DE SEGURIDAD:</span> Los cambios en el mapeo de marcaciones afectarán la consolidación de asistencia de forma retroactiva para los periodos abiertos.
                      </p>
                   </div>
-
-                </div>
                 
                 <div style={{ display: 'flex', gap: '24px', paddingTop: '60px' }}>
                   <button 
