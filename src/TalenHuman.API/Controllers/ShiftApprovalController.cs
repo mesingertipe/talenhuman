@@ -11,7 +11,7 @@ namespace TalenHuman.API.Controllers;
 
 [Authorize]
 [ApiController]
-[Route("api/ShiftApproval")]
+[Route("api/[controller]")]
 public class ShiftApprovalController : ControllerBase
 {
     private readonly IApplicationDbContext _context;
@@ -37,10 +37,16 @@ public class ShiftApprovalController : ControllerBase
     public async Task<IActionResult> GetPendingStores()
     {
         var companyId = _tenantProvider.GetTenantId();
-        var userClaimId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
+        var userClaimIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userClaimIdString)) return Unauthorized();
+        
+        var userClaimId = Guid.Parse(userClaimIdString);
+        
+        // 🚀 BYPASS ADMINISTRATIVO: Si es Admin/SuperAdmin, no bloqueamos si el perfil extendido no carga
+        bool isTopAdmin = User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
         
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userClaimId);
-        if (user == null) return Unauthorized();
+        if (user == null && !isTopAdmin) return Unauthorized();
 
         // 1. Get operational settings
         var settings = await _context.OperationalSettings
@@ -59,7 +65,7 @@ public class ShiftApprovalController : ControllerBase
         bool isTopAdmin = User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
         
         if (approvalMode == ShiftApprovalMode.District && !isTopAdmin) {
-            if (user.DistrictId.HasValue) {
+            if (user != null && user.DistrictId.HasValue) {
                 query = query.Where(s => s.Store.DistrictId == user.DistrictId);
             } else {
                 // If it's district mode but supervisor has no district, they see nothing pending
@@ -86,7 +92,9 @@ public class ShiftApprovalController : ControllerBase
     public async Task<IActionResult> ApproveShifts([FromBody] ApprovalRequest request)
     {
         var companyId = _tenantProvider.GetTenantId();
-        var approverId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
+        var approverIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(approverIdString)) return Unauthorized();
+        var approverId = Guid.Parse(approverIdString);
 
         var shifts = await _context.Shifts
             .Where(s => s.CompanyId == companyId && 
@@ -171,7 +179,9 @@ public class ShiftApprovalController : ControllerBase
             return BadRequest("El comentario de rechazo es obligatorio.");
 
         var companyId = _tenantProvider.GetTenantId();
-        var approverId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
+        var approverIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(approverIdString)) return Unauthorized();
+        var approverId = Guid.Parse(approverIdString);
 
         var shifts = await _context.Shifts
             .Where(s => s.CompanyId == companyId && 

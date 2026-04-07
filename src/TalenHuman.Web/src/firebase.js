@@ -131,7 +131,7 @@ export const onMessageListener = (callback) => {
     if (currentOnMessageUnsubscribe) currentOnMessageUnsubscribe();
     currentOnMessageUnsubscribe = onMessage(messaging, (payload) => {
         console.log('🔥 FCM Message Received:', payload);
-        if (callback) callback(payload);
+        if (payload && callback) callback(payload);
     });
     
     return () => {

@@ -108,11 +108,11 @@ const OperationalSettings = () => {
                     <button 
                         onClick={handleSave}
                         disabled={saving}
-                        className="group relative flex items-center gap-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-12 py-6 rounded-[28px] font-black text-[11px] uppercase tracking-[0.2em] transition-all overflow-hidden shadow-2xl hover:scale-105 active:scale-95 disabled:grayscale"
+                        className="group relative flex items-center gap-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-8 py-4 rounded-[22px] font-black text-[10px] uppercase tracking-[0.2em] transition-all overflow-hidden shadow-2xl hover:scale-105 active:scale-95 disabled:grayscale"
                     >
                         <div className="absolute inset-0 bg-indigo-600 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
-                        <span className="relative z-10 flex items-center gap-5">
-                            {saving ? <div className="animate-spin h-5 w-5 border-3 border-current rounded-full border-t-transparent"></div> : <Save size={20} className="group-hover:rotate-12 transition-transform" />}
+                        <span className="relative z-10 flex items-center gap-4">
+                            {saving ? <div className="animate-spin h-4 w-4 border-2 border-current rounded-full border-t-transparent"></div> : <Save size={18} className="group-hover:rotate-12 transition-transform" />}
                             {saving ? 'Sincronizando' : 'Sincronizar Cloud'}
                         </span>
                     </button>
@@ -123,9 +123,10 @@ const OperationalSettings = () => {
                     {/* Left Column (Main Rules) */}
                     <div className="lg:col-span-8 space-y-10">
                         {/* 1. MOTOR DE ASISTENCIA */}
-                        <div className="backdrop-blur-xl bg-white/40 dark:bg-slate-800/40 p-10 md:p-14 rounded-[50px] border border-white/20 dark:border-white/5 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.1)] relative overflow-hidden group">
-                           <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
-                                <Database size={150} />
+                        <div className="backdrop-blur-2xl bg-white/40 dark:bg-slate-800/50 p-10 md:p-14 rounded-[60px] border border-white/20 dark:border-white/5 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.1)] relative overflow-hidden group">
+                           {/* Background Decorative Icon - Moved and dimmed */}
+                           <div className="absolute bottom-[-40px] right-[-40px] opacity-[0.03] group-hover:opacity-[0.06] transition-all duration-1000 pointer-events-none rotate-12">
+                                <Database size={240} />
                            </div>
                            
                            <div className="flex items-center gap-6 mb-12">
@@ -280,20 +281,22 @@ const ModeOption = ({ active, onClick, icon, title, description, badge, color })
             className={`group relative p-8 rounded-[40px] border-2 cursor-pointer transition-all duration-500 hover:scale-[1.03] ${active ? variants[color] : 'border-slate-100 dark:border-white/5 bg-white/50 dark:bg-slate-800/30'}`}
         >
             {badge && (
-                <div className={`absolute -top-3 left-8 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest z-10 shadow-xl ${active ? 'bg-white text-indigo-600' : 'bg-indigo-600 text-white'}`}>
+                <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest z-20 shadow-2xl border border-white/20 ${active ? 'bg-indigo-900/40 backdrop-blur-md text-white' : 'bg-indigo-600 text-white'}`}>
                     {badge}
                 </div>
             )}
-            <div className="flex flex-col gap-6">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${active ? 'bg-white/20 scale-110' : 'bg-slate-100 dark:bg-slate-700/50 text-slate-400'}`}>
-                    {React.cloneElement(icon, { size: 28, strokeWidth: active ? 2.5 : 2 })}
+            <div className={`flex flex-col h-full gap-8 ${badge ? 'pt-6' : ''}`}>
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-500 ${active ? 'bg-white/10 scale-110' : 'bg-slate-100/50 dark:bg-slate-700/30 text-slate-400'}`}>
+                    {React.cloneElement(icon, { size: 32, strokeWidth: active ? 2.5 : 2 })}
                 </div>
                 <div>
-                    <h3 className={`text-lg font-[950] tracking-tight mb-2 ${active ? 'text-white' : 'text-slate-800 dark:text-slate-200'}`}>{title}</h3>
-                    <p className={`text-[11px] font-bold leading-relaxed opacity-60 ${active ? 'text-white' : 'text-slate-500'}`}>{description}</p>
+                    <h3 className={`text-xl font-[1000] tracking-tight mb-3 ${active ? 'text-white' : 'text-slate-800 dark:text-slate-200'}`}>{title}</h3>
+                    <p className={`text-[12px] font-bold leading-relaxed transition-opacity ${active ? 'text-white/70' : 'text-slate-400 dark:text-slate-500'}`}>{description}</p>
                 </div>
-                <div className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center ${active ? 'border-white bg-white text-indigo-600' : 'border-slate-200 dark:border-white/10'}`}>
-                    {active && <CheckCircle size={16} strokeWidth={3} />}
+                <div className="mt-auto flex justify-end">
+                    <div className={`w-10 h-10 rounded-2xl border-2 transition-all flex items-center justify-center ${active ? 'border-white/40 bg-white/10 text-white' : 'border-slate-200 dark:border-white/5'}`}>
+                        {active && <CheckCircle size={20} strokeWidth={3} />}
+                    </div>
                 </div>
             </div>
         </div>
