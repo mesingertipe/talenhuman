@@ -57,6 +57,7 @@ public class ShiftApprovalController : ControllerBase
         // 2. Fetch pending stores with hierarchy logic
         var query = _context.Shifts
             .Include(s => s.Store)
+                .ThenInclude(st => st.District)
             .Include(s => s.Employee)
             .Where(s => s.CompanyId == companyId && s.Status == ShiftStatus.PendingApproval);
 
@@ -73,13 +74,21 @@ public class ShiftApprovalController : ControllerBase
         }
 
         var pendingStores = await query
-            .GroupBy(s => new { s.StoreId, s.Store.Name })
+            .GroupBy(s => new { 
+                s.StoreId, 
+                s.Store.Name, 
+                s.Store.ExternalId, 
+                DistrictName = s.Store.District != null ? s.Store.District.Name : "SIN DISTRITO" 
+            })
             .Select(g => new {
                 StoreId = g.Key.StoreId,
-                StoreName = g.Key.Name,
+                Name = g.Key.Name,
+                ExternalId = g.Key.ExternalId,
+                DistrictName = g.Key.DistrictName,
                 PendingCount = g.Count(),
                 MinDate = g.Min(s => s.StartTime),
-                MaxDate = g.Max(s => s.StartTime)
+                MaxDate = g.Max(s => s.StartTime),
+                LastUploadAt = g.Max(s => s.CreatedAt)
             })
             .ToListAsync();
 
