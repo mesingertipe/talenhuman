@@ -103,12 +103,22 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     useEffect(() => {
         if (initialDate) {
             const requestedDate = new Date(initialDate);
-            const today = new Date();
-            // Calculate how many weeks away initialDate is from today's week
-            // This is a simplified calculation
-            const diffDays = (requestedDate - today) / (1000 * 60 * 60 * 24);
-            const weeks = Math.round(diffDays / 7);
-            setWeekOffset(weeks);
+            requestedDate.setHours(0, 0, 0, 0); // Limpiar horas para precisión
+            
+            // Hallar el lunes de la semana de hoy (el 0 de offset)
+            const todayMonday = getMonday(0);
+            
+            // Hallar el lunes de la semana solicitada
+            const dayOfRequested = requestedDate.getDay() || 7;
+            const requestedMonday = new Date(requestedDate);
+            requestedMonday.setDate(requestedDate.getDate() - dayOfRequested + 1);
+            requestedMonday.setHours(0, 0, 0, 0);
+
+            // Calcular diferencia de semanas exacta
+            const diffTime = requestedMonday - todayMonday;
+            const diffWeeks = Math.round(diffTime / (1000 * 60 * 60 * 24 * 7));
+            
+            setWeekOffset(diffWeeks);
         }
     }, [initialDate]);
 
@@ -144,6 +154,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             const isManager = user?.roles?.includes('Gerente');
             const isDistrital = user?.roles?.includes('Distrital');
             let filteredStores = res.data.filter(s => s.isActive);
+            setStores(filteredStores);
+
+            // V18.8.4: BLINDAJE DE INSPECCIÓN - Evitar sobreescritura automática de la sede
+            if (initialStoreId) {
+                setSelectedStore(initialStoreId);
+                return;
+            }
 
             if (isManager && user?.storeId) {
                 filteredStores = filteredStores.filter(s => s.id === user.storeId);
@@ -154,7 +171,6 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 setStores(filteredStores);
                 if (filteredStores.length > 0) setSelectedStore(filteredStores[0].id);
             } else {
-                setStores(filteredStores);
                 if (filteredStores.length > 0) setSelectedStore(filteredStores[0].id);
             }
         });
