@@ -161,15 +161,17 @@ public class ShiftApprovalController : ControllerBase
         if (string.IsNullOrEmpty(approverIdString)) return Unauthorized();
         var approverId = Guid.Parse(approverIdString);
 
-        // V18.10.6: BLINDAJE DE LIMPIEZA - Capturar todos los turnos del rango que NO estén ya aprobados
-        // para asegurar que la sede salga de la lista de pendientes.
-        var shifts = await _context.Shifts
+        // V18.10.8: SINCRONIZACIÓN TOTAL - Capturar todos los turnos del periodo agrupado
+        var allStoreShifts = await _context.Shifts
             .Where(s => s.CompanyId == companyId && 
-                        s.StoreId == request.StoreId && 
-                        s.StartTime >= request.StartDate && 
-                        s.StartTime < request.EndDate &&
+                        s.StoreId == request.StoreId &&
                         s.Status != ShiftStatus.Approved) 
             .ToListAsync();
+            
+        var shifts = allStoreShifts.Where(s => {
+            var weekStart = s.StartTime.Date.AddDays(-((int)s.StartTime.DayOfWeek == 0 ? 6 : (int)s.StartTime.DayOfWeek - 1));
+            return weekStart == request.StartDate.Date;
+        }).ToList();
 
         if (!shifts.Any()) return NotFound("No hay turnos pendientes para este rango.");
 
@@ -256,13 +258,18 @@ public class ShiftApprovalController : ControllerBase
     {
         var companyId = _tenantProvider.GetTenantId();
         
-        // V18.10.1: PRECISIÓN TOTAL - Consistencia de rango para el planificador
+        // V18.10.8: SINCRONIZACIÓN TOTAL - Usar la misma lógica de WeekStart que la consola principal
+        // para asegurar que los turnos de borde (Domingo noche) se cuenten en el mismo grupo.
         var shifts = await _context.Shifts
             .Where(s => s.CompanyId == companyId && 
-                        s.StoreId == storeId && 
-                        s.StartTime >= startDate && 
-                        s.StartTime < endDate)
+                        s.StoreId == storeId)
             .ToListAsync();
+            
+        // Filtrar en memoria para usar exactamente el mismo cálculo de agrupación
+        shifts = shifts.Where(s => {
+            var weekStart = s.StartTime.Date.AddDays(-((int)s.StartTime.DayOfWeek == 0 ? 6 : (int)s.StartTime.DayOfWeek - 1));
+            return weekStart == startDate.Date;
+        }).ToList();
 
         if (!shifts.Any()) 
             return Ok(new { Status = "Empty", Message = "No hay turnos cargados" });
@@ -295,15 +302,17 @@ public class ShiftApprovalController : ControllerBase
         if (string.IsNullOrEmpty(approverIdString)) return Unauthorized();
         var approverId = Guid.Parse(approverIdString);
 
-        // V18.10.1: PRECISIÓN TOTAL - Usar DateTime directo para rechazos consistentes
-        // V18.10.6: BLINDAJE DE LIMPIEZA - Capturar todos los turnos del rango que NO estén ya aprobados
-        var shifts = await _context.Shifts
+        // V18.10.8: SINCRONIZACIÓN TOTAL - Capturar todos los turnos del periodo agrupado para rechazo
+        var allStoreShifts = await _context.Shifts
             .Where(s => s.CompanyId == companyId && 
-                        s.StoreId == request.StoreId && 
-                        s.StartTime >= request.StartDate && 
-                        s.StartTime < request.EndDate &&
+                        s.StoreId == request.StoreId &&
                         s.Status != ShiftStatus.Approved) 
             .ToListAsync();
+            
+        var shifts = allStoreShifts.Where(s => {
+            var weekStart = s.StartTime.Date.AddDays(-((int)s.StartTime.DayOfWeek == 0 ? 6 : (int)s.StartTime.DayOfWeek - 1));
+            return weekStart == request.StartDate.Date;
+        }).ToList();
 
         if (!shifts.Any()) return NotFound("No hay turnos pendientes para este rango.");
 
