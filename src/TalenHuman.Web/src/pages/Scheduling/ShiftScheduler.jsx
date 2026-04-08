@@ -1939,9 +1939,20 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                             </div>
                         </div>
                     )}
-                    {/* V17.9 ELITE SYNC MONITOR - IMPACTFUL PROGRESS */}
+                    {/* V18.5 ELITE SYNC MONITOR - BRUTE FORCE POSITIONING */}
                     {isSaving && createPortal(
-                        <div className="fixed inset-0 z-[9999999] flex items-center justify-center p-6 bg-indigo-950/40 backdrop-blur-2xl animate-in fade-in duration-700">
+                        <div style={{
+                            position: 'fixed',
+                            inset: 0,
+                            zIndex: 9999999,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '1.5rem',
+                            background: 'rgba(30, 27, 75, 0.85)', // Indigo 950 with 85% opacity
+                            backdropFilter: 'blur(16px)',
+                            WebkitBackdropFilter: 'blur(16px)'
+                        }} className="animate-in fade-in duration-700">
                              <div className="bg-white dark:bg-[#0f172a] w-full max-w-md rounded-[48px] shadow-[0_50px_100px_rgba(0,0,0,0.6)] border border-white/20 p-12 text-center animate-in zoom-in-95 duration-500">
                                 <div className="relative mb-10 w-28 h-28 mx-auto">
                                     {/* Rotating Outer Ring */}
