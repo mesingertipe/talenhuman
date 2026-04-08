@@ -44,7 +44,7 @@ import HelpIcon from '../../components/Shared/HelpIcon';
 import { formatTenantDate } from '../../utils/localization';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
 
-const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId = null, initialDate = null }) => {
+const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId = null, initialDate = null, forceApprover = false }) => {
     const { isDarkMode } = useTheme();
     
     // Premium Design Tokens (Elite V12)
@@ -235,7 +235,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
     const isApprover = useMemo(() => {
         // V18.10.1: BLINDAJE DE AUDITORÍA - Forzar permisos si viene de la consola
-        if (props.forceApprover) return true;
+        if (forceApprover) return true;
 
         if (!user || !operationalSettings) return false;
         
