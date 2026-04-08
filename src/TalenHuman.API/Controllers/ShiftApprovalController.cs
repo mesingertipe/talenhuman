@@ -161,6 +161,9 @@ public class ShiftApprovalController : ControllerBase
         if (string.IsNullOrEmpty(approverIdString)) return Unauthorized();
         var approverId = Guid.Parse(approverIdString);
 
+        // V18.10.9: NORMALIZACIÓN FORZADA
+        var normalizedStart = GetMondayOfDate(request.StartDate);
+ 
         // V18.10.8: SINCRONIZACIÓN TOTAL - Capturar todos los turnos del periodo agrupado
         var allStoreShifts = await _context.Shifts
             .Where(s => s.CompanyId == companyId && 
@@ -169,8 +172,8 @@ public class ShiftApprovalController : ControllerBase
             .ToListAsync();
             
         var shifts = allStoreShifts.Where(s => {
-            var weekStart = s.StartTime.Date.AddDays(-((int)s.StartTime.DayOfWeek == 0 ? 6 : (int)s.StartTime.DayOfWeek - 1));
-            return weekStart == request.StartDate.Date;
+            var weekStart = GetMondayOfDate(s.StartTime);
+            return weekStart == normalizedStart;
         }).ToList();
 
         if (!shifts.Any()) return NotFound("No hay turnos pendientes para este rango.");
@@ -258,17 +261,19 @@ public class ShiftApprovalController : ControllerBase
     {
         var companyId = _tenantProvider.GetTenantId();
         
+        // V18.10.9: NORMALIZACIÓN FORZADA - Ignorar ruido de hora/zona de navegador
+        var normalizedStart = GetMondayOfDate(startDate);
+        
         // V18.10.8: SINCRONIZACIÓN TOTAL - Usar la misma lógica de WeekStart que la consola principal
-        // para asegurar que los turnos de borde (Domingo noche) se cuenten en el mismo grupo.
-        var shifts = await _context.Shifts
+        var allStoreShifts = await _context.Shifts
             .Where(s => s.CompanyId == companyId && 
                         s.StoreId == storeId)
             .ToListAsync();
             
         // Filtrar en memoria para usar exactamente el mismo cálculo de agrupación
-        shifts = shifts.Where(s => {
-            var weekStart = s.StartTime.Date.AddDays(-((int)s.StartTime.DayOfWeek == 0 ? 6 : (int)s.StartTime.DayOfWeek - 1));
-            return weekStart == startDate.Date;
+        var shifts = allStoreShifts.Where(s => {
+            var weekStart = GetMondayOfDate(s.StartTime);
+            return weekStart == normalizedStart;
         }).ToList();
 
         if (!shifts.Any()) 
@@ -302,6 +307,9 @@ public class ShiftApprovalController : ControllerBase
         if (string.IsNullOrEmpty(approverIdString)) return Unauthorized();
         var approverId = Guid.Parse(approverIdString);
 
+        // V18.10.9: NORMALIZACIÓN FORZADA
+        var normalizedStart = GetMondayOfDate(request.StartDate);
+ 
         // V18.10.8: SINCRONIZACIÓN TOTAL - Capturar todos los turnos del periodo agrupado para rechazo
         var allStoreShifts = await _context.Shifts
             .Where(s => s.CompanyId == companyId && 
@@ -310,8 +318,8 @@ public class ShiftApprovalController : ControllerBase
             .ToListAsync();
             
         var shifts = allStoreShifts.Where(s => {
-            var weekStart = s.StartTime.Date.AddDays(-((int)s.StartTime.DayOfWeek == 0 ? 6 : (int)s.StartTime.DayOfWeek - 1));
-            return weekStart == request.StartDate.Date;
+            var weekStart = GetMondayOfDate(s.StartTime);
+            return weekStart == normalizedStart;
         }).ToList();
 
         if (!shifts.Any()) return NotFound("No hay turnos pendientes para este rango.");
@@ -376,5 +384,13 @@ public class ShiftApprovalController : ControllerBase
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public string? Comment { get; set; }
+    }
+ 
+    private DateTime GetMondayOfDate(DateTime date)
+    {
+        // Fórmula centralizada: Lunes de la semana ISO-ish
+        var day = (int)date.DayOfWeek;
+        var diff = (day == 0 ? 6 : day - 1);
+        return date.Date.AddDays(-diff);
     }
 }
