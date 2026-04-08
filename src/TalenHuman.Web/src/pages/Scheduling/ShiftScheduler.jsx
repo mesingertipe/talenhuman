@@ -106,6 +106,9 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
     const [approvalComment, setApprovalComment] = useState('');
     const [isProcessingStatus, setIsProcessingStatus] = useState(false);
     const [syncPhase, setSyncPhase] = useState(0); // 0: Init, 1: Validating, 2: Syncing, 3: Notifying, 4: Done
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragSource, setDragSource] = useState(null);
+    const [draggedData, setDraggedData] = useState(null);
 
     const getMonday = (offset = 0) => {
         const now = new Date();
@@ -346,6 +349,9 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
     };
 
     const handleDragStart = (e, source, data) => {
+        // V17.2 ELITE CLEANUP: Desactivar tooltips inmediatamente para que no se vean en el arrastre
+        setHoveredShiftData(null);
+        
         setIsDragging(true);
         setDragSource(source);
         setDraggedData(data);
@@ -380,11 +386,12 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
             font-size: 10px;
             font-weight: 950;
             text-transform: uppercase;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
             border: 2px solid rgba(255,255,255,0.4);
             position: absolute;
             top: -1000px;
-            z-index: 10000;
+            left: -1000px;
+            z-index: 999999;
             letter-spacing: 0.1em;
             pointer-events: none;
         `;
@@ -393,12 +400,18 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
         document.body.appendChild(ghost);
         e.dataTransfer.setDragImage(ghost, 55, 24);
         
-        // Retrasar eliminación para asegurar rendereo
-        setTimeout(() => { if (document.body.contains(ghost)) document.body.removeChild(ghost); }, 50);
+        // Limpieza diferida
+        setTimeout(() => { if (document.body.contains(ghost)) document.body.removeChild(ghost); }, 100);
 
         e.dataTransfer.setData("source", source);
         e.dataTransfer.setData("payload", JSON.stringify(data));
         e.dataTransfer.effectAllowed = "copyMove";
+    };
+
+    const handleDragEnd = () => {
+        setIsDragging(false);
+        setDragSource(null);
+        setDraggedData(null);
     };
 
     const hasNovedad = (employeeId, date) => {
@@ -422,8 +435,19 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
     const handleDropOnGrid = (e, targetEmployeeId, targetDate) => {
         e.preventDefault();
         e.currentTarget.classList.remove('elite-drop-active');
+        setIsDragging(false);
         const source = e.dataTransfer.getData("source");
-        const payload = JSON.parse(e.dataTransfer.getData("payload"));
+        const rawPayload = e.dataTransfer.getData("payload");
+        
+        if (!source || !rawPayload) return;
+        
+        let payload;
+        try {
+            payload = JSON.parse(rawPayload);
+        } catch (err) {
+            console.error("Error parsing drag payload", err);
+            return;
+        }
 
         if (hasNovedad(targetEmployeeId, targetDate)) {
             showToast("Día bloqueado por novedad", "error");
