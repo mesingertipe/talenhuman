@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle, XCircle, Info, Search, Calendar, 
   Building2, Hash, ArrowRight, ShieldCheck, Clock,
-  Filter, Download, ChevronRight, AlertCircle, MessageSquare
+  Filter, Download, ChevronRight, AlertCircle, MessageSquare,
+  Eye, ArrowLeft
 } from 'lucide-react';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
+import ShiftScheduler from './ShiftScheduler';
 
 const ShiftApproval = ({ user }) => {
   const { isDarkMode } = useTheme();
@@ -19,6 +21,10 @@ const ShiftApproval = ({ user }) => {
   const [approvalComment, setApprovalComment] = useState('');
   const [processing, setProcessing] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  
+  // V18.8 New States
+  const [activeTab, setActiveTab] = useState('PENDING'); // PENDING, APPROVED, REJECTED
+  const [inspectedStore, setInspectedStore] = useState(null);
 
   const activeColors = {
     card: isDarkMode ? '#1e293b' : '#ffffff',
@@ -30,17 +36,22 @@ const ShiftApproval = ({ user }) => {
   };
 
   useEffect(() => {
-    fetchPendingStores();
-  }, []);
+    fetchStores();
+  }, [activeTab]);
 
-  const fetchPendingStores = async () => {
+  const fetchStores = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/ShiftApproval/pending-stores');
+      // Pending: 5, Approved: 6, Rejected: 7
+      let status = 5;
+      if (activeTab === 'APPROVED') status = 6;
+      if (activeTab === 'REJECTED') status = 7;
+
+      const res = await api.get(`/ShiftApproval/stores?status=${status}`);
       setStores(res.data);
     } catch (err) {
       console.error(err);
-      showToast('Error al cargar tiendas pendientes', 'error');
+      showToast('Error al sincronizar consola', 'error');
     } finally {
       setLoading(false);
     }
@@ -69,8 +80,6 @@ const ShiftApproval = ({ user }) => {
     if (selectedStores.length === 0) return;
     try {
       setProcessing(true);
-      // Backend expects a single store approval per request
-      // We will loop through selected stores
       for (const storeId of selectedStores) {
         const storeData = stores.find(s => s.storeId === storeId);
         if (storeData) {
@@ -86,7 +95,7 @@ const ShiftApproval = ({ user }) => {
       setSelectedStores([]);
       setApprovalComment('');
       setShowApprovalModal(false);
-      fetchPendingStores();
+      fetchStores();
     } catch (err) {
       showToast('Error en la aprobación masiva', 'error');
     } finally {
@@ -113,7 +122,7 @@ const ShiftApproval = ({ user }) => {
       setSelectedStores([]);
       setRejectionComment('');
       setShowCommentModal(false);
-      fetchPendingStores();
+      fetchStores();
     } catch (err) {
       showToast('Error al procesar el rechazo', 'error');
     } finally {
@@ -133,6 +142,59 @@ const ShiftApproval = ({ user }) => {
            district.includes(search);
   });
 
+  const formatDateRange = (min, max) => {
+    try {
+      const d1 = new Date(min);
+      const d2 = new Date(max);
+      const options = { day: '2-digit', month: 'short' };
+      return `${d1.toLocaleDateString('es-CO', options)} - ${d2.toLocaleDateString('es-CO', options)}`;
+    } catch {
+      return "Periodo no definido";
+    }
+  };
+
+  // V18.8 INSPECTION MODE RENDER
+  if (inspectedStore) {
+    return (
+      <div className="page-container" style={{ padding: '0 1rem' }}>
+         <div style={{ 
+           display: 'flex', 
+           alignItems: 'center', 
+           gap: '20px', 
+           padding: '2rem 0', 
+           borderBottom: `1px solid ${activeColors.border}`,
+           marginBottom: '2rem'
+         }}>
+            <button 
+              onClick={() => setInspectedStore(null)}
+              style={{ 
+                width: '48px', height: '48px', borderRadius: '16px', background: activeColors.accentSoft,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.accent,
+                border: 'none', cursor: 'pointer', transition: 'all 0.2s'
+              }}
+              className="hover:scale-110 active:scale-95"
+            >
+              <ArrowLeft size={24} strokeWidth={2.5} />
+            </button>
+            <div>
+              <h1 style={{ fontSize: '1.5rem', fontWeight: '950', color: activeColors.textMain, margin: 0 }}>
+                Verificación: {inspectedStore.name}
+              </h1>
+              <p style={{ margin: 0, color: activeColors.textMuted, fontSize: '0.85rem', fontWeight: '700' }}>
+                AUDITORÍA DE SOLO LECTURA • PERIOD: {formatDateRange(inspectedStore.minDate, inspectedStore.maxDate)}
+              </p>
+            </div>
+         </div>
+         <ShiftScheduler 
+            user={user} 
+            readOnly={true} 
+            initialStoreId={inspectedStore.storeId} 
+            initialDate={inspectedStore.minDate} 
+         />
+      </div>
+    );
+  }
+
   return (
     <div className="page-container animate-fade-in" style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto' }}>
       
@@ -147,51 +209,77 @@ const ShiftApproval = ({ user }) => {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button 
-            disabled={selectedStores.length === 0 || processing}
-            onClick={() => setShowCommentModal(true)}
+        {activeTab === 'PENDING' && (
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <button 
+              disabled={selectedStores.length === 0 || processing}
+              onClick={() => setShowCommentModal(true)}
+              style={{ 
+                padding: '14px 28px', 
+                borderRadius: '18px', 
+                border: `2px solid ${isDarkMode ? '#ef444433' : '#fecaca'}`, 
+                background: isDarkMode ? '#7f1d1d1a' : '#fef2f2', 
+                color: '#ef4444', 
+                fontWeight: '800', 
+                fontSize: '0.9rem', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '10px',
+                transition: 'all 0.2s',
+                cursor: selectedStores.length === 0 ? 'not-allowed' : 'pointer',
+                opacity: selectedStores.length === 0 ? 0.5 : 1
+              }}
+            >
+              <XCircle size={18} /> Rechazar ({selectedStores.length})
+            </button>
+            <button 
+              disabled={selectedStores.length === 0 || processing}
+              onClick={() => setShowApprovalModal(true)}
+              style={{ 
+                padding: '14px 28px', 
+                borderRadius: '18px', 
+                border: 'none', 
+                background: activeColors.accent, 
+                color: 'white', 
+                fontWeight: '900', 
+                fontSize: '0.9rem', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '10px',
+                boxShadow: '0 10px 25px rgba(79, 70, 229, 0.3)',
+                transition: 'all 0.2s',
+                cursor: selectedStores.length === 0 ? 'not-allowed' : 'pointer',
+                opacity: selectedStores.length === 0 ? 0.5 : 1
+              }}
+            >
+              <CheckCircle size={18} /> Aprobar Seleccionados
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Tabs de Estado V18.8 */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '2.5rem', background: activeColors.card, padding: '8px', borderRadius: '24px', border: `1.5px solid ${activeColors.border}`, width: 'fit-content' }}>
+        {[
+          { id: 'PENDING', label: 'Pendientes', icon: Clock, count: null },
+          { id: 'APPROVED', label: 'Aprobados', icon: CheckCircle, count: null },
+          { id: 'REJECTED', label: 'Rechazados', icon: AlertCircle, count: null }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
             style={{ 
-              padding: '14px 28px', 
-              borderRadius: '18px', 
-              border: `2px solid ${isDarkMode ? '#ef444433' : '#fecaca'}`, 
-              background: isDarkMode ? '#7f1d1d1a' : '#fef2f2', 
-              color: '#ef4444', 
-              fontWeight: '800', 
-              fontSize: '0.9rem', 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '10px',
-              transition: 'all 0.2s',
-              cursor: selectedStores.length === 0 ? 'not-allowed' : 'pointer',
-              opacity: selectedStores.length === 0 ? 0.5 : 1
+              display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 24px', borderRadius: '18px',
+              border: 'none', fontWeight: '900', fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.3s',
+              background: activeTab === tab.id ? activeColors.accent : 'transparent',
+              color: activeTab === tab.id ? 'white' : activeColors.textMuted,
+              boxShadow: activeTab === tab.id ? '0 10px 20px rgba(79, 70, 229, 0.2)' : 'none'
             }}
           >
-            <XCircle size={18} /> Rechazar ({selectedStores.length})
+            <tab.icon size={18} />
+            {tab.label}
           </button>
-          <button 
-            disabled={selectedStores.length === 0 || processing}
-            onClick={() => setShowApprovalModal(true)}
-            style={{ 
-              padding: '14px 28px', 
-              borderRadius: '18px', 
-              border: 'none', 
-              background: activeColors.accent, 
-              color: 'white', 
-              fontWeight: '900', 
-              fontSize: '0.9rem', 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '10px',
-              boxShadow: '0 10px 25px rgba(79, 70, 229, 0.3)',
-              transition: 'all 0.2s',
-              cursor: selectedStores.length === 0 ? 'not-allowed' : 'pointer',
-              opacity: selectedStores.length === 0 ? 0.5 : 1
-            }}
-          >
-            <CheckCircle size={18} /> Aprobar Seleccionados
-          </button>
-        </div>
+        ))}
       </div>
 
       {/* Toolbar & Stats */}
@@ -220,7 +308,7 @@ const ShiftApproval = ({ user }) => {
         
         <div style={{ display: 'flex', gap: '12px' }}>
            <div style={{ padding: '12px 20px', background: activeColors.accentSoft, borderRadius: '16px', border: `1.5px solid ${activeColors.accent}20` }}>
-              <span style={{ fontSize: '10px', fontWeight: '900', color: activeColors.accent, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tiendas Pendientes</span>
+              <span style={{ fontSize: '10px', fontWeight: '900', color: activeColors.accent, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tiendas Listadas</span>
               <span style={{ fontSize: '1.2rem', fontWeight: '950', color: activeColors.accent }}>{stores.length}</span>
            </div>
         </div>
@@ -231,47 +319,52 @@ const ShiftApproval = ({ user }) => {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ textAlign: 'left', background: activeColors.accentSoft + '40', borderBottom: `1.5px solid ${activeColors.border}` }}>
-              <th style={{ padding: '20px 24px', width: '60px' }}>
-                <input 
-                  type="checkbox" 
-                  checked={selectedStores.length === filteredStores.length && filteredStores.length > 0}
-                  onChange={handleSelectAll}
-                  style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: activeColors.accent }}
-                />
-              </th>
+              {activeTab === 'PENDING' && (
+                <th style={{ padding: '20px 24px', width: '60px' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={selectedStores.length === filteredStores.length && filteredStores.length > 0}
+                    onChange={handleSelectAll}
+                    style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: activeColors.accent }}
+                  />
+                </th>
+              )}
               <th style={{ padding: '20px 24px', fontSize: '0.7rem', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Sede / Identificador</th>
               <th style={{ padding: '20px 24px', fontSize: '0.7rem', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Distrito</th>
-              <th style={{ padding: '20px 24px', fontSize: '0.7rem', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Carga Realizada</th>
-              <th style={{ padding: '20px 24px', fontSize: '0.7rem', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Autor de Malla</th>
-              <th style={{ padding: '20px 24px', fontSize: '0.7rem', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em', textAlign: 'right' }}>Estado</th>
+              <th style={{ padding: '20px 24px', fontSize: '0.7rem', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Periodo Gestión</th>
+              <th style={{ padding: '20px 24px', fontSize: '0.7rem', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Fecha de Carga</th>
+              <th style={{ padding: '20px 24px', fontSize: '0.7rem', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Usuario Registra</th>
+              <th style={{ padding: '20px 24px', fontSize: '0.7rem', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em', textAlign: 'right' }}>Labor</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="6" style={{ padding: '100px', textAlign: 'center' }}>
+                <td colSpan="8" style={{ padding: '100px', textAlign: 'center' }}>
                   <div style={{ width: '40px', height: '40px', border: '4px solid #e2e8f0', borderTopColor: activeColors.accent, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
                   <p style={{ marginTop: '20px', fontWeight: '700', color: activeColors.textMuted }}>Sincronizando mallas horarias...</p>
                 </td>
               </tr>
             ) : filteredStores.length === 0 ? (
               <tr>
-                <td colSpan="6" style={{ padding: '100px', textAlign: 'center' }}>
+                <td colSpan="8" style={{ padding: '100px', textAlign: 'center' }}>
                   <ShieldCheck size={48} className="text-emerald-500 mx-auto opacity-30 mb-4" />
-                  <p style={{ fontSize: '1rem', fontWeight: '800', color: activeColors.textMain }}>¡Sin mallas pendientes!</p>
-                  <p style={{ fontSize: '0.85rem', fontWeight: '600', color: activeColors.textMuted }}>Todas las tiendas han sido validadas para el periodo actual.</p>
+                  <p style={{ fontSize: '1rem', fontWeight: '800', color: activeColors.textMain }}>¡Sin mallas en este estado!</p>
+                  <p style={{ fontSize: '0.85rem', fontWeight: '600', color: activeColors.textMuted }}>No se encontraron registros para la pestaña seleccionada.</p>
                 </td>
               </tr>
             ) : filteredStores.map(store => (
               <tr key={store.storeId} style={{ borderBottom: `1px solid ${activeColors.border}`, transition: 'all 0.2s' }} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                <td style={{ padding: '24px' }}>
-                  <input 
-                    type="checkbox" 
-                    checked={selectedStores.includes(store.storeId)}
-                    onChange={() => handleSelectStore(store.storeId)}
-                    style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: activeColors.accent }}
-                  />
-                </td>
+                {activeTab === 'PENDING' && (
+                  <td style={{ padding: '24px' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={selectedStores.includes(store.storeId)}
+                      onChange={() => handleSelectStore(store.storeId)}
+                      style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: activeColors.accent }}
+                    />
+                  </td>
+                )}
                 <td style={{ padding: '24px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                       <div style={{ width: '42px', height: '42px', borderRadius: '14px', background: activeColors.accentSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.accent }}>
@@ -290,28 +383,35 @@ const ShiftApproval = ({ user }) => {
                   </div>
                 </td>
                 <td style={{ padding: '24px' }}>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: activeColors.textMuted }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: activeColors.accent }}>
                       <Calendar size={14} />
-                      <span style={{ fontSize: '0.85rem', fontWeight: '700' }}>{new Date(store.lastUploadAt).toLocaleDateString()}</span>
+                      <span style={{ fontSize: '0.85rem', fontWeight: '950' }}>{formatDateRange(store.minDate, store.maxDate)}</span>
                    </div>
                 </td>
                 <td style={{ padding: '24px' }}>
-                  <div style={{ fontWeight: '800', fontSize: '0.85rem', color: activeColors.textMain }}>{store.authorName || 'SISTEMA'}</div>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: activeColors.textMuted }}>
+                      <Clock size={14} />
+                      <span style={{ fontSize: '0.85rem', fontWeight: '700' }}>{new Date(store.lastUploadAt).toLocaleString()}</span>
+                   </div>
+                </td>
+                <td style={{ padding: '24px' }}>
+                  <div>
+                    <div style={{ fontWeight: '950', fontSize: '0.85rem', color: activeColors.textMain }}>{store.authorName || 'SISTEMA'}</div>
+                    <div style={{ fontWeight: '700', fontSize: '0.7rem', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{store.authorProfile || 'PROCESO AUTOMÁTICO'}</div>
+                  </div>
                 </td>
                 <td style={{ padding: '24px', textAlign: 'right' }}>
-                   <span style={{ 
-                      padding: '8px 16px', 
-                      borderRadius: '12px', 
-                      fontSize: '0.7rem', 
-                      fontWeight: '950', 
-                      background: '#fef3c7', 
-                      color: '#d97706',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      border: '1.5px solid #fde68a'
-                    }}>
-                     Pendiente RH
-                   </span>
+                   <button 
+                    onClick={() => setInspectedStore(store)}
+                    style={{ 
+                      padding: '8px 16px', borderRadius: '12px', background: activeColors.accentSoft, color: activeColors.accent,
+                      border: 'none', fontWeight: '950', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px',
+                      cursor: 'pointer', float: 'right'
+                    }}
+                    className="hover:scale-105 active:scale-95"
+                   >
+                     <Eye size={16} /> INSPECCIONAR
+                   </button>
                 </td>
               </tr>
             ))}

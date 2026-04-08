@@ -34,46 +34,37 @@ public class ShiftApprovalController : ControllerBase
     [HttpGet("pending-stores")]
     [HttpGet("stores")]
     [Authorize(Roles = "Admin,SuperAdmin,RH,Supervisor")]
-    public async Task<IActionResult> GetPendingStores()
+    public async Task<IActionResult> GetPendingStores([FromQuery] ShiftStatus status = ShiftStatus.PendingApproval)
     {
         var companyId = _tenantProvider.GetTenantId();
         var userClaimIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userClaimIdString)) return Unauthorized();
         
         var userClaimId = Guid.Parse(userClaimIdString);
-        
-        // 🚀 BYPASS ADMINISTRATIVO: Si es Admin/SuperAdmin, no bloqueamos si el perfil extendido no carga
         bool isTopAdmin = User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
         
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userClaimId);
         if (user == null && !isTopAdmin) return Unauthorized();
 
-        // 1. Get operational settings
         var settings = await _context.OperationalSettings
             .FirstOrDefaultAsync(o => o.CompanyId == companyId);
         
         var approvalMode = settings?.ShiftApprovalMode ?? ShiftApprovalMode.HR;
 
-        // 2. Fetch pending stores with hierarchy logic
         var query = _context.Shifts
             .Include(s => s.Store)
                 .ThenInclude(st => st.District)
-            .Include(s => s.Employee)
-            .Where(s => s.CompanyId == companyId && s.Status == ShiftStatus.PendingApproval);
+            .Where(s => s.CompanyId == companyId && s.Status == status);
 
-        // Security logic: If District mode is active, filter by user's assigned district
-        // unless the user is a top-level Admin/SuperAdmin
-        
         if (approvalMode == ShiftApprovalMode.District && !isTopAdmin) {
             if (user != null && user.DistrictId.HasValue) {
                 query = query.Where(s => s.Store.DistrictId == user.DistrictId);
             } else {
-                // If it's district mode but supervisor has no district, they see nothing pending
                 return Ok(new List<object>()); 
             }
         }
 
-        var pendingStores = await query
+        var storeGroups = await query
             .GroupBy(s => new { 
                 s.StoreId, 
                 s.Store.Name, 
@@ -92,7 +83,66 @@ public class ShiftApprovalController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(pendingStores);
+        // V18.8: Enriquecer con información de auditoría (Usuario que Registra)
+        var result = new List<object>();
+        foreach (var group in storeGroups)
+        {
+            // Intentar encontrar el último log de auditoría de creación/edición de turnos para esta tienda
+            var lastLog = await _context.AuditLogs
+                .Where(al => al.CompanyId == companyId && 
+                            al.EntityType == "Shifts" && 
+                            al.EntityId == group.StoreId.ToString())
+                .OrderByDescending(al => al.CreatedAt)
+                .Select(al => new { al.UserName, al.UserId })
+                .FirstOrDefaultAsync();
+
+            string authorName = "SISTEMA";
+            string authorProfile = "PROCESO AUTOMÁTICO";
+
+            if (lastLog != null && lastLog.UserId.HasValue)
+            {
+                var authorUser = await _context.Users
+                    .Include(u => u.Profile)
+                    .FirstOrDefaultAsync(u => u.Id == lastLog.UserId);
+                
+                if (authorUser != null)
+                {
+                    authorName = $"{authorUser.FirstName} {authorUser.LastName}";
+                    authorProfile = authorUser.Profile?.Name ?? "USUARIO";
+                }
+            }
+            else
+            {
+                // Fallback: Gerente de la Sede
+                var manager = await _context.SupervisorStores
+                    .Include(ss => ss.User)
+                        .ThenInclude(u => u.Profile)
+                    .Where(ss => ss.StoreId == group.StoreId)
+                    .Select(ss => ss.User)
+                    .FirstOrDefaultAsync();
+
+                if (manager != null)
+                {
+                    authorName = $"{manager.FirstName} {manager.LastName}";
+                    authorProfile = manager.Profile?.Name ?? "GERENTE";
+                }
+            }
+
+            result.Add(new {
+                group.StoreId,
+                group.Name,
+                group.ExternalId,
+                group.DistrictName,
+                group.PendingCount,
+                group.MinDate,
+                group.MaxDate,
+                group.LastUploadAt,
+                AuthorName = authorName,
+                AuthorProfile = authorProfile
+            });
+        }
+
+        return Ok(result);
     }
 
     [HttpPost("approve")]

@@ -44,7 +44,7 @@ import HelpIcon from '../../components/Shared/HelpIcon';
 import { formatTenantDate } from '../../utils/localization';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
 
-const ShiftScheduler = ({ user, tenantSettings }) => {
+const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId = null, initialDate = null }) => {
     const { isDarkMode } = useTheme();
     
     // Premium Design Tokens (Elite V12)
@@ -64,7 +64,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
     const [attendances, setAttendances] = useState([]);
     const [news, setNews] = useState([]);
     const [stores, setStores] = useState([]);
-    const [selectedStore, setSelectedStore] = useState('');
+    const [selectedStore, setSelectedStore] = useState(initialStoreId || '');
     const [loading, setLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
@@ -98,6 +98,19 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
         endTime: '17:00',
         days: [true, true, true, true, true, true, false] // Mon-Sun
     });
+
+    // V18.8 Logic for initial date alignment
+    useEffect(() => {
+        if (initialDate) {
+            const requestedDate = new Date(initialDate);
+            const today = new Date();
+            // Calculate how many weeks away initialDate is from today's week
+            // This is a simplified calculation
+            const diffDays = (requestedDate - today) / (1000 * 60 * 60 * 24);
+            const weeks = Math.round(diffDays / 7);
+            setWeekOffset(weeks);
+        }
+    }, [initialDate]);
 
     // V13.0 PREMIUM STATES
     const [weeklyStatus, setWeeklyStatus] = useState({ status: 'Empty', message: '', comment: '' });
@@ -1097,11 +1110,13 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
 
                                 <div className="w-[1px] h-8 bg-slate-100 dark:bg-slate-800 hidden xl:block"></div>
 
-                                <button className="flex items-center gap-3 px-6 h-[56px] bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 rounded-[30px] transition-all active:scale-95 hover:bg-white dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-100 dark:hover:border-indigo-900 group"
-                                        data-v12-tooltip="Carga Inteligente de Turnos Proyectados">
-                                    <Sparkles size={18} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform" />
-                                    <span className="hidden xl:inline text-[10px] font-black uppercase tracking-widest">Carga</span>
-                                </button>
+                                {!readOnly && (
+                                    <button className="flex items-center gap-3 px-6 h-[56px] bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 rounded-[30px] transition-all active:scale-95 hover:bg-white dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-100 dark:hover:border-indigo-900 group"
+                                            data-v12-tooltip="Carga Inteligente de Turnos Proyectados">
+                                        <Sparkles size={18} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform" />
+                                        <span className="hidden xl:inline text-[10px] font-black uppercase tracking-widest">Carga</span>
+                                    </button>
+                                )}
 
                                 <div className="hidden xl:flex items-center">
                                     <HelpIcon text="Comando Central V12.20: Configure filtros, navegue por semanas y use acciones masivas para optimizar tiempos operativos." />
@@ -1184,40 +1199,41 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
 
                     {/* Fila 2: Command Center Ultra-Visibilidad V12.20 (Espaciado e Impacto) */}
                     <div className="no-print w-full flex flex-col xl:flex-row items-center justify-between gap-16 bg-white dark:bg-slate-900 shadow-xl p-8 border-[1px] border-slate-200 dark:border-slate-800" style={{ borderRadius: '48px' }}>
-                        {/* Izquierda: Toolkit de Operaciones (Ultra-Espaciado) */}
-                        <div className="flex flex-wrap items-center justify-center lg:justify-start p-8 bg-slate-50/50 dark:bg-slate-800/20 border-[1px] border-slate-200 dark:border-slate-700/50" 
-                             style={{ borderRadius: '24px', gap: '2rem' }}>
-                            {[
-                                { type: 'Turno', color: 'bg-indigo-600', icon: Clock, label: 'TURNO', tip: 'Turno de Trabajo (Arrastrar al grid)' },
-                                { type: 'Descanso', color: 'bg-slate-400 dark:bg-slate-500', icon: Calendar, label: 'DESC', tip: 'Descanso (Arrastrar al grid)' },
-                                { type: 'Turno Fuera', color: 'bg-purple-600', icon: AlertCircle, label: 'FUERA', tip: 'Turno Fuera de Sede (Arrastrar al grid)' }
-                            ].map((tool, idx) => (
-                                <div key={idx} draggable onDragStart={(e) => handleDragStart(e, 'PANEL', { type: tool.type })} 
-                                    className={`flex-shrink-0 ${tool.type === 'Descanso' ? '' : tool.color} text-white flex flex-col items-center justify-center cursor-grab shadow-sm hover:scale-105 active:scale-95 transition-all group relative`}
-                                    style={{ 
-                                        width: '96px', 
-                                        height: '64px', 
-                                        borderRadius: '16px',
-                                        backgroundColor: tool.type === 'Descanso' ? '#94a3b8' : undefined 
-                                    }}
-                                    data-v12-tooltip={tool.tip}
+                        {!readOnly && (
+                            <div className="flex flex-wrap items-center justify-center lg:justify-start p-8 bg-slate-50/50 dark:bg-slate-800/20 border-[1px] border-slate-200 dark:border-slate-700/50" 
+                                 style={{ borderRadius: '24px', gap: '2rem' }}>
+                                {[
+                                    { type: 'Turno', color: 'bg-indigo-600', icon: Clock, label: 'TURNO', tip: 'Turno de Trabajo (Arrastrar al grid)' },
+                                    { type: 'Descanso', color: 'bg-slate-400 dark:bg-slate-500', icon: Calendar, label: 'DESC', tip: 'Descanso (Arrastrar al grid)' },
+                                    { type: 'Turno Fuera', color: 'bg-purple-600', icon: AlertCircle, label: 'FUERA', tip: 'Turno Fuera de Sede (Arrastrar al grid)' }
+                                ].map((tool, idx) => (
+                                    <div key={idx} draggable onDragStart={(e) => handleDragStart(e, 'PANEL', { type: tool.type })} 
+                                        className={`flex-shrink-0 ${tool.type === 'Descanso' ? '' : tool.color} text-white flex flex-col items-center justify-center cursor-grab shadow-sm hover:scale-105 active:scale-95 transition-all group relative`}
+                                        style={{ 
+                                            width: '96px', 
+                                            height: '64px', 
+                                            borderRadius: '16px',
+                                            backgroundColor: tool.type === 'Descanso' ? '#94a3b8' : undefined 
+                                        }}
+                                        data-v12-tooltip={tool.tip}
+                                    >
+                                        <tool.icon size={22} strokeWidth={2.5} className="mb-1" />
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-center">
+                                            {tool.label}
+                                        </span>
+                                    </div>
+                                ))}
+                                <div className="hidden 2xl:block w-[1px] h-10 bg-slate-200 dark:bg-slate-700 flex-shrink-0"></div>
+                                <div onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnTrash} 
+                                    className="flex-shrink-0 bg-rose-50 dark:bg-rose-900/10 text-rose-500 flex flex-col items-center justify-center gap-1 border-2 border-dashed border-rose-200 dark:border-rose-900/40 hover:bg-rose-600 hover:text-white hover:border-solid transition-all cursor-pointer group relative"
+                                    style={{ width: '120px', height: '64px', borderRadius: '16px', marginLeft: '0.5rem' }}
+                                    data-v12-tooltip="Arrastra un turno aquí para eliminarlo"
                                 >
-                                    <tool.icon size={22} strokeWidth={2.5} className="mb-1" />
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-center">
-                                        {tool.label}
-                                    </span>
+                                    <Trash2 size={22} strokeWidth={2.5} />
+                                    <span className="text-[8px] font-black uppercase tracking-widest text-center">BORRAR</span>
                                 </div>
-                            ))}
-                            <div className="hidden 2xl:block w-[1px] h-10 bg-slate-200 dark:bg-slate-700 flex-shrink-0"></div>
-                            <div onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnTrash} 
-                                className="flex-shrink-0 bg-rose-50 dark:bg-rose-900/10 text-rose-500 flex flex-col items-center justify-center gap-1 border-2 border-dashed border-rose-200 dark:border-rose-900/40 hover:bg-rose-600 hover:text-white hover:border-solid transition-all cursor-pointer group relative"
-                                style={{ width: '120px', height: '64px', borderRadius: '16px', marginLeft: '0.5rem' }}
-                                data-v12-tooltip="Arrastra un turno aquí para eliminarlo"
-                            >
-                                <Trash2 size={22} strokeWidth={2.5} />
-                                <span className="text-[8px] font-black uppercase tracking-widest text-center">BORRAR</span>
                             </div>
-                        </div>
+                        )}
 
                         {/* Derecha: Acciones Globales (Ultra-Visibility & Gap-16) */}
                         <div className="no-print flex flex-wrap items-center justify-center lg:justify-end p-8 bg-slate-50/50 dark:bg-slate-800/20 border-[1px] border-slate-200 dark:border-slate-700/50" 
@@ -1242,13 +1258,17 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                 <FileDown size={22} className="group-hover:scale-110 transition-transform" />
                                 <span className="text-[9px] font-black uppercase tracking-widest">PDF</span>
                             </button>
-                            <button onClick={copyFromPreviousWeek} className="flex-shrink-0 bg-indigo-600 text-white flex flex-col items-center justify-center gap-1 hover:bg-indigo-700 transition-all group shadow-md" style={{ width: '96px', height: '64px', borderRadius: '16px' }} data-v12-tooltip="Copiar toda la programación de la semana anterior">
-                                <CopyIcon size={22} className="group-hover:scale-110 transition-transform" />
-                                <span className="text-[9px] font-black uppercase tracking-widest text-center">CLONAR</span>
-                            </button>
-                            <button onClick={handleSave} disabled={isExporting} className={`flex-shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white flex flex-col items-center justify-center gap-1 shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.05] active:scale-95 group ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ width: '96px', height: '64px', borderRadius: '16px' }} data-v12-tooltip="Guardar todos los cambios en el servidor">
-                                {isSaving ? <div className="loader !w-5 !h-5 !border-white"></div> : <><Save size={22} /><span className="text-[9px] font-black uppercase">GUARDAR</span></>}
-                            </button>
+                            {!readOnly && (
+                                <>
+                                    <button onClick={copyFromPreviousWeek} className="flex-shrink-0 bg-indigo-600 text-white flex flex-col items-center justify-center gap-1 hover:bg-indigo-700 transition-all group shadow-md" style={{ width: '96px', height: '64px', borderRadius: '16px' }} data-v12-tooltip="Copiar toda la programación de la semana anterior">
+                                        <CopyIcon size={22} className="group-hover:scale-110 transition-transform" />
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-center">CLONAR</span>
+                                    </button>
+                                    <button onClick={handleSave} disabled={isExporting} className={`flex-shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white flex flex-col items-center justify-center gap-1 shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.05] active:scale-95 group ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ width: '96px', height: '64px', borderRadius: '16px' }} data-v12-tooltip="Guardar todos los cambios en el servidor">
+                                        {isSaving ? <div className="loader !w-5 !h-5 !border-white"></div> : <><Save size={22} /><span className="text-[9px] font-black uppercase">GUARDAR</span></>}
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
                 
@@ -1347,10 +1367,10 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                     return (
                                                         <td
                                                             key={di}
-                                                            onDragOver={e => e.preventDefault()}
-                                                            onDragEnter={e => e.currentTarget.classList.add('elite-drop-active')}
-                                                            onDragLeave={e => e.currentTarget.classList.remove('elite-drop-active')}
-                                                            onDrop={e => handleDropOnGrid(e, emp.id, day)}
+                                                            onDragOver={e => !readOnly && e.preventDefault()}
+                                                            onDragEnter={e => !readOnly && e.currentTarget.classList.add('elite-drop-active')}
+                                                            onDragLeave={e => !readOnly && e.currentTarget.classList.remove('elite-drop-active')}
+                                                            onDrop={e => !readOnly && handleDropOnGrid(e, emp.id, day)}
                                                             className="p-1 border-r dark:border-slate-800 transition-colors"
                                                         >
                                                             <div className="flex flex-col gap-1 min-h-[96px] justify-center">
