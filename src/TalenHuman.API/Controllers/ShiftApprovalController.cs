@@ -210,15 +210,15 @@ public class ShiftApprovalController : ControllerBase
             var emails = managers.Where(m => !string.IsNullOrEmpty(m.Email)).Select(m => m.Email).ToList();
             if (!string.IsNullOrEmpty(authorEmail) && !emails.Contains(authorEmail)) emails.Add(authorEmail);
 
-            foreach (var email in emails)
-            {
-                await _notificationService.SendNotificationAsync(new NotificationRequest {
-                    To = email,
-                    Subject = "✅ Programación APROBADA",
-                    Message = $"La programación del {request.StartDate:dd/MM} al {request.EndDate:dd/MM} ha sido validada oficialmente.\n\nComentario: {request.Comment}",
-                    Type = NotificationType.Email
-                });
-            }
+            // V18.10.X: Fetch Store/Brand info for legible notification
+            var store = await _context.Stores.Include(s => s.Brand).FirstOrDefaultAsync(s => s.Id == request.StoreId);
+            string storeInfo = store != null ? $"{store.Brand?.Name} - Sede: {store.Name} ({store.ExternalId})" : request.StoreId.ToString();
+
+            await _notificationService.SendBatchEmailNotificationAsync(emails, new NotificationRequest {
+                Subject = $"✅ Programación APROBADA - {store.Name}",
+                Message = $"La programación de la sede <b>{storeInfo}</b> para el periodo <b>{request.StartDate:dd/MM}</b> al <b>{request.EndDate:dd/MM}</b> ha sido validada oficialmente.\n\nComentario: {request.Comment}",
+                Type = NotificationType.Email
+            });
         }
 
         if (settings?.EnablePushNotifications ?? true)
@@ -343,15 +343,15 @@ public class ShiftApprovalController : ControllerBase
             var emails = managers.Where(m => !string.IsNullOrEmpty(m.Email)).Select(m => m.Email).ToList();
             if (!string.IsNullOrEmpty(authorEmail) && !emails.Contains(authorEmail)) emails.Add(authorEmail);
 
-            foreach (var email in emails)
-            {
-                await _notificationService.SendNotificationAsync(new NotificationRequest {
-                    To = email,
-                    Subject = "🚨 Programación RECHAZADA - Ajustes Requeridos",
-                    Message = $"La programación del {request.StartDate:dd/MM} al {request.EndDate:dd/MM} NO ha sido aprobada.\n\nMOTIVO DEL RECHAZO: {request.Comment}\n\nPor favor, realice los ajustes y vuelva a publicar.",
-                    Type = NotificationType.Email
-                });
-            }
+            // V18.10.X: Fetch Store/Brand info for legible notification
+            var store = await _context.Stores.Include(s => s.Brand).FirstOrDefaultAsync(s => s.Id == request.StoreId);
+            string storeInfo = store != null ? $"{store.Brand?.Name} - Sede: {store.Name} ({store.ExternalId})" : request.StoreId.ToString();
+
+            await _notificationService.SendBatchEmailNotificationAsync(emails, new NotificationRequest {
+                Subject = $"🚨 Programación RECHAZADA - {store.Name}",
+                Message = $"La programación de la sede <b>{storeInfo}</b> para el periodo <b>{request.StartDate:dd/MM}</b> al <b>{request.EndDate:dd/MM}</b> NO ha sido aprobada.\n\nMOTIVO DEL RECHAZO: {request.Comment}\n\nPor favor, realice los ajustes y vuelva a publicar.",
+                Type = NotificationType.Email
+            });
         }
 
         await _auditService.LogAsync("REJECTION_FLOW", "Shifts", request.StoreId.ToString(), $"Programación RECHAZADA para el periodo {request.StartDate:dd/MM} - {request.EndDate:dd/MM}. Motivo: {request.Comment}");

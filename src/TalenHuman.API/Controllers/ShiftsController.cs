@@ -140,6 +140,11 @@ public class ShiftsController : ControllerBase
             var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userClaimId);
             var companyId = currentUser?.CompanyId;
             
+            // 6. Enrichment: Fetch Store and Brand details for legible notifications
+            var store = await _context.Stores
+                .Include(s => s.Brand)
+                .FirstOrDefaultAsync(s => s.Id == dto.StoreId);
+            
             // 6.1 Get operational settings for the company
             var settings = await _context.OperationalSettings
                 .FirstOrDefaultAsync(o => o.CompanyId == companyId);
@@ -148,32 +153,48 @@ public class ShiftsController : ControllerBase
             var approvers = new List<User>();
 
             if (approvalMode == ShiftApprovalMode.District) {
-                // District Mode: Only notify Supervisors assigned to that specific store's district
-                var store = await _context.Stores.FindAsync(dto.StoreId);
+                // District Mode: Notify only supervisors/distritales matching the store's district
                 if (store != null && store.DistrictId.HasValue) {
                     approvers = await _context.Users
                         .Where(u => u.CompanyId == companyId && u.DistrictId == store.DistrictId && u.IsActive)
                         .ToListAsync();
                 }
             } else {
-                // HR Mode: Notify ONLY the RH team or Admins of the company
+                // HR Mode: Notify ONLY users with the "RH" profile
                 approvers = await _context.Users
-                    .Where(u => u.CompanyId == companyId && u.IsActive)
+                    .Include(u => u.Employee)
+                        .ThenInclude(e => e.Profile)
+                    .Where(u => u.CompanyId == companyId && u.IsActive && 
+                                u.Employee != null && u.Employee.Profile != null && 
+                                u.Employee.Profile.Name.ToUpper().Contains("RH"))
                     .ToListAsync();
             }
 
-            var notificationTasks = approvers
+            // 7. Legible Messaging & Batch Dispatch
+            var emails = approvers
                 .Where(app => !string.IsNullOrEmpty(app.Email))
-                .Select(app => _notificationService.SendNotificationAsync(new Application.Services.NotificationRequest {
-                    To = app.Email,
-                    Subject = "⚠️ Nueva Programación de Turnos para Aprobar",
-                    Message = $"Se ha cargado una nueva programación de turnos para la tienda '{dto.StoreId}' para el periodo {start:dd/MM} al {end:dd/MM}.\n\nPor favor, ingresa al panel administrativo para revisarla.",
-                    Type = Application.Services.NotificationType.Email
-                }));
+                .Select(app => app.Email!)
+                .Distinct()
+                .ToList();
 
-            await Task.WhenAll(notificationTasks);
+            if (emails.Any())
+            {
+                string storeInfo = store != null 
+                    ? $"{store.Brand?.Name} - Sede: {store.Name} ({store.ExternalId})" 
+                    : dto.StoreId.ToString();
+
+                string emailBody = $"Se ha cargado una nueva programación de turnos para la sede <b>{storeInfo}</b> para el periodo <b>{start:dd/MM}</b> al <b>{end:dd/MM}</b>.\n\nPor favor, ingresa al panel administrativo para revisarla.";
+
+                // V18.10.X: ELITE RESILIENCE - Use SEND BATCH to avoid 429 Rate Limits
+                var emailService = HttpContext.RequestServices.GetRequiredService<IEmailService>();
+                await emailService.SendBatchEmailAsync(
+                    emails, 
+                    "⚠️ Nueva Programación de Turnos para Aprobar", 
+                    emailBody
+                );
+            }
         } catch (Exception ex) {
-            Console.WriteLine($"Shift Notification Error (PARALLEL-EMAIL): {ex.Message}");
+            Console.WriteLine($"Shift Notification Error (BATCH-RELIANCE): {ex.Message}");
         }
 
         await _auditService.LogAsync("MASS_UPDATE", "Shifts", dto.StoreId.ToString(), $"Actualizados {dto.Shifts.Count} turnos. Motivo/Comentario: {dto.Comment}");

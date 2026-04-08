@@ -92,6 +92,9 @@ public class AttendanceSchedulerService : BackgroundService
                                     }
                                     await auditService.CleanupOldLogsAsync(company.Id, auditDaysToKeep);
                                     
+                                    // 4. Cleanup old biometric records (retention setting)
+                                    await attendanceService.CleanupBiometricRecordsAsync(company.Id);
+                                    
                                     _lastRunDatesByCompany[company.Id] = companyNow;
                                     _logger.LogInformation("Scheduled cycle for {Name} completed.", company.Name);
                                 }

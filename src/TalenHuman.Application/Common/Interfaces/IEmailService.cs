@@ -3,6 +3,7 @@ namespace TalenHuman.Application.Common.Interfaces;
 public interface IEmailService
 {
     Task SendEmailAsync(string to, string subject, string body, List<AttachmentDto>? attachments = null);
+    Task SendBatchEmailAsync(List<string> tos, string subject, string body, List<AttachmentDto>? attachments = null);
 }
 
 public class AttachmentDto

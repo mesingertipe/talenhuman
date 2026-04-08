@@ -20,11 +20,34 @@ public class AttendanceReportService
 
     public async Task SendAutomaticDailyReportsAsync(Guid companyId, DateTime date)
     {
-        // 1. Fetch Recipients Configuration (from SystemSettings or default)
-        // For this demo, we'll assume we send to Admins, Distritales, and Gerentes
-        var users = await _context.Users
-            .Where(u => u.CompanyId == companyId && u.IsActive)
-            .ToListAsync();
+        // 1. Fetch Company Operational Settings to determine routing logic
+        var settings = await _context.OperationalSettings.FirstOrDefaultAsync(s => s.CompanyId == companyId);
+        var approvalMode = settings?.ShiftApprovalMode ?? ShiftApprovalMode.HR;
+
+        // 2. Fetch ONLY authorized administrative recipients
+        IQueryable<User> recipientsQuery = _context.Users
+            .Include(u => u.Employee)
+                .ThenInclude(e => e.Profile)
+            .Where(u => u.CompanyId == companyId && u.IsActive);
+
+        if (approvalMode == ShiftApprovalMode.HR)
+        {
+            // CENTRAL MODE: Only users with "RH" profile or similar administrative context
+            recipientsQuery = recipientsQuery.Where(u => 
+                (u.Employee != null && u.Employee.Profile != null && u.Employee.Profile.Name.ToUpper().Contains("RH")) ||
+                (u.Email != null && (u.Email.Contains("admin") || u.Email.Contains("gerencia")))
+            );
+        }
+        else
+        {
+            // DISTRICT/STORE MODE: Only users with actual management assignments (Distritales or Supervisors)
+            recipientsQuery = recipientsQuery.Where(u => 
+                u.DistrictId != null || 
+                _context.SupervisorStores.Any(ss => ss.UserId == u.Id)
+            );
+        }
+
+        var users = await recipientsQuery.ToListAsync();
 
         foreach (var user in users)
         {

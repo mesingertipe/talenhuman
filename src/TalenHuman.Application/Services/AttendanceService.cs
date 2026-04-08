@@ -420,9 +420,11 @@ public class AttendanceService
 
     public async Task CleanupBiometricRecordsAsync(Guid companyId)
     {
-        // Get retention setting
+        // Get retention setting (Prefer company-specific prefixed key)
+        var prefixedKey = $"{companyId}_BiometricRetentionDays";
         var retentionSetting = await _context.SystemSettings
-            .FirstOrDefaultAsync(s => s.Key == "BiometricRetentionDays");
+            .FirstOrDefaultAsync(s => s.Key == prefixedKey)
+            ?? await _context.SystemSettings.FirstOrDefaultAsync(s => s.Key == "BiometricRetentionDays");
         
         int days = 7; // Default
         if (retentionSetting != null && int.TryParse(retentionSetting.Value, out int customDays))

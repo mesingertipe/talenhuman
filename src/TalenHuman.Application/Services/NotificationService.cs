@@ -271,4 +271,15 @@ public class NotificationService
             _logger.LogError(ex, "FCM Broadcast Error: {Message}", ex.Message);
         }
     }
+    public async Task SendBatchEmailNotificationAsync(IEnumerable<string> emails, NotificationRequest request)
+    {
+        var activeEmails = emails.Where(e => !string.IsNullOrEmpty(e)).Distinct().ToList();
+        if (!activeEmails.Any()) return;
+
+        // Since we are sending an administrative notification (Approval/Rejection), 
+        // we use the batch capability of the infrastructure service.
+        await _emailService.SendBatchEmailAsync(activeEmails, request.Subject, request.Message);
+        
+        _logger.LogInformation("📧 [BATCH-EMAIL] Notification sent to {Count} recipients. Subject: {Subject}", activeEmails.Count, request.Subject);
+    }
 }
