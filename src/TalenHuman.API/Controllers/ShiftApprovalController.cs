@@ -65,21 +65,30 @@ public class ShiftApprovalController : ControllerBase
         }
 
         var storeGroups = await query
-            .GroupBy(s => new { 
-                s.StoreId, 
-                s.Store.Name, 
-                s.Store.ExternalId, 
-                DistrictName = s.Store.District != null ? s.Store.District.Name : "SIN DISTRITO" 
+            .Select(s => new {
+                Shift = s,
+                // Calcular el Lunes de la semana (ISO-ish) para agrupar por periodos de 7 días
+                // Domingo es 0, Lunes es 1... Sábado es 6.
+                // Si es Domingo (0), restamos 6 días. Si es Lunes (1), restamos 0.
+                WeekStart = s.StartTime.Date.AddDays(-((int)s.StartTime.DayOfWeek == 0 ? 6 : (int)s.StartTime.DayOfWeek - 1))
+            })
+            .GroupBy(g => new { 
+                g.Shift.StoreId, 
+                g.Shift.Store.Name, 
+                g.Shift.Store.ExternalId, 
+                DistrictName = g.Shift.Store.District != null ? g.Shift.Store.District.Name : "SIN DISTRITO",
+                g.WeekStart
             })
             .Select(g => new {
                 StoreId = g.Key.StoreId,
                 Name = g.Key.Name,
                 ExternalId = g.Key.ExternalId,
                 DistrictName = g.Key.DistrictName,
+                WeekStart = g.Key.WeekStart,
                 PendingCount = g.Count(),
-                MinDate = g.Min(s => s.StartTime),
-                MaxDate = g.Max(s => s.StartTime),
-                LastUploadAt = g.Max(s => s.CreatedAt)
+                MinDate = g.Min(x => x.Shift.StartTime),
+                MaxDate = g.Max(x => x.Shift.StartTime),
+                LastUploadAt = g.Max(x => x.Shift.CreatedAt)
             })
             .ToListAsync();
 

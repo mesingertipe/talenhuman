@@ -26,6 +26,12 @@ const ShiftApproval = ({ user }) => {
   const [activeTab, setActiveTab] = useState('PENDING'); // PENDING, APPROVED, REJECTED
   const [inspectedStore, setInspectedStore] = useState(null);
 
+  // V18.9: Advanced Filters
+  const [filterDistrict, setFilterDistrict] = useState('ALL');
+  const [filterStore, setFilterStore] = useState('ALL');
+  const [filterWeek, setFilterWeek] = useState('ALL');
+  const [selectedKeys, setSelectedKeys] = useState([]); // Composite keys: storeId-weekStart
+
   const activeColors = {
     card: isDarkMode ? '#1e293b' : '#ffffff',
     border: isDarkMode ? '#334155' : '#e2e8f0',
@@ -62,26 +68,28 @@ const ShiftApproval = ({ user }) => {
     setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
   };
 
-  const handleSelectStore = (id) => {
-    setSelectedStores(prev => 
-      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+  const handleSelectStore = (store) => {
+    const key = `${store.storeId}-${store.weekStart}`;
+    setSelectedKeys(prev => 
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
     );
   };
 
   const handleSelectAll = () => {
-    if (selectedStores.length === filteredStores.length) {
-      setSelectedStores([]);
+    if (selectedKeys.length === filteredStores.length) {
+      setSelectedKeys([]);
     } else {
-      setSelectedStores(filteredStores.map(s => s.storeId));
+      setSelectedKeys(filteredStores.map(s => `${s.storeId}-${s.weekStart}`));
     }
   };
 
   const handleApprove = async () => {
-    if (selectedStores.length === 0) return;
+    if (selectedKeys.length === 0) return;
     try {
       setProcessing(true);
-      for (const storeId of selectedStores) {
-        const storeData = stores.find(s => s.storeId === storeId);
+      for (const key of selectedKeys) {
+        const [storeId, weekStart] = key.split('-');
+        const storeData = stores.find(s => s.storeId === storeId && s.weekStart === weekStart);
         if (storeData) {
           await api.post('/ShiftApproval/approve', {
             storeId: storeId,
@@ -91,8 +99,8 @@ const ShiftApproval = ({ user }) => {
           });
         }
       }
-      showToast(`Se han aprobado ${selectedStores.length} mallas exitosamente`);
-      setSelectedStores([]);
+      showToast(`Se han aprobado ${selectedKeys.length} mallas exitosamente`);
+      setSelectedKeys([]);
       setApprovalComment('');
       setShowApprovalModal(false);
       fetchStores();
@@ -104,11 +112,12 @@ const ShiftApproval = ({ user }) => {
   };
 
   const handleReject = async () => {
-    if (selectedStores.length === 0 || !rejectionComment.trim()) return;
+    if (selectedKeys.length === 0 || !rejectionComment.trim()) return;
     try {
       setProcessing(true);
-      for (const storeId of selectedStores) {
-        const storeData = stores.find(s => s.storeId === storeId);
+      for (const key of selectedKeys) {
+        const [storeId, weekStart] = key.split('-');
+        const storeData = stores.find(s => s.storeId === storeId && s.weekStart === weekStart);
         if (storeData) {
           await api.post('/ShiftApproval/reject', { 
             storeId: storeId, 
@@ -118,8 +127,8 @@ const ShiftApproval = ({ user }) => {
           });
         }
       }
-      showToast(`${selectedStores.length} mallas han sido rechazadas`);
-      setSelectedStores([]);
+      showToast(`${selectedKeys.length} mallas han sido rechazadas`);
+      setSelectedKeys([]);
       setRejectionComment('');
       setShowCommentModal(false);
       fetchStores();
@@ -132,15 +141,25 @@ const ShiftApproval = ({ user }) => {
 
   const filteredStores = stores.filter(s => {
     if (!s) return false;
-    const search = (searchTerm || "").toLowerCase();
-    const name = (s.name || "").toLowerCase();
-    const externalId = (s.externalId || "").toLowerCase();
-    const district = (s.districtName || "").toLowerCase();
     
-    return name.includes(search) || 
-           externalId.includes(search) || 
-           district.includes(search);
+    // 🔍 Filtro de Buscador
+    const search = (searchTerm || "").toLowerCase();
+    const matchesSearch = (s.name || "").toLowerCase().includes(search) || 
+                         (s.externalId || "").toLowerCase().includes(search) || 
+                         (s.districtName || "").toLowerCase().includes(search);
+    
+    // 🎭 Filtros Advanced V18.9
+    const matchesDistrict = filterDistrict === 'ALL' || s.districtName === filterDistrict;
+    const matchesStore = filterStore === 'ALL' || s.name === filterStore;
+    const matchesWeek = filterWeek === 'ALL' || formatDateRange(s.minDate, s.maxDate) === filterWeek;
+
+    return matchesSearch && matchesDistrict && matchesStore && matchesWeek;
   });
+
+  // Extract Lists for Filters
+  const districtsList = [...new Set(stores.map(s => s.districtName))].sort();
+  const storesList = [...new Set(stores.map(s => s.name))].sort();
+  const weeksList = [...new Set(stores.map(s => formatDateRange(s.minDate, s.maxDate)))].sort();
 
   const formatDateRange = (min, max) => {
     try {
@@ -212,7 +231,7 @@ const ShiftApproval = ({ user }) => {
         {activeTab === 'PENDING' && (
           <div style={{ display: 'flex', gap: '16px' }}>
             <button 
-              disabled={selectedStores.length === 0 || processing}
+              disabled={selectedKeys.length === 0 || processing}
               onClick={() => setShowCommentModal(true)}
               style={{ 
                 padding: '14px 28px', 
@@ -226,14 +245,14 @@ const ShiftApproval = ({ user }) => {
                 alignItems: 'center', 
                 gap: '10px',
                 transition: 'all 0.2s',
-                cursor: selectedStores.length === 0 ? 'not-allowed' : 'pointer',
-                opacity: selectedStores.length === 0 ? 0.5 : 1
+                cursor: selectedKeys.length === 0 ? 'not-allowed' : 'pointer',
+                opacity: selectedKeys.length === 0 ? 0.5 : 1
               }}
             >
-              <XCircle size={18} /> Rechazar ({selectedStores.length})
+              <XCircle size={18} /> Rechazar ({selectedKeys.length})
             </button>
             <button 
-              disabled={selectedStores.length === 0 || processing}
+              disabled={selectedKeys.length === 0 || processing}
               onClick={() => setShowApprovalModal(true)}
               style={{ 
                 padding: '14px 28px', 
@@ -248,8 +267,8 @@ const ShiftApproval = ({ user }) => {
                 gap: '10px',
                 boxShadow: '0 10px 25px rgba(79, 70, 229, 0.3)',
                 transition: 'all 0.2s',
-                cursor: selectedStores.length === 0 ? 'not-allowed' : 'pointer',
-                opacity: selectedStores.length === 0 ? 0.5 : 1
+                cursor: selectedKeys.length === 0 ? 'not-allowed' : 'pointer',
+                opacity: selectedKeys.length === 0 ? 0.5 : 1
               }}
             >
               <CheckCircle size={18} /> Aprobar Seleccionados
@@ -282,35 +301,74 @@ const ShiftApproval = ({ user }) => {
         ))}
       </div>
 
-      {/* Toolbar & Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '20px', marginBottom: '2rem', alignItems: 'center' }}>
-        <div style={{ position: 'relative', width: '100%', maxWidth: '600px' }}>
-          <Search size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input 
-            type="text" 
-            placeholder="Buscar por sede, ID o distrito..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ 
-              width: '100%', 
-              padding: '18px 24px 18px 60px', 
-              borderRadius: '20px', 
-              border: `1.5px solid ${activeColors.border}`, 
-              background: activeColors.card, 
-              color: activeColors.textMain, 
-              fontWeight: '700',
-              outline: 'none',
-              transition: 'all 0.2s'
-            }}
-            className="focus:border-indigo-500 focus:shadow-xl focus:shadow-indigo-500/5"
-          />
-        </div>
-        
-        <div style={{ display: 'flex', gap: '12px' }}>
-           <div style={{ padding: '12px 20px', background: activeColors.accentSoft, borderRadius: '16px', border: `1.5px solid ${activeColors.accent}20` }}>
-              <span style={{ fontSize: '10px', fontWeight: '900', color: activeColors.accent, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tiendas Listadas</span>
-              <span style={{ fontSize: '1.2rem', fontWeight: '950', color: activeColors.accent }}>{stores.length}</span>
-           </div>
+      {/* Toolbar & Advanced Filters V18.9 */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px', marginBottom: '2.5rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
+          
+          {/* Buscador Principal */}
+          <div style={{ position: 'relative', flex: '1', minWidth: '300px' }}>
+            <Search size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input 
+              type="text" 
+              placeholder="Buscar por sede, ID o distrito..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ 
+                width: '100%', 
+                padding: '16px 20px 16px 55px', 
+                borderRadius: '18px', 
+                border: `1.5px solid ${activeColors.border}`, 
+                background: activeColors.card, 
+                color: activeColors.textMain, 
+                fontWeight: '700',
+                outline: 'none',
+                fontSize: '0.9rem'
+              }}
+              className="focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all"
+            />
+          </div>
+
+          {/* Filtro Distrito */}
+          <div style={{ minWidth: '180px' }}>
+            <select 
+              value={filterDistrict}
+              onChange={(e) => setFilterDistrict(e.target.value)}
+              style={{ width: '100%', padding: '16px 20px', borderRadius: '18px', border: `1.5px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '800', fontSize: '0.85rem', outline: 'none', cursor: 'pointer' }}
+            >
+              <option value="ALL">📍 Todos los Distritos</option>
+              {districtsList.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+
+          {/* Filtro Sede */}
+          <div style={{ minWidth: '180px' }}>
+            <select 
+              value={filterStore}
+              onChange={(e) => setFilterStore(e.target.value)}
+              style={{ width: '100%', padding: '16px 20px', borderRadius: '18px', border: `1.5px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '800', fontSize: '0.85rem', outline: 'none', cursor: 'pointer' }}
+            >
+              <option value="ALL">🏪 Todas las Sedes</option>
+              {storesList.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+
+          {/* Filtro Semana */}
+          <div style={{ minWidth: '220px' }}>
+            <select 
+              value={filterWeek}
+              onChange={(e) => setFilterWeek(e.target.value)}
+              style={{ width: '100%', padding: '16px 20px', borderRadius: '18px', border: `1.5px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '800', fontSize: '0.85rem', outline: 'none', cursor: 'pointer' }}
+            >
+              <option value="ALL">📅 Todos los Periodos</option>
+              {weeksList.map(w => <option key={w} value={w}>{w}</option>)}
+            </select>
+          </div>
+
+          {/* Stats Count */}
+          <div style={{ padding: '14px 24px', background: activeColors.accentSoft, borderRadius: '18px', border: `1.5px solid ${activeColors.accent}30`, display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '0.9rem', fontWeight: '950', color: activeColors.accent }}>{filteredStores.length}</span>
+            <span style={{ fontSize: '0.75rem', fontWeight: '800', color: activeColors.accent, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Mallas</span>
+          </div>
         </div>
       </div>
 
@@ -323,7 +381,7 @@ const ShiftApproval = ({ user }) => {
                 <th style={{ padding: '20px 24px', width: '60px' }}>
                   <input 
                     type="checkbox" 
-                    checked={selectedStores.length === filteredStores.length && filteredStores.length > 0}
+                    checked={selectedKeys.length === filteredStores.length && filteredStores.length > 0}
                     onChange={handleSelectAll}
                     style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: activeColors.accent }}
                   />
@@ -354,13 +412,13 @@ const ShiftApproval = ({ user }) => {
                 </td>
               </tr>
             ) : filteredStores.map(store => (
-              <tr key={store.storeId} style={{ borderBottom: `1px solid ${activeColors.border}`, transition: 'all 0.2s' }} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+              <tr key={`${store.storeId}-${store.weekStart}`} style={{ borderBottom: `1px solid ${activeColors.border}`, transition: 'all 0.2s' }} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                 {activeTab === 'PENDING' && (
                   <td style={{ padding: '24px' }}>
                     <input 
                       type="checkbox" 
-                      checked={selectedStores.includes(store.storeId)}
-                      onChange={() => handleSelectStore(store.storeId)}
+                      checked={selectedKeys.includes(`${store.storeId}-${store.weekStart}`)}
+                      onChange={() => handleSelectStore(store)}
                       style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: activeColors.accent }}
                     />
                   </td>
