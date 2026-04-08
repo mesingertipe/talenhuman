@@ -639,6 +639,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
             showToast("Semana aprobada correctamente");
             setShowApprovalModal(false);
+            setWeeklyStatus({ status: 'Approved', date: new Date() }); // Sincronización inmediata
             fetchData();
             fetchWeeklyStatus();
         } catch (err) {
@@ -673,6 +674,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
             showToast("Programación rechazada y gerente notificado");
             setShowRejectionModal(false);
+            setWeeklyStatus({ status: 'Rejected', comment: rejectionComment, date: new Date() }); // Sincronización inmediata
             fetchData();
             fetchWeeklyStatus();
         } catch (err) {
@@ -1004,6 +1006,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     placeholder="SELECCIONAR SEDE..."
                                     icon={Store}
                                     variant="minimal"
+                                    disabled={readOnly}
                                 />
                             </div>
 
@@ -1017,27 +1020,32 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     placeholder="TODOS LOS PUESTOS..."
                                     icon={ShieldCheck}
                                     variant="minimal"
+                                    disabled={readOnly}
                                 />
                             </div>
 
                             {/* V13.0 ELITE STATUS BADGE - VISIBILIDAD MEJORADA */}
-                            <div className="flex items-center gap-4 px-8 py-4 bg-white dark:bg-slate-800 rounded-[24px] border border-slate-100 dark:border-slate-700 shadow-xl shadow-slate-200/20 dark:shadow-none animate-in zoom-in duration-500 min-w-[180px]">
+                            <div className={`flex items-center gap-4 px-8 py-4 ${weeklyStatus.status === 'Approved' ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200' : (weeklyStatus.status === 'Rejected' ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-200' : 'bg-white dark:bg-slate-800 border-slate-100')} rounded-[24px] border shadow-xl shadow-slate-200/20 dark:shadow-none animate-in zoom-in duration-500 min-w-[220px]`}>
                                 {isProcessingStatus ? (
                                     <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
                                 ) : (
                                     <>
                                         <div className={`w-3 h-3 rounded-full animate-pulse ${weeklyStatus.status === 'Approved' ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : (weeklyStatus.status === 'Rejected' ? 'bg-rose-500 shadow-[0_0_10px_#f43f5e]' : (weeklyStatus.status === 'Empty' ? 'bg-slate-300' : 'bg-amber-500 shadow-[0_0_10px_#f59e0b]'))}`}></div>
                                         <div className="flex flex-col leading-none">
-                                            <span className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1.5 leading-none">Status Semanal</span>
+                                            <span className={`text-[9px] font-black uppercase tracking-[0.2em] mb-1.5 leading-none ${weeklyStatus.status === 'Approved' ? 'text-emerald-500' : (weeklyStatus.status === 'Rejected' ? 'text-rose-500' : 'text-slate-400')}`}>
+                                                {weeklyStatus.status === 'Approved' ? 'VALIDACIÓN COMPLETADA' : (weeklyStatus.status === 'Rejected' ? 'CORRECCIÓN REQUERIDA' : 'Status Semanal')}
+                                            </span>
                                             <span className={`text-[13px] font-[1000] uppercase tracking-tighter ${weeklyStatus.status === 'Approved' ? 'text-emerald-600' : (weeklyStatus.status === 'Rejected' ? 'text-rose-600' : 'text-amber-600')}`}>
-                                                {weeklyStatus.status === 'Approved' ? 'Semana Lista (OK)' : (weeklyStatus.status === 'Rejected' ? 'Programación Rechazada' : (weeklyStatus.status === 'Empty' ? 'Personal Sin Turno' : 'Esperando Validación'))}
+                                                {weeklyStatus.status === 'Approved' ? 'SEMANA LISTA (OK)' : (weeklyStatus.status === 'Rejected' ? 'RECHAZADA / AJUSTAR' : (weeklyStatus.status === 'Empty' ? 'Personal Sin Turno' : 'Esperando Validación'))}
                                             </span>
                                         </div>
+                                        {weeklyStatus.status === 'Approved' && <ShieldCheck size={18} className="text-emerald-500 ml-2" />}
                                         {weeklyStatus.status === 'Rejected' && weeklyStatus.comment && (
                                             <div className="group relative ml-2">
-                                                <AlertCircle size={14} className="text-rose-400 cursor-help" />
-                                                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-3 hidden group-hover:block w-48 p-3 bg-slate-900 text-white text-[10px] font-bold rounded-xl shadow-2xl z-[100] border border-white/10 animate-in fade-in slide-in-from-bottom-2">
-                                                    Motivo: {weeklyStatus.comment}
+                                                <AlertTriangle size={18} className="text-rose-500 cursor-help animate-bounce" />
+                                                <div className="absolute right-0 bottom-full mb-3 w-64 p-4 bg-slate-900 text-white text-[11px] font-bold rounded-2xl shadow-2xl z-[100] border border-white/10 animate-in fade-in slide-in-from-bottom-2">
+                                                    <p className="text-rose-400 uppercase text-[9px] mb-1">Motivo del Auditor:</p>
+                                                    {weeklyStatus.comment}
                                                 </div>
                                             </div>
                                         )}
@@ -1051,28 +1059,32 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                              style={{ borderRadius: '40px' }}>
                             
                             {/* Lado Izquierdo: Acciones Masivas (flex-1 para empujar) */}
-                            <div className="flex-1 flex justify-start pl-2">
-                                <button onClick={() => setShowBulkModal(true)}
-                                        disabled={selectedEmployees.length === 0}
-                                        className={`flex items-center gap-3 px-6 h-[56px] rounded-[30px] transition-all active:scale-95 group relative overflow-hidden ${selectedEmployees.length === 0 ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-400 opacity-40' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-200/50 dark:shadow-none hover:bg-indigo-700'}`}
-                                        data-v12-tooltip="Programar turno masivo para seleccionados">
-                                    <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                                    <div className="relative flex items-center gap-3">
-                                        <Clock size={18} strokeWidth={2.5} />
-                                        <div className="hidden xl:flex flex-col items-start leading-none">
-                                            <span className="text-[10px] font-black uppercase tracking-widest">Acciones Masivas</span>
-                                            <span className="text-[9px] font-bold opacity-80 uppercase">{selectedEmployees.length} Seleccionados</span>
+                            {!readOnly && (
+                                <div className="flex-1 flex justify-start pl-2">
+                                    <button onClick={() => setShowBulkModal(true)}
+                                            disabled={selectedEmployees.length === 0}
+                                            className={`flex items-center gap-3 px-6 h-[56px] rounded-[30px] transition-all active:scale-95 group relative overflow-hidden ${selectedEmployees.length === 0 ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-400 opacity-40' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-200/50 dark:shadow-none hover:bg-indigo-700'}`}
+                                            data-v12-tooltip="Programar turno masivo para seleccionados">
+                                        <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                                        <div className="relative flex items-center gap-3">
+                                            <Clock size={18} strokeWidth={2.5} />
+                                            <div className="hidden xl:flex flex-col items-start leading-none">
+                                                <span className="text-[10px] font-black uppercase tracking-widest">Acciones Masivas</span>
+                                                <span className="text-[9px] font-bold opacity-80 uppercase">{selectedEmployees.length} Seleccionados</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                </button>
-                            </div>
+                                    </button>
+                                </div>
+                            )}
 
                             {/* Centro: Navegación Central (Ancho Fijo para Centrado Real) */}
                             <div className="flex-shrink-0 flex items-center">
                                 <div className="w-[1px] h-8 bg-slate-100 dark:bg-slate-800 mr-4"></div>
-                                <button onClick={() => setWeekOffset(prev => prev - 1)} 
-                                        className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-2xl transition-all active:scale-90" 
-                                        data-v12-tooltip="Semana Anterior"><ChevronLeft size={22} strokeWidth={3} /></button>
+                                {!readOnly && (
+                                    <button onClick={() => setWeekOffset(prev => prev - 1)} 
+                                            className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-2xl transition-all active:scale-90" 
+                                            data-v12-tooltip="Semana Anterior"><ChevronLeft size={22} strokeWidth={3} /></button>
+                                )}
                                 
                                 <div className="flex flex-col items-center px-6 min-w-[200px]">
                                     <span className="text-[9px] font-black uppercase text-indigo-500 tracking-[0.3em] mb-1 leading-none">Período Vigente</span>
@@ -1081,9 +1093,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     </span>
                                 </div>
 
-                                <button onClick={() => setWeekOffset(prev => prev + 1)} 
-                                        className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-2xl transition-all active:scale-90" 
-                                        data-v12-tooltip="Semana Siguiente"><ChevronRight size={22} strokeWidth={3} /></button>
+                                {!readOnly && (
+                                    <button onClick={() => setWeekOffset(prev => prev + 1)} 
+                                            className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-2xl transition-all active:scale-90" 
+                                            data-v12-tooltip="Semana Siguiente"><ChevronRight size={22} strokeWidth={3} /></button>
+                                )}
                                 <div className="w-[1px] h-8 bg-slate-100 dark:bg-slate-800 ml-4"></div>
                             </div>
 
@@ -1125,7 +1139,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         </div>
 
                         {/* V13.0 TOP APPROVAL BAR - REUBICADA POR UX */}
-                        {isApprover && shifts.some(s => s.status === 0) && (
+                        {isApprover && weeklyStatus.status !== 'Approved' && weeklyStatus.status !== 'Rejected' && shifts.some(s => s.status === 0) && (
                             <div style={{ 
                                 background: isDarkMode ? 'rgba(79, 70, 229, 0.1)' : 'rgba(79, 70, 229, 0.05)', 
                                 backdropFilter: 'blur(10px)',

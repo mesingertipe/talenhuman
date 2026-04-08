@@ -175,28 +175,76 @@ public class ShiftApprovalController : ControllerBase
         }
 
         await _context.SaveChangesAsync(CancellationToken.None);
+        
+        // ⚙️ V18.8.3: Obtener Configuración Corporativa Global
+        var settings = await _context.OperationalSettings
+            .FirstOrDefaultAsync(o => o.CompanyId == companyId);
 
-        // 📧 1. Notificar al Gerente de la Tienda (Email)
-        var managers = await _context.SupervisorStores
-            .Include(ss => ss.User)
-            .Where(ss => ss.StoreId == request.StoreId)
-            .Select(ss => ss.User)
-            .ToListAsync();
+        // 🕵️ Identificar al Autor (Audit Log)
+        var lastLog = await _context.AuditLogs
+            .Where(al => al.CompanyId == companyId && 
+                        al.EntityType == "Shifts" && 
+                        al.EntityId == request.StoreId.ToString())
+            .OrderByDescending(al => al.CreatedAt)
+            .FirstOrDefaultAsync();
 
-        foreach (var manager in managers.Where(m => !string.IsNullOrEmpty(m.Email)))
+        string? authorEmail = null;
+        if (lastLog != null && lastLog.UserId.HasValue) 
         {
-            await _notificationService.SendNotificationAsync(new NotificationRequest {
-                To = manager.Email,
-                Subject = "✅ Programación de Turnos APROBADA",
-                Message = $"La programación del {request.StartDate:dd/MM} al {request.EndDate:dd/MM} ha sido aprobada por RH.\n\nComentario: {request.Comment}",
-                Type = NotificationType.Email
-            });
+            var authorUser = await _context.Users.FindAsync(lastLog.UserId.Value);
+            authorEmail = authorUser?.Email;
         }
 
-        // 📱 V13.0: Employee PUSH notification removed to avoid noise as requested.
+        // 📧 Notificaciones Email
+        if (settings?.EnableEmailNotifications ?? true)
+        {
+            var managers = await _context.SupervisorStores
+                .Include(ss => ss.User)
+                .Where(ss => ss.StoreId == request.StoreId)
+                .Select(ss => ss.User)
+                .ToListAsync();
+
+            var emails = managers.Where(m => !string.IsNullOrEmpty(m.Email)).Select(m => m.Email).ToList();
+            if (!string.IsNullOrEmpty(authorEmail) && !emails.Contains(authorEmail)) emails.Add(authorEmail);
+
+            foreach (var email in emails)
+            {
+                await _notificationService.SendNotificationAsync(new NotificationRequest {
+                    To = email,
+                    Subject = "✅ Programación APROBADA",
+                    Message = $"La programación del {request.StartDate:dd/MM} al {request.EndDate:dd/MM} ha sido validada oficialmente.\n\nComentario: {request.Comment}",
+                    Type = NotificationType.Email
+                });
+            }
+        }
+
+        // 📱 PUSH Masivo a Empleados ACTIVOS
+        if (settings?.EnablePushNotifications ?? true)
+        {
+            var employees = await _context.Employees
+                .Include(e => e.User)
+                .Where(e => e.CompanyId == companyId && e.StoreId == request.StoreId && e.IsActive && e.User != null && !string.IsNullOrEmpty(e.User.FirebaseToken))
+                .Select(e => new { e.User!.Id, e.User.FirebaseToken })
+                .ToListAsync();
+
+            if (employees.Any())
+            {
+                await _notificationService.SendBroadcastAsync(
+                    employees.Select(e => e.Id),
+                    employees.Select(e => e.FirebaseToken!),
+                    new NotificationRequest {
+                        Subject = "¡Horario Publicado! ✅",
+                        Message = $"Tu programación para {request.StartDate:dd/MM} — {request.EndDate:dd/MM} ya está disponible. ¡Consúltala!",
+                        Type = NotificationType.Push,
+                        Category = "shift_reminder"
+                    }
+                );
+            }
+        }
+
         await _auditService.LogAsync("APPROVAL_FLOW", "Shifts", request.StoreId.ToString(), $"Programación aprobada para el periodo {request.StartDate:dd/MM} - {request.EndDate:dd/MM}.");
 
-        return Ok(new { Message = "Turnos aprobados y notificaciones enviadas." });
+        return Ok(new { Message = "Turnos aprobados y notificaciones enviadas según configuración." });
     }
 
     [HttpGet("status")]
@@ -263,24 +311,51 @@ public class ShiftApprovalController : ControllerBase
 
         await _context.SaveChangesAsync(CancellationToken.None);
 
-        // 📧 Notificar al Gerente de la Tienda de que debe CORREGIR (Email)
-        var managers = await _context.SupervisorStores
-            .Include(ss => ss.User)
-            .Where(ss => ss.StoreId == request.StoreId)
-            .Select(ss => ss.User)
-            .ToListAsync();
+        // ⚙️ V18.8.3: Configuración Corporativa
+        var settings = await _context.OperationalSettings
+            .FirstOrDefaultAsync(o => o.CompanyId == companyId);
 
-        foreach (var manager in managers.Where(m => !string.IsNullOrEmpty(m.Email)))
+        // 🕵️ Identificar Autor mediante log de auditoría
+        var lastLog = await _context.AuditLogs
+            .Where(al => al.CompanyId == companyId && 
+                        al.EntityType == "Shifts" && 
+                        al.EntityId == request.StoreId.ToString())
+            .OrderByDescending(al => al.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        string? authorEmail = null;
+        if (lastLog != null && lastLog.UserId.HasValue) 
         {
-            await _notificationService.SendNotificationAsync(new NotificationRequest {
-                To = manager.Email,
-                Subject = "❌ Programación de Turnos RECHAZADA",
-                Message = $"La programación del {request.StartDate:dd/MM} al {request.EndDate:dd/MM} ha sido rechazada por RH y requiere ajustes.\n\nMotivo del rechazo: {request.Comment}",
-                Type = NotificationType.Email
-            });
+            var authorUser = await _context.Users.FindAsync(lastLog.UserId.Value);
+            authorEmail = authorUser?.Email;
         }
 
-        return Ok(new { Message = "Turnos rechazados y gerente notificado." });
+        // 📧 Notificaciones Email de Rechazo (Si aplica)
+        if (settings?.EnableEmailNotifications ?? true)
+        {
+            var managers = await _context.SupervisorStores
+                .Include(ss => ss.User)
+                .Where(ss => ss.StoreId == request.StoreId)
+                .Select(ss => ss.User)
+                .ToListAsync();
+
+            var emails = managers.Where(m => !string.IsNullOrEmpty(m.Email)).Select(m => m.Email).ToList();
+            if (!string.IsNullOrEmpty(authorEmail) && !emails.Contains(authorEmail)) emails.Add(authorEmail);
+
+            foreach (var email in emails)
+            {
+                await _notificationService.SendNotificationAsync(new NotificationRequest {
+                    To = email,
+                    Subject = "🚨 Programación RECHAZADA - Ajustes Requeridos",
+                    Message = $"La programación del {request.StartDate:dd/MM} al {request.EndDate:dd/MM} NO ha sido aprobada.\n\nMOTIVO DEL RECHAZO: {request.Comment}\n\nPor favor, realice los ajustes y vuelva a publicar.",
+                    Type = NotificationType.Email
+                });
+            }
+        }
+
+        await _auditService.LogAsync("REJECTION_FLOW", "Shifts", request.StoreId.ToString(), $"Programación RECHAZADA para el periodo {request.StartDate:dd/MM} - {request.EndDate:dd/MM}. Motivo: {request.Comment}");
+
+        return Ok(new { Message = "Turnos rechazados y notificaciones enviadas correctamente al autor y supervisores." });
     }
 
     public class ApprovalRequest
