@@ -102,8 +102,8 @@ public class ShiftsController : ControllerBase
         // 3.1 Identify shifts that have associated Attendances to avoid FK violations (Error 23503)
         var shiftIds = existingShifts.Select(s => s.Id).ToList();
         var shiftsWithAttendance = await _context.Attendances
-            .Where(a => shiftIds.Contains(a.ShiftId))
-            .Select(a => a.ShiftId)
+            .Where(a => a.ShiftId.HasValue && shiftIds.Contains(a.ShiftId.Value))
+            .Select(a => a.ShiftId.Value)
             .Distinct()
             .ToListAsync();
 
