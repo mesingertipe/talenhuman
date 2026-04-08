@@ -37,23 +37,29 @@ const OperationalSettings = () => {
         }
     };
 
-    const handleSaveRequest = () => setShowConfirm(true);
+    const handleSaveRequest = () => {
+        console.log("Triggering confirmation modal...");
+        setShowConfirm(true);
+    };
 
     const confirmSave = async () => {
         setShowConfirm(false);
         try {
             setSaving(true);
+            // Payload exacto para el UpdateOperationalSettingsDto
             const payload = {
-                
-                attendanceMode: settings.attendanceMode,
-                shiftApprovalMode: settings.shiftApprovalMode,
-                enablePushNotifications: settings.enablePushNotifications,
-                enableEmailNotifications: settings.enableEmailNotifications
+                attendanceMode: parseInt(settings.attendanceMode),
+                shiftApprovalMode: parseInt(settings.shiftApprovalMode),
+                enablePushNotifications: !!settings.enablePushNotifications,
+                enableEmailNotifications: !!settings.enableEmailNotifications
             };
+            
+            console.log("Sending payload:", payload);
             const res = await api.post('/OperationalSettings', payload);
             setSettings(res.data);
             showToast("Protocolos sincronizados exitosamente", "success");
         } catch (err) {
+            console.error("Save error:", err);
             showToast("Error de comunicación con el núcleo", "error");
         } finally {
             setSaving(false);

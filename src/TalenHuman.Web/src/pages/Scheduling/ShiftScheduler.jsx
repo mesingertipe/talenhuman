@@ -105,6 +105,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
     const [rejectionComment, setRejectionComment] = useState('');
     const [approvalComment, setApprovalComment] = useState('');
     const [isProcessingStatus, setIsProcessingStatus] = useState(false);
+    const [syncPhase, setSyncPhase] = useState(0); // 0: Init, 1: Validating, 2: Syncing, 3: Notifying, 4: Done
 
     const getMonday = (offset = 0) => {
         const now = new Date();
@@ -347,42 +348,57 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
     const handleDragStart = (e, source, data) => {
         setIsDragging(true);
         setDragSource(source);
-        setDraggedData(data); // data contains {type, id, ...}
+        setDraggedData(data);
 
-        // V13.0 PREMIUM GHOST IMAGE
-        // Create a clean, minimal preview for the drag operation
+        // V13.0 ELITE HIGH-FIDELITY GHOST IMAGE
         const ghost = document.createElement('div');
-        ghost.style.width = '100px';
-        ghost.style.height = '40px';
-        ghost.style.backgroundColor = source === 'PANEL' 
-            ? (data.type === 'Descanso' ? '#94a3b8' : (data.type === 'TurnoFuera' ? '#8b5cf6' : '#4f46e5')) 
-            : '#4f46e5';
-        ghost.style.borderRadius = '12px';
-        ghost.style.position = 'absolute';
-        ghost.style.top = '-1000px'; // Hide it from view
-        ghost.style.display = 'flex';
-        ghost.style.alignItems = 'center';
-        ghost.style.justifyContent = 'center';
-        ghost.style.color = 'white';
-        ghost.style.fontSize = '10px';
-        ghost.style.fontWeight = '900';
-        ghost.style.textTransform = 'uppercase';
-        ghost.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
-        ghost.style.border = '2px solid rgba(255,255,255,0.3)';
-        ghost.innerHTML = data.type || 'Moviendo';
+        ghost.className = 'elite-drag-ghost';
+        
+        // Determinar estilo basado en tipo
+        let typeLabel = data.type || 'TURNO';
+        let bgColor = '#4f46e5'; // Indigo
+        if (typeLabel === 'Descanso') bgColor = '#94a3b8'; // Slate
+        if (typeLabel === 'Turno Fuera') bgColor = '#8b5cf6'; // Purple
+        
+        // Si viene del grid, intentar obtener el color real
+        if (source === 'GRID' && data.shiftId) {
+             const s = shifts.find(sh => sh.id === data.shiftId);
+             if (s?.isDescanso) { bgColor = '#94a3b8'; typeLabel = 'DESC'; }
+             else if (s?.isFuera) { bgColor = '#8b5cf6'; typeLabel = 'FUERA'; }
+             else typeLabel = 'TURNO';
+        }
+
+        ghost.style.cssText = `
+            width: 110px;
+            height: 48px;
+            background: ${bgColor};
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+            font-weight: 950;
+            text-transform: uppercase;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.4);
+            position: absolute;
+            top: -1000px;
+            z-index: 10000;
+            letter-spacing: 0.1em;
+            pointer-events: none;
+        `;
+        ghost.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${typeLabel}`;
         
         document.body.appendChild(ghost);
-        e.dataTransfer.setDragImage(ghost, 50, 20);
+        e.dataTransfer.setDragImage(ghost, 55, 24);
         
-        // Cleanup ghost element after start
-        setTimeout(() => document.body.removeChild(ghost), 0);
+        // Retrasar eliminación para asegurar rendereo
+        setTimeout(() => { if (document.body.contains(ghost)) document.body.removeChild(ghost); }, 50);
 
-        if (source === 'GRID') {
-            e.dataTransfer.setData('shiftId', data.id);
-        }
         e.dataTransfer.setData("source", source);
         e.dataTransfer.setData("payload", JSON.stringify(data));
-        e.dataTransfer.effectAllowed = source === 'GRID' ? "copy" : "move";
+        e.dataTransfer.effectAllowed = "copyMove";
     };
 
     const hasNovedad = (employeeId, date) => {
@@ -405,6 +421,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
 
     const handleDropOnGrid = (e, targetEmployeeId, targetDate) => {
         e.preventDefault();
+        e.currentTarget.classList.remove('elite-drop-active');
         const source = e.dataTransfer.getData("source");
         const payload = JSON.parse(e.dataTransfer.getData("payload"));
 
@@ -415,16 +432,13 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
 
         const today = new Date();
         today.setHours(0,0,0,0);
-        const isLockedDay = new Date(targetDate).getTime() < today.getTime();
-        
-        if (isLockedDay) {
+        if (new Date(targetDate).getTime() < today.getTime()) {
             showToast("Día bloqueado: Dato histórico", "error");
             return;
         }
 
-        const existingShifts = shifts.filter(s => s.employeeId === targetEmployeeId && new Date(s.startTime).toDateString() === targetDate.toDateString());
-        const hasAttendance = existingShifts.some(s => attendances.some(a => String(a.shiftId) === String(s.id)));
-        if (hasAttendance) {
+        const existingDayShifts = shifts.filter(s => s.employeeId === targetEmployeeId && new Date(s.startTime).toDateString() === targetDate.toDateString());
+        if (existingDayShifts.some(s => attendances.some(a => String(a.shiftId) === String(s.id)))) {
             showToast("Día bloqueado: Ya existe marcación", "warning");
             return;
         }
@@ -442,23 +456,19 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                     isDescanso: payload.type === 'Descanso',
                     isFuera: payload.type === 'Turno Fuera'
                 };
-
-                const newShifts = [...shifts];
-                // Check if there is already a shift of the SAME TYPE or if we should just add it
-                // For Descanso/Fuera, usually one per day. 
-                const existingIdx = newShifts.findIndex(s => s.employeeId === targetEmployeeId && new Date(s.startTime).toDateString() === targetDate.toDateString() && (s.isDescanso || s.isFuera));
                 
-                if (existingIdx >= 0) newShifts[existingIdx] = newShift;
-                else newShifts.push(newShift);
-                
-                setShifts(newShifts);
+                setShifts(prev => {
+                    const filtered = prev.filter(s => !(s.employeeId === targetEmployeeId && new Date(s.startTime).toDateString() === targetDate.toDateString() && (s.isDescanso || s.isFuera)));
+                    return [...filtered, newShift];
+                });
                 showToast(`${payload.type} asignado`);
             } else {
                 setPendingEvent({ employeeId: targetEmployeeId, date: targetDate, type: payload.type });
                 setStartTime('08:00'); setEndTime('17:00'); setShowTimeModal(true);
             }
         } else if (source === 'GRID') {
-            const sourceShift = shifts.find(s => s.employeeId === payload.employeeId && new Date(s.startTime).toDateString() === new Date(payload.date).toDateString());
+            // Lógica de COPIADO entre celdas
+            const sourceShift = shifts.find(s => s.id === payload.shiftId || (s.employeeId === payload.employeeId && new Date(s.startTime).toDateString() === new Date(payload.date).toDateString()));
             if (!sourceShift) return;
 
             const newStart = new Date(targetDate);
@@ -468,6 +478,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
             const newEnd = new Date(targetDate);
             const oe = new Date(sourceShift.endTime);
             newEnd.setHours(oe.getHours(), oe.getMinutes(), 0);
+            if (newEnd < newStart && !sourceShift.isDescanso && !sourceShift.isFuera) newEnd.setDate(newEnd.getDate() + 1);
 
             const newShift = {
                 employeeId: targetEmployeeId,
@@ -478,15 +489,13 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                 isFuera: !!sourceShift.isFuera
             };
 
-            const newShifts = [...shifts];
-            // Add as a new shift instead of replacing, unless it exactly overlaps
-            const isOverlap = newShifts.some(s => s.employeeId === targetEmployeeId && s.startTime === newShift.startTime && s.endTime === newShift.endTime);
-            
-            if (!isOverlap) {
-                newShifts.push(newShift);
-                setShifts(newShifts);
-                showToast("Turno copiado");
-            }
+            setShifts(prev => {
+                // Evitar duplicados exactos en el mismo empleado/día/hora
+                const isOverlap = prev.some(s => s.employeeId === targetEmployeeId && s.startTime === newShift.startTime && s.endTime === newShift.endTime);
+                if (isOverlap) return prev;
+                return [...prev, newShift];
+            });
+            showToast("Turno copiado");
         }
     };
 
@@ -533,20 +542,42 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
         }
         try {
             setIsSaving(true);
-            const endDate = new Date(currentWeekStart); endDate.setDate(endDate.getDate() + 7);
+            setSyncPhase(1); // Fase: Validando
+            
+            const endDate = new Date(currentWeekStart); 
+            endDate.setDate(endDate.getDate() + 7);
             const localizedShifts = shifts.map(s => ({ ...s, startTime: toLocalISO(s.startTime), endTime: toLocalISO(s.endTime) }));
 
-            await api.post('/shifts/bulk', {
+            // Simular ritual de seguridad para fluidez visual
+            setTimeout(() => setSyncPhase(2), 600); // Fase: Sincronizando core
+
+            const response = await api.post('/shifts/bulk', {
                 storeId: selectedStore,
                 startDate: toLocalISO(currentWeekStart),
                 endDate: toLocalISO(endDate),
                 shifts: localizedShifts,
                 comment: saveComment
             });
-            setLastSaveComment(saveComment);
-            showToast("Programación guardada exitosamente");
-            setShowSaveModal(false); fetchData();
-        } catch (err) { showToast(err.response?.data?.message || "Error al guardar", "error"); } finally { setIsSaving(false); }
+
+            setSyncPhase(3); // Fase: Notificando Gerencia
+            setTimeout(() => {
+                setSyncPhase(4);
+                setLastSaveComment(saveComment);
+                showToast("Programación guardada exitosamente");
+                setShowSaveModal(false); 
+                fetchData();
+            }, 800);
+            
+        } catch (err) { 
+            showToast(err.response?.data?.message || "Error al guardar", "error"); 
+            setIsSaving(false);
+        } finally { 
+            // El setSaving(false) se maneja tras la animación 'Done'
+            setTimeout(() => {
+                setIsSaving(false);
+                setSyncPhase(0);
+            }, 2500);
+        }
     };
 
     const handleApproveAll = () => {
@@ -893,6 +924,9 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                         .th-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-weight: 950; font-size: 9px; text-transform: uppercase; }
                         .th-badge-hours { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
                         .dark .th-badge-hours { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+                        
+                        .elite-drop-active { background-color: rgba(79, 70, 229, 0.08) !important; border: 2px dashed #4f46e5 !important; transition: all 0.2s ease; }
+                        .dark .elite-drop-active { background-color: rgba(79, 70, 229, 0.15) !important; border-color: #6366f1 !important; }
                     `}
                 </style>
 
@@ -1288,8 +1322,10 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                                         <td
                                                             key={di}
                                                             onDragOver={e => e.preventDefault()}
+                                                            onDragEnter={e => e.currentTarget.classList.add('elite-drop-active')}
+                                                            onDragLeave={e => e.currentTarget.classList.remove('elite-drop-active')}
                                                             onDrop={e => handleDropOnGrid(e, emp.id, day)}
-                                                            className="p-1 border-r dark:border-slate-800"
+                                                            className="p-1 border-r dark:border-slate-800 transition-colors"
                                                         >
                                                             <div className="flex flex-col gap-1 min-h-[96px] justify-center">
                                                                 {nov && (
@@ -1875,6 +1911,44 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                     }}
                                 ></div>
                             </div>
+                        </div>
+                    )}
+                    {/* V17 ELITE SYNC OVERLAY - SMART SAVING FEEDBACK */}
+                    {isSaving && (
+                        <div className="fixed inset-0 z-[300000] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-2xl animate-in fade-in duration-500">
+                             <div className="bg-white dark:bg-[#0f172a] w-full max-w-sm rounded-[48px] shadow-[0_50px_100px_rgba(0,0,0,0.5)] border border-white/20 p-12 text-center animate-in zoom-in-95 duration-300">
+                                <div className="relative mb-10">
+                                    {/* Rotating Progress Ring */}
+                                    <div className={`w-28 h-28 mx-auto rounded-full border-4 ${syncPhase >= 4 ? 'border-emerald-500 bg-emerald-500/10' : 'border-indigo-600/10 border-t-indigo-600 animate-spin'}`}>
+                                        {syncPhase >= 4 && <CheckCircle size={54} className="text-emerald-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-in zoom-in-50" strokeWidth={2.5} />}
+                                    </div>
+                                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg shadow-indigo-600/30 uppercase tracking-widest whitespace-nowrap">
+                                        SECURE SYNC
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3 mb-10">
+                                    <h3 className="text-2xl font-[1000] text-slate-900 dark:text-white tracking-tight">
+                                        {syncPhase === 1 && "Analizando Malla"}
+                                        {syncPhase === 2 && "Sincronizando Core"}
+                                        {syncPhase === 3 && "Notificando Gerencia"}
+                                        {syncPhase >= 4 && "¡Éxito Total!"}
+                                    </h3>
+                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] leading-relaxed">
+                                        {syncPhase === 1 && "Verificando conflictos de nómina..."}
+                                        {syncPhase === 2 && "Actualizando Kernel central..."}
+                                        {syncPhase === 3 && "Disparando alertas de aprobación..."}
+                                        {syncPhase >= 4 && "Datos sincronizados correctamente"}
+                                    </p>
+                                </div>
+
+                                {/* Custom Progress Stepper */}
+                                <div className="flex justify-between gap-2 px-4 mb-2">
+                                    {[1, 2, 3].map(step => (
+                                        <div key={step} className={`h-1.5 flex-1 rounded-full transition-all duration-700 ${syncPhase >= step ? 'bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.5)]' : 'bg-slate-100 dark:bg-white/5'}`}></div>
+                                    ))}
+                                </div>
+                             </div>
                         </div>
                     )}
                 </>,

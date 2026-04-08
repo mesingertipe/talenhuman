@@ -38,7 +38,7 @@ public class OperationalSettingsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<OperationalSetting>> UpdateSettings([FromBody] OperationalSetting settings)
+    public async Task<ActionResult<OperationalSetting>> UpdateSettings([FromBody] UpdateOperationalSettingsDto dto)
     {
         var existing = await _context.OperationalSettings.FirstOrDefaultAsync();
         var companyId = _tenantProvider.GetTenantId();
@@ -46,9 +46,15 @@ public class OperationalSettingsController : ControllerBase
 
         if (existing == null)
         {
-            settings.CompanyId = companyId;
-            _context.OperationalSettings.Add(settings);
-            existing = settings;
+            existing = new OperationalSetting
+            {
+                CompanyId = companyId,
+                AttendanceMode = dto.AttendanceMode,
+                ShiftApprovalMode = dto.ShiftApprovalMode,
+                EnablePushNotifications = dto.EnablePushNotifications,
+                EnableEmailNotifications = dto.EnableEmailNotifications
+            };
+            _context.OperationalSettings.Add(existing);
         }
         else
         {
@@ -60,10 +66,10 @@ public class OperationalSettingsController : ControllerBase
                 existing.EnablePushNotifications
             });
 
-            existing.AttendanceMode = settings.AttendanceMode;
-            existing.ShiftApprovalMode = settings.ShiftApprovalMode;
-            existing.EnablePushNotifications = settings.EnablePushNotifications;
-            existing.EnableEmailNotifications = settings.EnableEmailNotifications;
+            existing.AttendanceMode = dto.AttendanceMode;
+            existing.ShiftApprovalMode = dto.ShiftApprovalMode;
+            existing.EnablePushNotifications = dto.EnablePushNotifications;
+            existing.EnableEmailNotifications = dto.EnableEmailNotifications;
             _context.OperationalSettings.Update(existing);
 
             // Audit Log implementation
@@ -82,4 +88,12 @@ public class OperationalSettingsController : ControllerBase
         await _context.SaveChangesAsync(CancellationToken.None);
         return Ok(existing);
     }
+}
+
+public class UpdateOperationalSettingsDto
+{
+    public AttendanceMode AttendanceMode { get; set; }
+    public ShiftApprovalMode ShiftApprovalMode { get; set; }
+    public bool EnablePushNotifications { get; set; }
+    public bool EnableEmailNotifications { get; set; }
 }

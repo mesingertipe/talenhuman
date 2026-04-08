@@ -162,18 +162,18 @@ public class ShiftsController : ControllerBase
                     .ToListAsync();
             }
 
-            foreach (var app in approvers) {
-                if (!string.IsNullOrEmpty(app.Email)) {
-                    await _notificationService.SendNotificationAsync(new Application.Services.NotificationRequest {
-                        To = app.Email,
-                        Subject = "⚠️ Nueva Malla de Turnos para Aprobar",
-                        Message = $"Se ha cargado una nueva malla de turnos para la tienda '{dto.StoreId}' para el periodo {start:dd/MM} al {end:dd/MM}.\n\nPor favor, ingresa al panel administrativo para revisarla.",
-                        Type = Application.Services.NotificationType.Email
-                    });
-                }
-            }
+            var notificationTasks = approvers
+                .Where(app => !string.IsNullOrEmpty(app.Email))
+                .Select(app => _notificationService.SendNotificationAsync(new Application.Services.NotificationRequest {
+                    To = app.Email,
+                    Subject = "⚠️ Nueva Malla de Turnos para Aprobar",
+                    Message = $"Se ha cargado una nueva malla de turnos para la tienda '{dto.StoreId}' para el periodo {start:dd/MM} al {end:dd/MM}.\n\nPor favor, ingresa al panel administrativo para revisarla.",
+                    Type = Application.Services.NotificationType.Email
+                }));
+
+            await Task.WhenAll(notificationTasks);
         } catch (Exception ex) {
-            Console.WriteLine($"Shift Notification Error (EMAIL-APPROVER): {ex.Message}");
+            Console.WriteLine($"Shift Notification Error (PARALLEL-EMAIL): {ex.Message}");
         }
 
         await _auditService.LogAsync("MASS_UPDATE", "Shifts", dto.StoreId.ToString(), $"Actualizados {dto.Shifts.Count} turnos. Motivo/Comentario: {dto.Comment}");
