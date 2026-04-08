@@ -36,7 +36,8 @@ import {
     LogOut,
     ArrowDown,
     XCircle,
-    AlertTriangle
+    AlertTriangle,
+    Cpu
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import HelpIcon from '../../components/Shared/HelpIcon';
