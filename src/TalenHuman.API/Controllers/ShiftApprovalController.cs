@@ -51,11 +51,15 @@ public class ShiftApprovalController : ControllerBase
         
         var approvalMode = settings?.ShiftApprovalMode ?? ShiftApprovalMode.HR;
         
-        // V19.0: MASTER APPROVAL SYSTEM - Querying the master table directly
+        // V19.5: Dynamic status filtering based on request
+        WeeklyApprovalStatus targetStatus = WeeklyApprovalStatus.Published; 
+        if (status == ShiftStatus.Approved) targetStatus = WeeklyApprovalStatus.Approved;
+        if (status == ShiftStatus.Rejected) targetStatus = WeeklyApprovalStatus.Rejected;
+
         var query = _context.WeeklyApprovals
             .Include(a => a.Store)
                 .ThenInclude(s => s.District)
-            .Where(a => a.CompanyId == companyId && a.Status == WeeklyApprovalStatus.Published);
+            .Where(a => a.CompanyId == companyId && a.Status == targetStatus);
 
         if (approvalMode == ShiftApprovalMode.District && !isTopAdmin) {
             if (user != null && user.DistrictId.HasValue) {

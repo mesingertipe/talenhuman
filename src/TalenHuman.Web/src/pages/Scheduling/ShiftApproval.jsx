@@ -207,17 +207,45 @@ const ShiftApproval = ({ user }) => {
     <div className="page-container" style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto' }}>
       {inspectedStore ? renderInspectionMode() : (
         <>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2.5rem', alignItems: 'center' }}>
             <div>
-              <h1 style={{ fontSize: '2.3rem', fontWeight: '950', color: activeColors.textMain, margin: 0 }}>Consola de Aprobación</h1>
-              <p style={{ color: activeColors.textMuted, fontWeight: '600' }}>Validación jerárquica de mallas semanales</p>
+              <h1 style={{ fontSize: '2.5rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-1px' }}>Consola de Aprobación</h1>
+              <p style={{ color: activeColors.textMuted, fontWeight: '600', fontSize: '1rem', marginTop: '5px' }}>Validación jerárquica de mallas semanales</p>
             </div>
             {activeTab === 'PENDING' && (
               <div style={{ display: 'flex', gap: '12px' }}>
-                <button disabled={selectedKeys.length === 0 || processing} onClick={() => setShowCommentModal(true)} style={{ padding: '12px 24px', borderRadius: '15px', border: 'none', background: '#fee2e2', color: '#ef4444', fontWeight: '800', cursor: 'pointer', opacity: selectedKeys.length === 0 ? 0.5 : 1 }}>Rechazar ({selectedKeys.length})</button>
-                <button disabled={selectedKeys.length === 0 || processing} onClick={() => setShowApprovalModal(true)} style={{ padding: '12px 24px', borderRadius: '15px', border: 'none', background: activeColors.accent, color: 'white', fontWeight: '900', cursor: 'pointer', opacity: selectedKeys.length === 0 ? 0.5 : 1 }}>Aprobar Seleccionados</button>
+                <button disabled={selectedKeys.length === 0 || processing} onClick={() => setShowCommentModal(true)} style={{ padding: '14px 28px', borderRadius: '18px', border: 'none', background: '#fee2e2', color: '#ef4444', fontWeight: '800', cursor: 'pointer', opacity: selectedKeys.length === 0 ? 0.5 : 1, transition: 'all 0.2s' }}>
+                   Rechazar ({selectedKeys.length})
+                </button>
+                <button disabled={selectedKeys.length === 0 || processing} onClick={() => setShowApprovalModal(true)} style={{ padding: '14px 28px', borderRadius: '18px', border: 'none', background: activeColors.accent, color: 'white', fontWeight: '900', cursor: 'pointer', opacity: selectedKeys.length === 0 ? 0.5 : 1, boxShadow: '0 10px 20px rgba(79, 70, 229, 0.3)', transition: 'all 0.2s' }}>
+                   Aprobar Seleccionados
+                </button>
               </div>
             )}
+          </div>
+
+          {/* SMART FILTERS V19.5 */}
+          <div style={{ display: 'flex', gap: '20px', marginBottom: '2.5rem', background: activeColors.card, padding: '24px', borderRadius: '28px', border: `1.5px solid ${activeColors.border}`, boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+            <div style={{ flex: 1.5, position: 'relative' }}>
+               <Search style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: activeColors.textMuted }} size={20} />
+               <input 
+                 style={{ width: '100%', padding: '15px 15px 15px 50px', borderRadius: '18px', border: `1.5px solid ${activeColors.border}`, background: activeColors.bg, color: activeColors.textMain, fontWeight: '700' }} 
+                 placeholder="Buscar por sede, supervisor o ID..." 
+                 value={searchTerm} 
+                 onChange={e => setSearchTerm(e.target.value)} 
+               />
+            </div>
+            
+            <div style={{ flex: 1, display: 'flex', gap: '10px' }}>
+              <select value={filterDistrict} onChange={e => setFilterDistrict(e.target.value)} style={{ flex: 1, padding: '10px 15px', borderRadius: '15px', border: `1.5px solid ${activeColors.border}`, background: activeColors.bg, color: activeColors.textMain, fontWeight: '700' }}>
+                <option value="ALL">Todos los Distritos</option>
+                {districtsList.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+              <select value={filterWeek} onChange={e => setFilterWeek(e.target.value)} style={{ flex: 1, padding: '10px 15px', borderRadius: '15px', border: `1.5px solid ${activeColors.border}`, background: activeColors.bg, color: activeColors.textMain, fontWeight: '700' }}>
+                <option value="ALL">Todas las Semanas</option>
+                {weeksList.map(w => <option key={w} value={w}>{w}</option>)}
+              </select>
+            </div>
           </div>
           <div style={{ display: 'flex', gap: '10px', marginBottom: '2.5rem' }}>
             {['PENDING', 'APPROVED', 'REJECTED'].map(tID => (
@@ -225,22 +253,35 @@ const ShiftApproval = ({ user }) => {
             ))}
           </div>
           <div style={{ background: activeColors.card, borderRadius: '25px', border: `1.5px solid ${activeColors.border}`, overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
               <thead>
-                <tr style={{ textAlign: 'left', background: activeColors.accentSoft }}>
-                  {activeTab === 'PENDING' && <th style={{ padding: '15px' }}><input type="checkbox" onChange={() => handleSelectAll(filteredStores)} /></th>}
-                  <th style={{ padding: '15px' }}>Sede</th>
-                  <th style={{ padding: '15px' }}>Periodo</th>
-                  <th style={{ padding: '15px', textAlign: 'right' }}>Acción</th>
+                <tr style={{ textAlign: 'left', color: activeColors.textMuted }}>
+                  {activeTab === 'PENDING' && <th style={{ padding: '15px 20px' }}><input type="checkbox" style={{ width: '18px', height: '18px', borderRadius: '6px' }} onChange={() => handleSelectAll(filteredStores)} checked={selectedKeys.length === filteredStores.length && filteredStores.length > 0} /></th>}
+                  <th style={{ padding: '15px 20px', fontSize: '0.8rem', fontWeight: '900', textTransform: 'uppercase' }}>Sede / Identificador</th>
+                  <th style={{ padding: '15px 20px', fontSize: '0.8rem', fontWeight: '900', textTransform: 'uppercase' }}>Periodo de Operación</th>
+                  <th style={{ padding: '15px 20px', fontSize: '0.8rem', fontWeight: '900', textTransform: 'uppercase', textAlign: 'right' }}>Acción</th>
                 </tr>
               </thead>
               <tbody>
-                {loading ? <tr><td colSpan="4" style={{ padding: '50px', textAlign: 'center' }}>Cargando datos...</td></tr> : filteredStores.map(store => (
-                  <tr key={`${store.storeId}-${store.weekStart}`} style={{ borderBottom: `1px solid ${activeColors.border}` }}>
-                    {activeTab === 'PENDING' && <td style={{ padding: '15px' }}><input type="checkbox" checked={selectedKeys.includes(`${store.storeId}-${store.weekStart}`)} onChange={() => handleSelectStore(store)} /></td>}
-                    <td style={{ padding: '15px' }}><span style={{ fontWeight: '800' }}>{store.name}</span></td>
-                    <td style={{ padding: '15px' }}>{formatDateRange(store.minDate, store.maxDate)}</td>
-                    <td style={{ padding: '15px', textAlign: 'right' }}><button onClick={() => setInspectedStore(store)} style={{ padding: '6px 12px', borderRadius: '8px', background: activeColors.accentSoft, color: activeColors.accent, border: 'none', fontWeight: '900', cursor: 'pointer' }}>INSPECCIONAR</button></td>
+                {loading ? <tr><td colSpan="4" style={{ padding: '50px', textAlign: 'center' }}>
+                   <div className="animate-pulse" style={{ color: activeColors.accent, fontWeight: '800' }}>Sincronizando registros...</div>
+                </td></tr> : filteredStores.length === 0 ? <tr><td colSpan="4" style={{ padding: '50px', textAlign: 'center', color: activeColors.textMuted }}>No se encontraron registros para los filtros aplicados.</td></tr> : filteredStores.map(store => (
+                  <tr key={`${store.storeId}-${store.weekStart}`} style={{ background: activeColors.bg, transition: 'transform 0.2s' }} className="hover:scale-[1.005]">
+                    {activeTab === 'PENDING' && <td style={{ padding: '15px 20px' }}><input type="checkbox" style={{ width: '18px', height: '18px' }} checked={selectedKeys.includes(`${store.storeId}-${store.weekStart}`)} onChange={() => handleSelectStore(store)} /></td>}
+                    <td style={{ padding: '15px 20px' }}>
+                      <div style={{ fontWeight: '900', color: activeColors.textMain, fontSize: '1.05rem' }}>{store.name}</div>
+                      <div style={{ fontSize: '0.7rem', color: activeColors.textMuted, fontWeight: '700' }}>ID: {store.externalId} • {store.districtName}</div>
+                    </td>
+                    <td style={{ padding: '15px 20px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '800', color: activeColors.textMain }}>
+                        <Calendar size={14} /> {formatDateRange(store.minDate, store.maxDate)}
+                      </div>
+                    </td>
+                    <td style={{ padding: '15px 20px', textAlign: 'right' }}>
+                      <button onClick={() => setInspectedStore(store)} style={{ padding: '10px 20px', borderRadius: '14px', background: activeColors.accentSoft, color: activeColors.accent, border: 'none', fontWeight: '950', fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s' }} className="hover:brightness-95">
+                        INSPECCIONAR
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
