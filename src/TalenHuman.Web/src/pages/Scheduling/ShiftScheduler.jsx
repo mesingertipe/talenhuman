@@ -645,26 +645,40 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
     const confirmApprove = async () => {
         try {
-            setLoading(true);
+            setIsSaving(true);
+            setSyncPhase(1); // Fase: Validando
+            setShowApprovalModal(false); 
+            
             const endDate = new Date(currentWeekStart);
             endDate.setDate(endDate.getDate() + 7);
+
+            // Simular ritual de seguridad para fluidez visual
+            setTimeout(() => setSyncPhase(2), 600); // Fase: Sincronizando Core
 
             await api.post('/ShiftApproval/approve', {
                 storeId: selectedStore,
                 startDate: toLocalISO(currentWeekStart),
                 endDate: toLocalISO(endDate),
-                comment: approvalComment || "Aprobado por panel administrativo"
+                comment: approvalComment || "Aprobación desde panel de inspección"
             });
 
-            showToast("Semana aprobada correctamente");
-            setShowApprovalModal(false);
-            setWeeklyStatus({ status: 'Approved', date: new Date() }); // Sincronización inmediata
-            fetchData();
-            fetchWeeklyStatus();
+            setSyncPhase(3); // Fase: Notificando
+            setTimeout(() => {
+                setSyncPhase(4);
+                showToast("Semana aprobada correctamente");
+                setWeeklyStatus({ status: 'Approved', date: new Date() });
+                fetchData();
+                fetchWeeklyStatus();
+            }, 800);
         } catch (err) {
             showToast("Error al aprobar la semana", "error");
+            setIsSaving(false);
+            setSyncPhase(0);
         } finally {
-            setLoading(false);
+            setTimeout(() => {
+                setIsSaving(false);
+                setSyncPhase(0);
+            }, 2500);
         }
     };
 
@@ -680,9 +694,15 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         }
 
         try {
-            setLoading(true);
+            setIsSaving(true);
+            setSyncPhase(1); // Fase: Validando
+            setShowRejectionModal(false);
+
             const endDate = new Date(currentWeekStart);
             endDate.setDate(endDate.getDate() + 7);
+
+            // Simular ritual de seguridad para fluidez visual
+            setTimeout(() => setSyncPhase(2), 600); // Fase: Sincronizando Core
 
             await api.post('/ShiftApproval/reject', {
                 storeId: selectedStore,
@@ -691,15 +711,23 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 comment: rejectionComment
             });
 
-            showToast("Programación rechazada y gerente notificado");
-            setShowRejectionModal(false);
-            setWeeklyStatus({ status: 'Rejected', comment: rejectionComment, date: new Date() }); // Sincronización inmediata
-            fetchData();
-            fetchWeeklyStatus();
+            setSyncPhase(3); // Fase: Notificando
+            setTimeout(() => {
+                setSyncPhase(4);
+                showToast("Programación rechazada y gerente notificado");
+                setWeeklyStatus({ status: 'Rejected', comment: rejectionComment, date: new Date() });
+                fetchData();
+                fetchWeeklyStatus();
+            }, 800);
         } catch (err) {
             showToast("Error al procesar el rechazo", "error");
+            setIsSaving(false);
+            setSyncPhase(0);
         } finally {
-            setLoading(false);
+            setTimeout(() => {
+                setIsSaving(false);
+                setSyncPhase(0);
+            }, 2500);
         }
     };
 
