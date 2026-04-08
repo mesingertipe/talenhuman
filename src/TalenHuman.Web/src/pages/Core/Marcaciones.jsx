@@ -243,7 +243,6 @@ const Marcaciones = ({ user }) => {
                     <div style={{ overflowX: 'auto' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
-                            <thead>
                                 <tr style={{ background: isDarkMode ? '#1e293b' : '#f8fafc', textAlign: 'left', borderBottom: `1px solid ${activeColors.border}` }}>
                                     <th style={{ padding: '1.5rem 2.5rem', fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMuted, letterSpacing: '0.05em' }}>Colaborador / número</th>
                                     <th style={{ padding: '1.5rem', fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMuted, letterSpacing: '0.05em' }}>Cargo</th>
@@ -252,7 +251,6 @@ const Marcaciones = ({ user }) => {
                                     <th style={{ padding: '1.5rem', fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMuted, letterSpacing: '0.05em' }}>Salida</th>
                                     <th style={{ padding: '1.5rem 2.5rem', fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMuted, letterSpacing: '0.05em', textAlign: 'right' }}>Estado</th>
                                 </tr>
-                            </thead>
                             </thead>
                             <tbody>
                                 {currentData.map(m => {
@@ -272,12 +270,12 @@ const Marcaciones = ({ user }) => {
                                             </td>
                                             <td style={{ padding: '1.5rem' }}>
                                                 <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-bold text-sm">
-                                                    <MapPin size={14} className="text-indigo-400" /> {m.storeName}
+                                                    <FileText size={14} className="text-indigo-400" /> {m.employeeJobTitle}
                                                 </div>
                                             </td>
                                             <td style={{ padding: '1.5rem' }}>
                                                 <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-bold text-sm">
-                                                    <FileText size={14} className="text-indigo-400" /> {m.employeeJobTitle}
+                                                    <MapPin size={14} className="text-indigo-400" /> {m.storeName}
                                                 </div>
                                             </td>
                                             <td style={{ padding: '1.5rem' }}>
@@ -305,7 +303,7 @@ const Marcaciones = ({ user }) => {
                                 })}
                                 {currentData.length === 0 && (
                                     <tr>
-                                        <td colSpan="5" style={{ padding: '8rem 2rem', textAlign: 'center' }}>
+                                        <td colSpan="6" style={{ padding: '8rem 2rem', textAlign: 'center' }}>
                                             <div className="flex flex-col items-center gap-4 opacity-20">
                                                 <ListTodo size={64} />
                                                 <p className="font-black text-xl tracking-widest">Sin registros consolidados</p>

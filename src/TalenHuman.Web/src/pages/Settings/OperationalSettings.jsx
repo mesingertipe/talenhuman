@@ -98,14 +98,17 @@ const OperationalSettings = () => {
                     <button 
                         onClick={handleSaveRequest}
                         disabled={saving}
-                        className="group flex items-center gap-3 bg-indigo-600 hover:bg-slate-900 dark:hover:bg-white dark:hover:text-black text-white px-12 py-4 rounded-full font-black text-[12px] uppercase tracking-widest transition-all shadow-xl shadow-indigo-600/15 active:scale-95 disabled:grayscale"
+                        className="group relative flex items-center gap-4 bg-indigo-600 hover:bg-slate-900 dark:hover:bg-white dark:hover:text-black text-white px-10 py-5 rounded-[22px] font-[1000] text-[11px] uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_20px_40px_-10px_rgba(79,70,229,0.35)] hover:shadow-[0_25px_50px_-12px_rgba(79,70,229,0.5)] hover:translate-y-[-2px] active:scale-95 disabled:grayscale overflow-hidden"
                     >
+                        {/* Glow effect on hover */}
+                        <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
+                        
                         {saving ? (
                             <div className="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"></div>
                         ) : (
-                            <Save size={18} />
+                            <Save size={18} strokeWidth={3} className="relative z-10 transition-transform group-hover:rotate-12" />
                         )}
-                        <span>{saving ? 'Guardando' : 'Aplicar Cambios'}</span>
+                        <span className="relative z-10">{saving ? 'EJECUTANDO SYNC...' : 'APLICAR CAMBIOS'}</span>
                     </button>
                 </div>
 
@@ -206,48 +209,49 @@ const OperationalSettings = () => {
 
             {/* Confirmation Modal - Precise 'New User' Style */}
             {showConfirm && (
-                <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6 bg-[#000000]/30 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="bg-white dark:bg-[#0f172a] w-full max-w-lg rounded-[48px] shadow-[0_50px_150px_-30px_rgba(0,0,0,0.5)] overflow-hidden border border-white/20 animate-in zoom-in-95 duration-200">
-                        {/* Header matching example */}
-                        <div className="flex items-center justify-between px-10 py-8 border-b border-slate-100 dark:border-white/5">
+                <div className="fixed inset-0 z-[5000] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-xl animate-in fade-in duration-500">
+                    <div className="bg-white dark:bg-[#0f172a] w-full max-w-md rounded-[48px] shadow-[0_80px_150px_-30px_rgba(0,0,0,0.7)] overflow-hidden border border-white/20 animate-in zoom-in-95 duration-300">
+                        {/* Header Elite */}
+                        <div className="flex items-center justify-between px-10 py-8 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
                             <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/20">
-                                    <ShieldCheck size={22} strokeWidth={2.5} />
+                                <div className="w-12 h-12 bg-indigo-600 text-white rounded-[18px] flex items-center justify-center shadow-xl shadow-indigo-600/30">
+                                    <Shield size={22} strokeWidth={3} />
                                 </div>
-                                <h3 className="text-xl font-[1000] text-slate-900 dark:text-white tracking-tight">Confirmar Cambios</h3>
+                                <h3 className="text-xl font-[1000] text-slate-900 dark:text-white tracking-tighter">Seguridad de Red</h3>
                             </div>
                             <button 
                                 onClick={() => setShowConfirm(false)}
-                                className="w-10 h-10 border border-slate-200 dark:border-white/10 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5 transition-all active:scale-90"
+                                className="w-10 h-10 border border-slate-200 dark:border-white/10 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-white/10 transition-all active:scale-90"
                             >
-                                <X size={20} strokeWidth={2.5} />
+                                <X size={20} strokeWidth={3} />
                             </button>
                         </div>
-
-                        {/* Content Area */}
-                        <div className="p-14 text-center bg-slate-50/50 dark:bg-white/[0.01]">
-                            <div className="w-20 h-20 bg-indigo-600/10 text-indigo-600 rounded-[30px] flex items-center justify-center mx-auto mb-8">
-                                <AlertTriangle size={42} strokeWidth={2.5} />
+                        
+                        <div className="p-12 text-center">
+                            <div className="relative w-24 h-24 mx-auto mb-8">
+                                <div className="absolute inset-0 bg-indigo-600/10 rounded-[32px] animate-ping"></div>
+                                <div className="relative w-24 h-24 bg-indigo-600/10 text-indigo-600 rounded-[32px] flex items-center justify-center">
+                                    <AlertTriangle size={48} strokeWidth={2.5} />
+                                </div>
                             </div>
-                            <h4 className="text-2xl font-[1000] text-slate-900 dark:text-white mb-4">¿Sincronizar Kernel?</h4>
-                            <p className="text-sm font-bold text-slate-500 leading-relaxed px-6">
-                                Los protocolos de asistencia se actualizarán para toda la organización de forma irreversible.
+                            <h4 className="text-2xl font-[1000] text-slate-900 dark:text-white mb-4 tracking-tight">¿Sincronizar Kernel?</h4>
+                            <p className="text-[12px] font-bold text-slate-400 leading-relaxed max-w-[280px] mx-auto uppercase tracking-widest">
+                                Los protocolos de asistencia se actualizarán de forma irreversible para toda la organización.
                             </p>
                         </div>
 
-                        {/* Action Buttons matching example */}
-                        <div className="flex p-10 gap-6 bg-white dark:bg-slate-900/50">
-                            <button 
-                                onClick={() => setShowConfirm(false)}
-                                className="flex-1 px-10 py-4 rounded-full font-black text-[12px] uppercase tracking-widest text-slate-600 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-all active:scale-95 shadow-sm"
-                            >
-                                Cancelar
-                            </button>
+                        <div className="flex flex-col gap-3 p-10 bg-slate-50 dark:bg-[#020617]/50">
                             <button 
                                 onClick={confirmSave}
-                                className="flex-1 px-10 py-4 rounded-full bg-indigo-600 text-white font-black text-[12px] uppercase tracking-widest hover:bg-black transition-all active:scale-95 shadow-lg shadow-indigo-600/20"
+                                className="w-full py-5 rounded-[22px] bg-indigo-600 text-white font-[1000] text-[11px] uppercase tracking-[0.2em] hover:bg-slate-900 dark:hover:bg-white dark:hover:text-black transition-all active:scale-95 shadow-2xl shadow-indigo-600/20"
                             >
-                                Sincronizar
+                                EJECUTAR SINCRONIZACIÓN
+                            </button>
+                            <button 
+                                onClick={() => setShowConfirm(false)}
+                                className="w-full py-5 rounded-[22px] font-black text-[11px] uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-white dark:hover:bg-white/5 transition-all active:scale-95"
+                            >
+                                CANCELAR OPERACIÓN
                             </button>
                         </div>
                     </div>
