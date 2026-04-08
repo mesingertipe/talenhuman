@@ -160,7 +160,7 @@ public class ShiftApprovalController : ControllerBase
             .Where(s => s.CompanyId == companyId && 
                         s.StoreId == request.StoreId && 
                         s.StartTime.Date >= request.StartDate.Date && 
-                        s.StartTime.Date <= request.EndDate.Date &&
+                        s.StartTime.Date < request.EndDate.Date &&
                         s.Status == ShiftStatus.PendingApproval)
             .ToListAsync();
 
@@ -257,7 +257,7 @@ public class ShiftApprovalController : ControllerBase
             .Where(s => s.CompanyId == companyId && 
                         s.StoreId == storeId && 
                         s.StartTime.Date >= startDate.Date && 
-                        s.StartTime.Date <= endDate.Date)
+                        s.StartTime.Date < endDate.Date)
             .ToListAsync();
 
         if (!shifts.Any()) 
@@ -295,7 +295,7 @@ public class ShiftApprovalController : ControllerBase
             .Where(s => s.CompanyId == companyId && 
                         s.StoreId == request.StoreId && 
                         s.StartTime.Date >= request.StartDate.Date && 
-                        s.StartTime.Date <= request.EndDate.Date &&
+                        s.StartTime.Date < request.EndDate.Date &&
                         s.Status == ShiftStatus.PendingApproval)
             .ToListAsync();
 
