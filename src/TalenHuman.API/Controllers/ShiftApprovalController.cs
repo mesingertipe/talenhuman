@@ -102,13 +102,14 @@ public class ShiftApprovalController : ControllerBase
             if (lastLog != null && lastLog.UserId.HasValue)
             {
                 var authorUser = await _context.Users
-                    .Include(u => u.Profile)
+                    .Include(u => u.Employee)
+                        .ThenInclude(e => e.Profile)
                     .FirstOrDefaultAsync(u => u.Id == lastLog.UserId);
                 
                 if (authorUser != null)
                 {
-                    authorName = $"{authorUser.FirstName} {authorUser.LastName}";
-                    authorProfile = authorUser.Profile?.Name ?? "USUARIO";
+                    authorName = authorUser.FullName;
+                    authorProfile = authorUser.Employee?.Profile?.Name ?? "USUARIO";
                 }
             }
             else
@@ -116,15 +117,16 @@ public class ShiftApprovalController : ControllerBase
                 // Fallback: Gerente de la Sede
                 var manager = await _context.SupervisorStores
                     .Include(ss => ss.User)
-                        .ThenInclude(u => u.Profile)
+                        .ThenInclude(u => u.Employee)
+                            .ThenInclude(e => e.Profile)
                     .Where(ss => ss.StoreId == group.StoreId)
                     .Select(ss => ss.User)
                     .FirstOrDefaultAsync();
 
                 if (manager != null)
                 {
-                    authorName = $"{manager.FirstName} {manager.LastName}";
-                    authorProfile = manager.Profile?.Name ?? "GERENTE";
+                    authorName = manager.FullName;
+                    authorProfile = manager.Employee?.Profile?.Name ?? "GERENTE";
                 }
             }
 
