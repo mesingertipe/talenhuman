@@ -145,6 +145,7 @@ public class ShiftApprovalController : ControllerBase
                 group.ExternalId,
                 group.DistrictName,
                 group.PendingCount,
+                group.WeekStart,        // V18.9.2: Identificador temporal único para el frontend
                 group.MinDate,
                 group.MaxDate,
                 group.LastUploadAt,

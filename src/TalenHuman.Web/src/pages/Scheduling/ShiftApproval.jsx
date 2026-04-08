@@ -224,7 +224,7 @@ const ShiftApproval = ({ user }) => {
             Consola de Aprobación
           </h1>
           <p style={{ color: activeColors.textMuted, fontSize: '0.95rem', fontWeight: '600', marginTop: '8px' }}>
-            Validación jerárquica de mallas horarias para el periodo vigente
+            Validación jerárquica de turnos para el periodo vigente
           </p>
         </div>
 
@@ -367,7 +367,7 @@ const ShiftApproval = ({ user }) => {
           {/* Stats Count */}
           <div style={{ padding: '14px 24px', background: activeColors.accentSoft, borderRadius: '18px', border: `1.5px solid ${activeColors.accent}30`, display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ fontSize: '0.9rem', fontWeight: '950', color: activeColors.accent }}>{filteredStores.length}</span>
-            <span style={{ fontSize: '0.75rem', fontWeight: '800', color: activeColors.accent, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Mallas</span>
+            <span style={{ fontSize: '0.75rem', fontWeight: '800', color: activeColors.accent, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Turnos</span>
           </div>
         </div>
       </div>
@@ -400,14 +400,14 @@ const ShiftApproval = ({ user }) => {
               <tr>
                 <td colSpan="8" style={{ padding: '100px', textAlign: 'center' }}>
                   <div style={{ width: '40px', height: '40px', border: '4px solid #e2e8f0', borderTopColor: activeColors.accent, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
-                  <p style={{ marginTop: '20px', fontWeight: '700', color: activeColors.textMuted }}>Sincronizando mallas horarias...</p>
+                  <p style={{ marginTop: '20px', fontWeight: '700', color: activeColors.textMuted }}>Sincronizando turnos...</p>
                 </td>
               </tr>
             ) : filteredStores.length === 0 ? (
               <tr>
                 <td colSpan="8" style={{ padding: '100px', textAlign: 'center' }}>
                   <ShieldCheck size={48} className="text-emerald-500 mx-auto opacity-30 mb-4" />
-                  <p style={{ fontSize: '1rem', fontWeight: '800', color: activeColors.textMain }}>¡Sin mallas en este estado!</p>
+                  <p style={{ fontSize: '1rem', fontWeight: '800', color: activeColors.textMain }}>¡Sin turnos en este estado!</p>
                   <p style={{ fontSize: '0.85rem', fontWeight: '600', color: activeColors.textMuted }}>No se encontraron registros para la pestaña seleccionada.</p>
                 </td>
               </tr>
@@ -485,9 +485,9 @@ const ShiftApproval = ({ user }) => {
                  <div style={{ width: '64px', height: '64px', background: '#fee2e2', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', marginBottom: '24px' }}>
                     <AlertCircle size={32} />
                  </div>
-                 <h3 style={{ fontSize: '1.5rem', fontWeight: '950', color: activeColors.textMain, margin: '0 0 12px 0' }}>Rechazar Mallas</h3>
+                 <h3 style={{ fontSize: '1.5rem', fontWeight: '950', color: activeColors.textMain, margin: '0 0 12px 0' }}>Rechazar Turnos</h3>
                  <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginBottom: '32px' }}>
-                    Se notificará a los gerentes de las {selectedStores.length} sedes seleccionadas. Por favor, indica el motivo del rechazo para su corrección.
+                    Se notificará a los gerentes de los {selectedKeys.length} turnos seleccionados. Por favor, indica el motivo del rechazo para su corrección.
                  </p>
 
                  <div className="group">
@@ -552,8 +552,8 @@ const ShiftApproval = ({ user }) => {
               <div style={{ width: '64px', height: '64px', background: '#dcfce7', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a', margin: '0 auto 24px' }}>
                  <CheckCircle size={32} />
               </div>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: '950', color: activeColors.textMain, marginBottom: '12px' }}>¿Aprobar mallas?</h3>
-              <p style={{ color: activeColors.textMuted, marginBottom: '32px' }}>Se aprobarán {selectedStores.length} sedes seleccionadas.</p>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '950', color: activeColors.textMain, marginBottom: '12px' }}>¿Aprobar turnos?</h3>
+              <p style={{ color: activeColors.textMuted, marginBottom: '32px' }}>Se aprobarán {selectedKeys.length} turnos seleccionados.</p>
               <div style={{ display: 'flex', gap: '12px' }}>
                  <button onClick={() => setShowApprovalModal(false)} style={{ flex: 1, padding: '16px', borderRadius: '16px', border: `1px solid ${activeColors.border}`, background: 'transparent', fontWeight: '800' }}>Cancelar</button>
                  <button onClick={handleApprove} style={{ flex: 1, padding: '16px', borderRadius: '16px', background: activeColors.accent, color: 'white', fontWeight: '950' }}>Confirmar</button>
