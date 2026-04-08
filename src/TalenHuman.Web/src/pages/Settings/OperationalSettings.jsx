@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
     Settings, Shield, Bell, Mail, Smartphone, Save, 
     CheckCircle, Clock, ListOrdered, UserCheck, Users, Info, AlertCircle,
@@ -95,21 +96,22 @@ const OperationalSettings = () => {
                         </div>
                     </div>
                     
-                    <button 
-                        onClick={handleSaveRequest}
-                        disabled={saving}
-                        className="group relative flex items-center gap-4 bg-indigo-600 hover:bg-slate-900 dark:hover:bg-white dark:hover:text-black text-white px-10 py-5 rounded-[22px] font-[1000] text-[11px] uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_20px_40px_-10px_rgba(79,70,229,0.35)] hover:shadow-[0_25px_50px_-12px_rgba(79,70,229,0.5)] hover:translate-y-[-2px] active:scale-95 disabled:grayscale overflow-hidden"
-                    >
-                        {/* Glow effect on hover */}
-                        <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
-                        
-                        {saving ? (
-                            <div className="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"></div>
-                        ) : (
-                            <Save size={18} strokeWidth={3} className="relative z-10 transition-transform group-hover:rotate-12" />
-                        )}
-                        <span className="relative z-10">{saving ? 'EJECUTANDO SYNC...' : 'APLICAR CAMBIOS'}</span>
-                    </button>
+                    <div className="flex-shrink-0">
+                        <button 
+                            onClick={handleSaveRequest}
+                            disabled={saving}
+                            className="group relative flex items-center gap-4 bg-indigo-600 hover:bg-slate-900 dark:hover:bg-white dark:hover:text-black text-white px-10 py-5 rounded-[22px] font-[1000] text-[11px] uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_20px_40px_-10px_rgba(79,70,229,0.35)] hover:shadow-[0_25px_50px_-12px_rgba(79,70,229,0.5)] hover:translate-y-[-2px] active:scale-95 disabled:grayscale overflow-hidden"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
+                            
+                            {saving ? (
+                                <div className="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"></div>
+                            ) : (
+                                <Save size={18} strokeWidth={3} className="relative z-10 transition-transform group-hover:rotate-12" />
+                            )}
+                            <span className="relative z-10">{saving ? 'EJECUTANDO SYNC...' : 'APLICAR CAMBIOS'}</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div className="grid lg:grid-cols-12 gap-8">
@@ -207,10 +209,10 @@ const OperationalSettings = () => {
                 </div>
             </div>
 
-            {/* Confirmation Modal - Precise 'New User' Style */}
-            {showConfirm && (
-                <div className="fixed inset-0 z-[5000] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-xl animate-in fade-in duration-500">
-                    <div className="bg-white dark:bg-[#0f172a] w-full max-w-md rounded-[48px] shadow-[0_80px_150px_-30px_rgba(0,0,0,0.7)] overflow-hidden border border-white/20 animate-in zoom-in-95 duration-300">
+            {/* Confirmation Modal - PORTAL POWER V18.1 */}
+            {showConfirm && createPortal(
+                <div className="fixed inset-0 z-[999999] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-xl animate-in fade-in duration-500">
+                    <div className="bg-white dark:bg-[#0f172a] w-full max-w-[420px] rounded-[48px] shadow-[0_80px_150px_-30px_rgba(0,0,0,0.7)] overflow-hidden border border-white/20 animate-in zoom-in-95 duration-300">
                         {/* Header Elite */}
                         <div className="flex items-center justify-between px-10 py-8 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
                             <div className="flex items-center gap-4">
@@ -235,12 +237,12 @@ const OperationalSettings = () => {
                                 </div>
                             </div>
                             <h4 className="text-2xl font-[1000] text-slate-900 dark:text-white mb-4 tracking-tight">¿Sincronizar Kernel?</h4>
-                            <p className="text-[12px] font-bold text-slate-400 leading-relaxed max-w-[280px] mx-auto uppercase tracking-widest">
-                                Los protocolos de asistencia se actualizarán de forma irreversible para toda la organización.
+                            <p className="text-[12px] font-bold text-slate-400 leading-relaxed max-w-[280px] mx-auto uppercase tracking-widest leading-loose">
+                                Los protocolos de asistencia se actualizarán de forma irreversible.
                             </p>
                         </div>
 
-                        <div className="flex flex-col gap-3 p-10 bg-slate-50 dark:bg-[#020617]/50">
+                        <div className="px-10 pb-12 space-y-3">
                             <button 
                                 onClick={confirmSave}
                                 className="w-full py-5 rounded-[22px] bg-indigo-600 text-white font-[1000] text-[11px] uppercase tracking-[0.2em] hover:bg-slate-900 dark:hover:bg-white dark:hover:text-black transition-all active:scale-95 shadow-2xl shadow-indigo-600/20"
@@ -249,13 +251,14 @@ const OperationalSettings = () => {
                             </button>
                             <button 
                                 onClick={() => setShowConfirm(false)}
-                                className="w-full py-5 rounded-[22px] font-black text-[11px] uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-white dark:hover:bg-white/5 transition-all active:scale-95"
+                                className="w-full py-4 rounded-[22px] font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 transition-all active:scale-95"
                             >
                                 CANCELAR OPERACIÓN
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.getElementById('modal-root') || document.body
             )}
 
             {/* Precision Toast */}

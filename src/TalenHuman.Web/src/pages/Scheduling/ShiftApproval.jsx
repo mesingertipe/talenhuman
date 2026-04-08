@@ -121,11 +121,17 @@ const ShiftApproval = ({ user }) => {
     }
   };
 
-  const filteredStores = stores.filter(s => 
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.externalId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.districtName?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredStores = stores.filter(s => {
+    if (!s) return false;
+    const search = (searchTerm || "").toLowerCase();
+    const name = (s.name || "").toLowerCase();
+    const externalId = (s.externalId || "").toLowerCase();
+    const district = (s.districtName || "").toLowerCase();
+    
+    return name.includes(search) || 
+           externalId.includes(search) || 
+           district.includes(search);
+  });
 
   return (
     <div className="page-container animate-fade-in" style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto' }}>

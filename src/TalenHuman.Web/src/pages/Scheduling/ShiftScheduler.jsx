@@ -1938,43 +1938,58 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                             </div>
                         </div>
                     )}
-                    {/* V17 ELITE SYNC OVERLAY - SMART SAVING FEEDBACK */}
-                    {isSaving && (
-                        <div className="fixed inset-0 z-[9999999] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-3xl animate-in fade-in duration-500">
-                             <div className="bg-white dark:bg-[#0f172a] w-full max-w-sm rounded-[48px] shadow-[0_50px_100px_rgba(0,0,0,0.5)] border border-white/20 p-12 text-center animate-in zoom-in-95 duration-300">
-                                <div className="relative mb-10">
-                                    {/* Rotating Progress Ring */}
-                                    <div className={`w-28 h-28 mx-auto rounded-full border-4 ${syncPhase >= 4 ? 'border-emerald-500 bg-emerald-500/10' : 'border-indigo-600/10 border-t-indigo-600 animate-spin'}`}>
-                                        {syncPhase >= 4 && <CheckCircle size={54} className="text-emerald-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-in zoom-in-50" strokeWidth={2.5} />}
+                    {/* V17.9 ELITE SYNC MONITOR - IMPACTFUL PROGRESS */}
+                    {isSaving && createPortal(
+                        <div className="fixed inset-0 z-[9999999] flex items-center justify-center p-6 bg-indigo-950/40 backdrop-blur-2xl animate-in fade-in duration-700">
+                             <div className="bg-white dark:bg-[#0f172a] w-full max-w-md rounded-[48px] shadow-[0_50px_100px_rgba(0,0,0,0.6)] border border-white/20 p-12 text-center animate-in zoom-in-95 duration-500">
+                                <div className="relative mb-10 w-28 h-28 mx-auto">
+                                    {/* Rotating Outer Ring */}
+                                    <div className="absolute inset-0 rounded-full border-4 border-indigo-500/10 border-t-indigo-500 animate-spin"></div>
+                                    
+                                    {/* Inner Pulsing Core */}
+                                    <div className="absolute inset-4 rounded-[28px] bg-indigo-600/10 flex items-center justify-center text-indigo-600">
+                                        {syncPhase >= 4 ? (
+                                            <CheckCircle size={40} strokeWidth={3} className="animate-in zoom-in-50 duration-500" />
+                                        ) : (
+                                            <Cpu size={40} className="animate-pulse" />
+                                        )}
                                     </div>
-                                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg shadow-indigo-600/30 uppercase tracking-widest whitespace-nowrap">
-                                        SECURE SYNC
+                                    
+                                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[9px] font-black px-4 py-1.5 rounded-full shadow-lg shadow-indigo-600/30 uppercase tracking-[0.2em] whitespace-nowrap z-10">
+                                        KERNEL SYNC
                                     </div>
                                 </div>
 
-                                <div className="space-y-3 mb-10">
-                                    <h3 className="text-2xl font-[1000] text-slate-900 dark:text-white tracking-tight">
-                                        {syncPhase === 1 && "Analizando Turnos"}
-                                        {syncPhase === 2 && "Sincronizando Core"}
-                                        {syncPhase === 3 && "Notificando Gerencia"}
-                                        {syncPhase >= 4 && "¡Éxito Total!"}
+                                <div className="space-y-3 mb-12">
+                                    <h3 className="text-2xl font-[1000] text-slate-900 dark:text-white tracking-tighter">
+                                        {syncPhase === 1 && "Analizando Estructura"}
+                                        {syncPhase === 2 && "Sincronizando Turnos"}
+                                        {syncPhase === 3 && "Ejecutando Notificaciones"}
+                                        {syncPhase >= 4 && "¡Proceso Exitoso!"}
                                     </h3>
-                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] leading-relaxed">
-                                        {syncPhase === 1 && "Verificando conflictos de nómina..."}
-                                        {syncPhase === 2 && "Actualizando Kernel central..."}
+                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] leading-relaxed px-4">
+                                        {syncPhase === 1 && "Verificando consistencia de datos..."}
+                                        {syncPhase === 2 && "Escribiendo cambios en la base central..."}
                                         {syncPhase === 3 && "Disparando alertas de aprobación..."}
-                                        {syncPhase >= 4 && "Datos sincronizados correctamente"}
+                                        {syncPhase >= 4 && "Tu programación ha sido publicada"}
                                     </p>
                                 </div>
 
-                                {/* Custom Progress Stepper */}
-                                <div className="flex justify-between gap-2 px-4 mb-2">
-                                    {[1, 2, 3].map(step => (
-                                        <div key={step} className={`h-1.5 flex-1 rounded-full transition-all duration-700 ${syncPhase >= step ? 'bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.5)]' : 'bg-slate-100 dark:bg-white/5'}`}></div>
-                                    ))}
+                                {/* Premium Linear Progress Bar */}
+                                <div className="relative h-2 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden mb-4">
+                                    <div 
+                                        className="h-full bg-gradient-to-r from-indigo-600 to-indigo-400 transition-all duration-700 ease-out"
+                                        style={{ width: `${Math.min(syncPhase * 25, 100)}%` }}
+                                    ></div>
+                                </div>
+
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Estado del Motor</span>
+                                    <span className="text-[14px] font-[1000] text-slate-900 dark:text-white">{Math.min(syncPhase * 25, 100)}%</span>
                                 </div>
                              </div>
-                        </div>
+                        </div>,
+                        document.getElementById('modal-root') || document.body
                     )}
                 </>,
                 document.getElementById('modal-root') || document.body
