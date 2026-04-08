@@ -91,10 +91,11 @@ const ShiftApproval = ({ user }) => {
         const [storeId, weekStart] = key.split('-');
         const storeData = stores.find(s => s.storeId === storeId && s.weekStart === weekStart);
         if (storeData) {
+          const exclusiveEnd = getExclusiveEndDate(storeData.weekStart);
           await api.post('/ShiftApproval/approve', {
             storeId: storeId,
-            startDate: storeData.minDate,
-            endDate: storeData.maxDate,
+            startDate: storeData.weekStart, // Usar WeekStart exacto
+            endDate: exclusiveEnd,          // Usar Lunes siguiente 00:00
             comment: approvalComment || "Aprobación masiva desde consola"
           });
         }
@@ -119,10 +120,11 @@ const ShiftApproval = ({ user }) => {
         const [storeId, weekStart] = key.split('-');
         const storeData = stores.find(s => s.storeId === storeId && s.weekStart === weekStart);
         if (storeData) {
+          const exclusiveEnd = getExclusiveEndDate(storeData.weekStart);
           await api.post('/ShiftApproval/reject', { 
             storeId: storeId, 
-            startDate: storeData.minDate,
-            endDate: storeData.maxDate,
+            startDate: storeData.weekStart, // Usar WeekStart exacto
+            endDate: exclusiveEnd,          // Usar Lunes siguiente 00:00
             comment: rejectionComment 
           });
         }
@@ -147,6 +149,20 @@ const ShiftApproval = ({ user }) => {
       return `${d1.toLocaleDateString('es-CO', options)} - ${d2.toLocaleDateString('es-CO', options)}`;
     } catch {
       return "Periodo no definido";
+    }
+  };
+
+  const getExclusiveEndDate = (weekStart) => {
+    try {
+      const start = new Date(weekStart);
+      const end = new Date(start);
+      end.setDate(start.getDate() + 7);
+      // Formato ISO local para el backend
+      const offset = end.getTimezoneOffset();
+      const localEnd = new Date(end.getTime() - (offset * 60 * 1000));
+      return localEnd.toISOString().split('.')[0];
+    } catch {
+      return null;
     }
   };
 
@@ -206,9 +222,10 @@ const ShiftApproval = ({ user }) => {
          </div>
          <ShiftScheduler 
             user={user} 
-            readOnly={true} 
+            readOnly={false} 
+            forceApprover={true}
             initialStoreId={inspectedStore.storeId} 
-            initialDate={inspectedStore.minDate} 
+            initialDate={inspectedStore.weekStart} 
          />
       </div>
     );

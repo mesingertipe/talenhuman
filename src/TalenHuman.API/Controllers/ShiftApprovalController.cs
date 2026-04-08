@@ -50,7 +50,7 @@ public class ShiftApprovalController : ControllerBase
             .FirstOrDefaultAsync(o => o.CompanyId == companyId);
         
         var approvalMode = settings?.ShiftApprovalMode ?? ShiftApprovalMode.HR;
-
+        
         var query = _context.Shifts
             .Include(s => s.Store)
                 .ThenInclude(st => st.District)
@@ -68,8 +68,6 @@ public class ShiftApprovalController : ControllerBase
             .Select(s => new {
                 Shift = s,
                 // Calcular el Lunes de la semana (ISO-ish) para agrupar por periodos de 7 días
-                // Domingo es 0, Lunes es 1... Sábado es 6.
-                // Si es Domingo (0), restamos 6 días. Si es Lunes (1), restamos 0.
                 WeekStart = s.StartTime.Date.AddDays(-((int)s.StartTime.DayOfWeek == 0 ? 6 : (int)s.StartTime.DayOfWeek - 1))
             })
             .GroupBy(g => new { 
@@ -92,11 +90,9 @@ public class ShiftApprovalController : ControllerBase
             })
             .ToListAsync();
 
-        // V18.8: Enriquecer con información de auditoría (Usuario que Registra)
         var result = new List<object>();
         foreach (var group in storeGroups)
         {
-            // Intentar encontrar el último log de auditoría de creación/edición de turnos para esta tienda
             var lastLog = await _context.AuditLogs
                 .Where(al => al.CompanyId == companyId && 
                             al.EntityType == "Shifts" && 
@@ -123,7 +119,6 @@ public class ShiftApprovalController : ControllerBase
             }
             else
             {
-                // Fallback: Gerente de la Sede
                 var manager = await _context.SupervisorStores
                     .Include(ss => ss.User)
                         .ThenInclude(u => u.Employee)
@@ -145,7 +140,7 @@ public class ShiftApprovalController : ControllerBase
                 group.ExternalId,
                 group.DistrictName,
                 group.PendingCount,
-                group.WeekStart,        // V18.9.2: Identificador temporal único para el frontend
+                group.WeekStart,
                 group.MinDate,
                 group.MaxDate,
                 group.LastUploadAt,
@@ -166,11 +161,12 @@ public class ShiftApprovalController : ControllerBase
         if (string.IsNullOrEmpty(approverIdString)) return Unauthorized();
         var approverId = Guid.Parse(approverIdString);
 
+        // V18.10.1: PRECISIÓN TOTAL - Usar DateTime directo para capturar turnos de borde (Domingo noche)
         var shifts = await _context.Shifts
             .Where(s => s.CompanyId == companyId && 
                         s.StoreId == request.StoreId && 
-                        s.StartTime.Date >= request.StartDate.Date && 
-                        s.StartTime.Date < request.EndDate.Date &&
+                        s.StartTime >= request.StartDate && 
+                        s.StartTime < request.EndDate &&
                         s.Status == ShiftStatus.PendingApproval)
             .ToListAsync();
 
@@ -186,11 +182,9 @@ public class ShiftApprovalController : ControllerBase
 
         await _context.SaveChangesAsync(CancellationToken.None);
         
-        // ⚙️ V18.8.3: Obtener Configuración Corporativa Global
         var settings = await _context.OperationalSettings
             .FirstOrDefaultAsync(o => o.CompanyId == companyId);
 
-        // 🕵️ Identificar al Autor (Audit Log)
         var lastLog = await _context.AuditLogs
             .Where(al => al.CompanyId == companyId && 
                         al.EntityType == "Shifts" && 
@@ -205,7 +199,6 @@ public class ShiftApprovalController : ControllerBase
             authorEmail = authorUser?.Email;
         }
 
-        // 📧 Notificaciones Email
         if (settings?.EnableEmailNotifications ?? true)
         {
             var managers = await _context.SupervisorStores
@@ -228,7 +221,6 @@ public class ShiftApprovalController : ControllerBase
             }
         }
 
-        // 📱 PUSH Masivo a Empleados ACTIVOS
         if (settings?.EnablePushNotifications ?? true)
         {
             var employees = await _context.Employees
@@ -263,11 +255,12 @@ public class ShiftApprovalController : ControllerBase
     {
         var companyId = _tenantProvider.GetTenantId();
         
+        // V18.10.1: PRECISIÓN TOTAL - Consistencia de rango para el planificador
         var shifts = await _context.Shifts
             .Where(s => s.CompanyId == companyId && 
                         s.StoreId == storeId && 
-                        s.StartTime.Date >= startDate.Date && 
-                        s.StartTime.Date < endDate.Date)
+                        s.StartTime >= startDate && 
+                        s.StartTime < endDate)
             .ToListAsync();
 
         if (!shifts.Any()) 
@@ -301,11 +294,12 @@ public class ShiftApprovalController : ControllerBase
         if (string.IsNullOrEmpty(approverIdString)) return Unauthorized();
         var approverId = Guid.Parse(approverIdString);
 
+        // V18.10.1: PRECISIÓN TOTAL - Usar DateTime directo para rechazos consistentes
         var shifts = await _context.Shifts
             .Where(s => s.CompanyId == companyId && 
                         s.StoreId == request.StoreId && 
-                        s.StartTime.Date >= request.StartDate.Date && 
-                        s.StartTime.Date < request.EndDate.Date &&
+                        s.StartTime >= request.StartDate && 
+                        s.StartTime < request.EndDate &&
                         s.Status == ShiftStatus.PendingApproval)
             .ToListAsync();
 
@@ -321,11 +315,9 @@ public class ShiftApprovalController : ControllerBase
 
         await _context.SaveChangesAsync(CancellationToken.None);
 
-        // ⚙️ V18.8.3: Configuración Corporativa
         var settings = await _context.OperationalSettings
             .FirstOrDefaultAsync(o => o.CompanyId == companyId);
 
-        // 🕵️ Identificar Autor mediante log de auditoría
         var lastLog = await _context.AuditLogs
             .Where(al => al.CompanyId == companyId && 
                         al.EntityType == "Shifts" && 
@@ -340,7 +332,6 @@ public class ShiftApprovalController : ControllerBase
             authorEmail = authorUser?.Email;
         }
 
-        // 📧 Notificaciones Email de Rechazo (Si aplica)
         if (settings?.EnableEmailNotifications ?? true)
         {
             var managers = await _context.SupervisorStores

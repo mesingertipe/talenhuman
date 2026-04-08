@@ -234,6 +234,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     };
 
     const isApprover = useMemo(() => {
+        // V18.10.1: BLINDAJE DE AUDITORÍA - Forzar permisos si viene de la consola
+        if (props.forceApprover) return true;
+
         if (!user || !operationalSettings) return false;
         
         // Admin / SuperAdmin can always approve
