@@ -567,6 +567,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
         try {
             setIsSaving(true);
             setSyncPhase(1); // Fase: Validando
+            setShowSaveModal(false); // V17.3: Cerrar modal inmediatamente para ver progreso
             
             const endDate = new Date(currentWeekStart); 
             endDate.setDate(endDate.getDate() + 7);
@@ -1005,17 +1006,17 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                 />
                             </div>
 
-                            {/* V13.0 ELITE STATUS BADGE */}
-                            <div className="hidden xl:flex items-center gap-3 px-6 py-3 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm animate-in zoom-in duration-500">
+                            {/* V13.0 ELITE STATUS BADGE - VISIBILIDAD MEJORADA */}
+                            <div className="flex items-center gap-4 px-8 py-4 bg-white dark:bg-slate-800 rounded-[24px] border border-slate-100 dark:border-slate-700 shadow-xl shadow-slate-200/20 dark:shadow-none animate-in zoom-in duration-500 min-w-[180px]">
                                 {isProcessingStatus ? (
                                     <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
                                 ) : (
                                     <>
                                         <div className={`w-3 h-3 rounded-full animate-pulse ${weeklyStatus.status === 'Approved' ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : (weeklyStatus.status === 'Rejected' ? 'bg-rose-500 shadow-[0_0_10px_#f43f5e]' : (weeklyStatus.status === 'Empty' ? 'bg-slate-300' : 'bg-amber-500 shadow-[0_0_10px_#f59e0b]'))}`}></div>
                                         <div className="flex flex-col leading-none">
-                                            <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">Estado de Malla</span>
-                                            <span className={`text-[11px] font-[1000] uppercase tracking-tight ${weeklyStatus.status === 'Approved' ? 'text-emerald-600' : (weeklyStatus.status === 'Rejected' ? 'text-rose-600' : 'text-amber-600')}`}>
-                                                {weeklyStatus.status === 'Approved' ? 'Semana Aprobada' : (weeklyStatus.status === 'Rejected' ? 'Malla Rechazada' : (weeklyStatus.status === 'Empty' ? 'Sin Programación' : 'Pendiente de Validación'))}
+                                            <span className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1.5 leading-none">Status Semanal</span>
+                                            <span className={`text-[13px] font-[1000] uppercase tracking-tighter ${weeklyStatus.status === 'Approved' ? 'text-emerald-600' : (weeklyStatus.status === 'Rejected' ? 'text-rose-600' : 'text-amber-600')}`}>
+                                                {weeklyStatus.status === 'Approved' ? 'Semana Lista (OK)' : (weeklyStatus.status === 'Rejected' ? 'Malla Rechazada' : (weeklyStatus.status === 'Empty' ? 'Personal Sin Turno' : 'Esperando Validación'))}
                                             </span>
                                         </div>
                                         {weeklyStatus.status === 'Rejected' && weeklyStatus.comment && (
@@ -1939,7 +1940,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                     )}
                     {/* V17 ELITE SYNC OVERLAY - SMART SAVING FEEDBACK */}
                     {isSaving && (
-                        <div className="fixed inset-0 z-[300000] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-2xl animate-in fade-in duration-500">
+                        <div className="fixed inset-0 z-[9999999] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-3xl animate-in fade-in duration-500">
                              <div className="bg-white dark:bg-[#0f172a] w-full max-w-sm rounded-[48px] shadow-[0_50px_100px_rgba(0,0,0,0.5)] border border-white/20 p-12 text-center animate-in zoom-in-95 duration-300">
                                 <div className="relative mb-10">
                                     {/* Rotating Progress Ring */}
