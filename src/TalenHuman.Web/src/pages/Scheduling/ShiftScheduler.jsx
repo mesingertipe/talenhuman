@@ -1939,69 +1939,89 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                             </div>
                         </div>
                     )}
-                    {/* V18.5 ELITE SYNC MONITOR - BRUTE FORCE POSITIONING */}
+                    {/* V18.6 ELITE SYNC MONITOR - PIXEL PERFECT UNIFICATION */}
                     {isSaving && createPortal(
                         <div style={{
                             position: 'fixed',
                             inset: 0,
-                            zIndex: 9999999,
+                            zIndex: 10000000,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            padding: '1.5rem',
-                            background: 'rgba(30, 27, 75, 0.85)', // Indigo 950 with 85% opacity
-                            backdropFilter: 'blur(16px)',
-                            WebkitBackdropFilter: 'blur(16px)'
-                        }} className="animate-in fade-in duration-700">
-                             <div className="bg-white dark:bg-[#0f172a] w-full max-w-md rounded-[48px] shadow-[0_50px_100px_rgba(0,0,0,0.6)] border border-white/20 p-12 text-center animate-in zoom-in-95 duration-500">
-                                <div className="relative mb-10 w-28 h-28 mx-auto">
-                                    {/* Rotating Outer Ring */}
-                                    <div className="absolute inset-0 rounded-full border-4 border-indigo-500/10 border-t-indigo-500 animate-spin"></div>
-                                    
-                                    {/* Inner Pulsing Core */}
-                                    <div className="absolute inset-4 rounded-[28px] bg-indigo-600/10 flex items-center justify-center text-indigo-600">
-                                        {syncPhase >= 4 ? (
-                                            <CheckCircle size={40} strokeWidth={3} className="animate-in zoom-in-50 duration-500" />
-                                        ) : (
-                                            <Cpu size={40} className="animate-pulse" />
-                                        )}
-                                    </div>
-                                    
-                                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[9px] font-black px-4 py-1.5 rounded-full shadow-lg shadow-indigo-600/30 uppercase tracking-[0.2em] whitespace-nowrap z-10">
-                                        KERNEL SYNC
+                            padding: '2rem',
+                            background: isDarkMode ? 'rgba(15, 23, 42, 0.85)' : 'rgba(30, 27, 75, 0.85)',
+                            backdropFilter: 'blur(12px)',
+                            WebkitBackdropFilter: 'blur(12px)'
+                        }}>
+                             <div className="animate-in zoom-in-95 duration-500" style={{
+                                background: isDarkMode ? '#1e293b' : '#ffffff',
+                                padding: '3.5rem 3rem',
+                                borderRadius: '3.5rem',
+                                boxShadow: '0 40px 100px -20px rgba(0, 0, 0, 0.6)',
+                                border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.05)',
+                                width: '100%',
+                                maxWidth: '440px',
+                                textAlign: 'center',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center'
+                             }}>
+                                {/* Elegant Progress Ring */}
+                                <div style={{ position: 'relative', width: '90px', height: '90px', marginBottom: '2rem' }}>
+                                    <svg style={{ transform: 'rotate(-90deg)', width: '90px', height: '90px' }}>
+                                        <circle cx="45" cy="45" r="40" stroke={isDarkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9'} strokeWidth="6" fill="transparent" />
+                                        <circle 
+                                            cx="45" cy="45" r="40" 
+                                            stroke="#4f46e5" 
+                                            strokeWidth="6" 
+                                            fill="transparent" 
+                                            strokeDasharray="251.2" 
+                                            strokeDashoffset={251.2 - (251.2 * Math.min(syncPhase * 25, 100)) / 100}
+                                            strokeLinecap="round"
+                                            style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+                                        />
+                                    </svg>
+                                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
+                                        {syncPhase >= 4 ? <CheckCircle size={32} strokeWidth={3} /> : <Cpu size={32} className="animate-pulse" />}
                                     </div>
                                 </div>
 
-                                <div className="space-y-3 mb-12">
-                                    <h3 className="text-2xl font-[1000] text-slate-900 dark:text-white tracking-tighter">
+                                <div style={{ marginBottom: '2.5rem' }}>
+                                    <h3 style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? '#f8fafc' : '#0f172a', margin: '0 0 0.75rem 0', letterSpacing: '-0.02em', lineHeight: '1.1' }}>
                                         {syncPhase === 1 && "Analizando Estructura"}
-                                        {syncPhase === 2 && "Sincronizando Turnos"}
+                                        {syncPhase === 2 && "Sincronizando Core"}
                                         {syncPhase === 3 && "Ejecutando Notificaciones"}
                                         {syncPhase >= 4 && "¡Proceso Exitoso!"}
                                     </h3>
-                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] leading-relaxed px-4">
+                                    <p style={{ fontSize: '0.85rem', fontWeight: '600', color: '#64748b', margin: 0, lineHeight: '1.6', maxWidth: '280px' }}>
                                         {syncPhase === 1 && "Verificando consistencia de datos..."}
-                                        {syncPhase === 2 && "Escribiendo cambios en la base central..."}
+                                        {syncPhase === 2 && "Sincronizando cambios con la base central..."}
                                         {syncPhase === 3 && "Disparando alertas de aprobación..."}
-                                        {syncPhase >= 4 && "Tu programación ha sido publicada"}
+                                        {syncPhase >= 4 && "Tu programación ha sido publicada correctamente."}
                                     </p>
                                 </div>
 
                                 {/* Premium Linear Progress Bar */}
-                                <div className="relative h-2 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden mb-4">
-                                    <div 
-                                        className="h-full bg-gradient-to-r from-indigo-600 to-indigo-400 transition-all duration-700 ease-out"
-                                        style={{ width: `${Math.min(syncPhase * 25, 100)}%` }}
-                                    ></div>
-                                </div>
-
-                                <div className="flex justify-between items-center">
-                                    <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Estado del Motor</span>
-                                    <span className="text-[14px] font-[1000] text-slate-900 dark:text-white">{Math.min(syncPhase * 25, 100)}%</span>
+                                <div style={{ width: '100%', marginBottom: '1.5rem' }}>
+                                    <div style={{ height: '6px', background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9', borderRadius: '10px', overflow: 'hidden' }}>
+                                        <div 
+                                            style={{ 
+                                                height: '100%', 
+                                                width: `${Math.min(syncPhase * 25, 100)}%`, 
+                                                background: 'linear-gradient(90deg, #4f46e5, #818cf8)',
+                                                borderRadius: '10px',
+                                                transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)'
+                                            }} 
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.75rem' }}>
+                                        <span style={{ fontSize: '0.7rem', fontWeight: '900', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Progreso Total</span>
+                                        <span style={{ fontSize: '0.85rem', fontWeight: '950', color: isDarkMode ? '#f8fafc' : '#0f172a' }}>{Math.min(syncPhase * 25, 100)}%</span>
+                                    </div>
                                 </div>
                              </div>
                         </div>,
-                        document.getElementById('modal-root') || document.body
+                        document.body
                     )}
                 </>,
                 document.getElementById('modal-root') || document.body
