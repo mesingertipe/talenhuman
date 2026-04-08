@@ -1,173 +1,162 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  ArrowLeft, CheckCircle, MessageSquare, ShieldCheck, 
-  Search, Filter, Calendar, Cpu, Check, X, AlertTriangle, 
-  Clock, MapPin, ChevronRight, User
+  CheckCircle, XCircle, Info, Search, Calendar, 
+  Building2, Hash, ArrowRight, ShieldCheck, Clock,
+  Filter, Download, ChevronRight, AlertCircle, MessageSquare,
+  Eye, ArrowLeft, Cpu, X
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import api from '../../services/api';
+import { useTheme } from '../../context/ThemeContext';
 import ShiftScheduler from './ShiftScheduler';
 
 const ShiftApproval = ({ user }) => {
+  const { isDarkMode } = useTheme();
   const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('PENDING');
-  const [selectedKeys, setSelectedKeys] = useState([]);
-  const [inspectedStore, setInspectedStore] = useState(null);
-  
-  const [rejectionComment, setRejectionComment] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const [rejectionComment, setRejectionComment] = useState('');
+  const [approvalComment, setApprovalComment] = useState('');
   const [processing, setProcessing] = useState(false);
-  const [syncPhase, setSyncPhase] = useState(0);
+  const [syncPhase, setSyncPhase] = useState(0); 
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  
+  const [activeTab, setActiveTab] = useState('PENDING');
+  const [inspectedStore, setInspectedStore] = useState(null);
 
-  const [searchTerm, setSearchTerm] = useState('');
   const [filterDistrict, setFilterDistrict] = useState('ALL');
-  const [isDarkMode] = useState(document.documentElement.classList.contains('dark-mode'));
+  const [filterStore, setFilterStore] = useState('ALL');
+  const [filterWeek, setFilterWeek] = useState('ALL');
+  const [selectedKeys, setSelectedKeys] = useState([]);
 
   const activeColors = {
-    bg: isDarkMode ? '#0f172a' : '#f8fafc',
     card: isDarkMode ? '#1e293b' : '#ffffff',
-    textMain: isDarkMode ? '#f1f5f9' : '#0f172a',
-    textMuted: isDarkMode ? '#94a3b8' : '#64748b',
     border: isDarkMode ? '#334155' : '#e2e8f0',
+    textMain: isDarkMode ? '#f1f5f9' : '#1e293b',
+    textMuted: isDarkMode ? '#94a3b8' : '#64748b',
     accent: '#4f46e5',
-    accentSoft: isDarkMode ? 'rgba(79, 70, 229, 0.15)' : 'rgba(79, 70, 229, 0.08)'
+    accentSoft: isDarkMode ? 'rgba(79, 70, 229, 0.15)' : 'rgba(79, 70, 229, 0.05)',
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchStores(); }, [activeTab]);
 
-  const fetchData = async () => {
+  const fetchStores = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/ShiftApproval/pending-stores');
-      setStores(res.data || []);
-    } catch (err) {
-      showToast("Error al cargar tiendas", "error");
-    } finally {
-      setLoading(false);
-    }
+      let status = 5;
+      if (activeTab === 'APPROVED') status = 6;
+      if (activeTab === 'REJECTED') status = 7;
+      const res = await api.get(`/ShiftApproval/stores?status=${status}`);
+      setStores(res.data);
+    } catch (err) { console.error(err); showToast('Error al sincronizar consola', 'error'); } 
+    finally { setLoading(false); }
   };
 
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
-    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 4000);
-  };
-
-  const handleSelectAll = (filtered) => {
-    if (selectedKeys.length === filtered.length) setSelectedKeys([]);
-    else setSelectedKeys(filtered.map(s => `${s.storeId}-${s.weekStart}`));
+    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
   };
 
   const handleSelectStore = (store) => {
     const key = `${store.storeId}-${store.weekStart}`;
-    if (selectedKeys.includes(key)) setSelectedKeys(selectedKeys.filter(k => k !== key));
-    else setSelectedKeys([...selectedKeys, key]);
+    setSelectedKeys(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
   };
 
+  const handleSelectAll = (fStores) => {
+    if (selectedKeys.length === fStores.length && fStores.length > 0) { setSelectedKeys([]); } 
+    else { setSelectedKeys(fStores.map(s => `${s.storeId}-${s.weekStart}`)); }
+  };
+
+  const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
   const handleApprove = async () => {
+    if (selectedKeys.length === 0) return;
     try {
-      setProcessing(true);
-      setSyncPhase(1); // Fase 1: Analizando
-      
-      const payload = selectedKeys.map(key => {
+      setProcessing(true); setSyncPhase(1); await delay(600);
+      for (const key of selectedKeys) {
+        setSyncPhase(2);
         const [storeId, weekStart] = key.split('-');
-        const store = stores.find(s => s.storeId === parseInt(storeId) && s.weekStart === weekStart);
-        return { storeId: parseInt(storeId), weekStart, weekEnd: store.maxDate };
-      });
-
-      // Simular delay visual para Premium UX
-      setTimeout(() => setSyncPhase(2), 800); // Fase 2: Procesando Maestro
-
-      await api.post('/ShiftApproval/bulk-approve', { 
-        approvals: payload,
-        comment: "Aprobación masiva desde consola administrativa"
-      });
-
-      setSyncPhase(3); // Fase 3: Notificando
-      setTimeout(() => setSyncPhase(4), 600); // Fase 4: Éxito
-
-      setTimeout(() => {
-        showToast(`Se aprobaron ${selectedKeys.length} mallas exitosamente`);
-        setSelectedKeys([]);
-        setShowApprovalModal(false);
-        fetchData();
-        setProcessing(false);
-        setSyncPhase(0);
-      }, 1200);
-
-    } catch (err) {
-      showToast("Error en la aprobación masiva", "error");
-      setProcessing(false);
-      setSyncPhase(0);
-    }
+        const storeData = stores.find(s => s.storeId === storeId && s.weekStart === weekStart);
+        if (storeData) {
+          const exclusiveEnd = getExclusiveEndDate(storeData.weekStart);
+          await api.post('/ShiftApproval/approve', {
+            storeId: storeId, startDate: storeData.weekStart, endDate: exclusiveEnd,
+            comment: approvalComment || "Aprobación masiva desde consola"
+          });
+        }
+      }
+      setSyncPhase(3); await delay(800); setSyncPhase(4); await delay(1200);
+      showToast(`Se han aprobado ${selectedKeys.length} mallas exitosamente`);
+      setSelectedKeys([]); setApprovalComment(''); setShowApprovalModal(false); fetchStores();
+    } catch (err) { showToast('Error en la aprobación masiva', 'error'); } 
+    finally { setProcessing(false); setSyncPhase(0); }
   };
 
   const handleReject = async () => {
-    if (!rejectionComment || rejectionComment.trim().length < 5) {
-        showToast("Debes indicar un motivo válido", "error");
-        return;
-    }
+    if (selectedKeys.length === 0 || !rejectionComment.trim()) return;
     try {
-      setProcessing(true);
-      setSyncPhase(1);
-
-      const payload = selectedKeys.map(key => {
+      setProcessing(true); setSyncPhase(1); await delay(600);
+      for (const key of selectedKeys) {
+        setSyncPhase(2);
         const [storeId, weekStart] = key.split('-');
-        const store = stores.find(s => s.storeId === parseInt(storeId) && s.weekStart === weekStart);
-        return { storeId: parseInt(storeId), weekStart, weekEnd: store.maxDate };
-      });
-
-      setTimeout(() => setSyncPhase(2), 800);
-
-      await api.post('/ShiftApproval/bulk-reject', { 
-        rejections: payload,
-        comment: rejectionComment
-      });
-
-      setSyncPhase(3);
-      setTimeout(() => {
-        showToast(`${selectedKeys.length} mallas han sido rechazadas`);
-        setSelectedKeys([]);
-        setRejectionComment('');
-        setShowCommentModal(false);
-        fetchData();
-        setProcessing(false);
-        setSyncPhase(0);
-      }, 1000);
-
-    } catch (err) {
-      showToast("Error al procesar el rechazo", "error");
-      setProcessing(false);
-      setSyncPhase(0);
-    }
+        const storeData = stores.find(s => s.storeId === storeId && s.weekStart === weekStart);
+        if (storeData) {
+          const exclusiveEnd = getExclusiveEndDate(storeData.weekStart);
+          await api.post('/ShiftApproval/reject', { 
+            storeId: storeId, startDate: storeData.weekStart, endDate: exclusiveEnd,
+            comment: rejectionComment 
+          });
+        }
+      }
+      setSyncPhase(3); await delay(800); setSyncPhase(4); await delay(1200);
+      showToast(`${selectedKeys.length} mallas han sido rechazadas`);
+      setSelectedKeys([]); setRejectionComment(''); setShowCommentModal(false); fetchStores();
+    } catch (err) { showToast('Error al procesar el rechazo', 'error'); } 
+    finally { setProcessing(false); setSyncPhase(0); }
   };
 
-  const filteredStores = useMemo(() => {
-    return stores.filter(s => {
-      const matchesTab = s.status === activeTab;
-      const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesDistrict = filterDistrict === 'ALL' || s.districtName === filterDistrict;
-      return matchesTab && matchesSearch && matchesDistrict;
-    });
-  }, [stores, activeTab, searchTerm, filterDistrict]);
-
-  const formatDateRange = (start, end) => {
-    const s = new Date(start);
-    const e = new Date(end);
-    return `${s.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })} - ${e.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })}`;
+  const formatDateRange = (min, max) => {
+    try {
+      const d1 = new Date(min); const d2 = new Date(max);
+      const options = { day: '2-digit', month: 'short' };
+      return `${d1.toLocaleDateString('es-CO', options)} - ${d2.toLocaleDateString('es-CO', options)}`;
+    } catch { return "Periodo no definido"; }
   };
+
+  const getExclusiveEndDate = (weekStart) => {
+    try {
+      const start = new Date(weekStart); const end = new Date(start);
+      end.setDate(start.getDate() + 7);
+      const offset = end.getTimezoneOffset();
+      const localEnd = new Date(end.getTime() - (offset * 60 * 1000));
+      return localEnd.toISOString().split('.')[0];
+    } catch { return null; }
+  };
+
+  const filteredStores = stores.filter(s => {
+    if (!s) return false;
+    const search = (searchTerm || "").toLowerCase();
+    const matchesSearch = (s.name || "").toLowerCase().includes(search) || 
+                         (s.externalId || "").toLowerCase().includes(search) || 
+                         (s.districtName || "").toLowerCase().includes(search);
+    const matchesDistrict = filterDistrict === 'ALL' || s.districtName === filterDistrict;
+    const matchesStore = filterStore === 'ALL' || s.name === filterStore;
+    const matchesWeek = filterWeek === 'ALL' || formatDateRange(s.minDate, s.maxDate) === filterWeek;
+    return matchesSearch && matchesDistrict && matchesStore && matchesWeek;
+  });
 
   const districtsList = [...new Set(stores.map(s => s.districtName))].sort();
   const storesList = [...new Set(stores.map(s => s.name))].sort();
+  const weeksList = [...new Set(stores.map(s => formatDateRange(s.minDate, s.maxDate)))].sort();
 
   const [history, setHistory] = useState([]);
   const [fetchingHistory, setFetchingHistory] = useState(false);
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
-  
+ 
   useEffect(() => { if (inspectedStore) fetchHistory(); }, [inspectedStore]);
-  
+ 
   const fetchHistory = async () => {
     try {
       setFetchingHistory(true);
