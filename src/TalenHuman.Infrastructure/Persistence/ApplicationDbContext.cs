@@ -52,6 +52,8 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<Comunicado> Comunicados => Set<Comunicado>();
     public DbSet<NotificationLog> NotificationLogs => Set<NotificationLog>();
     public DbSet<OperationalSetting> OperationalSettings => Set<OperationalSetting>();
+    public DbSet<WeeklyApproval> WeeklyApprovals => Set<WeeklyApproval>();
+    public DbSet<WeeklyApprovalLog> WeeklyApprovalLogs => Set<WeeklyApprovalLog>();
     public Guid TenantId => _tenantProvider.GetTenantId();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -84,6 +86,8 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<Comunicado>().HasQueryFilter(c => c.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<NotificationLog>().HasQueryFilter(n => n.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<OperationalSetting>().HasQueryFilter(o => o.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<WeeklyApproval>().HasQueryFilter(w => w.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<WeeklyApprovalLog>().HasQueryFilter(w => w.CompanyId == TenantId || TenantId == Guid.Empty);
 
         // Many-to-Many: Supervisor -> Stores
         builder.Entity<SupervisorStore>()
@@ -176,6 +180,8 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<NovedadLog>().HasIndex(n => new { n.CompanyId, n.NovedadId, n.CreatedAt });
         builder.Entity<NovedadAdjunto>().HasIndex(n => new { n.CompanyId, n.NovedadId });
         builder.Entity<NotificationLog>().HasIndex(n => new { n.CompanyId, n.UserId, n.CreatedAt });
+        builder.Entity<WeeklyApproval>().HasIndex(w => new { w.CompanyId, w.StoreId, w.WeekStartDate });
+        builder.Entity<WeeklyApprovalLog>().HasIndex(w => new { w.CompanyId, w.WeeklyApprovalId, w.ActionAt });
         builder.Entity<User>().HasIndex(u => u.CompanyId);
         builder.Entity<UserCredential>().HasIndex(u => u.UserId);
     }

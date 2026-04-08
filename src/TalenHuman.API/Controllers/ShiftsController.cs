@@ -64,6 +64,9 @@ public class ShiftsController : ControllerBase
     [HttpPost("bulk")]
     public async Task<IActionResult> BulkUpdate([FromBody] BulkShiftUpdateDto dto)
     {
+        var userClaimIdString = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+        var userClaimId = Guid.Parse(userClaimIdString);
+ 
         // Normalize UTC dates from frontend for PostgreSQL 'timestamp without time zone'
         var start = DateTime.SpecifyKind(dto.StartDate, DateTimeKind.Unspecified);
         var end = DateTime.SpecifyKind(dto.EndDate, DateTimeKind.Unspecified);
@@ -129,14 +132,45 @@ public class ShiftsController : ControllerBase
         }
 
         await _context.SaveChangesAsync(default);
+ 
+        // V19.0: MASTER APPROVAL SYSTEM - Registry and Trace
+        var normalizedStart = GetMondayOfDate(dto.StartDate);
+        var approval = await _context.WeeklyApprovals
+            .FirstOrDefaultAsync(a => a.StoreId == dto.StoreId && a.WeekStartDate == normalizedStart);
+            
+        if (approval == null)
+        {
+            approval = new WeeklyApproval
+            {
+                StoreId = dto.StoreId,
+                WeekStartDate = normalizedStart,
+                CompanyId = Guid.Empty // Set by interceptor
+            };
+            _context.WeeklyApprovals.Add(approval);
+        }
+ 
+        approval.Status = WeeklyApprovalStatus.Published;
+        approval.LatestComment = dto.Comment;
+        approval.LatestActionAt = DateTime.UtcNow;
+ 
+        var log = new WeeklyApprovalLog
+        {
+            WeeklyApproval = approval,
+            UserId = userClaimId,
+            Action = "Published",
+            Comment = dto.Comment,
+            ActionAt = DateTime.UtcNow,
+            CompanyId = Guid.Empty // Set by interceptor
+        };
+        _context.WeeklyApprovalLogs.Add(log);
+ 
+        await _context.SaveChangesAsync(default);
 
         // 5. Audit Trace (Replacing previous PUSH logic)
         await _auditService.LogAsync("MASS_UPLOAD", "Shifts", dto.StoreId.ToString(), $"Malla cargada para periodo {start:dd/MM} - {end:dd/MM}. Pendiente de aprobación.");
 
         // 6. Notify Approvers based on Configuration (V13.0 Requirement: RH vs Distrital)
         try {
-            var userClaimIdString = User.FindFirst(ClaimTypes.NameIdentifier).Value;
-            var userClaimId = Guid.Parse(userClaimIdString);
             var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userClaimId);
             var companyId = currentUser?.CompanyId;
             
@@ -238,6 +272,13 @@ public class ShiftsController : ControllerBase
             .ToListAsync();
 
         return Ok(shifts);
+    }
+ 
+    private DateTime GetMondayOfDate(DateTime date)
+    {
+        var day = (int)date.DayOfWeek;
+        var diff = (day == 0 ? 6 : day - 1);
+        return date.Date.AddDays(-diff);
     }
 }
 

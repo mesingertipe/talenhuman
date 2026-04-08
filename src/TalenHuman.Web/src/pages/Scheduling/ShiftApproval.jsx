@@ -188,45 +188,130 @@ const ShiftApproval = ({ user }) => {
   const storesList = [...new Set(stores.map(s => s.name))].sort();
   const weeksList = [...new Set(stores.map(s => formatDateRange(s.minDate, s.maxDate)))].sort();
 
+  // V19.0: NEW MASTER STATUS & HISTORY FETCH
+  const [history, setHistory] = useState([]);
+  const [fetchingHistory, setFetchingHistory] = useState(false);
+ 
+  useEffect(() => {
+    if (inspectedStore) {
+      fetchHistory();
+    }
+  }, [inspectedStore]);
+ 
+  const fetchHistory = async () => {
+    try {
+      setFetchingHistory(true);
+      const res = await api.get(`/ShiftApproval/status?storeId=${inspectedStore.storeId}&startDate=${inspectedStore.weekStart}`);
+      setHistory(res.data.history || []);
+    } catch (err) {
+      console.error("Error fetching audit trail", err);
+    } finally {
+      setFetchingHistory(false);
+    }
+  };
+ 
   // V18.8 INSPECTION MODE RENDER
   if (inspectedStore) {
     return (
-      <div className="page-container" style={{ padding: '0 1rem' }}>
+      <div className="page-container animate-fade-in" style={{ padding: '0 1.5rem', maxWidth: '1600px', margin: '0 auto' }}>
          <div style={{ 
            display: 'flex', 
            alignItems: 'center', 
-           gap: '20px', 
+           justifyContent: 'space-between',
            padding: '2rem 0', 
-           borderBottom: `1px solid ${activeColors.border}`,
+           borderBottom: `2px solid ${activeColors.border}`,
            marginBottom: '2rem'
          }}>
-            <button 
-              onClick={() => setInspectedStore(null)}
-              style={{ 
-                width: '48px', height: '48px', borderRadius: '16px', background: activeColors.accentSoft,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.accent,
-                border: 'none', cursor: 'pointer', transition: 'all 0.2s'
-              }}
-              className="hover:scale-110 active:scale-95"
-            >
-              <ArrowLeft size={24} strokeWidth={2.5} />
-            </button>
-            <div>
-              <h1 style={{ fontSize: '1.5rem', fontWeight: '950', color: activeColors.textMain, margin: 0 }}>
-                Verificación: {inspectedStore.name}
-              </h1>
-              <p style={{ margin: 0, color: activeColors.textMuted, fontSize: '0.85rem', fontWeight: '700' }}>
-                AUDITORÍA DE SOLO LECTURA • PERIOD: {formatDateRange(inspectedStore.minDate, inspectedStore.maxDate)}
-              </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <button 
+                onClick={() => setInspectedStore(null)}
+                style={{ 
+                  width: '48px', height: '48px', borderRadius: '16px', background: activeColors.accentSoft,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.accent,
+                  border: 'none', cursor: 'pointer', transition: 'all 0.2s'
+                }}
+                className="hover:scale-110 active:scale-95"
+              >
+                <ArrowLeft size={24} strokeWidth={2.5} />
+              </button>
+              <div>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.02em' }}>
+                  Auditoría: {inspectedStore.name}
+                </h1>
+                <p style={{ margin: 0, color: activeColors.textMuted, fontSize: '0.85rem', fontWeight: '700' }}>
+                  MODO INSPECCIÓN ELITE • PERIODO: {formatDateRange(inspectedStore.minDate, inspectedStore.maxDate)}
+                </p>
+              </div>
+            </div>
+ 
+            {/* V19.0: Audit Trail Indicator */}
+            <div style={{ display: 'flex', gap: '8px' }}>
+               <div style={{ padding: '10px 20px', background: activeColors.accentSoft, borderRadius: '14px', border: `1px solid ${activeColors.accent}40`, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <ShieldCheck size={18} style={{ color: activeColors.accent }} />
+                  <span style={{ fontSize: '0.8rem', fontWeight: '900', color: activeColors.accent, textTransform: 'uppercase' }}>Historial Auditado</span>
+               </div>
             </div>
          </div>
-         <ShiftScheduler 
-            user={user} 
-            readOnly={false} 
-            forceApprover={true}
-            initialStoreId={inspectedStore.storeId} 
-            initialDate={inspectedStore.weekStart} 
-         />
+ 
+         <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '30px' }}>
+            <div style={{ background: activeColors.card, borderRadius: '32px', border: `1.5px solid ${activeColors.border}`, overflow: 'hidden', padding: '1rem' }}>
+              <ShiftScheduler 
+                  user={user} 
+                  readOnly={false} 
+                  forceApprover={true}
+                  initialStoreId={inspectedStore.storeId} 
+                  initialDate={inspectedStore.weekStart} 
+              />
+            </div>
+ 
+            {/* V19.0: SIDEBAR AUDIT TRAIL */}
+            <div style={{ background: activeColors.accentSoft + '20', borderRadius: '32px', border: `1.5px solid ${activeColors.border}`, padding: '24px', height: 'fit-content' }}>
+               <h3 style={{ fontSize: '1.1rem', fontWeight: '950', color: activeColors.textMain, marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                 <MessageSquare size={20} className="text-indigo-500" />
+                 Traza de Comentarios
+               </h3>
+               
+               {fetchingHistory ? (
+                 <div style={{ padding: '40px 0', textAlign: 'center' }}>
+                   <div style={{ width: '24px', height: '24px', border: '3px solid #e2e8f0', borderTopColor: activeColors.accent, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
+                 </div>
+               ) : history.length === 0 ? (
+                 <div style={{ textAlign: 'center', padding: '30px 10px', color: activeColors.textMuted }}>
+                   <Info size={32} className="mx-auto opacity-20 mb-3" />
+                   <p style={{ fontSize: '0.85rem', fontWeight: '700' }}>Sin historial de comentarios disponible para este periodo.</p>
+                 </div>
+               ) : (
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                   {history.map((log, idx) => (
+                     <div key={idx} style={{ position: 'relative', paddingLeft: '24px', borderLeft: `2px dashed ${log.action === 'Published' ? '#94a3b8' : log.action === 'Approved' ? '#10b981' : '#ef4444'}40` }}>
+                        <div style={{ 
+                          position: 'absolute', left: '-7px', top: '0', width: '12px', height: '12px', borderRadius: '50%', 
+                          background: log.action === 'Published' ? '#94a3b8' : log.action === 'Approved' ? '#10b981' : '#ef4444',
+                          border: `2px solid ${activeColors.card}`
+                        }} />
+                        <div style={{ background: activeColors.card, padding: '16px', borderRadius: '20px', border: `1px solid ${activeColors.border}`, boxShadow: '0 4px 10px rgba(0,0,0,0.02)' }}>
+                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                              <span style={{ fontSize: '0.7rem', fontWeight: '950', color: log.action === 'Published' ? '#64748b' : log.action === 'Approved' ? '#059669' : '#dc2626', textTransform: 'uppercase' }}>
+                                 {log.action === 'Published' ? 'PUBLICADO' : log.action === 'Approved' ? 'APROBADO' : 'RECHAZADO'}
+                              </span>
+                              <span style={{ fontSize: '0.65rem', fontWeight: '800', color: activeColors.textMuted }}>
+                                 {new Date(log.actionAt).toLocaleDateString()}
+                              </span>
+                           </div>
+                           <p style={{ fontSize: '0.85rem', fontWeight: '700', color: activeColors.textMain, margin: '0 0 8px 0', lineHeight: '1.4' }}>
+                             "{log.comment || 'Sin comentario'}"
+                           </p>
+                           <div style={{ fontSize: '0.7rem', fontWeight: '800', color: activeColors.textMuted, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                             <ShieldCheck size={12} />
+                             {log.userName}
+                           </div>
+                        </div>
+                     </div>
+                   ))}
+                 </div>
+               )}
+            </div>
+         </div>
       </div>
     );
   }
@@ -409,6 +494,7 @@ const ShiftApproval = ({ user }) => {
               <th style={{ padding: '20px 24px', fontSize: '0.7rem', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Periodo Gestión</th>
               <th style={{ padding: '20px 24px', fontSize: '0.7rem', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Fecha de Carga</th>
               <th style={{ padding: '20px 24px', fontSize: '0.7rem', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Usuario Registra</th>
+              <th style={{ padding: '20px 24px', fontSize: '0.7rem', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Último Comentario</th>
               <th style={{ padding: '20px 24px', fontSize: '0.7rem', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em', textAlign: 'right' }}>Labor</th>
             </tr>
           </thead>
@@ -473,6 +559,15 @@ const ShiftApproval = ({ user }) => {
                   <div>
                     <div style={{ fontWeight: '950', fontSize: '0.85rem', color: activeColors.textMain }}>{store.authorName || 'SISTEMA'}</div>
                     <div style={{ fontWeight: '700', fontSize: '0.7rem', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{store.authorProfile || 'PROCESO AUTOMÁTICO'}</div>
+                  </div>
+                </td>
+                <td style={{ padding: '24px' }}>
+                  <div style={{ 
+                    maxHeight: '40px', overflow: 'hidden', textOverflow: 'ellipsis', 
+                    fontSize: '0.8rem', fontWeight: '700', color: activeColors.textMuted,
+                    borderLeft: `3px solid ${activeColors.accent}30`, paddingLeft: '10px'
+                  }}>
+                    {store.comment || '--'}
                   </div>
                 </td>
                 <td style={{ padding: '24px', textAlign: 'right' }}>

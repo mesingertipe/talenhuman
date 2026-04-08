@@ -273,3 +273,44 @@ public class Comunicado : BaseEntity, IMultitenant
     // Future metrics
     public int ReadCount { get; set; }
 }
+
+public enum WeeklyApprovalStatus
+{
+    Draft,
+    Published, // Pending approval
+    Approved,
+    Rejected
+}
+
+public class WeeklyApproval : BaseEntity, IMultitenant
+{
+    public Guid StoreId { get; set; }
+    public Store Store { get; set; } = null!;
+    
+    public DateTime WeekStartDate { get; set; }
+    public WeeklyApprovalStatus Status { get; set; } = WeeklyApprovalStatus.Draft;
+    
+    public string? LatestComment { get; set; }
+    public DateTime? LatestActionAt { get; set; }
+    
+    public Guid CompanyId { get; set; }
+    public Company Company { get; set; } = null!;
+
+    public ICollection<WeeklyApprovalLog> Logs { get; set; } = new List<WeeklyApprovalLog>();
+}
+
+public class WeeklyApprovalLog : BaseEntity, IMultitenant
+{
+    public Guid WeeklyApprovalId { get; set; }
+    public WeeklyApproval WeeklyApproval { get; set; } = null!;
+    
+    public Guid UserId { get; set; }
+    public User User { get; set; } = null!;
+    
+    public string Action { get; set; } = string.Empty; // Published, Approved, Rejected
+    public string? Comment { get; set; }
+    public DateTime ActionAt { get; set; } = ColombiaTime.Now;
+
+    public Guid CompanyId { get; set; }
+    public Company Company { get; set; } = null!;
+}

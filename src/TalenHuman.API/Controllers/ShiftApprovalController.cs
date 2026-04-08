@@ -51,101 +51,62 @@ public class ShiftApprovalController : ControllerBase
         
         var approvalMode = settings?.ShiftApprovalMode ?? ShiftApprovalMode.HR;
         
-        var query = _context.Shifts
-            .Include(s => s.Store)
-                .ThenInclude(st => st.District)
-            .Where(s => s.CompanyId == companyId && s.Status == status);
+        // V19.0: MASTER APPROVAL SYSTEM - Querying the master table directly
+        var query = _context.WeeklyApprovals
+            .Include(a => a.Store)
+                .ThenInclude(s => s.District)
+            .Where(a => a.CompanyId == companyId && a.Status == WeeklyApprovalStatus.Published);
 
         if (approvalMode == ShiftApprovalMode.District && !isTopAdmin) {
             if (user != null && user.DistrictId.HasValue) {
-                query = query.Where(s => s.Store.DistrictId == user.DistrictId);
+                query = query.Where(a => a.Store.DistrictId == user.DistrictId);
             } else {
                 return Ok(new List<object>()); 
             }
         }
 
-        var storeGroups = await query
-            .Select(s => new {
-                Shift = s,
-                // Calcular el Lunes de la semana (ISO-ish) para agrupar por periodos de 7 días
-                WeekStart = s.StartTime.Date.AddDays(-((int)s.StartTime.DayOfWeek == 0 ? 6 : (int)s.StartTime.DayOfWeek - 1))
-            })
-            .GroupBy(g => new { 
-                g.Shift.StoreId, 
-                g.Shift.Store.Name, 
-                g.Shift.Store.ExternalId, 
-                DistrictName = g.Shift.Store.District != null ? g.Shift.Store.District.Name : "SIN DISTRITO",
-                g.WeekStart
-            })
-            .Select(g => new {
-                StoreId = g.Key.StoreId,
-                Name = g.Key.Name,
-                ExternalId = g.Key.ExternalId,
-                DistrictName = g.Key.DistrictName,
-                WeekStart = g.Key.WeekStart,
-                PendingCount = g.Count(),
-                MinDate = g.Min(x => x.Shift.StartTime),
-                MaxDate = g.Max(x => x.Shift.StartTime),
-                LastUploadAt = g.Max(x => x.Shift.CreatedAt)
+        var masterRecords = await query
+            .Select(a => new {
+                a.StoreId,
+                a.Store.Name,
+                a.Store.ExternalId,
+                DistrictName = a.Store.District != null ? a.Store.District.Name : "SIN DISTRITO",
+                a.WeekStartDate,
+                a.LatestComment,
+                a.LatestActionAt
             })
             .ToListAsync();
 
         var result = new List<object>();
-        foreach (var group in storeGroups)
+        foreach (var item in masterRecords)
         {
-            var lastLog = await _context.AuditLogs
-                .Where(al => al.CompanyId == companyId && 
-                            al.EntityType == "Shifts" && 
-                            al.EntityId == group.StoreId.ToString())
-                .OrderByDescending(al => al.CreatedAt)
-                .Select(al => new { al.UserName, al.UserId })
+            // V19.0: Trace the specific author of the 'Published' action
+            var lastPublishedLog = await _context.WeeklyApprovalLogs
+                .Include(logEntry => logEntry.User)
+                    .ThenInclude(u => u.Employee)
+                        .ThenInclude(e => e.Profile)
+                .Where(logEntry => logEntry.WeeklyApproval.StoreId == item.StoreId && 
+                            logEntry.WeeklyApproval.WeekStartDate == item.WeekStartDate &&
+                            logEntry.Action == "Published")
+                .OrderByDescending(logEntry => logEntry.ActionAt)
                 .FirstOrDefaultAsync();
 
-            string authorName = "SISTEMA";
-            string authorProfile = "PROCESO AUTOMÁTICO";
-
-            if (lastLog != null && lastLog.UserId.HasValue)
-            {
-                var authorUser = await _context.Users
-                    .Include(u => u.Employee)
-                        .ThenInclude(e => e.Profile)
-                    .FirstOrDefaultAsync(u => u.Id == lastLog.UserId);
-                
-                if (authorUser != null)
-                {
-                    authorName = authorUser.FullName;
-                    authorProfile = authorUser.Employee?.Profile?.Name ?? "USUARIO";
-                }
-            }
-            else
-            {
-                var manager = await _context.SupervisorStores
-                    .Include(ss => ss.User)
-                        .ThenInclude(u => u.Employee)
-                            .ThenInclude(e => e.Profile)
-                    .Where(ss => ss.StoreId == group.StoreId)
-                    .Select(ss => ss.User)
-                    .FirstOrDefaultAsync();
-
-                if (manager != null)
-                {
-                    authorName = manager.FullName;
-                    authorProfile = manager.Employee?.Profile?.Name ?? "GERENTE";
-                }
-            }
+            string authorName = lastPublishedLog?.User?.FullName ?? "GERENTE";
+            string authorProfile = lastPublishedLog?.User?.Employee?.Profile?.Name ?? "USUARIO";
 
             result.Add(new {
-                group.StoreId,
-                group.Name,
-                group.ExternalId,
-                group.DistrictName,
-                group.PendingCount,
-                group.WeekStart,
-                group.MinDate,
-                group.MaxDate,
-                group.LastUploadAt,
+                item.StoreId,
+                item.Name,
+                item.ExternalId,
+                item.DistrictName,
+                PendingCount = 1, // UX Compatibility
+                WeekStart = item.WeekStartDate,
+                MinDate = item.WeekStartDate,
+                MaxDate = item.WeekStartDate.AddDays(6),
+                LastUploadAt = item.LatestActionAt,
                 AuthorName = authorName,
-                AuthorProfile = authorProfile
+                AuthorProfile = authorProfile,
+                Comment = item.LatestComment
             });
         }
 
@@ -161,22 +122,38 @@ public class ShiftApprovalController : ControllerBase
         if (string.IsNullOrEmpty(approverIdString)) return Unauthorized();
         var approverId = Guid.Parse(approverIdString);
 
-        // V18.10.9: NORMALIZACIÓN FORZADA
         var normalizedStart = GetMondayOfDate(request.StartDate);
- 
-        // V18.10.8: SINCRONIZACIÓN TOTAL - Capturar todos los turnos del periodo agrupado
+
+        // V19.0: Master Update
+        var approval = await _context.WeeklyApprovals
+            .FirstOrDefaultAsync(a => a.StoreId == request.StoreId && a.WeekStartDate == normalizedStart);
+            
+        if (approval != null)
+        {
+            approval.Status = WeeklyApprovalStatus.Approved;
+            approval.LatestComment = request.Comment;
+            approval.LatestActionAt = DateTime.UtcNow;
+            
+            var log = new WeeklyApprovalLog
+            {
+                WeeklyApproval = approval,
+                UserId = approverId,
+                Action = "Approved",
+                Comment = request.Comment,
+                ActionAt = DateTime.UtcNow,
+                CompanyId = companyId
+            };
+            _context.WeeklyApprovalLogs.Add(log);
+        }
+
+        // V13.0 Bridge: Update individual shifts for mobile app consistency
         var allStoreShifts = await _context.Shifts
             .Where(s => s.CompanyId == companyId && 
                         s.StoreId == request.StoreId &&
                         s.Status != ShiftStatus.Approved) 
             .ToListAsync();
             
-        var shifts = allStoreShifts.Where(s => {
-            var weekStart = GetMondayOfDate(s.StartTime);
-            return weekStart == normalizedStart;
-        }).ToList();
-
-        if (!shifts.Any()) return NotFound("No hay turnos pendientes para este rango.");
+        var shifts = allStoreShifts.Where(s => GetMondayOfDate(s.StartTime) == normalizedStart).ToList();
 
         foreach (var shift in shifts)
         {
@@ -188,111 +165,56 @@ public class ShiftApprovalController : ControllerBase
 
         await _context.SaveChangesAsync(CancellationToken.None);
         
-        var settings = await _context.OperationalSettings
-            .FirstOrDefaultAsync(o => o.CompanyId == companyId);
-
-        var lastLog = await _context.AuditLogs
-            .Where(al => al.CompanyId == companyId && 
-                        al.EntityType == "Shifts" && 
-                        al.EntityId == request.StoreId.ToString())
-            .OrderByDescending(al => al.CreatedAt)
-            .FirstOrDefaultAsync();
-
-        string? authorEmail = null;
-        if (lastLog != null && lastLog.UserId.HasValue) 
-        {
-            var authorUser = await _context.Users.FindAsync(lastLog.UserId.Value);
-            authorEmail = authorUser?.Email;
-        }
-
+        // Notifications Logic
+        var settings = await _context.OperationalSettings.FirstOrDefaultAsync(o => o.CompanyId == companyId);
         if (settings?.EnableEmailNotifications ?? true)
         {
-            var managers = await _context.SupervisorStores
-                .Include(ss => ss.User)
-                .Where(ss => ss.StoreId == request.StoreId)
-                .Select(ss => ss.User)
-                .ToListAsync();
-
-            var emails = managers.Where(m => !string.IsNullOrEmpty(m.Email)).Select(m => m.Email).ToList();
-            if (!string.IsNullOrEmpty(authorEmail) && !emails.Contains(authorEmail)) emails.Add(authorEmail);
-
-            // V18.10.X: Fetch Store/Brand info for legible notification
             var store = await _context.Stores.Include(s => s.Brand).FirstOrDefaultAsync(s => s.Id == request.StoreId);
-            string storeInfo = store != null ? $"{store.Brand?.Name} - Sede: {store.Name} ({store.ExternalId})" : request.StoreId.ToString();
+            var managers = await _context.SupervisorStores.Include(ss => ss.User)
+                .Where(ss => ss.StoreId == request.StoreId).Select(ss => ss.User).ToListAsync();
+            var emails = managers.Where(m => !string.IsNullOrEmpty(m.Email)).Select(m => m.Email).ToList();
 
+            string storeInfo = store != null ? $"{store.Brand?.Name} - Sede: {store.Name} ({store.ExternalId})" : request.StoreId.ToString();
             await _notificationService.SendBatchEmailNotificationAsync(emails, new NotificationRequest {
-                Subject = $"✅ Programación APROBADA - {store.Name}",
+                Subject = $"✅ Programación APROBADA - {store?.Name}",
                 Message = $"La programación de la sede <b>{storeInfo}</b> para el periodo <b>{request.StartDate:dd/MM}</b> al <b>{request.EndDate:dd/MM}</b> ha sido validada oficialmente.\n\nComentario: {request.Comment}",
                 Type = NotificationType.Email
             });
         }
 
-        if (settings?.EnablePushNotifications ?? true)
-        {
-            var employees = await _context.Employees
-                .Include(e => e.User)
-                .Where(e => e.CompanyId == companyId && e.StoreId == request.StoreId && e.IsActive && e.User != null && !string.IsNullOrEmpty(e.User.FirebaseToken))
-                .Select(e => new { e.User!.Id, e.User.FirebaseToken })
-                .ToListAsync();
-
-            if (employees.Any())
-            {
-                await _notificationService.SendBroadcastAsync(
-                    employees.Select(e => e.Id),
-                    employees.Select(e => e.FirebaseToken!),
-                    new NotificationRequest {
-                        Subject = "¡Horario Publicado! ✅",
-                        Message = $"Tu programación para {request.StartDate:dd/MM} — {request.EndDate:dd/MM} ya está disponible. ¡Consúltala!",
-                        Type = NotificationType.Push,
-                        Category = "shift_reminder"
-                    }
-                );
-            }
-        }
-
         await _auditService.LogAsync("APPROVAL_FLOW", "Shifts", request.StoreId.ToString(), $"Programación aprobada para el periodo {request.StartDate:dd/MM} - {request.EndDate:dd/MM}.");
 
-        return Ok(new { Message = "Turnos aprobados y notificaciones enviadas según configuración." });
+        return Ok(new { Message = "Turnos aprobados satisfactoriamente." });
     }
 
     [HttpGet("status")]
     [Authorize]
     public async Task<IActionResult> GetStatus([FromQuery] Guid storeId, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
     {
-        var companyId = _tenantProvider.GetTenantId();
-        
-        // V18.10.9: NORMALIZACIÓN FORZADA - Ignorar ruido de hora/zona de navegador
         var normalizedStart = GetMondayOfDate(startDate);
         
-        // V18.10.8: SINCRONIZACIÓN TOTAL - Usar la misma lógica de WeekStart que la consola principal
-        var allStoreShifts = await _context.Shifts
-            .Where(s => s.CompanyId == companyId && 
-                        s.StoreId == storeId)
-            .ToListAsync();
-            
-        // Filtrar en memoria para usar exactamente el mismo cálculo de agrupación
-        var shifts = allStoreShifts.Where(s => {
-            var weekStart = GetMondayOfDate(s.StartTime);
-            return weekStart == normalizedStart;
+        // V19.0: Master Query with Full History Trace
+        var approval = await _context.WeeklyApprovals
+            .Include(a => a.Logs)
+                .ThenInclude(l => l.User)
+            .FirstOrDefaultAsync(a => a.StoreId == storeId && a.WeekStartDate == normalizedStart);
+
+        if (approval == null) 
+            return Ok(new { Status = "Empty", Message = "Sin registro de aprobación maestro." });
+
+        var history = approval.Logs.OrderBy(logEntry => logEntry.ActionAt).Select(logEntry => new {
+            logEntry.Action,
+            logEntry.Comment,
+            logEntry.ActionAt,
+            UserName = logEntry.User.FullName
         }).ToList();
 
-        if (!shifts.Any()) 
-            return Ok(new { Status = "Empty", Message = "No hay turnos cargados" });
-
-        if (shifts.Any(s => s.Status == ShiftStatus.Rejected))
-        {
-            var firstRejection = shifts.FirstOrDefault(s => s.Status == ShiftStatus.Rejected);
-            return Ok(new { 
-                Status = "Rejected", 
-                Comment = firstRejection?.ApprovalComment, 
-                Date = firstRejection?.ApprovedAt 
-            });
-        }
-
-        if (shifts.All(s => s.Status == ShiftStatus.Approved))
-            return Ok(new { Status = "Approved", Date = shifts.First().ApprovedAt });
-
-        return Ok(new { Status = "Pending", Message = "Pendiente de validación por RH/Distrital" });
+        return Ok(new { 
+            Status = approval.Status.ToString(), 
+            Date = approval.LatestActionAt,
+            Comment = approval.LatestComment,
+            History = history
+        });
     }
 
     [HttpPost("reject")]
@@ -307,22 +229,38 @@ public class ShiftApprovalController : ControllerBase
         if (string.IsNullOrEmpty(approverIdString)) return Unauthorized();
         var approverId = Guid.Parse(approverIdString);
 
-        // V18.10.9: NORMALIZACIÓN FORZADA
         var normalizedStart = GetMondayOfDate(request.StartDate);
- 
-        // V18.10.8: SINCRONIZACIÓN TOTAL - Capturar todos los turnos del periodo agrupado para rechazo
+
+        // V19.0: Master Reject
+        var approval = await _context.WeeklyApprovals
+            .FirstOrDefaultAsync(a => a.StoreId == request.StoreId && a.WeekStartDate == normalizedStart);
+            
+        if (approval != null)
+        {
+            approval.Status = WeeklyApprovalStatus.Rejected;
+            approval.LatestComment = request.Comment;
+            approval.LatestActionAt = DateTime.UtcNow;
+            
+            var log = new WeeklyApprovalLog
+            {
+                WeeklyApproval = approval,
+                UserId = approverId,
+                Action = "Rejected",
+                Comment = request.Comment,
+                ActionAt = DateTime.UtcNow,
+                CompanyId = companyId
+            };
+            _context.WeeklyApprovalLogs.Add(log);
+        }
+
+        // Bridge: Update individual shifts
         var allStoreShifts = await _context.Shifts
             .Where(s => s.CompanyId == companyId && 
                         s.StoreId == request.StoreId &&
                         s.Status != ShiftStatus.Approved) 
             .ToListAsync();
             
-        var shifts = allStoreShifts.Where(s => {
-            var weekStart = GetMondayOfDate(s.StartTime);
-            return weekStart == normalizedStart;
-        }).ToList();
-
-        if (!shifts.Any()) return NotFound("No hay turnos pendientes para este rango.");
+        var shifts = allStoreShifts.Where(s => GetMondayOfDate(s.StartTime) == normalizedStart).ToList();
 
         foreach (var shift in shifts)
         {
@@ -334,48 +272,22 @@ public class ShiftApprovalController : ControllerBase
 
         await _context.SaveChangesAsync(CancellationToken.None);
 
-        var settings = await _context.OperationalSettings
-            .FirstOrDefaultAsync(o => o.CompanyId == companyId);
+        // Notifications
+        var store = await _context.Stores.Include(s => s.Brand).FirstOrDefaultAsync(s => s.Id == request.StoreId);
+        var managers = await _context.SupervisorStores.Include(ss => ss.User)
+            .Where(ss => ss.StoreId == request.StoreId).Select(ss => ss.User).ToListAsync();
+        var emails = managers.Where(m => !string.IsNullOrEmpty(m.Email)).Select(m => m.Email).ToList();
 
-        var lastLog = await _context.AuditLogs
-            .Where(al => al.CompanyId == companyId && 
-                        al.EntityType == "Shifts" && 
-                        al.EntityId == request.StoreId.ToString())
-            .OrderByDescending(al => al.CreatedAt)
-            .FirstOrDefaultAsync();
+        string storeInfo = store != null ? $"{store.Brand?.Name} - Sede: {store.Name} ({store.ExternalId})" : request.StoreId.ToString();
+        await _notificationService.SendBatchEmailNotificationAsync(emails, new NotificationRequest {
+            Subject = $"🚨 Programación RECHAZADA - {store?.Name}",
+            Message = $"La programación de la sede <b>{storeInfo}</b> para el periodo <b>{request.StartDate:dd/MM}</b> al <b>{request.EndDate:dd/MM}</b> ha sido RECHAZADA.\n\nMotivo: {request.Comment}",
+            Type = NotificationType.Email
+        });
 
-        string? authorEmail = null;
-        if (lastLog != null && lastLog.UserId.HasValue) 
-        {
-            var authorUser = await _context.Users.FindAsync(lastLog.UserId.Value);
-            authorEmail = authorUser?.Email;
-        }
+        await _auditService.LogAsync("REJECTION_FLOW", "Shifts", request.StoreId.ToString(), $"Programación rechazada para el periodo {request.StartDate:dd/MM} - {request.EndDate:dd/MM}.");
 
-        if (settings?.EnableEmailNotifications ?? true)
-        {
-            var managers = await _context.SupervisorStores
-                .Include(ss => ss.User)
-                .Where(ss => ss.StoreId == request.StoreId)
-                .Select(ss => ss.User)
-                .ToListAsync();
-
-            var emails = managers.Where(m => !string.IsNullOrEmpty(m.Email)).Select(m => m.Email).ToList();
-            if (!string.IsNullOrEmpty(authorEmail) && !emails.Contains(authorEmail)) emails.Add(authorEmail);
-
-            // V18.10.X: Fetch Store/Brand info for legible notification
-            var store = await _context.Stores.Include(s => s.Brand).FirstOrDefaultAsync(s => s.Id == request.StoreId);
-            string storeInfo = store != null ? $"{store.Brand?.Name} - Sede: {store.Name} ({store.ExternalId})" : request.StoreId.ToString();
-
-            await _notificationService.SendBatchEmailNotificationAsync(emails, new NotificationRequest {
-                Subject = $"🚨 Programación RECHAZADA - {store.Name}",
-                Message = $"La programación de la sede <b>{storeInfo}</b> para el periodo <b>{request.StartDate:dd/MM}</b> al <b>{request.EndDate:dd/MM}</b> NO ha sido aprobada.\n\nMOTIVO DEL RECHAZO: {request.Comment}\n\nPor favor, realice los ajustes y vuelva a publicar.",
-                Type = NotificationType.Email
-            });
-        }
-
-        await _auditService.LogAsync("REJECTION_FLOW", "Shifts", request.StoreId.ToString(), $"Programación RECHAZADA para el periodo {request.StartDate:dd/MM} - {request.EndDate:dd/MM}. Motivo: {request.Comment}");
-
-        return Ok(new { Message = "Turnos rechazados y notificaciones enviadas correctamente al autor y supervisores." });
+        return Ok(new { Message = "Turnos rechazados correctamente." });
     }
 
     public class ApprovalRequest
@@ -385,10 +297,9 @@ public class ShiftApprovalController : ControllerBase
         public DateTime EndDate { get; set; }
         public string? Comment { get; set; }
     }
- 
+
     private DateTime GetMondayOfDate(DateTime date)
     {
-        // Fórmula centralizada: Lunes de la semana ISO-ish
         var day = (int)date.DayOfWeek;
         var diff = (day == 0 ? 6 : day - 1);
         return date.Date.AddDays(-diff);

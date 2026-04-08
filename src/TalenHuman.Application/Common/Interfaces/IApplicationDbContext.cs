@@ -36,6 +36,8 @@ public interface IApplicationDbContext
     DbSet<Comunicado> Comunicados { get; }
     DbSet<NotificationLog> NotificationLogs { get; }
     DbSet<OperationalSetting> OperationalSettings { get; }
+    DbSet<WeeklyApproval> WeeklyApprovals { get; }
+    DbSet<WeeklyApprovalLog> WeeklyApprovalLogs { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }
