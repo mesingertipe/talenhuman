@@ -562,18 +562,69 @@ const ShiftApproval = ({ user }) => {
         </div>
       )}
 
-      {/* Modal de Aprobación */}
+      {/* Modal de Aprobación Masiva con Comentarios */}
       {showApprovalModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-           <div style={{ background: activeColors.card, width: '100%', maxWidth: '400px', borderRadius: '32px', padding: '40px', textAlign: 'center' }}>
-              <div style={{ width: '64px', height: '64px', background: '#dcfce7', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a', margin: '0 auto 24px' }}>
-                 <CheckCircle size={32} />
-              </div>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: '950', color: activeColors.textMain, marginBottom: '12px' }}>¿Aprobar turnos?</h3>
-              <p style={{ color: activeColors.textMuted, marginBottom: '32px' }}>Se aprobarán {selectedKeys.length} turnos seleccionados.</p>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                 <button onClick={() => setShowApprovalModal(false)} style={{ flex: 1, padding: '16px', borderRadius: '16px', border: `1px solid ${activeColors.border}`, background: 'transparent', fontWeight: '800' }}>Cancelar</button>
-                 <button onClick={handleApprove} style={{ flex: 1, padding: '16px', borderRadius: '16px', background: activeColors.accent, color: 'white', fontWeight: '950' }}>Confirmar</button>
+           <div style={{ background: activeColors.card, width: '100%', maxWidth: '500px', borderRadius: '32px', boxShadow: '0 25px 60px rgba(0,0,0,0.15)', overflow: 'hidden' }}>
+              <div style={{ padding: '40px' }}>
+                 <div style={{ width: '64px', height: '64px', background: '#dcfce7', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a', marginBottom: '24px' }}>
+                    <CheckCircle size={32} />
+                 </div>
+                 <h3 style={{ fontSize: '1.5rem', fontWeight: '950', color: activeColors.textMain, margin: '0 0 12px 0' }}>Aprobar Seleccionados</h3>
+                 <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginBottom: '32px' }}>
+                    Estás a punto de validar {selectedKeys.length} mallas de turnos. Los colaboradores podrán ver sus horarios de forma oficial.
+                 </p>
+ 
+                 <div className="group">
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMuted, marginBottom: '12px', textTransform: 'uppercase' }}>Comentarios de Aprobación (Opcional)</label>
+                    <div style={{ position: 'relative' }}>
+                       <MessageSquare size={18} className="absolute left-5 top-5 text-slate-400" />
+                       <textarea 
+                          value={approvalComment}
+                          onChange={(e) => setApprovalComment(e.target.value)}
+                          placeholder="Ej: Programación validada según cobertura requerida..."
+                          style={{ 
+                            width: '100%', 
+                            padding: '18px 24px 18px 60px', 
+                            borderRadius: '24px', 
+                            border: `2px solid ${activeColors.border}`, 
+                            background: activeColors.card, 
+                            color: activeColors.textMain, 
+                            fontWeight: '700',
+                            minHeight: '120px',
+                            resize: 'none',
+                            outline: 'none'
+                          }}
+                          className="focus:border-indigo-400 focus:shadow-xl focus:shadow-indigo-500/5"
+                       />
+                    </div>
+                 </div>
+ 
+                 <div style={{ display: 'flex', gap: '16px', marginTop: '40px' }}>
+                    <button 
+                      onClick={() => { setShowApprovalModal(false); setApprovalComment(''); }}
+                      style={{ flex: 1, padding: '18px', borderRadius: '20px', border: `2px solid ${activeColors.border}`, background: 'transparent', color: activeColors.textMuted, fontWeight: '800', cursor: 'pointer' }}
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      disabled={processing}
+                      onClick={handleApprove}
+                      style={{ 
+                        flex: 2, 
+                        padding: '18px', 
+                        borderRadius: '20px', 
+                        border: 'none', 
+                        background: activeColors.accent, 
+                        color: 'white', 
+                        fontWeight: '950', 
+                        boxShadow: '0 10px 25px rgba(79, 70, 229, 0.3)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {processing ? 'Procesando...' : 'Confirmar Aprobación'}
+                    </button>
+                 </div>
               </div>
            </div>
         </div>

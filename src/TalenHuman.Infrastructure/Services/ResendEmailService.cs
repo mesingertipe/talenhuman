@@ -52,13 +52,14 @@ public class ResendEmailService : IEmailService
             }).ToList()
         }).ToList();
 
-        var httpRequest = new HttpRequestMessage(HttpMethod.Post, "https://api.resend.com/emails/batch")
-        {
-            Content = JsonContent.Create(emails)
-        };
-        httpRequest.Headers.Add("Authorization", $"Bearer {apiKey}");
-
         // Execute with Polly retry policy
-        await _retryPolicy.ExecuteAsync(async () => await _httpClient.SendAsync(httpRequest));
+        await _retryPolicy.ExecuteAsync(async () => {
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, "https://api.resend.com/emails/batch")
+            {
+                Content = JsonContent.Create(emails)
+            };
+            httpRequest.Headers.Add("Authorization", $"Bearer {apiKey}");
+            return await _httpClient.SendAsync(httpRequest);
+        });
     }
 }
