@@ -139,6 +139,17 @@ const ShiftApproval = ({ user }) => {
     }
   };
 
+  const formatDateRange = (min, max) => {
+    try {
+      const d1 = new Date(min);
+      const d2 = new Date(max);
+      const options = { day: '2-digit', month: 'short' };
+      return `${d1.toLocaleDateString('es-CO', options)} - ${d2.toLocaleDateString('es-CO', options)}`;
+    } catch {
+      return "Periodo no definido";
+    }
+  };
+
   const filteredStores = stores.filter(s => {
     if (!s) return false;
     
@@ -160,17 +171,6 @@ const ShiftApproval = ({ user }) => {
   const districtsList = [...new Set(stores.map(s => s.districtName))].sort();
   const storesList = [...new Set(stores.map(s => s.name))].sort();
   const weeksList = [...new Set(stores.map(s => formatDateRange(s.minDate, s.maxDate)))].sort();
-
-  const formatDateRange = (min, max) => {
-    try {
-      const d1 = new Date(min);
-      const d2 = new Date(max);
-      const options = { day: '2-digit', month: 'short' };
-      return `${d1.toLocaleDateString('es-CO', options)} - ${d2.toLocaleDateString('es-CO', options)}`;
-    } catch {
-      return "Periodo no definido";
-    }
-  };
 
   // V18.8 INSPECTION MODE RENDER
   if (inspectedStore) {
