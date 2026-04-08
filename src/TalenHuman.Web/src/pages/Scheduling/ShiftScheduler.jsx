@@ -657,7 +657,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                 comment: rejectionComment
             });
 
-            showToast("Malla rechazada y gerente notificado");
+            showToast("Programación rechazada y gerente notificado");
             setShowRejectionModal(false);
             fetchData();
             fetchWeeklyStatus();
@@ -1016,7 +1016,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                         <div className="flex flex-col leading-none">
                                             <span className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1.5 leading-none">Status Semanal</span>
                                             <span className={`text-[13px] font-[1000] uppercase tracking-tighter ${weeklyStatus.status === 'Approved' ? 'text-emerald-600' : (weeklyStatus.status === 'Rejected' ? 'text-rose-600' : 'text-amber-600')}`}>
-                                                {weeklyStatus.status === 'Approved' ? 'Semana Lista (OK)' : (weeklyStatus.status === 'Rejected' ? 'Malla Rechazada' : (weeklyStatus.status === 'Empty' ? 'Personal Sin Turno' : 'Esperando Validación'))}
+                                                {weeklyStatus.status === 'Approved' ? 'Semana Lista (OK)' : (weeklyStatus.status === 'Rejected' ? 'Programación Rechazada' : (weeklyStatus.status === 'Empty' ? 'Personal Sin Turno' : 'Esperando Validación'))}
                                             </span>
                                         </div>
                                         {weeklyStatus.status === 'Rejected' && weeklyStatus.comment && (
@@ -1128,7 +1128,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
                                     </div>
                                     <div>
                                         <p style={{ margin: 0, fontWeight: '950', color: activeColors.textMain, fontSize: '0.9rem', letterSpacing: '-0.02em' }}>Pendiente de Aprobación</p>
-                                        <p style={{ margin: 0, fontWeight: '700', color: activeColors.textMuted, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Malla lista para validación administrativa</p>
+                                        <p style={{ margin: 0, fontWeight: '700', color: activeColors.textMuted, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Programación lista para validación administrativa</p>
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', gap: '12px' }}>
@@ -1954,7 +1954,7 @@ const ShiftScheduler = ({ user, tenantSettings }) => {
 
                                 <div className="space-y-3 mb-10">
                                     <h3 className="text-2xl font-[1000] text-slate-900 dark:text-white tracking-tight">
-                                        {syncPhase === 1 && "Analizando Malla"}
+                                        {syncPhase === 1 && "Analizando Turnos"}
                                         {syncPhase === 2 && "Sincronizando Core"}
                                         {syncPhase === 3 && "Notificando Gerencia"}
                                         {syncPhase >= 4 && "¡Éxito Total!"}

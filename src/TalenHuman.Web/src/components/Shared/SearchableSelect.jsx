@@ -29,10 +29,13 @@ const SearchableSelect = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filteredOptions = options.filter(opt => 
-    opt.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    opt.label?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredOptions = options.filter(opt => {
+    if (!opt) return false;
+    const search = (searchTerm || "").toLowerCase();
+    const name = (opt.name || "").toLowerCase();
+    const label = (opt.label || "").toLowerCase();
+    return name.includes(search) || label.includes(search);
+  });
 
   const handleSelect = (option) => {
     onChange(option.id || option.value);

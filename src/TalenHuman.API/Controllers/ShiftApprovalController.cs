@@ -126,14 +126,14 @@ public class ShiftApprovalController : ControllerBase
         {
             await _notificationService.SendNotificationAsync(new NotificationRequest {
                 To = manager.Email,
-                Subject = "✅ Malla de Turnos APROBADA",
+                Subject = "✅ Programación de Turnos APROBADA",
                 Message = $"La programación del {request.StartDate:dd/MM} al {request.EndDate:dd/MM} ha sido aprobada por RH.\n\nComentario: {request.Comment}",
                 Type = NotificationType.Email
             });
         }
 
         // 📱 V13.0: Employee PUSH notification removed to avoid noise as requested.
-        await _auditService.LogAsync("APPROVAL_FLOW", "Shifts", request.StoreId.ToString(), $"Malla aprobada para el periodo {request.StartDate:dd/MM} - {request.EndDate:dd/MM}.");
+        await _auditService.LogAsync("APPROVAL_FLOW", "Shifts", request.StoreId.ToString(), $"Programación aprobada para el periodo {request.StartDate:dd/MM} - {request.EndDate:dd/MM}.");
 
         return Ok(new { Message = "Turnos aprobados y notificaciones enviadas." });
     }
@@ -213,7 +213,7 @@ public class ShiftApprovalController : ControllerBase
         {
             await _notificationService.SendNotificationAsync(new NotificationRequest {
                 To = manager.Email,
-                Subject = "❌ Malla de Turnos RECHAZADA",
+                Subject = "❌ Programación de Turnos RECHAZADA",
                 Message = $"La programación del {request.StartDate:dd/MM} al {request.EndDate:dd/MM} ha sido rechazada por RH y requiere ajustes.\n\nMotivo del rechazo: {request.Comment}",
                 Type = NotificationType.Email
             });

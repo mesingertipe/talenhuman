@@ -166,8 +166,8 @@ public class ShiftsController : ControllerBase
                 .Where(app => !string.IsNullOrEmpty(app.Email))
                 .Select(app => _notificationService.SendNotificationAsync(new Application.Services.NotificationRequest {
                     To = app.Email,
-                    Subject = "⚠️ Nueva Malla de Turnos para Aprobar",
-                    Message = $"Se ha cargado una nueva malla de turnos para la tienda '{dto.StoreId}' para el periodo {start:dd/MM} al {end:dd/MM}.\n\nPor favor, ingresa al panel administrativo para revisarla.",
+                    Subject = "⚠️ Nueva Programación de Turnos para Aprobar",
+                    Message = $"Se ha cargado una nueva programación de turnos para la tienda '{dto.StoreId}' para el periodo {start:dd/MM} al {end:dd/MM}.\n\nPor favor, ingresa al panel administrativo para revisarla.",
                     Type = Application.Services.NotificationType.Email
                 }));
 
