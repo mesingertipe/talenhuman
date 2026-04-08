@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { 
     Settings, Shield, Bell, Mail, Smartphone, Save, 
     CheckCircle, Clock, ListOrdered, UserCheck, Users, Info, AlertCircle,
-    Zap, Sparkles, AlertTriangle, ShieldCheck, X, HelpCircle
+    Zap, Sparkles, AlertTriangle, ShieldCheck, X, HelpCircle, Activity
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
@@ -22,6 +22,19 @@ const OperationalSettings = () => {
     });
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
+    // Premium Color System (V12 Elite - Unified with Monitoring)
+    const activeColors = {
+        bg: isDarkMode ? '#0f172a' : '#f8fafc',
+        card: isDarkMode ? '#1e293b' : '#ffffff',
+        border: isDarkMode ? '#334155' : '#f1f5f9',
+        textMain: isDarkMode ? '#f1f5f9' : '#1e293b',
+        textMuted: isDarkMode ? '#94a3b8' : '#64748b',
+        accent: '#4f46e5',
+        success: '#10b981',
+        warning: '#f59e0b',
+        danger: '#ef4444'
+    };
+
     useEffect(() => {
         fetchSettings();
     }, []);
@@ -39,7 +52,6 @@ const OperationalSettings = () => {
     };
 
     const handleSaveRequest = () => {
-        console.log("Triggering confirmation modal...");
         setShowConfirm(true);
     };
 
@@ -47,7 +59,6 @@ const OperationalSettings = () => {
         setShowConfirm(false);
         try {
             setSaving(true);
-            // Payload exacto para el UpdateOperationalSettingsDto
             const payload = {
                 attendanceMode: parseInt(settings.attendanceMode),
                 shiftApprovalMode: parseInt(settings.shiftApprovalMode),
@@ -55,7 +66,6 @@ const OperationalSettings = () => {
                 enableEmailNotifications: !!settings.enableEmailNotifications
             };
             
-            console.log("Sending payload:", payload);
             const res = await api.post('/OperationalSettings', payload);
             setSettings(res.data);
             showToast("Protocolos sincronizados exitosamente", "success");
@@ -80,181 +90,162 @@ const OperationalSettings = () => {
     );
 
     return (
-        <div className={`min-h-screen ${isDarkMode ? 'dark' : ''} bg-[#f1f5f9] dark:bg-[#020617] p-4 md:p-10 transition-all duration-500 font-inter`}>
+        <div className="page-container animate-in fade-in duration-500" style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto' }}>
             
-            <div className="max-w-6xl mx-auto space-y-8">
-                
-                {/* Header Action Bar - Premium & Professional */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 px-10 py-8 rounded-[40px] shadow-sm border border-slate-200/60 dark:border-white/5">
-                    <div className="flex items-center gap-5">
-                        <div className="w-14 h-14 bg-indigo-600 rounded-3xl flex items-center justify-center text-white shadow-xl shadow-indigo-600/20 transition-transform hover:rotate-3 active:scale-95">
-                            <Settings size={28} />
-                        </div>
-                        <div>
-                            <h2 className="text-2xl font-[900] text-slate-900 dark:text-white tracking-tight">Opciones Operativas</h2>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-1">Configuración Administrativa V15</p>
-                        </div>
-                    </div>
-                    
-                    <div className="flex-shrink-0">
-                        <button 
-                            onClick={handleSaveRequest}
-                            disabled={saving}
-                            className="group relative flex items-center gap-4 bg-indigo-600 hover:bg-slate-900 dark:hover:bg-white dark:hover:text-black text-white px-10 py-5 rounded-[22px] font-[1000] text-[11px] uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_20px_40px_-10px_rgba(79,70,229,0.35)] hover:shadow-[0_25px_50px_-12px_rgba(79,70,229,0.5)] hover:translate-y-[-2px] active:scale-95 disabled:grayscale overflow-hidden"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
-                            
-                            {saving ? (
-                                <div className="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"></div>
-                            ) : (
-                                <Save size={18} strokeWidth={3} className="relative z-10 transition-transform group-hover:rotate-12" />
-                            )}
-                            <span className="relative z-10">{saving ? 'EJECUTANDO SYNC...' : 'APLICAR CAMBIOS'}</span>
-                        </button>
-                    </div>
+            {/* Header Elite Unified Style */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3rem', gap: '2rem' }}>
+                <div>
+                    <h1 style={{ fontSize: '2.2rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.03em' }}>Configuraciones operativas</h1>
+                    <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginTop: '6px' }}>Gestión de protocolos y parámetros de ejecución del núcleo</p>
                 </div>
 
-                <div className="grid lg:grid-cols-12 gap-8">
-                    
-                    {/* Main Content Sections */}
-                    <div className="lg:col-span-8 space-y-8">
-                        
-                        {/* MOTOR DE ASISTENCIA */}
-                        <div className="bg-white dark:bg-slate-900 p-10 rounded-[48px] shadow-sm border border-slate-200/60 dark:border-white/5 space-y-8">
-                            <div className="flex items-center gap-4">
-                                <Clock size={20} className="text-indigo-600" />
-                                <h3 className="text-[11px] font-[1000] text-slate-400 uppercase tracking-widest">Motor de Asistencia</h3>
-                            </div>
-                            
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <PremiumModeCard 
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                    <button 
+                        onClick={handleSaveRequest}
+                        disabled={saving}
+                        style={{ 
+                            padding: '16px 32px', 
+                            borderRadius: '18px', 
+                            fontWeight: '800', 
+                            fontSize: '0.8rem', 
+                            textTransform: 'uppercase', 
+                            border: 'none', 
+                            background: activeColors.accent, 
+                            color: 'white', 
+                            cursor: 'pointer', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            gap: '10px', 
+                            boxShadow: '0 10px 20px rgba(79, 70, 229, 0.3)',
+                            transition: 'all 0.2s'
+                        }}
+                        className="hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                    >
+                        {saving ? (
+                            <div className="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"></div>
+                        ) : (
+                            <Save size={20} />
+                        )}
+                        {saving ? 'SINCRONIZANDO...' : 'APLICAR CAMBIOS'}
+                    </button>
+                </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }} className="grid-cols-1 md:grid-cols-2">
+                
+                {/* MOTOR DE ASISTENCIA */}
+                <div className="card" style={{ padding: '2.5rem', background: activeColors.card, borderRadius: '40px', border: `1px solid ${activeColors.border}` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
+                        <div style={{ padding: '12px', background: activeColors.accent + '15', color: activeColors.accent, borderRadius: '16px' }}>
+                            <Activity size={28} />
+                        </div>
+                        <h2 style={{ fontSize: '1.4rem', fontWeight: '800', color: activeColors.textMain, margin: 0 }}>Motor de Asistencia</h2>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: '900', textTransform: 'uppercase', color: activeColors.textMuted, marginBottom: '0.75rem', letterSpacing: '0.05em' }}>Protocolo de cálculo</label>
+                            <div style={{ display: 'grid', gap: '10px' }}>
+                                <SelectionBlock 
                                     active={settings.attendanceMode === 0}
                                     onClick={() => setSettings({...settings, attendanceMode: 0})}
                                     title="Protocolo Min-Max"
-                                    description="Optimización basada en marcas extremas."
-                                    icon={<Smartphone size={22} />}
+                                    description="Optimización basada en marcas extremas diarias."
+                                    icon={<Smartphone size={18} />}
+                                    colors={activeColors}
                                 />
-                                <PremiumModeCard 
+                                <SelectionBlock 
                                     active={settings.attendanceMode === 1}
                                     onClick={() => setSettings({...settings, attendanceMode: 1})}
                                     title="Modo Secuencial"
-                                    description="Auditoría total de registros intermedios."
-                                    icon={<ListOrdered size={22} />}
-                                />
-                            </div>
-                        </div>
-
-                        {/* FLUJO DE APROBACIÓN */}
-                        <div className="bg-white dark:bg-slate-900 p-10 rounded-[48px] shadow-sm border border-slate-200/60 dark:border-white/5 space-y-8">
-                            <div className="flex items-center gap-4">
-                                <Shield size={20} className="text-indigo-600" />
-                                <h3 className="text-[11px] font-[1000] text-slate-400 uppercase tracking-widest">Flujo de Aprobación</h3>
-                            </div>
-                            
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <PremiumModeCard 
-                                    active={settings.shiftApprovalMode === 0}
-                                    onClick={() => setSettings({...settings, shiftApprovalMode: 0})}
-                                    title="Nivel Central (RH)"
-                                    description="Validación unificada en gestión centralizada."
-                                    icon={<Users size={22} />}
-                                />
-                                <PremiumModeCard 
-                                    active={settings.shiftApprovalMode === 1}
-                                    onClick={() => setSettings({...settings, shiftApprovalMode: 1})}
-                                    title="Nivel Distrital"
-                                    description="Delegación a gerencia regional y distrital."
-                                    icon={<UserCheck size={22} />}
+                                    description="Auditoría total de todos los registros intermedios."
+                                    icon={<ListOrdered size={18} />}
+                                    colors={activeColors}
                                 />
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    {/* Notification Sidebar - Consistency Update */}
-                    <div className="lg:col-span-4 space-y-6">
-                        <div className="bg-white dark:bg-slate-900 p-8 rounded-[40px] shadow-sm border border-slate-200/60 dark:border-white/5 space-y-8 h-full flex flex-col">
-                            <div className="flex items-center gap-3">
-                                <Bell size={18} className="text-indigo-600" />
-                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Alertas Smart</h3>
-                            </div>
-                            
-                            <div className="space-y-4 flex-grow">
-                                <UserStyleSwitchCard 
-                                    icon={<Mail size={20} />}
-                                    title="Reporte vía Email"
-                                    active={settings.enableEmailNotifications}
-                                    onChange={(val) => setSettings({...settings, enableEmailNotifications: val})}
+                {/* FLUJO DE APROBACIÓN */}
+                <div className="card" style={{ padding: '2.5rem', background: activeColors.card, borderRadius: '40px', border: `1px solid ${activeColors.border}` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
+                        <div style={{ padding: '12px', background: '#ec489915', color: '#ec4899', borderRadius: '16px' }}>
+                            <Shield size={28} />
+                        </div>
+                        <h2 style={{ fontSize: '1.4rem', fontWeight: '800', color: activeColors.textMain, margin: 0 }}>Flujo de Aprobación</h2>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: '900', textTransform: 'uppercase', color: activeColors.textMuted, marginBottom: '0.75rem', letterSpacing: '0.05em' }}>Jerarquía de Validación</label>
+                            <div style={{ display: 'grid', gap: '10px' }}>
+                                <SelectionBlock 
+                                    active={settings.shiftApprovalMode === 0}
+                                    onClick={() => setSettings({...settings, shiftApprovalMode: 0})}
+                                    title="Nivel Central (RH)"
+                                    description="Gestión unificada para toda la organización."
+                                    icon={<Users size={18} />}
+                                    colors={activeColors}
                                 />
-                                <UserStyleSwitchCard 
-                                    icon={<Smartphone size={20} />}
-                                    title="Notificaciones Push"
-                                    active={settings.enablePushNotifications}
-                                    onChange={(val) => setSettings({...settings, enablePushNotifications: val})}
+                                <SelectionBlock 
+                                    active={settings.shiftApprovalMode === 1}
+                                    onClick={() => setSettings({...settings, shiftApprovalMode: 1})}
+                                    title="Nivel Distrital / Tienda"
+                                    description="Delegación a gerencia regional y de sede."
+                                    icon={<UserCheck size={18} />}
+                                    colors={activeColors}
                                 />
-                            </div>
-                            
-                            <div className="mt-8 p-6 bg-slate-50 dark:bg-white/5 rounded-3xl border border-slate-100 dark:border-white/5">
-                                <div className="flex gap-4">
-                                    <ShieldCheck size={20} className="text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
-                                    <div>
-                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white mb-1">Seguridad Activa</h4>
-                                        <p className="text-[9px] font-bold text-slate-400 italic">
-                                            Logs auditados en cada cambio operativo.
-                                        </p>
-                                    </div>
-                                </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {/* NOTIFICACIONES SMART */}
+                <div className="card" style={{ padding: '2.5rem', background: activeColors.card, borderRadius: '40px', border: `1px solid ${activeColors.border}`, gridColumn: 'span 2' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
+                        <div style={{ padding: '12px', background: activeColors.warning + '15', color: activeColors.warning, borderRadius: '16px' }}>
+                            <Bell size={28} />
+                        </div>
+                        <h2 style={{ fontSize: '1.4rem', fontWeight: '800', color: activeColors.textMain, margin: 0 }}>Alertas Smart</h2>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }} className="grid-cols-1 md:grid-cols-2">
+                        <SwitchBlock 
+                            active={settings.enableEmailNotifications}
+                            onChange={(val) => setSettings({...settings, enableEmailNotifications: val})}
+                            title="Reporte vía Email"
+                            description="Envío automático de PDFs de cierre diario."
+                            icon={<Mail size={20} />}
+                            colors={activeColors}
+                        />
+                        <SwitchBlock 
+                            active={settings.enablePushNotifications}
+                            onChange={(val) => setSettings({...settings, enablePushNotifications: val})}
+                            title="Notificaciones Push"
+                            description="Alertas instantáneas en dispositivos móviles."
+                            icon={<Smartphone size={20} />}
+                            colors={activeColors}
+                        />
                     </div>
                 </div>
             </div>
 
-            {/* Confirmation Modal - PORTAL POWER V18.1 */}
+            {/* Confirmation Modal - PORTAL POWER V18.3 */}
             {showConfirm && createPortal(
-                <div className="fixed inset-0 z-[999999] flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-xl animate-in fade-in duration-500">
-                    <div className="bg-white dark:bg-[#0f172a] w-full max-w-[420px] rounded-[48px] shadow-[0_80px_150px_-30px_rgba(0,0,0,0.7)] overflow-hidden border border-white/20 animate-in zoom-in-95 duration-300">
-                        {/* Header Elite */}
-                        <div className="flex items-center justify-between px-10 py-8 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-indigo-600 text-white rounded-[18px] flex items-center justify-center shadow-xl shadow-indigo-600/30">
-                                    <Shield size={22} strokeWidth={3} />
-                                </div>
-                                <h3 className="text-xl font-[1000] text-slate-900 dark:text-white tracking-tighter">Seguridad de Red</h3>
-                            </div>
-                            <button 
-                                onClick={() => setShowConfirm(false)}
-                                className="w-10 h-10 border border-slate-200 dark:border-white/10 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-white/10 transition-all active:scale-90"
-                            >
-                                <X size={20} strokeWidth={3} />
-                            </button>
+                <div style={{ position: 'fixed', inset: 0, zIndex: 100000, background: isDarkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="animate-in zoom-in-95 duration-300" style={{ background: activeColors.card, padding: '3rem', borderRadius: '40px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', border: `1px solid ${activeColors.border}`, width: '90%', maxWidth: '440px', textAlign: 'center' }}>
+                        <div style={{ margin: '0 auto 1.5rem auto', width: '72px', height: '72px', background: activeColors.accent + '15', color: activeColors.accent, borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <ShieldCheck size={40} className="animate-pulse" />
                         </div>
-                        
-                        <div className="p-12 text-center">
-                            <div className="relative w-24 h-24 mx-auto mb-8">
-                                <div className="absolute inset-0 bg-indigo-600/10 rounded-[32px] animate-ping"></div>
-                                <div className="relative w-24 h-24 bg-indigo-600/10 text-indigo-600 rounded-[32px] flex items-center justify-center">
-                                    <AlertTriangle size={48} strokeWidth={2.5} />
-                                </div>
-                            </div>
-                            <h4 className="text-2xl font-[1000] text-slate-900 dark:text-white mb-4 tracking-tight">¿Sincronizar Kernel?</h4>
-                            <p className="text-[12px] font-bold text-slate-400 leading-relaxed max-w-[280px] mx-auto uppercase tracking-widest leading-loose">
-                                Los protocolos de asistencia se actualizarán de forma irreversible.
-                            </p>
-                        </div>
-
-                        <div className="px-10 pb-12 space-y-3">
-                            <button 
-                                onClick={confirmSave}
-                                className="w-full py-5 rounded-[22px] bg-indigo-600 text-white font-[1000] text-[11px] uppercase tracking-[0.2em] hover:bg-slate-900 dark:hover:bg-white dark:hover:text-black transition-all active:scale-95 shadow-2xl shadow-indigo-600/20"
-                            >
-                                EJECUTAR SINCRONIZACIÓN
-                            </button>
-                            <button 
-                                onClick={() => setShowConfirm(false)}
-                                className="w-full py-4 rounded-[22px] font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 transition-all active:scale-95"
-                            >
-                                CANCELAR OPERACIÓN
-                            </button>
+                        <h3 style={{ fontSize: '1.6rem', fontWeight: '950', color: activeColors.textMain, marginBottom: '0.75rem', letterSpacing: '-0.02em' }}>¿Sincronizar Kernel?</h3>
+                        <p style={{ fontSize: '0.9rem', color: activeColors.textMuted, fontWeight: '600', marginBottom: '2.5rem', lineHeight: '1.6' }}>
+                            Los protocolos de asistencia se actualizarán de forma irreversible para toda la organización.
+                        </p>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                            <button onClick={() => setShowConfirm(false)} style={{ padding: '16px', borderRadius: '18px', fontWeight: '800', fontSize: '0.8rem', textTransform: 'uppercase', border: `1px solid ${activeColors.border}`, background: 'transparent', color: activeColors.textMuted, cursor: 'pointer' }}>Cancelar</button>
+                            <button onClick={confirmSave} style={{ padding: '16px', borderRadius: '18px', fontWeight: '800', fontSize: '0.8rem', textTransform: 'uppercase', border: 'none', background: activeColors.accent, color: 'white', cursor: 'pointer', boxShadow: `0 10px 20px ${activeColors.accent}30` }}>Sincronizar</button>
                         </div>
                     </div>
                 </div>,
@@ -263,58 +254,95 @@ const OperationalSettings = () => {
 
             {/* Precision Toast */}
             {toast.show && (
-                <div className={`fixed bottom-10 right-10 flex items-center gap-5 px-10 py-6 rounded-3xl shadow-2xl animate-in slide-in-from-right-10 z-[3000] border border-white/10 ${toast.type === 'error' ? 'bg-rose-600 text-white' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-950'}`}>
-                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                         {toast.type === 'error' ? <AlertCircle size={22} /> : <CheckCircle size={22} className={isDarkMode ? 'text-indigo-600' : 'text-emerald-400'} />}
-                    </div>
-                    <span className="text-[12px] font-black uppercase tracking-[0.2em]">{toast.message}</span>
+                <div style={{ position: 'fixed', bottom: '40px', right: '40px', padding: '18px 30px', background: toast.type === 'error' ? activeColors.danger : '#0f172a', color: 'white', borderRadius: '24px', fontWeight: '900', fontSize: '0.85rem', boxShadow: '0 20px 40px rgba(0,0,0,0.2)', zIndex: 100000, display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {toast.type === 'error' ? <AlertCircle size={20} /> : <CheckCircle size={20} className="text-emerald-400" />}
+                    {toast.message}
                 </div>
             )}
         </div>
     );
 };
 
-const PremiumModeCard = ({ active, onClick, title, description, icon }) => {
+// Selection Block Component - Transplanted Style from Monitoring Labels and Inputs
+const SelectionBlock = ({ active, onClick, title, description, icon, colors }) => {
     return (
         <div 
             onClick={onClick}
-            className={`group p-8 rounded-[40px] border-2 cursor-pointer transition-all duration-300 flex flex-col gap-6 relative overflow-hidden ${active ? 'border-indigo-600 bg-white dark:bg-indigo-600/5 shadow-xl shadow-indigo-600/5 ring-4 ring-indigo-600/5' : 'border-slate-100 dark:border-white/5 bg-transparent opacity-70 hover:opacity-100 hover:border-slate-200 dark:hover:border-white/10'}`}
+            style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '15px', 
+                background: active ? colors.accent + '08' : colors.bg, 
+                padding: '16px 20px', 
+                borderRadius: '18px', 
+                border: `2px solid ${active ? colors.accent : colors.border}`,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                position: 'relative'
+            }}
+            className="hover:translate-x-1 group"
         >
-            <div className="flex justify-between items-start">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${active ? 'bg-indigo-600 text-white shadow-xl' : 'bg-slate-100 dark:bg-white/5 text-slate-400 group-hover:bg-slate-200'}`}>
-                    {React.cloneElement(icon, { strokeWidth: 2.5 })}
+            <div style={{ padding: '10px', background: active ? colors.accent : colors.border, color: active ? 'white' : colors.textMuted, borderRadius: '12px', transition: 'all 0.2s' }}>
+                {icon}
+            </div>
+            <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '0.95rem', fontWeight: '800', color: active ? colors.accent : colors.textMain }}>{title}</div>
+                <div style={{ fontSize: '0.75rem', fontWeight: '600', color: colors.textMuted }}>{description}</div>
+            </div>
+            {active && (
+                <div style={{ width: '24px', height: '24px', background: colors.accent, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                    <CheckCircle size={14} strokeWidth={3} />
                 </div>
-                {active && <CheckCircle size={24} className="text-indigo-600 animate-in zoom-in-50" />}
-            </div>
-            <div>
-                <h4 className={`text-lg font-[900] tracking-tight mb-2 ${active ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-400'}`}>{title}</h4>
-                <p className={`text-[12px] font-bold leading-relaxed ${active ? 'text-indigo-600/70' : 'text-slate-400'}`}>{description}</p>
-            </div>
+            )}
         </div>
     );
 };
 
-const UserStyleSwitchCard = ({ icon, title, active, onChange }) => {
+// Switch Block Component - Impactful and Minimal
+const SwitchBlock = ({ active, onChange, title, description, icon, colors }) => {
     return (
         <div 
-            className="flex items-center justify-between bg-white dark:bg-slate-900 p-8 rounded-[38px] border border-slate-200/60 dark:border-white/5 shadow-md hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer group"
             onClick={() => onChange(!active)}
+            style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                background: colors.bg, 
+                padding: '18px 24px', 
+                borderRadius: '24px', 
+                border: `1px solid ${colors.border}`,
+                cursor: 'pointer'
+            }}
+            className="hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
         >
-            <div className="flex items-center gap-5">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${active ? 'bg-indigo-600 text-white' : 'bg-slate-50 dark:bg-white/5 text-slate-400 group-hover:text-slate-600'}`}>
+            <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                <div style={{ color: active ? colors.accent : colors.textMuted }}>
                     {icon}
                 </div>
                 <div>
-                   <div className="flex items-center gap-2">
-                        <span className={`text-[15px] font-[1000] tracking-tight transition-colors ${active ? 'text-slate-900 dark:text-white' : 'text-slate-500'}`}>{title}</span>
-                        <HelpCircle size={14} className="text-slate-300" />
-                   </div>
-                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Status: {active ? 'On' : 'Off'}</p>
+                    <div style={{ fontSize: '0.9rem', fontWeight: '900', color: colors.textMain }}>{title}</div>
+                    <div style={{ fontSize: '0.7rem', fontWeight: '600', color: colors.textMuted }}>{active ? 'Habilitado' : 'Desactivado'}</div>
                 </div>
             </div>
-            
-            <div className={`w-14 h-8 rounded-full p-1.5 transition-all duration-300 relative ${active ? 'bg-indigo-600 shadow-lg shadow-indigo-600/30' : 'bg-slate-200 dark:bg-white/10'}`}>
-                <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-300 transform ${active ? 'translate-x-6' : 'translate-x-0'}`}></div>
+            <div style={{ 
+                width: '48px', 
+                height: '24px', 
+                borderRadius: '12px', 
+                background: active ? colors.accent : colors.border, 
+                position: 'relative',
+                transition: 'all 0.3s'
+            }}>
+                <div style={{ 
+                    width: '18px', 
+                    height: '18px', 
+                    background: 'white', 
+                    borderRadius: '50%', 
+                    position: 'absolute', 
+                    top: '3px',
+                    left: active ? '27px' : '3px',
+                    transition: 'all 0.3s',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                }}></div>
             </div>
         </div>
     );
