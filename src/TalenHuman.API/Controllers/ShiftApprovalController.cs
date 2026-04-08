@@ -161,13 +161,14 @@ public class ShiftApprovalController : ControllerBase
         if (string.IsNullOrEmpty(approverIdString)) return Unauthorized();
         var approverId = Guid.Parse(approverIdString);
 
-        // V18.10.1: PRECISIÓN TOTAL - Usar DateTime directo para capturar turnos de borde (Domingo noche)
+        // V18.10.6: BLINDAJE DE LIMPIEZA - Capturar todos los turnos del rango que NO estén ya aprobados
+        // para asegurar que la sede salga de la lista de pendientes.
         var shifts = await _context.Shifts
             .Where(s => s.CompanyId == companyId && 
                         s.StoreId == request.StoreId && 
                         s.StartTime >= request.StartDate && 
                         s.StartTime < request.EndDate &&
-                        s.Status == ShiftStatus.PendingApproval)
+                        s.Status != ShiftStatus.Approved) 
             .ToListAsync();
 
         if (!shifts.Any()) return NotFound("No hay turnos pendientes para este rango.");
@@ -295,12 +296,13 @@ public class ShiftApprovalController : ControllerBase
         var approverId = Guid.Parse(approverIdString);
 
         // V18.10.1: PRECISIÓN TOTAL - Usar DateTime directo para rechazos consistentes
+        // V18.10.6: BLINDAJE DE LIMPIEZA - Capturar todos los turnos del rango que NO estén ya aprobados
         var shifts = await _context.Shifts
             .Where(s => s.CompanyId == companyId && 
                         s.StoreId == request.StoreId && 
                         s.StartTime >= request.StartDate && 
                         s.StartTime < request.EndDate &&
-                        s.Status == ShiftStatus.PendingApproval)
+                        s.Status != ShiftStatus.Approved) 
             .ToListAsync();
 
         if (!shifts.Any()) return NotFound("No hay turnos pendientes para este rango.");

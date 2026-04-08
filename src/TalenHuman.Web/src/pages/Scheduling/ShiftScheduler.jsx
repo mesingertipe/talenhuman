@@ -251,7 +251,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             const currentStoreObj = stores.find(s => s.id === selectedStore);
             return user.roles?.includes('Supervisor') && user.districtId === currentStoreObj?.districtId;
         }
-    }, [user, operationalSettings, selectedStore, stores]);
+    }, [user, operationalSettings, selectedStore, stores, forceApprover]);
 
     const fetchData = async () => {
         try {
@@ -1158,7 +1158,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         </div>
 
                         {/* V13.0 TOP APPROVAL BAR - REUBICADA POR UX */}
-                        {isApprover && weeklyStatus.status !== 'Approved' && weeklyStatus.status !== 'Rejected' && shifts.some(s => s.status === 0) && (
+                        {isApprover && weeklyStatus.status !== 'Approved' && weeklyStatus.status !== 'Rejected' && (forceApprover || shifts.some(s => s.status === 0)) && (
                             <div style={{ 
                                 background: isDarkMode ? 'rgba(79, 70, 229, 0.1)' : 'rgba(79, 70, 229, 0.05)', 
                                 backdropFilter: 'blur(10px)',
