@@ -94,12 +94,22 @@ public class ShiftsController : ControllerBase
             }
         }
 
-        // 3. Get existing shifts in the range to remove
+        // 3. Get existing shifts in the range
         var existingShifts = await _context.Shifts
             .Where(s => s.StoreId == dto.StoreId && s.StartTime >= start && s.StartTime <= end)
             .ToListAsync();
 
-        _context.Shifts.RemoveRange(existingShifts);
+        // 3.1 Identify shifts that have associated Attendances to avoid FK violations (Error 23503)
+        var shiftIds = existingShifts.Select(s => s.Id).ToList();
+        var shiftsWithAttendance = await _context.Attendances
+            .Where(a => shiftIds.Contains(a.ShiftId))
+            .Select(a => a.ShiftId)
+            .Distinct()
+            .ToListAsync();
+
+        // 3.2 Only remove shifts that DON'T have attendances
+        var shiftsToDelete = existingShifts.Where(s => !shiftsWithAttendance.Contains(s.Id)).ToList();
+        _context.Shifts.RemoveRange(shiftsToDelete);
 
         // 4. Add new ones
         foreach (var sDto in dto.Shifts)

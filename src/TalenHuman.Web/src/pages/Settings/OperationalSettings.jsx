@@ -44,7 +44,7 @@ const OperationalSettings = () => {
         try {
             setSaving(true);
             const payload = {
-                id: settings.id,
+                
                 attendanceMode: settings.attendanceMode,
                 shiftApprovalMode: settings.shiftApprovalMode,
                 enablePushNotifications: settings.enablePushNotifications,
