@@ -209,9 +209,17 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     useEffect(() => {
         if (selectedStore || approvalId) {
             setLoading(true);
-            setWeeklyStatus({ status: 'Empty', message: '', comment: '' }); // Reset para evitar estados viejos
-            fetchData().finally(() => setLoading(false));
-            fetchWeeklyStatus();
+            setWeeklyStatus({ status: 'Empty', message: '', comment: '' }); 
+            const startLoad = Date.now();
+            
+            Promise.all([
+                fetchData(),
+                fetchWeeklyStatus()
+            ]).finally(() => {
+                const elapsed = Date.now() - startLoad;
+                const remaining = Math.max(0, 800 - elapsed);
+                setTimeout(() => setLoading(false), remaining);
+            });
         }
     }, [selectedStore, currentWeekStart, approvalId]);
 
@@ -1372,7 +1380,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 
                 <div className="card shadow-[0_40px_100px_rgba(0,0,0,0.12)] bg-white dark:bg-slate-900 border-2 dark:border-slate-800 relative" style={{ borderRadius: '48px', overflow: 'hidden', minHeight: '600px' }}>
                     {(loading || isProcessingStatus) && (
-                        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-white/60 dark:bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-500">
+                        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl"
+                             style={{ animation: 'fade-in-elite 0.4s ease-out forwards' }}>
                             <div className="text-center">
                                 <div className="relative w-24 h-24 mx-auto mb-8">
                                     <div className="absolute inset-0 rounded-full border-4 border-indigo-500/10 dark:border-indigo-400/10"></div>
