@@ -70,6 +70,17 @@ const ShiftApproval = ({ user }) => {
     else { setSelectedKeys(fStores.map(s => `${s.storeId}-${s.weekStartDate}`)); }
   };
 
+  const [isInspecting, setIsInspecting] = useState(false);
+  const handleInspect = (store) => {
+    setIsInspecting(true);
+    setSyncPhase(1);
+    setTimeout(() => {
+      setInspectedStore(store);
+      setIsInspecting(false);
+      setSyncPhase(0);
+    }, 1500); 
+  };
+
   const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
   const handleApprove = async () => {
@@ -300,7 +311,7 @@ const ShiftApproval = ({ user }) => {
                       </div>
                     </td>
                     <td style={{ padding: '15px 20px', textAlign: 'right' }}>
-                      <button onClick={() => setInspectedStore(store)} style={{ padding: '10px 20px', borderRadius: '14px', background: activeColors.accentSoft, color: activeColors.accent, border: 'none', fontWeight: '950', fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s' }} className="hover:brightness-95">
+                      <button onClick={() => handleInspect(store)} style={{ padding: '10px 20px', borderRadius: '14px', background: activeColors.accentSoft, color: activeColors.accent, border: 'none', fontWeight: '950', fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s' }} className="hover:brightness-95">
                         INSPECCIONAR
                       </button>
                     </td>
@@ -394,24 +405,27 @@ const ShiftApproval = ({ user }) => {
       )}
 
 
-      {/* ELITE PROGRESS MONITOR portal */}
-      {processing && syncPhase > 0 && createPortal(
+      {/* PROGRESS MONITOR portal (Masivo + Transición) */}
+      {(isInspecting || (processing && syncPhase > 0)) && createPortal(
         <div style={{ position: 'fixed', inset: 0, zIndex: 10000000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: isDarkMode ? 'rgba(15, 23, 42, 0.9)' : 'rgba(30,30,60,0.8)', backdropFilter: 'blur(10px)' }}>
-           <div style={{ background: isDarkMode ? '#1e293b' : 'white', padding: '40px', borderRadius: '40px', textAlign: 'center', width: '380px', boxShadow: '0 30px 60px rgba(0,0,0,0.5)' }}>
-              <div style={{ position: 'relative', width: '70px', height: '70px', margin: '0 auto 20px' }}>
-                <svg style={{ transform: 'rotate(-90deg)', width: '70px', height: '70px' }}>
-                  <circle cx="35" cy="35" r="30" stroke="#f1f5f9" strokeWidth="5" fill="transparent" />
-                  <circle cx="35" cy="35" r="30" stroke="#4f46e5" strokeWidth="5" fill="transparent" strokeDasharray="188.5" strokeDashoffset={188.5 - (188.5 * (syncPhase * 25)) / 100} style={{ transition: 'stroke-dashoffset 0.6s ease' }} />
+           <div style={{ background: isDarkMode ? '#1e293b' : 'white', padding: '40px', borderRadius: '40px', textAlign: 'center', width: '380px', boxShadow: '0 30px 60px rgba(0,0,0,0.5)', animation: 'scaleIn 0.3s ease' }}>
+              <div style={{ position: 'relative', width: '80px', height: '80px', margin: '0 auto 25px' }}>
+                <svg style={{ transform: 'rotate(-90deg)', width: '80px', height: '80px' }}>
+                  <circle cx="40" cy="40" r="35" stroke={isDarkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9'} strokeWidth="6" fill="transparent" />
+                  <circle cx="40" cy="40" r="35" stroke="#4f46e5" strokeWidth="6" fill="transparent" strokeDasharray="219.9" strokeDashoffset={219.9 - (219.9 * (syncPhase || (isInspecting ? 60 : 25))) / 100} style={{ transition: 'stroke-dashoffset 0.8s ease' }} strokeLinecap="round" />
                 </svg>
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
-                  {syncPhase >= 4 ? <CheckCircle size={28} /> : <Cpu size={28} className="animate-pulse" />}
+                  {isInspecting ? <Clock size={32} className="animate-pulse" /> : (syncPhase >= 4 ? <CheckCircle size={32} /> : <Cpu size={32} className="animate-pulse" />)}
                 </div>
               </div>
-              <h3 style={{ fontWeight: '950', fontSize: '1.3rem', margin: '0 0 10px 0' }}>
-                {syncPhase === 1 ? "Analizando..." : syncPhase === 2 ? "Procesando Maestro..." : syncPhase === 3 ? "Notificando..." : "¡Finalizado!"}
+              <h3 style={{ fontWeight: '950', fontSize: '1.4rem', color: isDarkMode ? '#f1f5f9' : '#1e293b', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
+                {isInspecting ? "Autenticando Sede" : (syncPhase === 1 ? "Analizando..." : syncPhase === 2 ? "Procesando Maestro..." : syncPhase === 3 ? "Notificando..." : "¡Carga Exitosa!")}
               </h3>
-              <div style={{ height: '5px', background: '#f1f5f9', borderRadius: '10px', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${syncPhase * 25}%`, background: '#4f46e5', transition: 'width 0.6s ease' }} />
+              <p style={{ fontSize: '0.85rem', fontWeight: '600', color: '#94a3b8', marginBottom: '25px' }}>
+                {isInspecting ? "Sincronizando registros para auditoría segura..." : "Preparando datos de nómina centralizados."}
+              </p>
+              <div style={{ height: '6px', background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9', borderRadius: '10px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: isInspecting ? '75%' : `${syncPhase * 25}%`, background: 'linear-gradient(90deg, #4f46e5, #818cf8)', transition: 'width 0.8s ease' }} />
               </div>
            </div>
         </div>,
