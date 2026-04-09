@@ -74,11 +74,9 @@ const ShiftApproval = ({ user }) => {
   const handleInspect = (store) => {
     setIsInspecting(true);
     setSyncPhase(1);
-    setTimeout(() => {
-      setInspectedStore(store);
-      setIsInspecting(false);
-      setSyncPhase(0);
-    }, 1500); 
+    // V12.22: No quitamos el loading aquí. 
+    // Esperamos a que ShiftScheduler llame a onReady() para una transición atómica.
+    setInspectedStore(store);
   };
 
   const delay = (ms) => new Promise(res => setTimeout(res, ms));
@@ -99,7 +97,6 @@ const ShiftApproval = ({ user }) => {
           });
         }
       }
-      setSyncPhase(3); await delay(800); setSyncPhase(4); await delay(1200);
       setSyncPhase(3); await delay(800); setSyncPhase(4); await delay(1200);
       showToast(`Se han aprobado ${selectedKeys.length} turnos exitosamente`);
       setSelectedKeys([]); setApprovalComment(''); setShowApprovalModal(false); fetchStores();
@@ -315,8 +312,8 @@ const ShiftApproval = ({ user }) => {
             )}
           </div>
 
-          {/* SMART FILTERS V19.5 */}
-          <div style={{ display: 'flex', gap: '20px', marginBottom: '2.5rem', background: activeColors.card, padding: '24px', borderRadius: '28px', border: `1.5px solid ${activeColors.border}`, boxShadow: '0 4px 15px rgba(0,0,0,0.02)', position: 'relative', zIndex: 60 }}>
+          {/* SMART FILTERS V12.22 (Z-Index Master) */}
+          <div style={{ display: 'flex', gap: '20px', marginBottom: '2.5rem', background: activeColors.card, padding: '24px', borderRadius: '28px', border: `1.5px solid ${activeColors.border}`, boxShadow: '0 4px 15px rgba(0,0,0,0.02)', position: 'relative', zIndex: 100 }}>
             <div style={{ flex: 1.5, position: 'relative' }}>
                <Search style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: activeColors.textMuted }} size={20} />
                <input 

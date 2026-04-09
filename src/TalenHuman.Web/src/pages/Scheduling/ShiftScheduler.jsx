@@ -226,7 +226,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         }
     }, [selectedStore, currentWeekStart, approvalId]);
 
-    // V12.20: CIERRE DETERMINISTA DEL OVERLAY
+    // V12.21: CIERRE ATÓMICO DEL OVERLAY
     // Solo se quita el overlay cuando los datos están en el estado Y el navegador ha tenido tiempo de pintar el grid pesado
     useEffect(() => {
         if (loading && dataLoaded) {
@@ -235,13 +235,14 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     setTimeout(() => {
                         setLoading(false);
                         setSyncPhase(0);
-                        setDataLoaded(false);
-                        if (onReady) onReady(); // Avisar al padre (ShiftApproval)
-                    }, 1500); // Margen de seguridad aumentado para renderizado pesado
+                        // NOTA: No seteamos dataLoaded a false aquí para evitar el "re-cargue" visual 
+                        // El próximo fetchData lo pondrá en true de nuevo cuando termine.
+                        if (onReady) onReady(); 
+                    }, 1500); 
                 });
             });
         }
-    }, [loading, dataLoaded, employees, shifts, onReady]);
+    }, [loading, dataLoaded, onReady]); // Simplificado para evitar disparos accidentales
 
     const fetchWeeklyStatus = async () => {
         if (!selectedStore && !approvalId) return;
@@ -1099,8 +1100,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
                 {/* 2. UI Principal (V12.20 Command Center) */}
                 <div className="no-print space-y-32 mb-32">
-                    {/* 2. UI Principal: COMANDO CENTRAL V12.20 (Floating Glassmorphism Dock) */}
-                    <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-8 sticky top-4 z-[50] transition-all duration-500">
+                    {/* 2. UI Principal: COMANDO CENTRAL V12.21 (Floating Glassmorphism Dock) */}
+                    <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-8 sticky top-4 z-[100] transition-all duration-500">
                         
                         {/* 2.1 Dock de Filtros (Glassmorphism) */}
                         <div className="flex-1 flex flex-col md:flex-row items-center gap-3 p-4 bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl border border-white/20 dark:border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.1)]"
@@ -1217,12 +1218,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 <div className="flex items-center gap-3 pl-2">
                                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-2">Herramientas:</span>
                                     {[
-                                        { type: 'Turno', color: 'bg-indigo-600', icon: Clock, label: 'TURNO' },
-                                        { type: 'Descanso', color: 'bg-amber-600', icon: Calendar, label: 'DESC' },
-                                        { type: 'Turno Fuera', color: 'bg-purple-600', icon: AlertCircle, label: 'FUERA' }
+                                        { type: 'Turno', hex: '#4f46e5', icon: Clock, label: 'TURNO' },
+                                        { type: 'Descanso', hex: '#f59e0b', icon: Calendar, label: 'DESC' },
+                                        { type: 'Turno Fuera', hex: '#9333ea', icon: AlertCircle, label: 'FUERA' }
                                     ].map((tool, idx) => (
                                         <div key={idx} draggable onDragStart={(e) => handleDragStart(e, 'PANEL', { type: tool.type })} 
-                                            className={`${tool.color} text-white flex items-center gap-2 px-4 h-[38px] rounded-xl cursor-grab hover:scale-105 active:scale-95 transition-all shadow-sm`}>
+                                            style={{ backgroundColor: tool.hex }}
+                                            className="text-white flex items-center gap-2 px-4 h-[38px] rounded-xl cursor-grab hover:scale-105 active:scale-95 transition-all shadow-sm">
                                             <tool.icon size={14} strokeWidth={3} />
                                             <span className="text-[9px] font-black uppercase tracking-tight">{tool.label}</span>
                                         </div>
