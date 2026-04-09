@@ -237,7 +237,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         setSyncPhase(0);
                         setDataLoaded(false);
                         if (onReady) onReady(); // Avisar al padre (ShiftApproval)
-                    }, 300); // Pequeño delay de suavizado para evitar parpadeo
+                    }, 1500); // Margen de seguridad aumentado para renderizado pesado
                 });
             });
         }
@@ -1181,8 +1181,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     className="flex items-center gap-2 px-4 h-[44px] bg-rose-600 text-white rounded-[16px] hover:bg-rose-700 transition-all font-black text-[10px] active:scale-95 shadow-lg shadow-rose-500/20" data-v12-tooltip="Generar PDF">
                                     <FileDown size={16} /> <span className="hidden xl:inline">PDF</span>
                                 </button>
+                                
                                 {!effectiveReadOnly && (
                                     <>
+                                        <button onClick={() => setShowBulkModal(true)}
+                                            className="flex items-center gap-2 px-4 h-[44px] bg-amber-500 text-white rounded-[16px] hover:bg-amber-600 transition-all font-black text-[10px] active:scale-95 shadow-lg shadow-amber-500/20" data-v12-tooltip="Programación Masiva">
+                                            <Sparkles size={16} /> <span className="hidden xl:inline">MASIVA</span>
+                                        </button>
                                         <div className="w-[1px] h-6 bg-slate-200 mx-1"></div>
                                         <button onClick={copyFromPreviousWeek} className="flex items-center gap-2 px-4 h-[44px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-[16px] hover:bg-indigo-600 hover:text-white transition-all font-black text-[10px] active:scale-95" data-v12-tooltip="Clonar Semana Anterior">
                                             <CopyIcon size={16} /> <span className="hidden xl:inline">CLONAR</span>
@@ -1213,7 +1218,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-2">Herramientas:</span>
                                     {[
                                         { type: 'Turno', color: 'bg-indigo-600', icon: Clock, label: 'TURNO' },
-                                        { type: 'Descanso', color: 'bg-slate-500', icon: Calendar, label: 'DESC' },
+                                        { type: 'Descanso', color: 'bg-amber-600', icon: Calendar, label: 'DESC' },
                                         { type: 'Turno Fuera', color: 'bg-purple-600', icon: AlertCircle, label: 'FUERA' }
                                     ].map((tool, idx) => (
                                         <div key={idx} draggable onDragStart={(e) => handleDragStart(e, 'PANEL', { type: tool.type })} 

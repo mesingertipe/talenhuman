@@ -242,7 +242,7 @@ const ShiftApproval = ({ user }) => {
                   <XCircle size={16} /> RECHAZAR
                 </button>
                 <button 
-                  onClick={() => handleApproveSingle()}
+                  onClick={() => setShowApprovalModal(true)}
                   style={{ padding: '10px 24px', background: activeColors.accent, color: 'white', border: 'none', borderRadius: '14px', fontWeight: '950', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 8px 15px rgba(79, 70, 229, 0.2)' }}
                 >
                   <CheckCircle size={16} /> APROBAR SEMANA
@@ -316,7 +316,7 @@ const ShiftApproval = ({ user }) => {
           </div>
 
           {/* SMART FILTERS V19.5 */}
-          <div style={{ display: 'flex', gap: '20px', marginBottom: '2.5rem', background: activeColors.card, padding: '24px', borderRadius: '28px', border: `1.5px solid ${activeColors.border}`, boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+          <div style={{ display: 'flex', gap: '20px', marginBottom: '2.5rem', background: activeColors.card, padding: '24px', borderRadius: '28px', border: `1.5px solid ${activeColors.border}`, boxShadow: '0 4px 15px rgba(0,0,0,0.02)', position: 'relative', zIndex: 60 }}>
             <div style={{ flex: 1.5, position: 'relative' }}>
                <Search style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: activeColors.textMuted }} size={20} />
                <input 
@@ -421,7 +421,7 @@ const ShiftApproval = ({ user }) => {
                 Cancelar
               </button>
               <button 
-                onClick={handleReject} 
+                onClick={() => inspectedStore ? handleRejectSingle() : handleReject()} 
                 style={{ flex: 1, height: '60px', padding: '10px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '20px', fontWeight: '950', fontSize: '0.85rem', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 30px rgba(239, 68, 68, 0.3)', transition: 'all 0.2s' }}
                 className="hover:bg-rose-600 hover:scale-[1.02] active:scale-95"
               >
@@ -461,7 +461,7 @@ const ShiftApproval = ({ user }) => {
                 Regresar
               </button>
               <button 
-                onClick={handleApprove} 
+                onClick={() => inspectedStore ? handleApproveSingle() : handleApprove()} 
                 style={{ flex: 1, height: '60px', background: activeColors.accent, color: 'white', border: 'none', borderRadius: '20px', fontWeight: '950', fontSize: '0.85rem', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 30px rgba(79, 70, 229, 0.3)', transition: 'all 0.2s' }}
                 className="hover:bg-indigo-700 hover:scale-[1.02] active:scale-95"
               >
