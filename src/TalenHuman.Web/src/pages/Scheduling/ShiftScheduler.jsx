@@ -99,6 +99,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         days: [true, true, true, true, true, true, false] // Mon-Sun
     });
 
+    // V12.24: Protección de concurrencia
+    const fetchIdRef = useRef(0);
+
     // V18.8 Logic for initial date alignment
     useEffect(() => {
         if (initialDate) {
@@ -208,33 +211,33 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         loadScript("https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js");
     }, []);
 
-    useEffect(() => {
+            useEffect(() => {
         if (selectedStore || approvalId) {
+            const currentFetchId = ++fetchIdRef.current;
             setLoading(true);
             setSyncPhase(20);
             setDataLoaded(false);
             setWeeklyStatus({ status: 'Empty', message: '', comment: '' }); 
             
-            const startLoad = Date.now();
-            
             Promise.all([
-                fetchData().then(() => setSyncPhase(prev => Math.max(prev, 65))),
-                fetchWeeklyStatus().then(() => setSyncPhase(prev => Math.max(prev, 90)))
+                fetchData(),
+                fetchWeeklyStatus()
             ]).finally(() => {
+                if (currentFetchId !== fetchIdRef.current) return; // Ignorar si hay una carga más nueva
                 setSyncPhase(100);
                 setDataLoaded(true);
             });
         }
     }, [selectedStore, currentWeekStart, approvalId]);
 
-    // V12.22: CIERRE ATÓMICO DEL OVERLAY
+    // V12.24: CIERRE FLASH DEL OVERLAY (600ms de gracia para pintura)
     useEffect(() => {
         if (loading && dataLoaded) {
             const timer = setTimeout(() => {
                 setLoading(false);
                 setSyncPhase(0);
                 if (onReady) onReady();
-            }, 1500);
+            }, 600);
             return () => clearTimeout(timer);
         }
     }, [loading, dataLoaded, onReady]); 
@@ -1146,25 +1149,27 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             </div>
                         </div>
 
-                        {/* 2.2 Comando Central Ultra-Compacto V12.20 */}
+                        {/* 2.2 Comando Central Ultra-Compacto V12.24 */}
                         <div className="flex flex-wrap items-center justify-between gap-4 p-2.5 bg-white dark:bg-slate-900 shadow-xl border border-slate-100 dark:border-slate-800 w-full" 
                              style={{ borderRadius: '32px' }}>
                             
-                            {/* Navegación de Fecha */}
+                            {/* Navegación de Fecha (Bloqueada en Auditoría V12.24) */}
                             <div className="flex-shrink-0 flex items-center pr-4 border-r border-slate-100 dark:border-slate-800">
                                 <button onClick={() => setWeekOffset(prev => prev - 1)} 
-                                        className="p-2.5 text-slate-400 hover:text-indigo-500 hover:bg-slate-50 rounded-xl transition-all active:scale-90" 
-                                        data-v12-tooltip="Semana Anterior"><ChevronLeft size={18} strokeWidth={3} /></button>
+                                        disabled={readOnly}
+                                        className={`p-2.5 rounded-xl transition-all active:scale-90 ${readOnly ? 'text-slate-200 cursor-not-allowed' : 'text-slate-400 hover:text-indigo-500 hover:bg-slate-50'}`} 
+                                        data-v12-tooltip={readOnly ? "Semana bloqueada en Auditoría" : "Semana Anterior"}><ChevronLeft size={18} strokeWidth={3} /></button>
                                 
                                 <div className="flex flex-col items-center px-4 min-w-[160px]">
-                                    <span className="text-[12px] font-[1000] uppercase tracking-tight text-slate-800 dark:text-white text-center whitespace-nowrap">
+                                    <span className={`text-[12px] font-[1000] uppercase tracking-tight text-center whitespace-nowrap ${readOnly ? 'text-slate-400' : 'text-slate-800 dark:text-white'}`}>
                                         {currentWeekStart.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} — {new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
                                     </span>
                                 </div>
 
                                 <button onClick={() => setWeekOffset(prev => prev + 1)} 
-                                        className="p-2.5 text-slate-400 hover:text-indigo-500 hover:bg-slate-50 rounded-xl transition-all active:scale-90" 
-                                        data-v12-tooltip="Semana Siguiente"><ChevronRight size={18} strokeWidth={3} /></button>
+                                        disabled={readOnly}
+                                        className={`p-2.5 rounded-xl transition-all active:scale-90 ${readOnly ? 'text-slate-200 cursor-not-allowed' : 'text-slate-400 hover:text-indigo-500 hover:bg-slate-50'}`} 
+                                        data-v12-tooltip={readOnly ? "Semana bloqueada en Auditoría" : "Semana Siguiente"}><ChevronRight size={18} strokeWidth={3} /></button>
                             </div>
 
                             {/* Acciones Globales Linealizadas */}

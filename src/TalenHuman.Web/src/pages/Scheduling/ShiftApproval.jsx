@@ -81,7 +81,7 @@ const ShiftApproval = ({ user }) => {
     setTimeout(() => {
       setIsInspecting(false); 
       setSyncPhase(0);
-    }, 8000);
+    }, 2500); 
   };
 
   const delay = (ms) => new Promise(res => setTimeout(res, ms));
@@ -286,7 +286,7 @@ const ShiftApproval = ({ user }) => {
                         {getActionLabel(log.action)}
                       </div>
                       <p style={{ fontSize: '0.85rem', fontWeight: '700', margin: '0 0 10px 0' }}>"{log.comment}"</p>
-                      <div style={{ fontSize: '0.7rem', color: activeColors.textMuted }}>{log.userName} • {new Date(log.actionAt).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+                      <div style={{ fontSize: '0.7rem', color: activeColors.textMuted }}><span className="font-black text-indigo-500">{log.user || 'SISTEMA'}</span> • {log.date ? new Date(log.date).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Fecha no disponible'}</div>
                    </div>
                  );
                })}
