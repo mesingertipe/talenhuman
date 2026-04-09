@@ -190,12 +190,37 @@ const ShiftApproval = ({ user }) => {
               </button>
               <div>
                 <h1 style={{ fontSize: '1.5rem', fontWeight: '950', color: activeColors.textMain, margin: 0 }}>Auditoría: {inspectedStore.name}</h1>
-                <p style={{ margin: 0, color: activeColors.textMuted, fontSize: '0.85rem' }}>MODO INSPECCIÓN • PERIODO: {formatDateRange(inspectedStore.minDate, inspectedStore.maxDate)}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <p style={{ margin: 0, color: activeColors.textMuted, fontSize: '0.85rem' }}>MODO INSPECCIÓN • {formatDateRange(inspectedStore.minDate, inspectedStore.maxDate)}</p>
+                  <div className="w-1 h-1 rounded-full bg-slate-300"></div>
+                  <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">{inspectedStore.districtName}</span>
+                </div>
               </div>
             </div>
-            <button onClick={() => setShowHistoryDrawer(!showHistoryDrawer)} style={{ padding: '12px 24px', background: showHistoryDrawer ? activeColors.accent : activeColors.accentSoft, borderRadius: '16px', border: 'none', display: 'flex', alignItems: 'center', gap: '12px', color: showHistoryDrawer ? 'white' : activeColors.accent, fontWeight: '900', cursor: 'pointer' }}>
-               <MessageSquare size={18} /> {showHistoryDrawer ? 'Cerrar Historial' : 'Ver Comentarios'}
-            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              {/* Acciones de Auditoría en Cabecera */}
+              <div style={{ display: 'flex', gap: '8px', padding: '6px', background: activeColors.border, borderRadius: '20px' }}>
+                <button 
+                  onClick={() => setShowCommentModal(true)}
+                  style={{ padding: '10px 20px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', borderRadius: '14px', fontWeight: '950', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <XCircle size={16} /> RECHAZAR
+                </button>
+                <button 
+                  onClick={() => handleApprove()}
+                  style={{ padding: '10px 24px', background: activeColors.accent, color: 'white', border: 'none', borderRadius: '14px', fontWeight: '950', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 8px 15px rgba(79, 70, 229, 0.2)' }}
+                >
+                  <CheckCircle size={16} /> APROBAR SEMANA
+                </button>
+              </div>
+
+              <div style={{ width: '1px', h: '30px', background: activeColors.border }}></div>
+
+              <button onClick={() => setShowHistoryDrawer(!showHistoryDrawer)} style={{ padding: '12px 24px', background: showHistoryDrawer ? activeColors.accent : activeColors.accentSoft, borderRadius: '16px', border: 'none', display: 'flex', alignItems: 'center', gap: '12px', color: showHistoryDrawer ? 'white' : activeColors.accent, fontWeight: '900', cursor: 'pointer' }}>
+                 <MessageSquare size={18} /> {showHistoryDrawer ? 'Historial' : 'Comentarios'}
+              </button>
+            </div>
          </div>
          <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '32px' }}>
                         <div key={inspectedStore.id} style={{ background: activeColors.card, borderRadius: '32px', border: `1.5px solid ${activeColors.border}`, overflow: 'hidden', padding: '1rem', marginRight: showHistoryDrawer ? '400px' : '0', transition: 'margin 0.4s ease' }}>

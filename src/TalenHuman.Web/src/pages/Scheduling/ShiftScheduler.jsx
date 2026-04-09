@@ -128,6 +128,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const [approvalComment, setApprovalComment] = useState('');
     const [isProcessingStatus, setIsProcessingStatus] = useState(false);
     const [syncPhase, setSyncPhase] = useState(0); // 0: Init, 1: Validating, 2: Syncing, 3: Notifying, 4: Done
+    const [dataLoaded, setDataLoaded] = useState(false);
 
     // V19.2: BLINDAJE DE SEGURIDAD ELITE - Modo Inspección Auditoría
     const effectiveReadOnly = useMemo(() => {
@@ -210,6 +211,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         if (selectedStore || approvalId) {
             setLoading(true);
             setSyncPhase(20);
+            setDataLoaded(false);
             setWeeklyStatus({ status: 'Empty', message: '', comment: '' }); 
             
             const startLoad = Date.now();
@@ -219,15 +221,26 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 fetchWeeklyStatus().then(() => setSyncPhase(prev => Math.max(prev, 90)))
             ]).finally(() => {
                 setSyncPhase(100);
-                const elapsed = Date.now() - startLoad;
-                const remaining = Math.max(400, 1500 - elapsed);
-                setTimeout(() => {
-                    setLoading(false);
-                    setSyncPhase(0);
-                }, remaining);
+                setDataLoaded(true);
             });
         }
     }, [selectedStore, currentWeekStart, approvalId]);
+
+    // V12.20: CIERRE DETERMINISTA DEL OVERLAY
+    // Solo se quita el overlay cuando los datos están en el estado Y el navegador ha tenido tiempo de pintar el grid pesado
+    useEffect(() => {
+        if (loading && dataLoaded) {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        setLoading(false);
+                        setSyncPhase(0);
+                        setDataLoaded(false);
+                    }, 300); // Pequeño delay de suavizado para evitar parpadeo
+                });
+            });
+        }
+    }, [loading, dataLoaded, employees, shifts]);
 
     const fetchWeeklyStatus = async () => {
         if (!selectedStore && !approvalId) return;
@@ -1117,158 +1130,112 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 />
                             </div>
 
-                            {/* V13.0 ELITE STATUS BADGE - VISIBILIDAD MEJORADA */}
-                            <div className={`flex items-center gap-4 px-8 py-4 ${weeklyStatus.status === 'Approved' ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200' : (weeklyStatus.status === 'Rejected' ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-200' : 'bg-white dark:bg-slate-800 border-slate-100')} rounded-[24px] border shadow-xl shadow-slate-200/20 dark:shadow-none animate-in zoom-in duration-500 min-w-[220px]`}>
+                            <div className="flex items-center gap-4 px-6 py-3 bg-white dark:bg-slate-800 border-slate-100 rounded-[20px] border shadow-sm min-w-[200px]">
                                 {isProcessingStatus ? (
                                     <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
                                 ) : (
                                     <>
-                                        <div className={`w-3 h-3 rounded-full animate-pulse ${weeklyStatus.status === 'Approved' ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : (weeklyStatus.status === 'Rejected' ? 'bg-rose-500 shadow-[0_0_10px_#f43f5e]' : (weeklyStatus.status === 'Empty' ? 'bg-slate-300' : 'bg-amber-500 shadow-[0_0_10px_#f59e0b]'))}`}></div>
+                                        <div className={`w-3 h-3 rounded-full animate-pulse ${weeklyStatus.status === 'Approved' ? 'bg-emerald-500' : (weeklyStatus.status === 'Rejected' ? 'bg-rose-500' : (weeklyStatus.status === 'Empty' ? 'bg-slate-300' : 'bg-amber-500'))}`}></div>
                                         <div className="flex flex-col leading-none">
-                                            <span className={`text-[9px] font-black uppercase tracking-[0.2em] mb-1.5 leading-none ${weeklyStatus.status === 'Approved' ? 'text-emerald-500' : (weeklyStatus.status === 'Rejected' ? 'text-rose-500' : (weeklyStatus.status === 'Published' ? 'text-amber-500' : 'text-slate-400'))}`}>
-                                                {weeklyStatus.status === 'Approved' ? 'VALIDACIÓN COMPLETADA' : (weeklyStatus.status === 'Rejected' ? 'CORRECCIÓN REQUERIDA' : (weeklyStatus.status === 'Published' || weeklyStatus.status === 'Published' ? 'PENDIENTE DE VALIDACIÓN' : 'Status Semanal'))}
+                                            <span className={`text-[8px] font-black uppercase tracking-[0.2em] mb-1 leading-none ${weeklyStatus.status === 'Approved' ? 'text-emerald-500' : (weeklyStatus.status === 'Rejected' ? 'text-rose-500' : 'text-slate-400')}`}>
+                                                ESTADO SEMANAL
                                             </span>
-                                            <span className={`text-[13px] font-[1000] uppercase tracking-tighter ${weeklyStatus.status === 'Approved' ? 'text-emerald-600' : (weeklyStatus.status === 'Rejected' ? 'text-rose-600' : 'text-amber-600')}`}>
-                                                {weeklyStatus.status === 'Approved' ? 'SEMANA APROBADA (OK)' : (weeklyStatus.status === 'Rejected' ? 'RECHAZADA / AJUSTAR' : (weeklyStatus.status === 'Published' || weeklyStatus.status === 'Published' ? 'ESPERANDO APROBACIÓN' : (weeklyStatus.status === 'Empty' ? 'Personal Sin Turno' : 'Esperando Validación')))}
+                                            <span className={`text-[11px] font-[1000] uppercase tracking-tighter ${weeklyStatus.status === 'Approved' ? 'text-emerald-600' : (weeklyStatus.status === 'Rejected' ? 'text-rose-600' : 'text-amber-600')}`}>
+                                                {weeklyStatus.status === 'Approved' ? 'Semana Cerrada' : (weeklyStatus.status === 'Rejected' ? 'Ajustar Turnos' : (weeklyStatus.status === 'Published' ? 'Validando...' : 'En Edición'))}
                                             </span>
                                         </div>
-                                        {weeklyStatus.status === 'Approved' && <ShieldCheck size={18} className="text-emerald-500 ml-2" />}
-                                        {weeklyStatus.status === 'Rejected' && weeklyStatus.comment && (
-                                            <div className="group relative ml-2">
-                                                <AlertTriangle size={18} className="text-rose-500 cursor-help animate-bounce" />
-                                                <div className="absolute right-0 bottom-full mb-3 w-64 p-4 bg-slate-900 text-white text-[11px] font-bold rounded-2xl shadow-2xl z-[100] border border-white/10 animate-in fade-in slide-in-from-bottom-2">
-                                                    <p className="text-rose-400 uppercase text-[9px] mb-1">Motivo del Auditor:</p>
-                                                    {weeklyStatus.comment}
-                                                </div>
-                                            </div>
-                                        )}
                                     </>
                                 )}
                             </div>
                         </div>
 
-                        {/* 2.2 Comando Central Unificado (Smart Center) */}
-                        <div className="flex items-center justify-between gap-4 p-2 bg-white dark:bg-slate-900 shadow-2xl border border-slate-100 dark:border-slate-800 w-full" 
-                             style={{ borderRadius: '40px' }}>
+                        {/* 2.2 Comando Central Ultra-Compacto V12.20 */}
+                        <div className="flex flex-wrap items-center justify-between gap-4 p-2.5 bg-white dark:bg-slate-900 shadow-xl border border-slate-100 dark:border-slate-800 w-full" 
+                             style={{ borderRadius: '32px' }}>
                             
-                            {/* Lado Izquierdo: Acciones Masivas (flex-1 para empujar) */}
-                            {!effectiveReadOnly && (
-                                <div className="flex-1 flex justify-start pl-2">
-                                    <button onClick={() => setShowBulkModal(true)}
-                                            disabled={selectedEmployees.length === 0}
-                                            className={`flex items-center gap-3 px-6 h-[56px] rounded-[30px] transition-all active:scale-95 group relative overflow-hidden ${selectedEmployees.length === 0 ? 'bg-slate-50 dark:bg-slate-800/50 text-slate-400 opacity-40' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-200/50 dark:shadow-none hover:bg-indigo-700'}`}
-                                            data-v12-tooltip="Programar turno masivo para seleccionados">
-                                        <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                                        <div className="relative flex items-center gap-3">
-                                            <Clock size={18} strokeWidth={2.5} />
-                                            <div className="hidden xl:flex flex-col items-start leading-none">
-                                                <span className="text-[10px] font-black uppercase tracking-widest">Acciones Masivas</span>
-                                                <span className="text-[9px] font-bold opacity-80 uppercase">{selectedEmployees.length} Seleccionados</span>
-                                            </div>
-                                        </div>
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* Centro: Navegación Central (Ancho Fijo para Centrado Real) */}
-                            <div className="flex-shrink-0 flex items-center">
-                                <div className="w-[1px] h-8 bg-slate-100 dark:bg-slate-800 mr-4"></div>
+                            {/* Navegación de Fecha */}
+                            <div className="flex-shrink-0 flex items-center pr-4 border-r border-slate-100 dark:border-slate-800">
                                 {!effectiveReadOnly && (
                                     <button onClick={() => setWeekOffset(prev => prev - 1)} 
-                                            className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-2xl transition-all active:scale-90" 
-                                            data-v12-tooltip="Semana Anterior"><ChevronLeft size={22} strokeWidth={3} /></button>
+                                            className="p-2.5 text-slate-400 hover:text-indigo-500 hover:bg-slate-50 rounded-xl transition-all active:scale-90" 
+                                            data-v12-tooltip="Semana Anterior"><ChevronLeft size={18} strokeWidth={3} /></button>
                                 )}
                                 
-                                <div className="flex flex-col items-center px-6 min-w-[200px]">
-                                    <span className="text-[9px] font-black uppercase text-indigo-500 tracking-[0.3em] mb-1 leading-none">Período Vigente</span>
-                                    <span className="text-[14px] font-[1000] uppercase tracking-tight text-slate-800 dark:text-white text-center whitespace-nowrap">
+                                <div className="flex flex-col items-center px-4 min-w-[160px]">
+                                    <span className="text-[12px] font-[1000] uppercase tracking-tight text-slate-800 dark:text-white text-center whitespace-nowrap">
                                         {currentWeekStart.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} — {new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
                                     </span>
                                 </div>
 
                                 {!effectiveReadOnly && (
                                     <button onClick={() => setWeekOffset(prev => prev + 1)} 
-                                            className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-2xl transition-all active:scale-90" 
-                                            data-v12-tooltip="Semana Siguiente"><ChevronRight size={22} strokeWidth={3} /></button>
+                                            className="p-2.5 text-slate-400 hover:text-indigo-500 hover:bg-slate-50 rounded-xl transition-all active:scale-90" 
+                                            data-v12-tooltip="Semana Siguiente"><ChevronRight size={18} strokeWidth={3} /></button>
                                 )}
-                                <div className="w-[1px] h-8 bg-slate-100 dark:bg-slate-800 ml-4"></div>
                             </div>
 
-                            {/* Lado Derecho: Switch de Vista + Carga Inteligente + Ayuda */}
-                            <div className="flex-1 flex justify-end items-center gap-6 pr-2">
-                                
-                                {/* Elite View Mode Switch */}
-                                <div className="flex items-center bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-full border border-slate-200 dark:border-slate-700/50 shadow-inner gap-1">
-                                    <button 
-                                        onClick={() => setViewMode('SHIFTS')}
-                                        className={`w-12 h-12 flex items-center justify-center rounded-full transition-all ${viewMode === 'SHIFTS' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/40 scale-105' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
-                                        data-v12-tooltip="VISTA PROGRAMACIÓN (AGENDA)"
-                                    >
-                                        <Calendar size={20} strokeWidth={2.5} />
-                                    </button>
-                                    <button 
-                                        onClick={() => setViewMode('ATTENDANCE')}
-                                        className={`w-12 h-12 flex items-center justify-center rounded-full transition-all ${viewMode === 'ATTENDANCE' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/40 scale-105' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}`}
-                                        data-v12-tooltip="VISTA BIOMETRÍA (RELOJ)"
-                                    >
-                                        <Clock size={20} strokeWidth={2.5} />
-                                    </button>
-                                </div>
-
-                                <div className="w-[1px] h-8 bg-slate-100 dark:bg-slate-800 hidden xl:block"></div>
-
-                                {!effectiveReadOnly && (
-                                    <button className="flex items-center gap-3 px-6 h-[56px] bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 rounded-[30px] transition-all active:scale-95 hover:bg-white dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-100 dark:hover:border-indigo-900 group"
-                                            data-v12-tooltip="Carga Inteligente de Turnos Proyectados">
-                                        <Sparkles size={18} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform" />
-                                        <span className="hidden xl:inline text-[10px] font-black uppercase tracking-widest">Carga</span>
-                                    </button>
+                            {/* Acciones Globales Linealizadas */}
+                            <div className="flex-1 flex items-center justify-center gap-2">
+                                <button onClick={exportToExcel} disabled={isExporting} 
+                                    className="flex items-center gap-2 px-4 h-[44px] bg-emerald-600 text-white rounded-[16px] hover:bg-emerald-700 transition-all font-black text-[10px] active:scale-95 shadow-lg shadow-emerald-500/20" data-v12-tooltip="Exportar Excel">
+                                    <FileSpreadsheet size={16} /> <span className="hidden xl:inline">EXCEL</span>
+                                </button>
+                                <button onClick={exportToPDF} disabled={isExporting}
+                                    className="flex items-center gap-2 px-4 h-[44px] bg-rose-600 text-white rounded-[16px] hover:bg-rose-700 transition-all font-black text-[10px] active:scale-95 shadow-lg shadow-rose-500/20" data-v12-tooltip="Generar PDF">
+                                    <FileDown size={16} /> <span className="hidden xl:inline">PDF</span>
+                                </button>
+                                {(!effectiveReadOnly || forceApprover) && (
+                                    <>
+                                        <div className="w-[1px] h-6 bg-slate-200 mx-1"></div>
+                                        <button onClick={copyFromPreviousWeek} className="flex items-center gap-2 px-4 h-[44px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-[16px] hover:bg-indigo-600 hover:text-white transition-all font-black text-[10px] active:scale-95" data-v12-tooltip="Clonar Semana Anterior">
+                                            <CopyIcon size={16} /> <span className="hidden xl:inline">CLONAR</span>
+                                        </button>
+                                        <button onClick={handleSave} disabled={isExporting} 
+                                            className="flex items-center gap-2 px-6 h-[44px] bg-indigo-600 text-white rounded-[16px] hover:bg-indigo-700 transition-all font-black text-[10px] active:scale-95 shadow-lg shadow-indigo-500/20" data-v12-tooltip="Guardar Cambios">
+                                            {isSaving ? <div className="loader !w-4 !h-4 !border-white"></div> : <><Save size={16} /> <span className="hidden xl:inline">GUARDAR</span></>}
+                                        </button>
+                                    </>
                                 )}
+                            </div>
 
-                                <div className="hidden xl:flex items-center">
-                                    <HelpIcon text="Comando Central V12.20: Configure filtros, navegue por semanas y use acciones masivas para optimizar tiempos operativos." />
-                                </div>
+                            {/* Switches de Vista */}
+                            <div className="flex items-center bg-slate-100 dark:bg-slate-800/80 p-1 rounded-full border border-slate-200 dark:border-slate-700/50 gap-1">
+                                <button onClick={() => setViewMode('SHIFTS')} className={`w-9 h-9 flex items-center justify-center rounded-full transition-all ${viewMode === 'SHIFTS' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+                                    <Calendar size={16} strokeWidth={2.5} />
+                                </button>
+                                <button onClick={() => setViewMode('ATTENDANCE')} className={`w-9 h-9 flex items-center justify-center rounded-full transition-all ${viewMode === 'ATTENDANCE' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+                                    <Clock size={16} strokeWidth={2.5} />
+                                </button>
                             </div>
                         </div>
 
-                        {/* V13.0 TOP APPROVAL BAR - REUBICADA POR UX */}
-                        {isApprover && weeklyStatus.status !== 'Approved' && weeklyStatus.status !== 'Rejected' && (forceApprover || shifts.some(s => s.status === 0)) && (
-                            <div style={{ 
-                                background: isDarkMode ? 'rgba(79, 70, 229, 0.1)' : 'rgba(79, 70, 229, 0.05)', 
-                                backdropFilter: 'blur(10px)',
-                                border: `1px solid ${activeColors.accent}30`, 
-                                borderRadius: '32px', 
-                                padding: '16px 24px', 
-                                marginTop: '24px',
-                                display: 'flex', 
-                                justifyContent: 'space-between', 
-                                alignItems: 'center',
-                                boxShadow: '0 15px 35px rgba(79, 70, 229, 0.08)' 
-                            }} className="animate-in slide-in-from-top-6 duration-700">
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                    <div style={{ width: '48px', height: '48px', background: activeColors.accent, borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 8px 20px rgba(79, 70, 229, 0.3)' }}>
-                                        <ShieldCheck size={24} strokeWidth={2.5} />
-                                    </div>
-                                    <div>
-                                        <p style={{ margin: 0, fontWeight: '950', color: activeColors.textMain, fontSize: '0.9rem', letterSpacing: '-0.02em' }}>Pendiente de Aprobación</p>
-                                        <p style={{ margin: 0, fontWeight: '700', color: activeColors.textMuted, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Programación lista para validación administrativa</p>
+                        {/* 2.3 Barra de Herramientas de Arrastre (Manager Only - Slim Style) */}
+                        {!effectiveReadOnly && (
+                            <div className="flex items-center justify-between gap-4 p-2 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-700/50 w-full" style={{ borderRadius: '20px' }}>
+                                <div className="flex items-center gap-3 pl-2">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-2">Herramientas:</span>
+                                    {[
+                                        { type: 'Turno', color: 'bg-indigo-600', icon: Clock, label: 'TURNO' },
+                                        { type: 'Descanso', color: 'bg-slate-500', icon: Calendar, label: 'DESC' },
+                                        { type: 'Turno Fuera', color: 'bg-purple-600', icon: AlertCircle, label: 'FUERA' }
+                                    ].map((tool, idx) => (
+                                        <div key={idx} draggable onDragStart={(e) => handleDragStart(e, 'PANEL', { type: tool.type })} 
+                                            className={`${tool.color} text-white flex items-center gap-2 px-4 h-[38px] rounded-xl cursor-grab hover:scale-105 active:scale-95 transition-all shadow-sm`}>
+                                            <tool.icon size={14} strokeWidth={3} />
+                                            <span className="text-[9px] font-black uppercase tracking-tight">{tool.label}</span>
+                                        </div>
+                                    ))}
+                                    <div onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnTrash} 
+                                        className="flex items-center gap-2 px-4 h-[38px] bg-rose-50 text-rose-500 rounded-xl border-2 border-dashed border-rose-200 hover:bg-rose-600 hover:text-white transition-all cursor-pointer">
+                                        <Trash2 size={14} strokeWidth={3} />
+                                        <span className="text-[9px] font-black uppercase">BORRAR</span>
                                     </div>
                                 </div>
-                                <div style={{ display: 'flex', gap: '12px' }}>
-                                    <button 
-                                        onClick={() => handleRejectAll()}
-                                        className="btn-premium"
-                                        style={{ background: isDarkMode ? 'rgba(239, 68, 68, 0.15)' : '#fee2e2', color: '#ef4444', border: 'none', height: '44px', padding: '0 20px', borderRadius: '16px', fontWeight: '950', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }}
-                                    >
-                                        <XCircle size={16} strokeWidth={2.5} /> RECHAZAR
-                                    </button>
-                                    <button 
-                                        onClick={handleApproveAll}
-                                        className="btn-premium"
-                                        style={{ background: activeColors.accent, color: 'white', border: 'none', height: '44px', padding: '0 24px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(79, 70, 229, 0.4)', fontWeight: '950', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }}
-                                    >
-                                        <CheckCircle size={16} strokeWidth={2.5} /> APROBAR SEMANA
-                                    </button>
+                                <div className="flex items-center pr-4">
+                                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse mr-2"></div>
+                                    <span className="text-[9px] font-black text-slate-500 uppercase">
+                                        {employees.length} Activos
+                                    </span>
                                 </div>
                             </div>
                         )}
@@ -1288,101 +1255,14 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 </div>
 
                     {lastSaveComment && (
-                        <div className="no-print flex items-center gap-4 p-5 bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/50 rounded-3xl animate-in slide-in-from-top-2 duration-500">
-                            <div className="flex-shrink-0 w-10 h-10 bg-white dark:bg-indigo-950 rounded-2xl flex items-center justify-center shadow-sm">
-                                <FileText size={18} className="text-indigo-600 dark:text-indigo-400" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-[10px] font-black uppercase text-indigo-500 tracking-widest mb-0.5">Observaciones vigentes de la programación:</p>
-                                <p className="text-sm font-bold text-slate-700 dark:text-slate-300 truncate">{lastSaveComment}</p>
-                                {weeklyStatus && (
-                                    <p className="text-[9px] font-bold text-indigo-400 mt-1 uppercase">
-                                        Registrado por: {weeklyStatus.userName || 'Sistema'} • {new Date(weeklyStatus.date).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                                    </p>
-                                )}
-                            </div>
-                            <div className="flex-shrink-0">
-                                <div className="text-[10px] font-black px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full uppercase tracking-tighter">
-                                    {weeklyStatus?.status === 'Approved' ? 'SEMANA CERRADA' : 'MODO INSPECCIÓN'}
-                                </div>
-                            </div>
+                        <div className="no-print flex items-center gap-3 p-3 bg-indigo-50/30 dark:bg-indigo-900/5 border border-indigo-100/50 rounded-2xl mb-4">
+                            <FileText size={14} className="text-indigo-400" />
+                            <p className="text-[11px] font-bold text-slate-500 leading-none m-0 truncate">
+                                <span className="text-indigo-500 font-black uppercase text-[9px] mr-2">Observación:</span>
+                                {lastSaveComment}
+                            </p>
                         </div>
                     )}
-
-                    {/* Fila 2: Command Center Ultra-Visibilidad V12.20 (Espaciado e Impacto) */}
-                    <div className="no-print w-full flex flex-col xl:flex-row items-center justify-between gap-16 bg-white dark:bg-slate-900 shadow-xl p-8 border-[1px] border-slate-200 dark:border-slate-800" style={{ borderRadius: '48px' }}>
-                        {!effectiveReadOnly && (
-                            <div className="flex flex-wrap items-center justify-center lg:justify-start p-8 bg-slate-50/50 dark:bg-slate-800/20 border-[1px] border-slate-200 dark:border-slate-700/50" 
-                                 style={{ borderRadius: '24px', gap: '2rem' }}>
-                                {[
-                                    { type: 'Turno', color: 'bg-indigo-600', icon: Clock, label: 'TURNO', tip: 'Turno de Trabajo (Arrastrar al grid)' },
-                                    { type: 'Descanso', color: 'bg-slate-400 dark:bg-slate-500', icon: Calendar, label: 'DESC', tip: 'Descanso (Arrastrar al grid)' },
-                                    { type: 'Turno Fuera', color: 'bg-purple-600', icon: AlertCircle, label: 'FUERA', tip: 'Turno Fuera de Sede (Arrastrar al grid)' }
-                                ].map((tool, idx) => (
-                                    <div key={idx} draggable onDragStart={(e) => handleDragStart(e, 'PANEL', { type: tool.type })} 
-                                        className={`flex-shrink-0 ${tool.type === 'Descanso' ? '' : tool.color} text-white flex flex-col items-center justify-center cursor-grab shadow-sm hover:scale-105 active:scale-95 transition-all group relative`}
-                                        style={{ 
-                                            width: '96px', 
-                                            height: '64px', 
-                                            borderRadius: '16px',
-                                            backgroundColor: tool.type === 'Descanso' ? '#94a3b8' : undefined 
-                                        }}
-                                        data-v12-tooltip={tool.tip}
-                                    >
-                                        <tool.icon size={22} strokeWidth={2.5} className="mb-1" />
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-center">
-                                            {tool.label}
-                                        </span>
-                                    </div>
-                                ))}
-                                <div className="hidden 2xl:block w-[1px] h-10 bg-slate-200 dark:bg-slate-700 flex-shrink-0"></div>
-                                <div onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnTrash} 
-                                    className="flex-shrink-0 bg-rose-50 dark:bg-rose-900/10 text-rose-500 flex flex-col items-center justify-center gap-1 border-2 border-dashed border-rose-200 dark:border-rose-900/40 hover:bg-rose-600 hover:text-white hover:border-solid transition-all cursor-pointer group relative"
-                                    style={{ width: '120px', height: '64px', borderRadius: '16px', marginLeft: '0.5rem' }}
-                                    data-v12-tooltip="Arrastra un turno aquí para eliminarlo"
-                                >
-                                    <Trash2 size={22} strokeWidth={2.5} />
-                                    <span className="text-[8px] font-black uppercase tracking-widest text-center">BORRAR</span>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Derecha: Acciones Globales (Ultra-Visibility & Gap-16) */}
-                        <div className="no-print flex flex-wrap items-center justify-center lg:justify-end p-8 bg-slate-50/50 dark:bg-slate-800/20 border-[1px] border-slate-200 dark:border-slate-700/50" 
-                             style={{ borderRadius: '24px', gap: '2rem' }}>
-                            <button 
-                                onClick={exportToExcel} 
-                                disabled={isExporting}
-                                className={`flex-shrink-0 bg-emerald-600 text-white flex flex-col items-center justify-center gap-1 hover:bg-emerald-700 transition-all group shadow-md ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                style={{ width: '96px', height: '64px', borderRadius: '16px' }} 
-                                data-v12-tooltip="Exportar programación a Excel .xlsx"
-                            >
-                                <FileSpreadsheet size={22} className="group-hover:scale-110 transition-transform" />
-                                <span className="text-[9px] font-black uppercase tracking-widest">EXCEL</span>
-                            </button>
-                            <button 
-                                onClick={exportToPDF} 
-                                disabled={isExporting}
-                                className={`flex-shrink-0 flex flex-col items-center justify-center gap-1 hover:brightness-110 transition-all group shadow-md ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                style={{ width: '96px', height: '64px', borderRadius: '16px', backgroundColor: '#dc2626', color: 'white' }} 
-                                data-v12-tooltip="Generar reporte PDF para impresión"
-                            >
-                                <FileDown size={22} className="group-hover:scale-110 transition-transform" />
-                                <span className="text-[9px] font-black uppercase tracking-widest">PDF</span>
-                            </button>
-                            {!effectiveReadOnly && (
-                                <>
-                                    <button onClick={copyFromPreviousWeek} className="flex-shrink-0 bg-indigo-600 text-white flex flex-col items-center justify-center gap-1 hover:bg-indigo-700 transition-all group shadow-md" style={{ width: '96px', height: '64px', borderRadius: '16px' }} data-v12-tooltip="Copiar toda la programación de la semana anterior">
-                                        <CopyIcon size={22} className="group-hover:scale-110 transition-transform" />
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-center">CLONAR</span>
-                                    </button>
-                                    <button onClick={handleSave} disabled={isExporting} className={`flex-shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white flex flex-col items-center justify-center gap-1 shadow-lg shadow-indigo-500/20 transition-all hover:scale-[1.05] active:scale-95 group ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ width: '96px', height: '64px', borderRadius: '16px' }} data-v12-tooltip="Guardar todos los cambios en el servidor">
-                                        {isSaving ? <div className="loader !w-5 !h-5 !border-white"></div> : <><Save size={22} /><span className="text-[9px] font-black uppercase">GUARDAR</span></>}
-                                    </button>
-                                </>
-                            )}
-                        </div>
-                    </div>
                 
                 <div className="card shadow-[0_40px_100px_rgba(0,0,0,0.12)] bg-white dark:bg-slate-900 border-2 dark:border-slate-800 relative" style={{ borderRadius: '48px', overflow: 'hidden', minHeight: '600px' }}>
                     {createPortal(
