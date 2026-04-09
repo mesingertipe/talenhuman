@@ -179,7 +179,7 @@ const ShiftApproval = ({ user }) => {
               </button>
               <div>
                 <h1 style={{ fontSize: '1.5rem', fontWeight: '950', color: activeColors.textMain, margin: 0 }}>Auditoría: {inspectedStore.name}</h1>
-                <p style={{ margin: 0, color: activeColors.textMuted, fontSize: '0.85rem' }}>MODO INSPECCIÓN ELITE • PERIODO: {formatDateRange(inspectedStore.minDate, inspectedStore.maxDate)}</p>
+                <p style={{ margin: 0, color: activeColors.textMuted, fontSize: '0.85rem' }}>MODO INSPECCIÓN • PERIODO: {formatDateRange(inspectedStore.minDate, inspectedStore.maxDate)}</p>
               </div>
             </div>
             <button onClick={() => setShowHistoryDrawer(!showHistoryDrawer)} style={{ padding: '12px 24px', background: showHistoryDrawer ? activeColors.accent : activeColors.accentSoft, borderRadius: '16px', border: 'none', display: 'flex', alignItems: 'center', gap: '12px', color: showHistoryDrawer ? 'white' : activeColors.accent, fontWeight: '900', cursor: 'pointer' }}>

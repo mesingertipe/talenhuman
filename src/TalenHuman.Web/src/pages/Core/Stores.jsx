@@ -372,7 +372,7 @@ const Stores = ({ user }) => {
                     {currentStore ? 'Actualizar Sede' : 'Registrar Sede'}
                   </h2>
                   <p style={{ fontSize: '0.85rem', color: activeColors.textMuted, fontWeight: '700', marginTop: '4px', letterSpacing: '0.02em' }}>
-                    Gobierno de Sede V13.0 Elite - Motor Min-Max
+                    Gobierno de Sede V13.0 - Motor Min-Max
                   </p>
                 </div>
               </div>
@@ -567,7 +567,7 @@ const Stores = ({ user }) => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '30px', background: isDarkMode ? 'rgba(79, 70, 229, 0.1)' : '#f1f5f9', borderRadius: '32px', color: activeColors.textMuted }}>
                      <Shield size={20} />
                       <p style={{ fontSize: '0.75rem', fontWeight: '700', maxWidth: '600px', margin: 0 }}>
-                        <span style={{ fontWeight: '950', color: activeColors.textMain }}>CONTROL ELITE:</span> Los horarios base definen la ventana operativa para la consolidación automática Min-Max de asistencia por sede.
+                        <span style={{ fontWeight: '950', color: activeColors.textMain }}>CONTROL DE SEDE:</span> Los horarios base definen la ventana operativa para la consolidación automática Min-Max de asistencia por sede.
                       </p>
                   </div>
                 

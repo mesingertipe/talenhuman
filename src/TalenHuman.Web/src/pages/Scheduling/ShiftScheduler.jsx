@@ -209,16 +209,22 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     useEffect(() => {
         if (selectedStore || approvalId) {
             setLoading(true);
+            setSyncPhase(20);
             setWeeklyStatus({ status: 'Empty', message: '', comment: '' }); 
+            
             const startLoad = Date.now();
             
             Promise.all([
-                fetchData(),
-                fetchWeeklyStatus()
+                fetchData().then(() => setSyncPhase(prev => Math.max(prev, 65))),
+                fetchWeeklyStatus().then(() => setSyncPhase(prev => Math.max(prev, 90)))
             ]).finally(() => {
+                setSyncPhase(100);
                 const elapsed = Date.now() - startLoad;
-                const remaining = Math.max(0, 800 - elapsed);
-                setTimeout(() => setLoading(false), remaining);
+                const remaining = Math.max(400, 1500 - elapsed);
+                setTimeout(() => {
+                    setLoading(false);
+                    setSyncPhase(0);
+                }, remaining);
             });
         }
     }, [selectedStore, currentWeekStart, approvalId]);
@@ -1379,34 +1385,55 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     </div>
                 
                 <div className="card shadow-[0_40px_100px_rgba(0,0,0,0.12)] bg-white dark:bg-slate-900 border-2 dark:border-slate-800 relative" style={{ borderRadius: '48px', overflow: 'hidden', minHeight: '600px' }}>
-                    {(loading || isProcessingStatus) && (
-                        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-slate-900/40 dark:bg-black/60 backdrop-blur-2xl"
-                             style={{ animation: 'fade-in-elite 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
-                            <div className="text-center transform" style={{ animation: 'zoom-in-elite 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}>
-                                <div className="relative w-32 h-32 mx-auto mb-10">
-                                    {/* Capas concéntricas de carga */}
-                                    <div className="absolute inset-0 rounded-full border-[6px] border-white/10"></div>
-                                    <div className="absolute inset-0 rounded-full border-[6px] border-indigo-500 border-t-transparent animate-spin duration-700"></div>
-                                    <div className="absolute inset-4 rounded-full border-[4px] border-emerald-400/30 border-b-transparent animate-spin-reverse duration-1000"></div>
-                                    <div className="absolute inset-0 flex items-center justify-center text-white">
-                                        <ShieldCheck size={48} className="animate-pulse" strokeWidth={1.5} />
+                    {createPortal(
+                        (loading || isProcessingStatus) && (
+                            <div className="fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
+                                <div className="bg-white dark:bg-slate-900 p-8 md:p-12 rounded-[3.5rem] shadow-2xl border border-white/10 flex flex-col items-center max-w-md w-full text-center animate-in zoom-in-95 duration-300">
+                                    <div className="relative mb-8">
+                                        <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 animate-pulse"></div>
+                                        {/* Elegant Progress Ring */}
+                                        <div style={{ position: 'relative', width: '90px', height: '90px' }}>
+                                            <svg style={{ transform: 'rotate(-90deg)', width: '90px', height: '90px' }}>
+                                                <circle cx="45" cy="45" r="40" stroke={isDarkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9'} strokeWidth="6" fill="transparent" />
+                                                <circle 
+                                                    cx="45" cy="45" r="40" 
+                                                    stroke="#4f46e5" 
+                                                    strokeWidth="6" 
+                                                    fill="transparent" 
+                                                    strokeDasharray="251.2" 
+                                                    strokeDashoffset={251.2 - (251.2 * (syncPhase || (loading ? 45 : 95))) / 100}
+                                                    strokeLinecap="round"
+                                                    style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+                                                />
+                                            </svg>
+                                            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
+                                                {syncPhase >= 95 ? <CheckCircle size={32} strokeWidth={3} /> : <Clock size={32} className="animate-pulse" />}
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="space-y-4">
-                                    <h3 className="text-3xl font-[1000] text-white uppercase tracking-[0.3em] drop-shadow-2xl">Sincronizando</h3>
-                                    <div className="flex items-center justify-center gap-3">
-                                        <div className="h-[2px] w-12 bg-indigo-500/50"></div>
-                                        <p className="text-[11px] font-black text-indigo-200 uppercase tracking-[0.5em] animate-pulse">Consola de Auditoría Elite</p>
-                                        <div className="h-[2px] w-12 bg-indigo-500/50"></div>
+                                    <h3 className="text-xl font-[950] text-slate-800 dark:text-white mb-2 uppercase tracking-tight">
+                                        {syncPhase < 30 ? "Iniciando Consola" : 
+                                         syncPhase < 70 ? "Sincronizando Nómina" : 
+                                         syncPhase < 95 ? "Validando Registros" : "¡Consola Lista!"}
+                                    </h3>
+                                    <p className="text-sm font-bold text-slate-400 leading-relaxed px-4">
+                                        {syncPhase < 30 ? "Preparando entorno de auditoría..." : 
+                                         syncPhase < 70 ? "Cargando programación desde el servidor central..." : 
+                                         syncPhase < 95 ? "Verificando consistencia de turnos y estados..." : "Sincronización completada exitosamente."}
+                                    </p>
+                                    
+                                    <div className="w-full mt-6 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                        <div className="bg-indigo-600 h-full transition-all duration-700" style={{ width: `${syncPhase || (loading ? 45 : 95)}%` }}></div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        ),
+                        document.body
                     )}
                     
                     <div className="overflow-x-auto">
-                            <footer className="mt-8 mb-4">
-                                <div className="version-tag-subtle">V12.20</div>
+                            <footer className="mt-8 mb-4 text-center">
+                                <div className="version-tag-subtle">SISTEMA V12.20</div>
                             </footer>
                             <table className="w-full border-collapse">
                                 <thead>

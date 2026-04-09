@@ -83,7 +83,7 @@ function App() {
   useEffect(() => {
       const lastVersion = localStorage.getItem('app_version');
       
-      // 🚀 SILENT AUTO-UPDATE (V65.1.18-ELITE)
+      // 🚀 SILENT AUTO-UPDATE (V65.1.18)
       // Detects version mismatch and forces a full internal reset to fix Workbox precaching errors
       if (lastVersion && lastVersion !== CURRENT_VERSION) {
           console.log(`PWA: Version mismatch (${lastVersion} vs ${CURRENT_VERSION}). Initializing silent reset...`);
