@@ -214,23 +214,42 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         loadScript("https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js");
     }, []);
 
-            useEffect(() => {
-        if (selectedStore || approvalId) {
+    useEffect(() => {
+        const runFetch = async () => {
+            if (!selectedStore && !approvalId) return;
+            
             const currentFetchId = ++fetchIdRef.current;
             setLoading(true);
             setSyncPhase(20);
             setDataLoaded(false);
             setWeeklyStatus({ status: 'Empty', message: '', comment: '' }); 
-            
-            Promise.all([
-                fetchData(),
-                fetchWeeklyStatus()
-            ]).finally(() => {
-                if (currentFetchId !== fetchIdRef.current) return; // Ignorar si hay una carga más nueva
-                setSyncPhase(100);
-                setDataLoaded(true);
-            });
-        }
+
+            try {
+                if (approvalId) {
+                    // V12.26: FLUJO SECUENCIAL AUTORITARIO (Un solo set de llamados)
+                    const statusData = await fetchWeeklyStatus();
+                    if (statusData && currentFetchId === fetchIdRef.current) {
+                        const confirmedDate = statusData.weekStartDate ? new Date(statusData.weekStartDate) : null;
+                        await fetchData(statusData.storeId, confirmedDate);
+                    }
+                } else {
+                    // FLUJO PARALELO NORMAL (Modo Gerente)
+                    await Promise.all([
+                        fetchData(),
+                        fetchWeeklyStatus()
+                    ]);
+                }
+
+                if (currentFetchId === fetchIdRef.current) {
+                    setSyncPhase(100);
+                    setDataLoaded(true);
+                }
+            } catch (err) {
+                console.error("Error in fetch sequence", err);
+            }
+        };
+
+        runFetch();
     }, [selectedStore, currentWeekStart, approvalId]);
 
     // V12.24: CIERRE FLASH DEL OVERLAY (600ms de gracia para pintura)
@@ -246,7 +265,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     }, [loading, dataLoaded, onReady]); 
 
     const fetchWeeklyStatus = async () => {
-        if (!selectedStore && !approvalId) return;
+        if (!selectedStore && !approvalId) return null;
         try {
             setIsProcessingStatus(true);
             
@@ -261,15 +280,21 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             // V19.8: Sincronización Maestra - Si consultamos por ID, la fecha de la DB es la LEY
             if (approvalId && res.data.weekStartDate) {
                 const dbDate = new Date(res.data.weekStartDate);
-                if (dbDate.getTime() !== currentWeekStart.getTime()) {
+                // Usamos comparación segura de fecha ISO para evitar re-triggers innecesarios
+                const currentISO = toLocalISO(currentWeekStart);
+                const dbISO = toLocalISO(dbDate);
+
+                if (dbISO !== currentISO) {
                     setCurrentWeekStart(dbDate);
                 }
                 if (res.data.storeId && res.data.storeId !== selectedStore) {
                     setSelectedStore(res.data.storeId);
                 }
             }
+            return res.data;
         } catch (err) {
             console.error("Error fetching status", err);
+            return null;
         } finally {
             setIsProcessingStatus(false);
         }
@@ -316,18 +341,25 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         }
     }, [user, operationalSettings, selectedStore, stores, forceApprover]);
 
-    const fetchData = async () => {
+    const fetchData = async (overrideStoreId = null, overrideWeekStart = null) => {
         try {
             setLoading(true);
-            const startDateStr = toLocalISO(currentWeekStart);
-            const endDate = new Date(currentWeekStart);
+            
+            // V12.26: Priorizar parámetros autoritarios (Secuencialidad)
+            const targetStore = overrideStoreId || selectedStore;
+            const targetWeekStart = overrideWeekStart || currentWeekStart;
+
+            if (!targetStore) return;
+
+            const startDateStr = toLocalISO(targetWeekStart);
+            const endDate = new Date(targetWeekStart);
             endDate.setDate(endDate.getDate() + 7);
             const endDateStr = toLocalISO(endDate);
 
             const [empRes, shiftRes, newsRes, jornadaRes, attRes] = await Promise.all([
-                api.get(`/employees?storeId=${selectedStore}`),
-                api.get(`/shifts?storeId=${selectedStore}&startDate=${startDateStr}&endDate=${endDateStr}`),
-                api.get(`/novedades?storeId=${selectedStore}&startDate=${startDateStr}&endDate=${endDateStr}&status=1`),
+                api.get(`/employees?storeId=${targetStore}`),
+                api.get(`/shifts?storeId=${targetStore}&startDate=${startDateStr}&endDate=${endDateStr}`),
+                api.get(`/novedades?storeId=${targetStore}&startDate=${startDateStr}&endDate=${endDateStr}&status=1`),
                 api.get('/jornadas'),
                 api.get(`/attendance?start=${startDateStr}&end=${endDateStr}`)
             ]);
