@@ -74,9 +74,14 @@ const ShiftApproval = ({ user }) => {
   const handleInspect = (store) => {
     setIsInspecting(true);
     setSyncPhase(1);
-    // V12.22: No quitamos el loading aquí. 
-    // Esperamos a que ShiftScheduler llame a onReady() para una transición atómica.
     setInspectedStore(store);
+    
+    // V12.22: Failsafe de seguridad (8 segundos)
+    // Si el hijo no responde por red lenta o error, forzamos el cierre para no bloquear al usuario.
+    setTimeout(() => {
+      setIsInspecting(false); 
+      setSyncPhase(0);
+    }, 8000);
   };
 
   const delay = (ms) => new Promise(res => setTimeout(res, ms));

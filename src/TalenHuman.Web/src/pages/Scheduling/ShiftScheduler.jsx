@@ -172,7 +172,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
             // V18.8.4: BLINDAJE DE INSPECCIÓN - Evitar sobreescritura automática de la sede
             if (initialStoreId) {
-                setSelectedStore(initialStoreId);
+                // Solo actualizamos si es diferente para evitar ciclos
+                setSelectedStore(prev => prev === initialStoreId ? prev : initialStoreId);
                 return;
             }
 
@@ -226,23 +227,17 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         }
     }, [selectedStore, currentWeekStart, approvalId]);
 
-    // V12.21: CIERRE ATÓMICO DEL OVERLAY
-    // Solo se quita el overlay cuando los datos están en el estado Y el navegador ha tenido tiempo de pintar el grid pesado
+    // V12.22: CIERRE ATÓMICO DEL OVERLAY
     useEffect(() => {
         if (loading && dataLoaded) {
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    setTimeout(() => {
-                        setLoading(false);
-                        setSyncPhase(0);
-                        // NOTA: No seteamos dataLoaded a false aquí para evitar el "re-cargue" visual 
-                        // El próximo fetchData lo pondrá en true de nuevo cuando termine.
-                        if (onReady) onReady(); 
-                    }, 1500); 
-                });
-            });
+            const timer = setTimeout(() => {
+                setLoading(false);
+                setSyncPhase(0);
+                if (onReady) onReady();
+            }, 1500);
+            return () => clearTimeout(timer);
         }
-    }, [loading, dataLoaded, onReady]); // Simplificado para evitar disparos accidentales
+    }, [loading, dataLoaded, onReady]); 
 
     const fetchWeeklyStatus = async () => {
         if (!selectedStore && !approvalId) return;
