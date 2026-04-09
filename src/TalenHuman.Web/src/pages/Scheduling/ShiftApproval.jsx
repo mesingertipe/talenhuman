@@ -23,7 +23,7 @@ const ShiftApproval = ({ user }) => {
   const [syncPhase, setSyncPhase] = useState(0); 
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   
-  const [activeTab, setActiveTab] = useState('PENDING');
+  const [activeTab, setActiveTab] = useState('PENDIENTES');
   const [inspectedStore, setInspectedStore] = useState(null);
 
   const [filterDistrict, setFilterDistrict] = useState('ALL');
@@ -46,8 +46,8 @@ const ShiftApproval = ({ user }) => {
     try {
       setLoading(true);
       let status = 5;
-      if (activeTab === 'APPROVED') status = 6;
-      if (activeTab === 'REJECTED') status = 7;
+      if (activeTab === 'APROBADOS') status = 6;
+      if (activeTab === 'RECHAZADOS') status = 7;
       const res = await api.get(`/ShiftApproval/stores?status=${status}`);
       setStores(res.data);
     } catch (err) { console.error(err); showToast('Error al sincronizar consola', 'error'); } 
@@ -88,7 +88,8 @@ const ShiftApproval = ({ user }) => {
         }
       }
       setSyncPhase(3); await delay(800); setSyncPhase(4); await delay(1200);
-      showToast(`Se han aprobado ${selectedKeys.length} mallas exitosamente`);
+      setSyncPhase(3); await delay(800); setSyncPhase(4); await delay(1200);
+      showToast(`Se han aprobado ${selectedKeys.length} turnos exitosamente`);
       setSelectedKeys([]); setApprovalComment(''); setShowApprovalModal(false); fetchStores();
     } catch (err) { showToast('Error en la aprobación masiva', 'error'); } 
     finally { setProcessing(false); setSyncPhase(0); }
@@ -111,7 +112,7 @@ const ShiftApproval = ({ user }) => {
         }
       }
       setSyncPhase(3); await delay(800); setSyncPhase(4); await delay(1200);
-      showToast(`${selectedKeys.length} mallas han sido rechazadas`);
+      showToast(`${selectedKeys.length} turnos han sido rechazados`);
       setSelectedKeys([]); setRejectionComment(''); setShowCommentModal(false); fetchStores();
     } catch (err) { showToast('Error al procesar el rechazo', 'error'); } 
     finally { setProcessing(false); setSyncPhase(0); }
@@ -186,7 +187,7 @@ const ShiftApproval = ({ user }) => {
          </div>
          <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '32px' }}>
             <div style={{ background: activeColors.card, borderRadius: '32px', border: `1.5px solid ${activeColors.border}`, overflow: 'hidden', padding: '1rem', marginRight: showHistoryDrawer ? '400px' : '0', transition: 'margin 0.4s ease' }}>
-              <ShiftScheduler user={user} readOnly={activeTab !== 'PENDING'} forceApprover={true} initialStoreId={inspectedStore.storeId} initialDate={inspectedStore.weekStart} />
+              <ShiftScheduler user={user} readOnly={activeTab !== 'PENDIENTES'} forceApprover={true} initialStoreId={inspectedStore.storeId} initialDate={inspectedStore.weekStart} />
             </div>
             <div style={{ position: 'absolute', right: showHistoryDrawer ? '0' : '-450px', top: '0', bottom: '0', width: '380px', background: isDarkMode ? '#1e293b' : '#f8fafc', borderRadius: '32px', borderLeft: `2px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`, padding: '28px', transition: 'right 0.4s ease', zIndex: 50, overflowY: 'auto' }}>
                <h3 style={{ fontSize: '1.1rem', fontWeight: '950', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}><ShieldCheck size={20} /> Auditoría</h3>
@@ -220,9 +221,9 @@ const ShiftApproval = ({ user }) => {
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2.5rem', alignItems: 'center' }}>
             <div>
               <h1 style={{ fontSize: '2.5rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-1px' }}>Consola de Aprobación</h1>
-              <p style={{ color: activeColors.textMuted, fontWeight: '600', fontSize: '1rem', marginTop: '5px' }}>Validación jerárquica de mallas semanales</p>
+              <p style={{ color: activeColors.textMuted, fontWeight: '600', fontSize: '1rem', marginTop: '5px' }}>Validación jerárquica de turnos semanales</p>
             </div>
-            {activeTab === 'PENDING' && (
+            {activeTab === 'PENDIENTES' && (
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button disabled={selectedKeys.length === 0 || processing} onClick={() => setShowCommentModal(true)} style={{ padding: '14px 28px', borderRadius: '18px', border: 'none', background: '#fee2e2', color: '#ef4444', fontWeight: '800', cursor: 'pointer', opacity: selectedKeys.length === 0 ? 0.5 : 1, transition: 'all 0.2s' }}>
                    Rechazar ({selectedKeys.length})
@@ -258,7 +259,7 @@ const ShiftApproval = ({ user }) => {
             </div>
           </div>
           <div style={{ display: 'flex', gap: '10px', marginBottom: '2.5rem' }}>
-            {['PENDING', 'APPROVED', 'REJECTED'].map(tID => (
+            {['PENDIENTES', 'APROBADOS', 'RECHAZADOS'].map(tID => (
               <button key={tID} onClick={() => setActiveTab(tID)} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', fontWeight: '900', background: activeTab === tID ? activeColors.accent : activeColors.card, color: activeTab === tID ? 'white' : activeColors.textMuted, cursor: 'pointer' }}>{tID}</button>
             ))}
           </div>
@@ -266,7 +267,7 @@ const ShiftApproval = ({ user }) => {
             <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
               <thead>
                 <tr style={{ textAlign: 'left', color: activeColors.textMuted }}>
-                  {activeTab === 'PENDING' && <th style={{ padding: '15px 20px' }}><input type="checkbox" style={{ width: '18px', height: '18px', borderRadius: '6px' }} onChange={() => handleSelectAll(filteredStores)} checked={selectedKeys.length === filteredStores.length && filteredStores.length > 0} /></th>}
+                  {activeTab === 'PENDIENTES' && <th style={{ padding: '15px 20px' }}><input type="checkbox" style={{ width: '18px', height: '18px', borderRadius: '6px' }} onChange={() => handleSelectAll(filteredStores)} checked={selectedKeys.length === filteredStores.length && filteredStores.length > 0} /></th>}
                   <th style={{ padding: '15px 20px', fontSize: '0.8rem', fontWeight: '900', textTransform: 'uppercase' }}>Sede / Identificador</th>
                   <th style={{ padding: '15px 20px', fontSize: '0.8rem', fontWeight: '900', textTransform: 'uppercase' }}>Periodo de Operación</th>
                   <th style={{ padding: '15px 20px', fontSize: '0.8rem', fontWeight: '900', textTransform: 'uppercase', textAlign: 'right' }}>Acción</th>
@@ -277,7 +278,7 @@ const ShiftApproval = ({ user }) => {
                    <div className="animate-pulse" style={{ color: activeColors.accent, fontWeight: '800' }}>Sincronizando registros...</div>
                 </td></tr> : filteredStores.length === 0 ? <tr><td colSpan="4" style={{ padding: '50px', textAlign: 'center', color: activeColors.textMuted }}>No se encontraron registros para los filtros aplicados.</td></tr> : filteredStores.map(store => (
                   <tr key={`${store.storeId}-${store.weekStart}`} style={{ background: activeColors.bg, transition: 'transform 0.2s' }} className="hover:scale-[1.005]">
-                    {activeTab === 'PENDING' && <td style={{ padding: '15px 20px' }}><input type="checkbox" style={{ width: '18px', height: '18px' }} checked={selectedKeys.includes(`${store.storeId}-${store.weekStart}`)} onChange={() => handleSelectStore(store)} /></td>}
+                    {activeTab === 'PENDIENTES' && <td style={{ padding: '15px 20px' }}><input type="checkbox" style={{ width: '18px', height: '18px' }} checked={selectedKeys.includes(`${store.storeId}-${store.weekStart}`)} onChange={() => handleSelectStore(store)} /></td>}
                     <td style={{ padding: '15px 20px' }}>
                       <div style={{ fontWeight: '900', color: activeColors.textMain, fontSize: '1.05rem' }}>{store.name}</div>
                       <div style={{ fontSize: '0.7rem', color: activeColors.textMuted, fontWeight: '700' }}>ID: {store.externalId} • {store.districtName}</div>
@@ -304,7 +305,7 @@ const ShiftApproval = ({ user }) => {
       {showCommentModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
           <div style={{ background: activeColors.card, padding: '30px', borderRadius: '25px', width: '400px' }}>
-            <h3 style={{ fontWeight: '950', marginBottom: '15px' }}>Rechazar Malla</h3>
+            <h3 style={{ fontWeight: '950', marginBottom: '15px' }}>Rechazar Turno</h3>
             <textarea value={rejectionComment} onChange={(e) => setRejectionComment(e.target.value)} style={{ width: '100%', height: '100px', borderRadius: '10px', padding: '10px' }} placeholder="Escribe el motivo..." />
             <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
               <button onClick={() => setShowCommentModal(false)} style={{ flex: 1, padding: '10px' }}>Cancelar</button>
@@ -318,10 +319,16 @@ const ShiftApproval = ({ user }) => {
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
           <div style={{ background: activeColors.card, padding: '30px', borderRadius: '25px', width: '400px', textAlign: 'center' }}>
             <h3 style={{ fontWeight: '950', marginBottom: '10px' }}>Aprobar Selección</h3>
-            <p>Se aprobarán {selectedKeys.length} mallas semanales.</p>
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <button onClick={() => setShowApprovalModal(false)} style={{ flex: 1, padding: '10px' }}>No, volver</button>
-              <button onClick={handleApprove} style={{ flex: 1, padding: '10px', background: activeColors.accent, color: 'white', border: 'none', borderRadius: '10px', fontWeight: '900' }}>Sí, Aprobar todo</button>
+            <p style={{ margin: '0 0 20px 0', fontSize: '0.9rem', color: activeColors.textMuted }}>Se aprobarán {selectedKeys.length} turnos semanales.</p>
+            <textarea 
+              value={approvalComment} 
+              onChange={(e) => setApprovalComment(e.target.value)} 
+              style={{ width: '100%', height: '100px', borderRadius: '15px', padding: '12px', border: `1.5px solid ${activeColors.border}`, background: 'rgba(0,0,0,0.02)', fontWeight: '600', marginBottom: '10px' }} 
+              placeholder="Comentario de aprobación (opcional)..." 
+            />
+            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+              <button onClick={() => setShowApprovalModal(false)} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: 'none', background: activeColors.accentSoft, color: activeColors.accent, fontWeight: '800' }}>Cancelar</button>
+              <button onClick={handleApprove} style={{ flex: 1, padding: '12px', background: activeColors.accent, color: 'white', border: 'none', borderRadius: '12px', fontWeight: '900' }}>Aprobar Todo</button>
             </div>
           </div>
         </div>

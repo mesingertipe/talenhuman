@@ -130,6 +130,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const [approvalComment, setApprovalComment] = useState('');
     const [isProcessingStatus, setIsProcessingStatus] = useState(false);
     const [syncPhase, setSyncPhase] = useState(0); // 0: Init, 1: Validating, 2: Syncing, 3: Notifying, 4: Done
+
+    // V19.0: Rule-Based ReadOnly Logic
+    const effectiveReadOnly = useMemo(() => {
+        if (readOnly) return true;
+        if (weeklyStatus.status === 'Approved') return true;
+        return false;
+    }, [readOnly, weeklyStatus.status]);
     const [isDragging, setIsDragging] = useState(false);
     const [dragSource, setDragSource] = useState(null);
     const [draggedData, setDraggedData] = useState(null);
@@ -1079,11 +1086,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     <>
                                         <div className={`w-3 h-3 rounded-full animate-pulse ${weeklyStatus.status === 'Approved' ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : (weeklyStatus.status === 'Rejected' ? 'bg-rose-500 shadow-[0_0_10px_#f43f5e]' : (weeklyStatus.status === 'Empty' ? 'bg-slate-300' : 'bg-amber-500 shadow-[0_0_10px_#f59e0b]'))}`}></div>
                                         <div className="flex flex-col leading-none">
-                                            <span className={`text-[9px] font-black uppercase tracking-[0.2em] mb-1.5 leading-none ${weeklyStatus.status === 'Approved' ? 'text-emerald-500' : (weeklyStatus.status === 'Rejected' ? 'text-rose-500' : 'text-slate-400')}`}>
-                                                {weeklyStatus.status === 'Approved' ? 'VALIDACIÓN COMPLETADA' : (weeklyStatus.status === 'Rejected' ? 'CORRECCIÓN REQUERIDA' : 'Status Semanal')}
+                                            <span className={`text-[9px] font-black uppercase tracking-[0.2em] mb-1.5 leading-none ${weeklyStatus.status === 'Approved' ? 'text-emerald-500' : (weeklyStatus.status === 'Rejected' ? 'text-rose-500' : (weeklyStatus.status === 'Published' ? 'text-amber-500' : 'text-slate-400'))}`}>
+                                                {weeklyStatus.status === 'Approved' ? 'VALIDACIÓN COMPLETADA' : (weeklyStatus.status === 'Rejected' ? 'CORRECCIÓN REQUERIDA' : (weeklyStatus.status === 'Published' ? 'PENDIENTE DE VALIDACIÓN' : 'Status Semanal'))}
                                             </span>
                                             <span className={`text-[13px] font-[1000] uppercase tracking-tighter ${weeklyStatus.status === 'Approved' ? 'text-emerald-600' : (weeklyStatus.status === 'Rejected' ? 'text-rose-600' : 'text-amber-600')}`}>
-                                                {weeklyStatus.status === 'Approved' ? 'SEMANA LISTA (OK)' : (weeklyStatus.status === 'Rejected' ? 'RECHAZADA / AJUSTAR' : (weeklyStatus.status === 'Empty' ? 'Personal Sin Turno' : 'Esperando Validación'))}
+                                                {weeklyStatus.status === 'Approved' ? 'SEMANA APROBADA (OK)' : (weeklyStatus.status === 'Rejected' ? 'RECHAZADA / AJUSTAR' : (weeklyStatus.status === 'Published' ? 'ESPERANDO APROBACIÓN' : (weeklyStatus.status === 'Empty' ? 'Personal Sin Turno' : 'Esperando Validación')))}
                                             </span>
                                         </div>
                                         {weeklyStatus.status === 'Approved' && <ShieldCheck size={18} className="text-emerald-500 ml-2" />}
@@ -1433,10 +1440,10 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                     return (
                                                         <td
                                                             key={di}
-                                                            onDragOver={e => !readOnly && e.preventDefault()}
-                                                            onDragEnter={e => !readOnly && e.currentTarget.classList.add('elite-drop-active')}
-                                                            onDragLeave={e => !readOnly && e.currentTarget.classList.remove('elite-drop-active')}
-                                                            onDrop={e => !readOnly && handleDropOnGrid(e, emp.id, day)}
+                                                            onDragOver={e => !effectiveReadOnly && e.preventDefault()}
+                                                            onDragEnter={e => !effectiveReadOnly && e.currentTarget.classList.add('elite-drop-active')}
+                                                            onDragLeave={e => !effectiveReadOnly && e.currentTarget.classList.remove('elite-drop-active')}
+                                                            onDrop={e => !effectiveReadOnly && handleDropOnGrid(e, emp.id, day)}
                                                             className="p-1 border-r dark:border-slate-800 transition-colors"
                                                         >
                                                             <div className="flex flex-col gap-1 min-h-[96px] justify-center">
@@ -1481,9 +1488,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                      
                                                                     return (
                                                                          <div key={si} 
-                                                                              draggable={!isLocked} 
+                                                                              draggable={!effectiveReadOnly && !isLocked} 
                                                                               onDragStart={e => {
-                                                                                  if (isLocked) {
+                                                                                  if (effectiveReadOnly || isLocked) {
                                                                                       e.preventDefault();
                                                                                       return;
                                                                                   }
@@ -1519,9 +1526,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                               }}
                                                                          >
                                                                              <div className="flex items-center gap-2 mb-0.5">
-                                                                                 {shift.status === 1 && <CheckCircle size={10} className="text-white" />}
-                                                                                 {shift.status === 2 && <XCircle size={10} className="text-white" />}
-                                                                                 {shift.status === 0 && <Clock size={10} className="text-white opacity-70" />}
+                                                                                 {shift.status === 6 && <CheckCircle size={10} className="text-white" />}
+                                                                                 {shift.status === 7 && <XCircle size={10} className="text-white" />}
+                                                                                 {shift.status === 5 && <Clock size={10} className="text-white opacity-70" />}
                                                                                  {isLocked && <Lock size={11} className="text-white opacity-70" />}
                                                                                  {att && <Activity size={12} className="text-white opacity-100 animate-pulse" />}
                                                                                  <span className="text-[7px] font-black uppercase tracking-[0.1em] opacity-80 leading-none">
@@ -1542,8 +1549,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                  })}
                                                                 {!nov && dayShifts.length === 0 && (
                                                                     <div onClick={() => {
-                                                                                 if (isLockedDay) {
-                                                                                     showToast("Turno bloqueado: Dato histórico", "info");
+                                                                                 if (effectiveReadOnly || isLockedDay) {
+                                                                                     showToast(isLockedDay ? "Dato histórico bloqueado" : "Control de cambios bloqueado (Semana Validada)", "info");
                                                                                      return;
                                                                                  }
                                                                                  setPendingEvent({ employeeId: emp.id, date: day, type: 'Turno', existingShift: null });
@@ -1694,7 +1701,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     <div style={{ width: '84px', height: '84px', background: '#fee2e2', color: '#ef4444', borderRadius: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 30px', transform: 'rotate(-5deg)', boxShadow: '0 20px 40px rgba(239, 68, 68, 0.15)' }}>
                                         <XCircle size={44} strokeWidth={2.5} />
                                     </div>
-                                    <h2 style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', letterSpacing: '-0.03em', margin: '0 0 10px' }}>Rechazar Malla</h2>
+                                    <h2 style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', letterSpacing: '-0.03em', margin: '0 0 10px' }}>Rechazar Turno</h2>
                                     <p style={{ color: '#94a3b8', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Solicitar corrección inmediata</p>
                                 </div>
                                 <div style={{ padding: '0 50px 50px' }}>
@@ -1937,7 +1944,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-white/5">
                                     <div className="flex flex-col text-left">
                                         <span className={`text-[12px] font-[1000] tracking-tight`} style={{ color: hoveredShiftData.borderCol }}>
-                                            {hoveredShiftData.att ? `TURNO ${hoveredShiftData.att.status === 0 ? 'CORRECTO' : (hoveredShiftData.att.status === 3 ? 'INCOMPLETO' : 'DESFASADO')}` : (hoveredShiftData.isDescanso ? 'DESCANSO' : (hoveredShiftData.isLocked ? 'TURNO SIN MARCACIONES' : 'PENDIENTE'))}
+                                            {hoveredShiftData.status === 6 ? 'TURNO APROBADO' : (hoveredShiftData.status === 7 ? 'TURNO RECHAZADO' : (hoveredShiftData.status === 5 ? 'PENDIENTE VALIDACIÓN' : (hoveredShiftData.att ? `TURNO ${hoveredShiftData.att.status === 0 ? 'CORRECTO' : (hoveredShiftData.att.status === 3 ? 'INCOMPLETO' : 'DESFASADO')}` : (hoveredShiftData.isDescanso ? 'DESCANSO' : (hoveredShiftData.isLocked ? 'SIN MARCACIONES' : 'REGISTRADO')))))}
                                         </span>
                                     </div>
                                     <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg`} style={{ backgroundColor: hoveredShiftData.borderCol, color: 'white' }}>
