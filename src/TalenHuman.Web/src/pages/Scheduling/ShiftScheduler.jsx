@@ -102,22 +102,20 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     // V18.8 Logic for initial date alignment
     useEffect(() => {
         if (initialDate) {
-            const requestedDate = new Date(initialDate);
-            requestedDate.setHours(0, 0, 0, 0); // Limpiar horas para precisión
-            
-            // Hallar el lunes de la semana de hoy (el 0 de offset)
-            const todayMonday = getMonday(0);
-            
-            // Hallar el lunes de la semana solicitada
-            const dayOfRequested = requestedDate.getDay() || 7;
-            const requestedMonday = new Date(requestedDate);
-            requestedMonday.setDate(requestedDate.getDate() - dayOfRequested + 1);
+            // V19.5: PARSEO LITERAL - Usar la 'Llave Maestra' del padre sin transformaciones
+            const parts = initialDate.split('T')[0].split('-');
+            const requestedMonday = new Date(parts[0], parts[1] - 1, parts[2]);
             requestedMonday.setHours(0, 0, 0, 0);
+            
+            // Establecer como estado actual inmediatamente para evitar discrepancias
+            setCurrentWeekStart(requestedMonday);
+            
+            // Hallar el lunes de hoy para sincronizar el offset UI
+            const todayMonday = getMonday(0);
+            todayMonday.setHours(0, 0, 0, 0);
 
-            // Calcular diferencia de semanas exacta
             const diffTime = requestedMonday - todayMonday;
             const diffWeeks = Math.round(diffTime / (1000 * 60 * 60 * 24 * 7));
-            
             setWeekOffset(diffWeeks);
         }
     }, [initialDate]);
@@ -230,8 +228,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const toLocalISO = (date) => {
         if (!date) return null;
         const d = new Date(date);
-        const offset = d.getTimezoneOffset() * 60000;
-        return new Date(d - offset).toISOString().slice(0, -1);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        // V19.5: Retornar solo la llave de fecha (YYYY-MM-DD) para alineación con backend
+        return `${y}-${m}-${day}`;
     };
 
     const formatHours = (hours) => {
@@ -1074,7 +1075,6 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     placeholder="TODOS LOS PUESTOS..."
                                     icon={ShieldCheck}
                                     variant="minimal"
-                                    disabled={readOnly}
                                 />
                             </div>
 
@@ -1346,14 +1346,24 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     </div>
                 
                 {/* 3. Grid V12.20 Elite Classic */}
-                <div className="card shadow-[0_40px_100px_rgba(0,0,0,0.12)] bg-white dark:bg-slate-900 border-2 dark:border-slate-800" style={{ borderRadius: '48px', overflow: 'hidden' }}>
-                    {loading ? (
-                        <div className="py-48 text-center text-slate-400">
-                            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-indigo-600 mx-auto mb-8"></div>
-                            <p className="font-black text-[12px] uppercase tracking-[0.4em] animate-pulse">Sincronizando Nómina V12.20...</p>
+                <div className="card shadow-[0_40px_100px_rgba(0,0,0,0.12)] bg-white dark:bg-slate-900 border-2 dark:border-slate-800 relative" style={{ borderRadius: '48px', overflow: 'hidden', minHeight: '600px' }}>
+                    {loading && (
+                        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-white/60 dark:bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-500">
+                            <div className="text-center">
+                                <div className="relative w-24 h-24 mx-auto mb-8">
+                                    <div className="absolute inset-0 rounded-full border-4 border-indigo-500/10 dark:border-indigo-400/10"></div>
+                                    <div className="absolute inset-0 rounded-full border-4 border-indigo-600 dark:border-indigo-400 border-t-transparent animate-spin"></div>
+                                    <div className="absolute inset-0 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                                        <Activity size={32} className="animate-pulse" />
+                                    </div>
+                                </div>
+                                <h3 className="text-xl font-[1000] text-slate-800 dark:text-white uppercase tracking-[0.2em] mb-2">Sincronizando Nómina</h3>
+                                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.4em] animate-pulse">Optimizando registros Elite V12.20</p>
+                            </div>
                         </div>
-                    ) : (
-                        <div className="overflow-x-auto">
+                    )}
+                    
+                    <div className="overflow-x-auto">
                             <footer className="mt-8 mb-4">
                                 <div className="version-tag-subtle">V12.20</div>
                             </footer>

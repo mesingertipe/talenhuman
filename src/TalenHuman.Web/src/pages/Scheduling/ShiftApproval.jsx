@@ -186,7 +186,7 @@ const ShiftApproval = ({ user }) => {
             </button>
          </div>
          <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '32px' }}>
-            <div style={{ background: activeColors.card, borderRadius: '32px', border: `1.5px solid ${activeColors.border}`, overflow: 'hidden', padding: '1rem', marginRight: showHistoryDrawer ? '400px' : '0', transition: 'margin 0.4s ease' }}>
+                        <div key={`${inspectedStore.storeId}-${inspectedStore.weekStart}`} style={{ background: activeColors.card, borderRadius: '32px', border: `1.5px solid ${activeColors.border}`, overflow: 'hidden', padding: '1rem', marginRight: showHistoryDrawer ? '400px' : '0', transition: 'margin 0.4s ease' }}>
                             <ShiftScheduler user={user} readOnly={true} forceApprover={true} initialStoreId={inspectedStore.storeId} initialDate={inspectedStore.weekStart} />
             </div>
             <div style={{ position: 'absolute', right: showHistoryDrawer ? '0' : '-450px', top: '0', bottom: '0', width: '380px', background: isDarkMode ? '#1e293b' : '#f8fafc', borderRadius: '32px', borderLeft: `2px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`, padding: '28px', transition: 'right 0.4s ease', zIndex: 50, overflowY: 'auto' }}>
