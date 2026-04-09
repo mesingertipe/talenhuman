@@ -163,7 +163,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     });
 
     useEffect(() => {
-        setCurrentWeekStart(getMonday(weekOffset));
+        const newMonday = getMonday(weekOffset);
+        setCurrentWeekStart(prev => {
+            if (prev && prev.getTime() === newMonday.getTime()) return prev;
+            return newMonday;
+        });
     }, [weekOffset]);
 
     useEffect(() => {
@@ -173,10 +177,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             let filteredStores = res.data.filter(s => s.isActive);
             setStores(filteredStores);
 
-            // V18.8.4: BLINDAJE DE INSPECCIÓN - Evitar sobreescritura automática de la sede
+            // V12.24: BLINDAJE DE INSPECCIÓN - Evitar sobreescritura automática de la sede
             if (initialStoreId) {
-                // Solo actualizamos si es diferente para evitar ciclos
-                setSelectedStore(prev => prev === initialStoreId ? prev : initialStoreId);
+                // No llamamos a setSelectedStore si ya es el valor inicial
                 return;
             }
 
