@@ -187,7 +187,7 @@ const ShiftApproval = ({ user }) => {
          </div>
          <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '32px' }}>
             <div style={{ background: activeColors.card, borderRadius: '32px', border: `1.5px solid ${activeColors.border}`, overflow: 'hidden', padding: '1rem', marginRight: showHistoryDrawer ? '400px' : '0', transition: 'margin 0.4s ease' }}>
-              <ShiftScheduler user={user} readOnly={activeTab !== 'PENDIENTES'} forceApprover={true} initialStoreId={inspectedStore.storeId} initialDate={inspectedStore.weekStart} />
+                            <ShiftScheduler user={user} readOnly={true} forceApprover={true} initialStoreId={inspectedStore.storeId} initialDate={inspectedStore.weekStart} />
             </div>
             <div style={{ position: 'absolute', right: showHistoryDrawer ? '0' : '-450px', top: '0', bottom: '0', width: '380px', background: isDarkMode ? '#1e293b' : '#f8fafc', borderRadius: '32px', borderLeft: `2px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`, padding: '28px', transition: 'right 0.4s ease', zIndex: 50, overflowY: 'auto' }}>
                <h3 style={{ fontSize: '1.1rem', fontWeight: '950', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}><ShieldCheck size={20} /> Auditoría</h3>
@@ -259,8 +259,8 @@ const ShiftApproval = ({ user }) => {
             </div>
           </div>
           <div style={{ display: 'flex', gap: '10px', marginBottom: '2.5rem' }}>
-            {['PENDIENTES', 'APROBADOS', 'RECHAZADOS'].map(tID => (
-              <button key={tID} onClick={() => setActiveTab(tID)} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', fontWeight: '900', background: activeTab === tID ? activeColors.accent : activeColors.card, color: activeTab === tID ? 'white' : activeColors.textMuted, cursor: 'pointer' }}>{tID}</button>
+            {['Pendientes', 'Aprobados', 'Rechazados'].map(tID => (
+              <button key={tID.toUpperCase()} onClick={() => setActiveTab(tID.toUpperCase())} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', fontWeight: '900', background: activeTab === tID.toUpperCase() ? activeColors.accent : activeColors.card, color: activeTab === tID.toUpperCase() ? 'white' : activeColors.textMuted, cursor: 'pointer' }}>{tID}</button>
             ))}
           </div>
           <div style={{ background: activeColors.card, borderRadius: '25px', border: `1.5px solid ${activeColors.border}`, overflow: 'hidden' }}>
@@ -268,9 +268,9 @@ const ShiftApproval = ({ user }) => {
               <thead>
                 <tr style={{ textAlign: 'left', color: activeColors.textMuted }}>
                   {activeTab === 'PENDIENTES' && <th style={{ padding: '15px 20px' }}><input type="checkbox" style={{ width: '18px', height: '18px', borderRadius: '6px' }} onChange={() => handleSelectAll(filteredStores)} checked={selectedKeys.length === filteredStores.length && filteredStores.length > 0} /></th>}
-                  <th style={{ padding: '15px 20px', fontSize: '0.8rem', fontWeight: '900', textTransform: 'uppercase' }}>Sede / Identificador</th>
-                  <th style={{ padding: '15px 20px', fontSize: '0.8rem', fontWeight: '900', textTransform: 'uppercase' }}>Periodo de Operación</th>
-                  <th style={{ padding: '15px 20px', fontSize: '0.8rem', fontWeight: '900', textTransform: 'uppercase', textAlign: 'right' }}>Acción</th>
+                  <th style={{ padding: '15px 20px', fontSize: '0.8rem', fontWeight: '900', textTransform: 'uppercase' }}>Sede / Auditoría</th>
+                  <th style={{ padding: '15px 20px', fontSize: '0.8rem', fontWeight: '900', textTransform: 'uppercase' }}>Periodo Operativo</th>
+                  <th style={{ padding: '15px 20px', fontSize: '0.8rem', fontWeight: '900', textTransform: 'uppercase', textAlign: 'right' }}>Análisis</th>
                 </tr>
               </thead>
               <tbody>
@@ -281,11 +281,21 @@ const ShiftApproval = ({ user }) => {
                     {activeTab === 'PENDIENTES' && <td style={{ padding: '15px 20px' }}><input type="checkbox" style={{ width: '18px', height: '18px' }} checked={selectedKeys.includes(`${store.storeId}-${store.weekStart}`)} onChange={() => handleSelectStore(store)} /></td>}
                     <td style={{ padding: '15px 20px' }}>
                       <div style={{ fontWeight: '900', color: activeColors.textMain, fontSize: '1.05rem' }}>{store.name}</div>
-                      <div style={{ fontSize: '0.7rem', color: activeColors.textMuted, fontWeight: '700' }}>ID: {store.externalId} • {store.districtName}</div>
+                      <div style={{ fontSize: '0.75rem', color: activeColors.accent, fontWeight: '900', marginTop: '2px' }}>
+                        POR: {store.authorName || 'SISTEMA'} ({store.authorProfile || 'GERENTE'})
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: activeColors.textMuted, fontWeight: '700' }}>
+                        ID: {store.externalId} • {store.districtName}
+                      </div>
                     </td>
                     <td style={{ padding: '15px 20px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '800', color: activeColors.textMain }}>
-                        <Calendar size={14} /> {formatDateRange(store.minDate, store.maxDate)}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '800', color: activeColors.textMain }}>
+                          <Calendar size={14} className="text-indigo-500" /> {formatDateRange(store.minDate, store.maxDate)}
+                        </div>
+                        <div style={{ fontSize: '0.65rem', color: activeColors.textMuted, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Clock size={10} /> REGISTRO: {new Date(store.lastUploadAt).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </div>
                       </div>
                     </td>
                     <td style={{ padding: '15px 20px', textAlign: 'right' }}>
@@ -301,38 +311,87 @@ const ShiftApproval = ({ user }) => {
         </>
       )}
 
-      {/* MODALS */}
-      {showCommentModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
-          <div style={{ background: activeColors.card, padding: '30px', borderRadius: '25px', width: '400px' }}>
-            <h3 style={{ fontWeight: '950', marginBottom: '15px' }}>Rechazar Turno</h3>
-            <textarea value={rejectionComment} onChange={(e) => setRejectionComment(e.target.value)} style={{ width: '100%', height: '100px', borderRadius: '10px', padding: '10px' }} placeholder="Escribe el motivo..." />
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <button onClick={() => setShowCommentModal(false)} style={{ flex: 1, padding: '10px' }}>Cancelar</button>
-              <button onClick={handleReject} style={{ flex: 1, padding: '10px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '900' }}>Confirmar Rechazo</button>
+            {showCommentModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: isDarkMode ? 'rgba(15, 23, 42, 0.8)' : 'rgba(30,30,60,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)' }} className="animate-in fade-in duration-300">
+          <div style={{ background: activeColors.card, padding: '40px', borderRadius: '40px', width: '450px', boxShadow: '0 40px 100px rgba(0,0,0,0.2)', border: `1px solid ${activeColors.border}` }} className="animate-in zoom-in-95 duration-300">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px' }}>
+              <div style={{ width: '50px', height: '50px', background: '#fee2e2', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444' }}>
+                <AlertCircle size={26} strokeWidth={2.5} />
+              </div>
+              <div>
+                <h3 style={{ fontWeight: '1000', fontSize: '1.4rem', color: activeColors.textMain, margin: 0, letterSpacing: '-0.02em' }}>Rechazar Turno</h3>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: activeColors.textMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Se requiere un motivo para el ajuste</p>
+              </div>
+            </div>
+            
+            <textarea 
+              value={rejectionComment} 
+              onChange={(e) => setRejectionComment(e.target.value)} 
+              style={{ width: '100%', height: '140px', borderRadius: '24px', padding: '20px', border: `2px solid ${activeColors.border}`, background: isDarkMode ? 'rgba(0,0,0,0.2)' : '#f8fafc', color: activeColors.textMain, fontWeight: '700', fontSize: '0.95rem', outline: 'none', transition: 'all 0.2s', resize: 'none' }} 
+              placeholder="Escribe el motivo detallado del rechazo..." 
+              className="focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 placeholder:text-slate-400"
+            />
+            
+            <div style={{ display: 'flex', gap: '16px', marginTop: '30px' }}>
+              <button 
+                onClick={() => setShowCommentModal(false)} 
+                style={{ flex: 1, height: '60px', borderRadius: '20px', border: `2px solid ${activeColors.border}`, background: 'transparent', color: activeColors.textMuted, fontWeight: '950', fontSize: '0.85rem', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.2s' }}
+                className="hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleReject} 
+                style={{ flex: 1, height: '60px', padding: '10px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '20px', fontWeight: '950', fontSize: '0.85rem', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 30px rgba(239, 68, 68, 0.3)', transition: 'all 0.2s' }}
+                className="hover:bg-rose-600 hover:scale-[1.02] active:scale-95"
+              >
+                Confirmar Rechazo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showApprovalModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: isDarkMode ? 'rgba(15, 23, 42, 0.8)' : 'rgba(30,30,60,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(12px)' }} className="animate-in fade-in duration-300">
+          <div style={{ background: activeColors.card, padding: '40px', borderRadius: '40px', width: '450px', boxShadow: '0 40px 100px rgba(0,0,0,0.2)', border: `1px solid ${activeColors.border}` }} className="animate-in zoom-in-95 duration-300">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px' }}>
+              <div style={{ width: '50px', height: '50px', background: activeColors.accentSoft, borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.accent }}>
+                <ShieldCheck size={26} strokeWidth={2.5} />
+              </div>
+              <div>
+                <h3 style={{ fontWeight: '1000', fontSize: '1.4rem', color: activeColors.textMain, margin: 0, letterSpacing: '-0.02em' }}>Aprobar Selección</h3>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: activeColors.textMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Se validarán {selectedKeys.length} registros semanales</p>
+              </div>
+            </div>
+
+            <textarea 
+              value={approvalComment} 
+              onChange={(e) => setApprovalComment(e.target.value)} 
+              style={{ width: '100%', height: '140px', borderRadius: '24px', padding: '20px', border: `2px solid ${activeColors.border}`, background: isDarkMode ? 'rgba(0,0,0,0.2)' : '#f8fafc', color: activeColors.textMain, fontWeight: '700', fontSize: '0.95rem', outline: 'none', transition: 'all 0.2s', resize: 'none' }} 
+              placeholder="Comentario de aprobación (opcional)..." 
+              className="focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-slate-400"
+            />
+
+            <div style={{ display: 'flex', gap: '16px', marginTop: '30px' }}>
+              <button 
+                onClick={() => setShowApprovalModal(false)} 
+                style={{ flex: 1, height: '60px', borderRadius: '20px', border: `2px solid ${activeColors.border}`, background: 'transparent', color: activeColors.textMuted, fontWeight: '950', fontSize: '0.85rem', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.2s' }}
+                className="hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95"
+              >
+                Regresar
+              </button>
+              <button 
+                onClick={handleApprove} 
+                style={{ flex: 1, height: '60px', background: activeColors.accent, color: 'white', border: 'none', borderRadius: '20px', fontWeight: '950', fontSize: '0.85rem', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 30px rgba(79, 70, 229, 0.3)', transition: 'all 0.2s' }}
+                className="hover:bg-indigo-700 hover:scale-[1.02] active:scale-95"
+              >
+                Aprobar Todo
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {showApprovalModal && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
-          <div style={{ background: activeColors.card, padding: '30px', borderRadius: '25px', width: '400px', textAlign: 'center' }}>
-            <h3 style={{ fontWeight: '950', marginBottom: '10px' }}>Aprobar Selección</h3>
-            <p style={{ margin: '0 0 20px 0', fontSize: '0.9rem', color: activeColors.textMuted }}>Se aprobarán {selectedKeys.length} turnos semanales.</p>
-            <textarea 
-              value={approvalComment} 
-              onChange={(e) => setApprovalComment(e.target.value)} 
-              style={{ width: '100%', height: '100px', borderRadius: '15px', padding: '12px', border: `1.5px solid ${activeColors.border}`, background: 'rgba(0,0,0,0.02)', fontWeight: '600', marginBottom: '10px' }} 
-              placeholder="Comentario de aprobación (opcional)..." 
-            />
-            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-              <button onClick={() => setShowApprovalModal(false)} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: 'none', background: activeColors.accentSoft, color: activeColors.accent, fontWeight: '800' }}>Cancelar</button>
-              <button onClick={handleApprove} style={{ flex: 1, padding: '12px', background: activeColors.accent, color: 'white', border: 'none', borderRadius: '12px', fontWeight: '900' }}>Aprobar Todo</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ELITE PROGRESS MONITOR portal */}
       {processing && syncPhase > 0 && createPortal(

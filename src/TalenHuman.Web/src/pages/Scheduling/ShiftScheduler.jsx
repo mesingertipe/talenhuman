@@ -131,7 +131,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const [isProcessingStatus, setIsProcessingStatus] = useState(false);
     const [syncPhase, setSyncPhase] = useState(0); // 0: Init, 1: Validating, 2: Syncing, 3: Notifying, 4: Done
 
-    // V19.0: Rule-Based ReadOnly Logic
+    // V19.2: BLINDAJE DE SEGURIDAD ELITE - Modo Inspección Auditoría
     const effectiveReadOnly = useMemo(() => {
         if (readOnly) return true;
         if (weeklyStatus.status === 'Approved') return true;
@@ -1087,10 +1087,10 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         <div className={`w-3 h-3 rounded-full animate-pulse ${weeklyStatus.status === 'Approved' ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : (weeklyStatus.status === 'Rejected' ? 'bg-rose-500 shadow-[0_0_10px_#f43f5e]' : (weeklyStatus.status === 'Empty' ? 'bg-slate-300' : 'bg-amber-500 shadow-[0_0_10px_#f59e0b]'))}`}></div>
                                         <div className="flex flex-col leading-none">
                                             <span className={`text-[9px] font-black uppercase tracking-[0.2em] mb-1.5 leading-none ${weeklyStatus.status === 'Approved' ? 'text-emerald-500' : (weeklyStatus.status === 'Rejected' ? 'text-rose-500' : (weeklyStatus.status === 'Published' ? 'text-amber-500' : 'text-slate-400'))}`}>
-                                                {weeklyStatus.status === 'Approved' ? 'VALIDACIÓN COMPLETADA' : (weeklyStatus.status === 'Rejected' ? 'CORRECCIÓN REQUERIDA' : (weeklyStatus.status === 'Published' ? 'PENDIENTE DE VALIDACIÓN' : 'Status Semanal'))}
+                                                {weeklyStatus.status === 'Approved' ? 'VALIDACIÓN COMPLETADA' : (weeklyStatus.status === 'Rejected' ? 'CORRECCIÓN REQUERIDA' : (weeklyStatus.status === 'Published' || weeklyStatus.status === 'Published' ? 'PENDIENTE DE VALIDACIÓN' : 'Status Semanal'))}
                                             </span>
                                             <span className={`text-[13px] font-[1000] uppercase tracking-tighter ${weeklyStatus.status === 'Approved' ? 'text-emerald-600' : (weeklyStatus.status === 'Rejected' ? 'text-rose-600' : 'text-amber-600')}`}>
-                                                {weeklyStatus.status === 'Approved' ? 'SEMANA APROBADA (OK)' : (weeklyStatus.status === 'Rejected' ? 'RECHAZADA / AJUSTAR' : (weeklyStatus.status === 'Published' ? 'ESPERANDO APROBACIÓN' : (weeklyStatus.status === 'Empty' ? 'Personal Sin Turno' : 'Esperando Validación')))}
+                                                {weeklyStatus.status === 'Approved' ? 'SEMANA APROBADA (OK)' : (weeklyStatus.status === 'Rejected' ? 'RECHAZADA / AJUSTAR' : (weeklyStatus.status === 'Published' || weeklyStatus.status === 'Published' ? 'ESPERANDO APROBACIÓN' : (weeklyStatus.status === 'Empty' ? 'Personal Sin Turno' : 'Esperando Validación')))}
                                             </span>
                                         </div>
                                         {weeklyStatus.status === 'Approved' && <ShieldCheck size={18} className="text-emerald-500 ml-2" />}
@@ -1113,7 +1113,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                              style={{ borderRadius: '40px' }}>
                             
                             {/* Lado Izquierdo: Acciones Masivas (flex-1 para empujar) */}
-                            {!readOnly && (
+                            {!effectiveReadOnly && (
                                 <div className="flex-1 flex justify-start pl-2">
                                     <button onClick={() => setShowBulkModal(true)}
                                             disabled={selectedEmployees.length === 0}
@@ -1134,7 +1134,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             {/* Centro: Navegación Central (Ancho Fijo para Centrado Real) */}
                             <div className="flex-shrink-0 flex items-center">
                                 <div className="w-[1px] h-8 bg-slate-100 dark:bg-slate-800 mr-4"></div>
-                                {!readOnly && (
+                                {!effectiveReadOnly && (
                                     <button onClick={() => setWeekOffset(prev => prev - 1)} 
                                             className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-2xl transition-all active:scale-90" 
                                             data-v12-tooltip="Semana Anterior"><ChevronLeft size={22} strokeWidth={3} /></button>
@@ -1147,7 +1147,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     </span>
                                 </div>
 
-                                {!readOnly && (
+                                {!effectiveReadOnly && (
                                     <button onClick={() => setWeekOffset(prev => prev + 1)} 
                                             className="p-3 text-slate-400 hover:text-indigo-500 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-2xl transition-all active:scale-90" 
                                             data-v12-tooltip="Semana Siguiente"><ChevronRight size={22} strokeWidth={3} /></button>
@@ -1178,7 +1178,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
                                 <div className="w-[1px] h-8 bg-slate-100 dark:bg-slate-800 hidden xl:block"></div>
 
-                                {!readOnly && (
+                                {!effectiveReadOnly && (
                                     <button className="flex items-center gap-3 px-6 h-[56px] bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 rounded-[30px] transition-all active:scale-95 hover:bg-white dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-100 dark:hover:border-indigo-900 group"
                                             data-v12-tooltip="Carga Inteligente de Turnos Proyectados">
                                         <Sparkles size={18} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform" />
@@ -1264,7 +1264,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             </div>
                             <div className="flex-shrink-0">
                                 <div className="text-[10px] font-black px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full uppercase tracking-tighter">
-                                    {weeklyStatus?.status === 'Approved' ? '✅ APROBACIÓN FINAL' : 'Sincronizado con Reporte PDF'}
+                                    {weeklyStatus?.status === 'Approved' ? 'SEMANA CERRADA' : 'MODO INSPECCIÓN'}
                                 </div>
                             </div>
                         </div>
@@ -1272,7 +1272,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
                     {/* Fila 2: Command Center Ultra-Visibilidad V12.20 (Espaciado e Impacto) */}
                     <div className="no-print w-full flex flex-col xl:flex-row items-center justify-between gap-16 bg-white dark:bg-slate-900 shadow-xl p-8 border-[1px] border-slate-200 dark:border-slate-800" style={{ borderRadius: '48px' }}>
-                        {!readOnly && (
+                        {!effectiveReadOnly && (
                             <div className="flex flex-wrap items-center justify-center lg:justify-start p-8 bg-slate-50/50 dark:bg-slate-800/20 border-[1px] border-slate-200 dark:border-slate-700/50" 
                                  style={{ borderRadius: '24px', gap: '2rem' }}>
                                 {[
@@ -1331,7 +1331,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 <FileDown size={22} className="group-hover:scale-110 transition-transform" />
                                 <span className="text-[9px] font-black uppercase tracking-widest">PDF</span>
                             </button>
-                            {!readOnly && (
+                            {!effectiveReadOnly && (
                                 <>
                                     <button onClick={copyFromPreviousWeek} className="flex-shrink-0 bg-indigo-600 text-white flex flex-col items-center justify-center gap-1 hover:bg-indigo-700 transition-all group shadow-md" style={{ width: '96px', height: '64px', borderRadius: '16px' }} data-v12-tooltip="Copiar toda la programación de la semana anterior">
                                         <CopyIcon size={22} className="group-hover:scale-110 transition-transform" />
