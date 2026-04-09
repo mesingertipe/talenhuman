@@ -65,7 +65,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const [news, setNews] = useState([]);
     const [stores, setStores] = useState([]);
     const [selectedStore, setSelectedStore] = useState(initialStoreId || '');
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(!!initialStoreId || !!approvalId);
     const [isSaving, setIsSaving] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const [exportUrl, setExportUrl] = useState('');

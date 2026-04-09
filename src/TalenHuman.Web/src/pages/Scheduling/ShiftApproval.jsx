@@ -49,6 +49,7 @@ const ShiftApproval = ({ user }) => {
       if (activeTab === 'APROBADOS') status = 6;
       if (activeTab === 'RECHAZADOS') status = 7;
       const res = await api.get(`/ShiftApproval/stores?status=${status}`);
+      // Mapear weekStart a weekStartDate si es necesario o simplemente usar el nombre del backend
       setStores(res.data);
     } catch (err) { console.error(err); showToast('Error al sincronizar consola', 'error'); } 
     finally { setLoading(false); }
@@ -60,13 +61,13 @@ const ShiftApproval = ({ user }) => {
   };
 
   const handleSelectStore = (store) => {
-    const key = `${store.storeId}-${store.weekStart}`;
+    const key = `${store.storeId}-${store.weekStartDate}`;
     setSelectedKeys(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
   };
 
   const handleSelectAll = (fStores) => {
     if (selectedKeys.length === fStores.length && fStores.length > 0) { setSelectedKeys([]); } 
-    else { setSelectedKeys(fStores.map(s => `${s.storeId}-${s.weekStart}`)); }
+    else { setSelectedKeys(fStores.map(s => `${s.storeId}-${s.weekStartDate}`)); }
   };
 
   const delay = (ms) => new Promise(res => setTimeout(res, ms));
@@ -77,12 +78,12 @@ const ShiftApproval = ({ user }) => {
       setProcessing(true); setSyncPhase(1); await delay(600);
       for (const key of selectedKeys) {
         setSyncPhase(2);
-        const [storeId, weekStart] = key.split('-');
-        const storeData = stores.find(s => s.storeId === storeId && s.weekStart === weekStart);
+        const [storeId, weekStartDate] = key.split('-');
+        const storeData = stores.find(s => s.storeId === storeId && s.weekStartDate === weekStartDate);
         if (storeData) {
-          const exclusiveEnd = getExclusiveEndDate(storeData.weekStart);
+          const exclusiveEnd = getExclusiveEndDate(storeData.weekStartDate);
           await api.post('/ShiftApproval/approve', {
-            storeId: storeId, startDate: storeData.weekStart, endDate: exclusiveEnd,
+            storeId: storeId, startDate: storeData.weekStartDate, endDate: exclusiveEnd,
             comment: approvalComment || "Aprobación masiva desde consola"
           });
         }
@@ -101,12 +102,12 @@ const ShiftApproval = ({ user }) => {
       setProcessing(true); setSyncPhase(1); await delay(600);
       for (const key of selectedKeys) {
         setSyncPhase(2);
-        const [storeId, weekStart] = key.split('-');
-        const storeData = stores.find(s => s.storeId === storeId && s.weekStart === weekStart);
+        const [storeId, weekStartDate] = key.split('-');
+        const storeData = stores.find(s => s.storeId === storeId && s.weekStartDate === weekStartDate);
         if (storeData) {
-          const exclusiveEnd = getExclusiveEndDate(storeData.weekStart);
+          const exclusiveEnd = getExclusiveEndDate(storeData.weekStartDate);
           await api.post('/ShiftApproval/reject', { 
-            storeId: storeId, startDate: storeData.weekStart, endDate: exclusiveEnd,
+            storeId: storeId, startDate: storeData.weekStartDate, endDate: exclusiveEnd,
             comment: rejectionComment 
           });
         }
@@ -126,9 +127,9 @@ const ShiftApproval = ({ user }) => {
     } catch { return "Periodo no definido"; }
   };
 
-  const getExclusiveEndDate = (weekStart) => {
+  const getExclusiveEndDate = (weekStartDate) => {
     try {
-      const start = new Date(weekStart); const end = new Date(start);
+      const start = new Date(weekStartDate); const end = new Date(start);
       end.setDate(start.getDate() + 7);
       const offset = end.getTimezoneOffset();
       const localEnd = new Date(end.getTime() - (offset * 60 * 1000));
@@ -161,7 +162,7 @@ const ShiftApproval = ({ user }) => {
   const fetchHistory = async () => {
     try {
       setFetchingHistory(true);
-      const res = await api.get(`/ShiftApproval/status?storeId=${inspectedStore.storeId}&startDate=${inspectedStore.weekStart}`);
+      const res = await api.get(`/ShiftApproval/status?storeId=${inspectedStore.storeId}&startDate=${inspectedStore.weekStartDate}`);
       setHistory(res.data.history || []);
     } catch (err) { console.error("Error fetching audit trail", err); } 
     finally { setFetchingHistory(false); }
@@ -186,8 +187,8 @@ const ShiftApproval = ({ user }) => {
             </button>
          </div>
          <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '32px' }}>
-                        <div key={`${inspectedStore.storeId}-${inspectedStore.weekStart}`} style={{ background: activeColors.card, borderRadius: '32px', border: `1.5px solid ${activeColors.border}`, overflow: 'hidden', padding: '1rem', marginRight: showHistoryDrawer ? '400px' : '0', transition: 'margin 0.4s ease' }}>
-                            <ShiftScheduler user={user} readOnly={true} forceApprover={true} initialStoreId={inspectedStore.storeId} initialDate={inspectedStore.weekStart} approvalId={inspectedStore.id} />
+                        <div key={inspectedStore.id} style={{ background: activeColors.card, borderRadius: '32px', border: `1.5px solid ${activeColors.border}`, overflow: 'hidden', padding: '1rem', marginRight: showHistoryDrawer ? '400px' : '0', transition: 'margin 0.4s ease' }}>
+                            <ShiftScheduler user={user} readOnly={true} forceApprover={true} initialStoreId={inspectedStore.storeId} initialDate={inspectedStore.weekStartDate} approvalId={inspectedStore.id} />
             </div>
             <div style={{ position: 'absolute', right: showHistoryDrawer ? '0' : '-450px', top: '0', bottom: '0', width: '380px', background: isDarkMode ? '#1e293b' : '#f8fafc', borderRadius: '32px', borderLeft: `2px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`, padding: '28px', transition: 'right 0.4s ease', zIndex: 50, overflowY: 'auto' }}>
                <h3 style={{ fontSize: '1.1rem', fontWeight: '950', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}><ShieldCheck size={20} /> Auditoría</h3>
