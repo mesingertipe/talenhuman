@@ -148,7 +148,15 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         return monday;
     };
 
-    const [currentWeekStart, setCurrentWeekStart] = useState(getMonday(0));
+    const [currentWeekStart, setCurrentWeekStart] = useState(() => {
+        if (initialDate) {
+            const parts = initialDate.split('T')[0].split('-');
+            const date = new Date(parts[0], parts[1] - 1, parts[2]);
+            date.setHours(0, 0, 0, 0);
+            return date;
+        }
+        return getMonday(0);
+    });
 
     useEffect(() => {
         setCurrentWeekStart(getMonday(weekOffset));
@@ -221,13 +229,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             setWeeklyStatus(res.data);
 
             // V19.8: Sincronización Maestra - Si consultamos por ID, la fecha de la DB es la LEY
-            if (approvalId && res.data.WeekStart) {
-                const dbDate = new Date(res.data.WeekStart);
+            if (approvalId && res.data.weekStartDate) {
+                const dbDate = new Date(res.data.weekStartDate);
                 if (dbDate.getTime() !== currentWeekStart.getTime()) {
                     setCurrentWeekStart(dbDate);
                 }
-                if (res.data.StoreId && res.data.StoreId !== selectedStore) {
-                    setSelectedStore(res.data.StoreId);
+                if (res.data.storeId && res.data.storeId !== selectedStore) {
+                    setSelectedStore(res.data.storeId);
                 }
             }
         } catch (err) {

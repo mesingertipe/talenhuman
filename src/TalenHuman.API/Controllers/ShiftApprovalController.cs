@@ -71,14 +71,16 @@ public class ShiftApprovalController : ControllerBase
 
         var masterRecords = await query
             .Select(a => new {
-                a.Id,
-                a.StoreId,
-                a.Store.Name,
-                a.Store.ExternalId,
-                DistrictName = a.Store.District != null ? a.Store.District.Name : "SIN DISTRITO",
-                a.WeekStartDate,
-                a.LatestComment,
-                a.LatestActionAt
+                id = a.Id,
+                storeId = a.StoreId,
+                name = a.Store.Name,
+                externalId = a.Store.ExternalId,
+                districtName = a.Store.District != null ? a.Store.District.Name : "SIN DISTRITO",
+                weekStartDate = a.WeekStartDate,
+                minDate = a.WeekStartDate,
+                maxDate = a.WeekStartDate.AddDays(6),
+                latestComment = a.LatestComment,
+                latestActionAt = a.LatestActionAt
             })
             .ToListAsync();
 
@@ -214,22 +216,22 @@ public class ShiftApprovalController : ControllerBase
         }
 
         if (approval == null) 
-            return Ok(new { Status = "Empty", Message = "Sin registro de aprobación maestro." });
+            return Ok(new { status = "Empty", message = "Sin registro de aprobación maestro." });
 
-        var history = approval.Logs.OrderBy(logEntry => logEntry.ActionAt).Select(logEntry => new {
-            logEntry.Action,
-            logEntry.Comment,
-            logEntry.ActionAt,
-            UserName = logEntry.User.FullName
+        var history = approval.Logs.OrderByDescending(logEntry => logEntry.ActionAt).Select(logEntry => new {
+            action = logEntry.Action,
+            comment = logEntry.Comment,
+            date = logEntry.ActionAt,
+            user = logEntry.User.FullName
         }).ToList();
 
         return Ok(new { 
-            Status = approval.Status.ToString(), 
-            Date = approval.LatestActionAt,
-            Comment = approval.LatestComment,
-            History = history,
-            StoreId = approval.StoreId,
-            WeekStart = approval.WeekStartDate
+            status = approval.Status.ToString(), 
+            date = approval.LatestActionAt,
+            comment = approval.LatestComment,
+            history = history,
+            storeId = approval.StoreId,
+            weekStartDate = approval.WeekStartDate
         });
     }
 
