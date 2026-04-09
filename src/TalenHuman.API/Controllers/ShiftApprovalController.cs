@@ -71,6 +71,7 @@ public class ShiftApprovalController : ControllerBase
 
         var masterRecords = await query
             .Select(a => new {
+                a.Id,
                 a.StoreId,
                 a.Store.Name,
                 a.Store.ExternalId,
@@ -193,15 +194,24 @@ public class ShiftApprovalController : ControllerBase
 
     [HttpGet("status")]
     [Authorize]
-    public async Task<IActionResult> GetStatus([FromQuery] Guid storeId, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+    public async Task<IActionResult> GetStatus([FromQuery] Guid? id, [FromQuery] Guid? storeId, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
     {
-        var normalizedStart = GetMondayOfDate(startDate);
-        
-        // V19.0: Master Query with Full History Trace
-        var approval = await _context.WeeklyApprovals
-            .Include(a => a.Logs)
-                .ThenInclude(l => l.User)
-            .FirstOrDefaultAsync(a => a.StoreId == storeId && a.WeekStartDate == normalizedStart);
+        WeeklyApproval? approval = null;
+        if (id.HasValue) 
+        {
+            approval = await _context.WeeklyApprovals
+                .Include(a => a.Logs)
+                    .ThenInclude(l => l.User)
+                .FirstOrDefaultAsync(a => a.Id == id.Value);
+        }
+        else if (storeId.HasValue && startDate.HasValue)
+        {
+            var normalizedStart = GetMondayOfDate(startDate.Value);
+            approval = await _context.WeeklyApprovals
+                .Include(a => a.Logs)
+                    .ThenInclude(l => l.User)
+                .FirstOrDefaultAsync(a => a.StoreId == storeId.Value && a.WeekStartDate == normalizedStart);
+        }
 
         if (approval == null) 
             return Ok(new { Status = "Empty", Message = "Sin registro de aprobación maestro." });
@@ -217,7 +227,9 @@ public class ShiftApprovalController : ControllerBase
             Status = approval.Status.ToString(), 
             Date = approval.LatestActionAt,
             Comment = approval.LatestComment,
-            History = history
+            History = history,
+            StoreId = approval.StoreId,
+            WeekStart = approval.WeekStartDate
         });
     }
 

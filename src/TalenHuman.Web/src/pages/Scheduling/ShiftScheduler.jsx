@@ -44,7 +44,7 @@ import HelpIcon from '../../components/Shared/HelpIcon';
 import { formatTenantDate } from '../../utils/localization';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
 
-const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId = null, initialDate = null, forceApprover = false }) => {
+const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId = null, initialDate = null, forceApprover = false, approvalId = null }) => {
     const { isDarkMode } = useTheme();
     
     // Premium Design Tokens (Elite V12)
@@ -199,20 +199,37 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     }, []);
 
     useEffect(() => {
-        if (selectedStore) {
-            fetchData();
+        if (selectedStore || approvalId) {
+            setLoading(true);
+            setWeeklyStatus({ status: 'Empty', message: '', comment: '' }); // Reset para evitar estados viejos
+            fetchData().finally(() => setLoading(false));
             fetchWeeklyStatus();
         }
-    }, [selectedStore, currentWeekStart]);
+    }, [selectedStore, currentWeekStart, approvalId]);
 
     const fetchWeeklyStatus = async () => {
-        if (!selectedStore) return;
+        if (!selectedStore && !approvalId) return;
         try {
             setIsProcessingStatus(true);
-            const endDate = new Date(currentWeekStart); 
-            endDate.setDate(endDate.getDate() + 7);
-            const res = await api.get(`/ShiftApproval/status?storeId=${selectedStore}&startDate=${toLocalISO(currentWeekStart)}&endDate=${toLocalISO(endDate)}`);
+            
+            let url = `/ShiftApproval/status?storeId=${selectedStore}&startDate=${toLocalISO(currentWeekStart)}`;
+            if (approvalId) {
+                url = `/ShiftApproval/status?id=${approvalId}`;
+            }
+
+            const res = await api.get(url);
             setWeeklyStatus(res.data);
+
+            // V19.8: Sincronización Maestra - Si consultamos por ID, la fecha de la DB es la LEY
+            if (approvalId && res.data.WeekStart) {
+                const dbDate = new Date(res.data.WeekStart);
+                if (dbDate.getTime() !== currentWeekStart.getTime()) {
+                    setCurrentWeekStart(dbDate);
+                }
+                if (res.data.StoreId && res.data.StoreId !== selectedStore) {
+                    setSelectedStore(res.data.StoreId);
+                }
+            }
         } catch (err) {
             console.error("Error fetching status", err);
         } finally {
@@ -1345,9 +1362,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         </div>
                     </div>
                 
-                {/* 3. Grid V12.20 Elite Classic */}
                 <div className="card shadow-[0_40px_100px_rgba(0,0,0,0.12)] bg-white dark:bg-slate-900 border-2 dark:border-slate-800 relative" style={{ borderRadius: '48px', overflow: 'hidden', minHeight: '600px' }}>
-                    {loading && (
+                    {(loading || isProcessingStatus) && (
                         <div className="absolute inset-0 z-[100] flex items-center justify-center bg-white/60 dark:bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-500">
                             <div className="text-center">
                                 <div className="relative w-24 h-24 mx-auto mb-8">
