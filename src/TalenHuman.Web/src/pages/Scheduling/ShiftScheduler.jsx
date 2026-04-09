@@ -1658,7 +1658,6 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 </tbody>
                             </table>
                         </div>
-                    )}
                 </div>
 
                 {/* Justificación de la semana (Print) */}

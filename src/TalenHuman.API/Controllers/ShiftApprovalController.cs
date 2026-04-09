@@ -92,8 +92,8 @@ public class ShiftApprovalController : ControllerBase
                 .Include(logEntry => logEntry.User)
                     .ThenInclude(u => u.Employee)
                         .ThenInclude(e => e.Profile)
-                .Where(logEntry => logEntry.WeeklyApproval.StoreId == item.StoreId && 
-                            logEntry.WeeklyApproval.WeekStartDate == item.WeekStartDate &&
+                .Where(logEntry => logEntry.WeeklyApproval.StoreId == item.storeId && 
+                            logEntry.WeeklyApproval.WeekStartDate == item.weekStartDate &&
                             logEntry.Action == "Published")
                 .OrderByDescending(logEntry => logEntry.ActionAt)
                 .FirstOrDefaultAsync();
@@ -102,18 +102,19 @@ public class ShiftApprovalController : ControllerBase
             string authorProfile = lastPublishedLog?.User?.Employee?.Profile?.Name ?? "USUARIO";
 
             result.Add(new {
-                item.StoreId,
-                item.Name,
-                item.ExternalId,
-                item.DistrictName,
-                PendingCount = 1, // UX Compatibility
-                WeekStart = item.WeekStartDate,
-                MinDate = item.WeekStartDate,
-                MaxDate = item.WeekStartDate.AddDays(6),
-                LastUploadAt = item.LatestActionAt,
-                AuthorName = authorName,
-                AuthorProfile = authorProfile,
-                Comment = item.LatestComment
+                id = item.id,
+                storeId = item.storeId,
+                name = item.name,
+                externalId = item.externalId,
+                districtName = item.districtName,
+                pendingCount = 1, 
+                weekStartDate = item.weekStartDate,
+                minDate = item.minDate,
+                maxDate = item.maxDate,
+                lastUploadAt = item.latestActionAt,
+                authorName = authorName,
+                authorProfile = authorProfile,
+                comment = item.latestComment
             });
         }
 
