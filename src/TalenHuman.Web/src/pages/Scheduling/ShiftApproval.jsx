@@ -107,6 +107,40 @@ const ShiftApproval = ({ user }) => {
     finally { setProcessing(false); setSyncPhase(0); }
   };
 
+  const handleApproveSingle = async () => {
+    if (!inspectedStore) return;
+    try {
+      setProcessing(true); setSyncPhase(1); await delay(600);
+      setSyncPhase(2);
+      const exclusiveEnd = getExclusiveEndDate(inspectedStore.weekStartDate);
+      await api.post('/ShiftApproval/approve', {
+        storeId: inspectedStore.storeId, startDate: inspectedStore.weekStartDate, endDate: exclusiveEnd,
+        comment: approvalComment || "Aprobación desde modo inspección"
+      });
+      setSyncPhase(3); await delay(800); setSyncPhase(4); await delay(1200);
+      showToast(`Sede ${inspectedStore.name} aprobada exitosamente`);
+      setInspectedStore(null); fetchStores();
+    } catch (err) { showToast('Error al aprobar la sede', 'error'); } 
+    finally { setProcessing(false); setSyncPhase(0); }
+  };
+
+  const handleRejectSingle = async () => {
+    if (!inspectedStore || !rejectionComment.trim()) return;
+    try {
+      setProcessing(true); setSyncPhase(1); await delay(600);
+      setSyncPhase(2);
+      const exclusiveEnd = getExclusiveEndDate(inspectedStore.weekStartDate);
+      await api.post('/ShiftApproval/reject', { 
+        storeId: inspectedStore.storeId, startDate: inspectedStore.weekStartDate, endDate: exclusiveEnd,
+        comment: rejectionComment 
+      });
+      setSyncPhase(3); await delay(800); setSyncPhase(4); await delay(1200);
+      showToast(`Sede ${inspectedStore.name} rechazada`);
+      setInspectedStore(null); setShowCommentModal(false); setRejectionComment(''); fetchStores();
+    } catch (err) { showToast('Error al rechazar la sede', 'error'); } 
+    finally { setProcessing(false); setSyncPhase(0); }
+  };
+
   const handleReject = async () => {
     if (selectedKeys.length === 0 || !rejectionComment.trim()) return;
     try {
@@ -208,7 +242,7 @@ const ShiftApproval = ({ user }) => {
                   <XCircle size={16} /> RECHAZAR
                 </button>
                 <button 
-                  onClick={() => handleApprove()}
+                  onClick={() => handleApproveSingle()}
                   style={{ padding: '10px 24px', background: activeColors.accent, color: 'white', border: 'none', borderRadius: '14px', fontWeight: '950', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 8px 15px rgba(79, 70, 229, 0.2)' }}
                 >
                   <CheckCircle size={16} /> APROBAR SEMANA
@@ -224,8 +258,17 @@ const ShiftApproval = ({ user }) => {
          </div>
          <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '32px' }}>
                         <div key={inspectedStore.id} style={{ background: activeColors.card, borderRadius: '32px', border: `1.5px solid ${activeColors.border}`, overflow: 'hidden', padding: '1rem', marginRight: showHistoryDrawer ? '400px' : '0', transition: 'margin 0.4s ease' }}>
-                            <ShiftScheduler user={user} readOnly={true} forceApprover={true} initialStoreId={inspectedStore.storeId} initialDate={inspectedStore.weekStartDate} approvalId={inspectedStore.id} />
-            </div>
+                            <ShiftScheduler 
+                                user={user} 
+                                readOnly={true} 
+                                forceApprover={true} 
+                                initialStoreId={inspectedStore.storeId} 
+                                initialDate={inspectedStore.weekStartDate} 
+                                approvalId={inspectedStore.id} 
+                                onReady={() => { setIsInspecting(false); setSyncPhase(0); }}
+                                suppressOverlay={true}
+                            />
+                        </div>
             <div style={{ position: 'absolute', right: showHistoryDrawer ? '0' : '-450px', top: '0', bottom: '0', width: '380px', background: isDarkMode ? '#1e293b' : '#f8fafc', borderRadius: '32px', borderLeft: `2px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`, padding: '28px', transition: 'right 0.4s ease', zIndex: 50, overflowY: 'auto' }}>
                <h3 style={{ fontSize: '1.1rem', fontWeight: '950', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}><ShieldCheck size={20} /> Auditoría</h3>
                {fetchingHistory ? <p>Cargando...</p> : history.map((log, idx) => {
@@ -432,25 +475,25 @@ const ShiftApproval = ({ user }) => {
 
       {/* PROGRESS MONITOR portal (Masivo + Transición) */}
       {(isInspecting || (processing && syncPhase > 0)) && createPortal(
-        <div style={{ position: 'fixed', inset: 0, zIndex: 10000000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: isDarkMode ? 'rgba(15, 23, 42, 0.9)' : 'rgba(30,30,60,0.8)', backdropFilter: 'blur(10px)' }}>
-           <div style={{ background: isDarkMode ? '#1e293b' : 'white', padding: '40px', borderRadius: '40px', textAlign: 'center', width: '380px', boxShadow: '0 30px 60px rgba(0,0,0,0.5)', animation: 'scaleIn 0.3s ease' }}>
-              <div style={{ position: 'relative', width: '80px', height: '80px', margin: '0 auto 25px' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: isDarkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(30,30,60,0.4)', backdropFilter: 'blur(10px)' }}>
+           <div style={{ background: activeColors.card, padding: '40px', borderRadius: '40px', textAlign: 'center', width: '400px', boxShadow: '0 40px 100px rgba(0,0,0,0.3)', border: `1px solid ${activeColors.border}`, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ position: 'relative', width: '80px', height: '80px', marginBottom: '25px' }}>
                 <svg style={{ transform: 'rotate(-90deg)', width: '80px', height: '80px' }}>
                   <circle cx="40" cy="40" r="35" stroke={isDarkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9'} strokeWidth="6" fill="transparent" />
-                  <circle cx="40" cy="40" r="35" stroke="#4f46e5" strokeWidth="6" fill="transparent" strokeDasharray="219.9" strokeDashoffset={219.9 - (219.9 * (syncPhase || (isInspecting ? 60 : 25))) / 100} style={{ transition: 'stroke-dashoffset 0.8s ease' }} strokeLinecap="round" />
+                  <circle cx="40" cy="40" r="35" stroke={activeColors.accent} strokeWidth="6" fill="transparent" strokeDasharray="219.9" strokeDashoffset={219.9 - (219.9 * (syncPhase || (isInspecting ? 60 : 25))) / 100} style={{ transition: 'stroke-dashoffset 0.8s ease' }} strokeLinecap="round" />
                 </svg>
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.accent }}>
                   {isInspecting ? <Clock size={32} className="animate-pulse" /> : (syncPhase >= 4 ? <CheckCircle size={32} /> : <Cpu size={32} className="animate-pulse" />)}
                 </div>
               </div>
-              <h3 style={{ fontWeight: '950', fontSize: '1.4rem', color: isDarkMode ? '#f1f5f9' : '#1e293b', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
-                {isInspecting ? "Autenticando Sede" : (syncPhase === 1 ? "Analizando..." : syncPhase === 2 ? "Procesando Maestro..." : syncPhase === 3 ? "Notificando..." : "¡Carga Exitosa!")}
+              <h3 style={{ fontWeight: '1000', fontSize: '1.4rem', color: activeColors.textMain, margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
+                {isInspecting ? "Autenticando Sede" : (syncPhase === 1 ? "Iniciando..." : syncPhase === 2 ? "Procesando Maestro..." : syncPhase === 3 ? "Notificando..." : "¡Carga Exitosa!")}
               </h3>
-              <p style={{ fontSize: '0.85rem', fontWeight: '600', color: '#94a3b8', marginBottom: '25px' }}>
-                {isInspecting ? "Sincronizando registros para auditoría segura..." : "Preparando datos de nómina centralizados."}
+              <p style={{ fontSize: '0.85rem', fontWeight: '800', color: activeColors.textMuted, marginBottom: '25px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                {isInspecting ? "Sincronizando registros para auditoría segura..." : "Preparando datos."}
               </p>
-              <div style={{ height: '6px', background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9', borderRadius: '10px', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: isInspecting ? '75%' : `${syncPhase * 25}%`, background: 'linear-gradient(90deg, #4f46e5, #818cf8)', transition: 'width 0.8s ease' }} />
+              <div style={{ height: '8px', background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9', borderRadius: '10px', overflow: 'hidden', width: '100%' }}>
+                <div style={{ height: '100%', width: isInspecting ? '75%' : `${syncPhase * 25}%`, background: activeColors.accent, transition: 'width 0.8s ease' }} />
               </div>
            </div>
         </div>,

@@ -44,7 +44,7 @@ import HelpIcon from '../../components/Shared/HelpIcon';
 import { formatTenantDate } from '../../utils/localization';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
 
-const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId = null, initialDate = null, forceApprover = false, approvalId = null }) => {
+const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId = null, initialDate = null, forceApprover = false, approvalId = null, onReady = null, suppressOverlay = false }) => {
     const { isDarkMode } = useTheme();
     
     // Premium Design Tokens (Elite V12)
@@ -236,11 +236,12 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         setLoading(false);
                         setSyncPhase(0);
                         setDataLoaded(false);
+                        if (onReady) onReady(); // Avisar al padre (ShiftApproval)
                     }, 300); // Pequeño delay de suavizado para evitar parpadeo
                 });
             });
         }
-    }, [loading, dataLoaded, employees, shifts]);
+    }, [loading, dataLoaded, employees, shifts, onReady]);
 
     const fetchWeeklyStatus = async () => {
         if (!selectedStore && !approvalId) return;
@@ -1155,11 +1156,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             
                             {/* Navegación de Fecha */}
                             <div className="flex-shrink-0 flex items-center pr-4 border-r border-slate-100 dark:border-slate-800">
-                                {!effectiveReadOnly && (
-                                    <button onClick={() => setWeekOffset(prev => prev - 1)} 
-                                            className="p-2.5 text-slate-400 hover:text-indigo-500 hover:bg-slate-50 rounded-xl transition-all active:scale-90" 
-                                            data-v12-tooltip="Semana Anterior"><ChevronLeft size={18} strokeWidth={3} /></button>
-                                )}
+                                <button onClick={() => setWeekOffset(prev => prev - 1)} 
+                                        className="p-2.5 text-slate-400 hover:text-indigo-500 hover:bg-slate-50 rounded-xl transition-all active:scale-90" 
+                                        data-v12-tooltip="Semana Anterior"><ChevronLeft size={18} strokeWidth={3} /></button>
                                 
                                 <div className="flex flex-col items-center px-4 min-w-[160px]">
                                     <span className="text-[12px] font-[1000] uppercase tracking-tight text-slate-800 dark:text-white text-center whitespace-nowrap">
@@ -1167,11 +1166,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     </span>
                                 </div>
 
-                                {!effectiveReadOnly && (
-                                    <button onClick={() => setWeekOffset(prev => prev + 1)} 
-                                            className="p-2.5 text-slate-400 hover:text-indigo-500 hover:bg-slate-50 rounded-xl transition-all active:scale-90" 
-                                            data-v12-tooltip="Semana Siguiente"><ChevronRight size={18} strokeWidth={3} /></button>
-                                )}
+                                <button onClick={() => setWeekOffset(prev => prev + 1)} 
+                                        className="p-2.5 text-slate-400 hover:text-indigo-500 hover:bg-slate-50 rounded-xl transition-all active:scale-90" 
+                                        data-v12-tooltip="Semana Siguiente"><ChevronRight size={18} strokeWidth={3} /></button>
                             </div>
 
                             {/* Acciones Globales Linealizadas */}
@@ -1184,7 +1181,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     className="flex items-center gap-2 px-4 h-[44px] bg-rose-600 text-white rounded-[16px] hover:bg-rose-700 transition-all font-black text-[10px] active:scale-95 shadow-lg shadow-rose-500/20" data-v12-tooltip="Generar PDF">
                                     <FileDown size={16} /> <span className="hidden xl:inline">PDF</span>
                                 </button>
-                                {(!effectiveReadOnly || forceApprover) && (
+                                {!effectiveReadOnly && (
                                     <>
                                         <div className="w-[1px] h-6 bg-slate-200 mx-1"></div>
                                         <button onClick={copyFromPreviousWeek} className="flex items-center gap-2 px-4 h-[44px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-[16px] hover:bg-indigo-600 hover:text-white transition-all font-black text-[10px] active:scale-95" data-v12-tooltip="Clonar Semana Anterior">
@@ -1266,7 +1263,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 
                 <div className="card shadow-[0_40px_100px_rgba(0,0,0,0.12)] bg-white dark:bg-slate-900 border-2 dark:border-slate-800 relative" style={{ borderRadius: '48px', overflow: 'hidden', minHeight: '600px' }}>
                     {createPortal(
-                        (loading || isProcessingStatus) && (
+                        (loading || isProcessingStatus) && !suppressOverlay && (
                             <div className="fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
                                 <div className="bg-white dark:bg-slate-900 p-8 md:p-12 rounded-[3.5rem] shadow-2xl border border-white/10 flex flex-col items-center max-w-md w-full text-center animate-in zoom-in-95 duration-300">
                                     <div className="relative mb-8">
