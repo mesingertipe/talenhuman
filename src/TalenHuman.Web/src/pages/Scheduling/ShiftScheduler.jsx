@@ -1249,10 +1249,15 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             <div className="flex-1 min-w-0">
                                 <p className="text-[10px] font-black uppercase text-indigo-500 tracking-widest mb-0.5">Observaciones vigentes de la programación:</p>
                                 <p className="text-sm font-bold text-slate-700 dark:text-slate-300 truncate">{lastSaveComment}</p>
+                                {weeklyStatus && (
+                                    <p className="text-[9px] font-bold text-indigo-400 mt-1 uppercase">
+                                        Registrado por: {weeklyStatus.userName || 'Sistema'} • {new Date(weeklyStatus.date).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                )}
                             </div>
                             <div className="flex-shrink-0">
                                 <div className="text-[10px] font-black px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full uppercase tracking-tighter">
-                                    Sincronizado con Reporte PDF
+                                    {weeklyStatus?.status === 'Approved' ? '✅ APROBACIÓN FINAL' : 'Sincronizado con Reporte PDF'}
                                 </div>
                             </div>
                         </div>
@@ -1444,7 +1449,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                         </div>
                                                                     </div>
                                                                 )}
-                                                                {dayShifts.map((shift, si) => {
+                                                                {dayShifts.reduce((acc, current) => { const hasAtt = (attendances || []).some(a => String(a.shiftId) === String(current.id)); const existing = acc.find(s => s.startTime === current.startTime); if (!existing) return [...acc, current]; if (hasAtt && !attendances.some(a => String(a.shiftId) === String(existing.id))) { return acc.map(s => s.startTime === current.startTime ? current : s); } return acc; }, []).map((shift, si) => {
                                                                     const att = attendances.find(a => String(a.shiftId) === String(shift.id) && shift.id);
                                                                     let bgColor = '#4f46e5';
                                                                     

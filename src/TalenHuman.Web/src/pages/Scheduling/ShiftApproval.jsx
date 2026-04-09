@@ -186,17 +186,27 @@ const ShiftApproval = ({ user }) => {
          </div>
          <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '32px' }}>
             <div style={{ background: activeColors.card, borderRadius: '32px', border: `1.5px solid ${activeColors.border}`, overflow: 'hidden', padding: '1rem', marginRight: showHistoryDrawer ? '400px' : '0', transition: 'margin 0.4s ease' }}>
-              <ShiftScheduler user={user} readOnly={false} forceApprover={true} initialStoreId={inspectedStore.storeId} initialDate={inspectedStore.weekStart} />
+              <ShiftScheduler user={user} readOnly={activeTab !== 'PENDING'} forceApprover={true} initialStoreId={inspectedStore.storeId} initialDate={inspectedStore.weekStart} />
             </div>
             <div style={{ position: 'absolute', right: showHistoryDrawer ? '0' : '-450px', top: '0', bottom: '0', width: '380px', background: isDarkMode ? '#1e293b' : '#f8fafc', borderRadius: '32px', borderLeft: `2px solid ${isDarkMode ? '#334155' : '#e2e8f0'}`, padding: '28px', transition: 'right 0.4s ease', zIndex: 50, overflowY: 'auto' }}>
                <h3 style={{ fontSize: '1.1rem', fontWeight: '950', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}><ShieldCheck size={20} /> Auditoría</h3>
-               {fetchingHistory ? <p>Cargando...</p> : history.map((log, idx) => (
-                 <div key={idx} style={{ marginBottom: '20px', padding: '15px', borderRadius: '20px', background: activeColors.card, border: `1px solid ${activeColors.border}` }}>
-                    <div style={{ fontSize: '0.7rem', fontWeight: '900', color: log.action === 'Approved' ? '#10b981' : '#ef4444', marginBottom: '5px' }}>{log.action.toUpperCase()}</div>
-                    <p style={{ fontSize: '0.85rem', fontWeight: '700', margin: '0 0 10px 0' }}>"{log.comment}"</p>
-                    <div style={{ fontSize: '0.7rem', color: activeColors.textMuted }}>{log.userName} • {new Date(log.actionDate).toLocaleString()}</div>
-                 </div>
-               ))}
+               {fetchingHistory ? <p>Cargando...</p> : history.map((log, idx) => {
+                 const getActionLabel = (action) => {
+                   if (action === 'Published') return 'PROGRAMADO';
+                   if (action === 'Approved') return 'APROBADO';
+                   if (action === 'Rejected') return 'RECHAZADO';
+                   return action.toUpperCase();
+                 };
+                 return (
+                   <div key={idx} style={{ marginBottom: '20px', padding: '15px', borderRadius: '20px', background: activeColors.card, border: `1px solid ${activeColors.border}` }}>
+                      <div style={{ fontSize: '0.7rem', fontWeight: '900', color: log.action === 'Approved' ? '#10b981' : (log.action === 'Rejected' ? '#ef4444' : activeColors.accent), marginBottom: '5px' }}>
+                        {getActionLabel(log.action)}
+                      </div>
+                      <p style={{ fontSize: '0.85rem', fontWeight: '700', margin: '0 0 10px 0' }}>"{log.comment}"</p>
+                      <div style={{ fontSize: '0.7rem', color: activeColors.textMuted }}>{log.userName} • {new Date(log.actionAt).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+                   </div>
+                 );
+               })}
             </div>
          </div>
       </div>
