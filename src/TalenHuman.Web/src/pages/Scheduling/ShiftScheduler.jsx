@@ -1198,36 +1198,36 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         </div>
                     </div>
 
-                    {/* 2.2 Fila 2: Barra de Herramientas Premium Unificada (Una sola línea) */}
-                    <div className="flex flex-row items-center justify-between gap-4 w-full mt-2 overflow-x-auto pb-1">
+                    {/* 2.2 Fila 2: Barra de Herramientas Premium (Módulos de Control Pods) */}
+                    <div className="flex flex-row items-stretch justify-center gap-6 w-full mt-4 no-print overflow-x-auto pb-6 px-2">
                         
-                        {/* Inteligencia (Izquierda) */}
-                        <div className="flex flex-col items-start gap-2">
-                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-[0.2em] ml-2">Inteligencia</span>
-                            <div className="flex items-center gap-2 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md p-1.5 rounded-[24px] border border-slate-200/50 dark:border-white/5 shadow-sm">
+                        {/* Módulo A: Inteligencia (Glass Pod) */}
+                        <div className="flex flex-col gap-2 p-4 px-8 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.8rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod">
+                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-[0.3em] uppercase mb-1 px-1 group-hover/pod:text-indigo-500 transition-colors text-center">Inteligencia</span>
+                            <div className="flex items-center gap-3">
                                 {!effectiveReadOnly && (
                                     <>
                                         <button onClick={() => setShowBulkModal(true)}
-                                            className="w-[46px] h-[46px] bg-amber-500 text-white rounded-[18px] flex items-center justify-center hover:bg-amber-600 transition-all shadow-glow-amber active:scale-95 btn-chiclet" title="Programación Masiva">
-                                            <Sparkles size={22} strokeWidth={2.5} />
+                                            className="w-11 h-11 bg-amber-500 text-white rounded-[18px] flex items-center justify-center hover:bg-amber-600 transition-all shadow-glow-amber active:scale-95 btn-chiclet" title="Programación Masiva">
+                                            <Sparkles size={20} strokeWidth={2.5} />
                                         </button>
                                         <button onClick={copyFromPreviousWeek} 
-                                            className="w-[46px] h-[46px] bg-indigo-500 text-white rounded-[18px] flex items-center justify-center hover:bg-indigo-600 transition-all shadow-glow-indigo active:scale-95 btn-chiclet" title="Clonar Semana">
-                                            <CopyIcon size={22} strokeWidth={2.5} />
+                                            className="w-11 h-11 bg-indigo-500 text-white rounded-[18px] flex items-center justify-center hover:bg-indigo-600 transition-all shadow-glow-indigo active:scale-95 btn-chiclet" title="Clonar Semana">
+                                            <CopyIcon size={20} strokeWidth={2.5} />
                                         </button>
                                     </>
                                 )}
                                 <button onClick={() => setShowPredictiveModal(true)}
-                                    className="w-[46px] h-[46px] bg-purple-600 text-white rounded-[18px] flex items-center justify-center hover:bg-purple-700 transition-all shadow-glow-purple active:scale-95 btn-chiclet" title="Análisis Predictivo">
-                                    <Cpu size={22} strokeWidth={2.5} />
+                                    className="w-11 h-11 bg-purple-600 text-white rounded-[18px] flex items-center justify-center hover:bg-purple-700 transition-all shadow-glow-purple active:scale-95 btn-chiclet" title="Análisis Predictivo">
+                                    <Cpu size={20} strokeWidth={2.5} />
                                 </button>
                             </div>
                         </div>
 
-                        {/* Eventos (Centro) */}
-                        <div className="flex flex-col items-center gap-2">
-                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-[0.2em]">Centro de Eventos</span>
-                            <div className="flex items-center gap-2 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md p-1.5 rounded-[24px] border border-slate-200/50 dark:border-white/5 shadow-sm">
+                        {/* Módulo B: Centro de Eventos (Glass Pod) */}
+                        <div className="flex flex-col gap-2 p-4 px-9 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.8rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod items-center border-b-indigo-500/20">
+                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-[0.3em] uppercase mb-1 group-hover/pod:text-indigo-500 transition-colors">Centro de Eventos</span>
+                            <div className="flex items-center gap-3">
                                 {!effectiveReadOnly ? (
                                     <>
                                         {[
@@ -1236,41 +1236,41 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             { type: 'Turno Fuera', shadow: 'shadow-glow-purple', color: 'bg-purple-600', icon: AlertCircle, title: 'Asignación Fuera' }
                                         ].map((tool, idx) => (
                                             <div key={idx} draggable onDragStart={(e) => handleDragStart(e, 'PANEL', { type: tool.type })} 
-                                                className={`w-[46px] h-[46px] ${tool.color} text-white rounded-[18px] flex items-center justify-center cursor-grab hover:scale-105 transition-all ${tool.shadow} active:scale-95 btn-chiclet`} title={tool.title}>
-                                                <tool.icon size={22} strokeWidth={2.5} />
+                                                className={`w-11 h-11 ${tool.color} text-white rounded-[18px] flex items-center justify-center cursor-grab hover:scale-110 hover:shadow-2xl transition-all ${tool.shadow} active:scale-95 btn-chiclet`} title={tool.title}>
+                                                <tool.icon size={20} strokeWidth={2.5} />
                                             </div>
                                         ))}
                                         <div onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnTrash} 
-                                            className="w-[46px] h-[46px] bg-rose-50 dark:bg-rose-900/20 text-rose-500 rounded-[18px] flex items-center justify-center border-2 border-dashed border-rose-200 dark:border-rose-800 hover:bg-rose-600 hover:text-white transition-all cursor-pointer shadow-sm active:scale-95 btn-chiclet-trash" title="Borrar Turno">
-                                            <Trash2 size={22} strokeWidth={2.5} />
+                                            className="w-11 h-11 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-[18px] flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-700 hover:bg-rose-600 hover:text-white hover:border-solid hover:shadow-glow-rose transition-all cursor-pointer active:scale-95 btn-chiclet-trash" title="Borrar Turno">
+                                            <Trash2 size={20} strokeWidth={2.5} />
                                         </div>
                                     </>
                                 ) : (
-                                    <div className="h-[46px] flex items-center text-slate-400 font-bold text-[10px] tracking-tight px-4 bg-slate-100 dark:bg-slate-800/40 rounded-[18px]">Semana cerrada</div>
+                                    <div className="h-11 flex items-center text-slate-400 font-bold text-[10px] tracking-[0.1em] px-6 bg-slate-100/50 dark:bg-slate-800/40 rounded-full border border-slate-200 dark:border-slate-700 italic">Semana cerrada</div>
                                 )}
                             </div>
                         </div>
 
-                        {/* Utilidades (Derecha) */}
-                        <div className="flex flex-col items-end gap-2">
-                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-[0.2em] mr-2">Utilidades</span>
-                            <div className="flex items-center gap-2 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md p-1.5 rounded-[24px] border border-slate-200/50 dark:border-white/5 shadow-sm">
+                        {/* Módulo C: Utilidades (Glass Pod) */}
+                        <div className="flex flex-col gap-2 p-4 px-8 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.8rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod items-end">
+                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-[0.3em] uppercase mb-1 px-1 group-hover/pod:text-indigo-500 transition-colors text-center">Utilidades</span>
+                            <div className="flex items-center gap-3">
                                 <button onClick={handleExcelExport} disabled={isExporting} 
-                                    className="w-[46px] h-[46px] bg-emerald-600 text-white rounded-[18px] flex items-center justify-center hover:bg-emerald-700 transition-all shadow-glow-emerald active:scale-95 btn-chiclet" title="Exportar Excel">
-                                    <FileSpreadsheet size={22} strokeWidth={2.5} />
+                                    className="w-11 h-11 bg-emerald-600 text-white rounded-[18px] flex items-center justify-center hover:bg-emerald-700 transition-all shadow-glow-emerald active:scale-95 btn-chiclet" title="Exportar Excel">
+                                    <FileSpreadsheet size={20} strokeWidth={2.5} />
                                 </button>
                                 <button onClick={handlePdfExport} disabled={isExporting}
-                                    className="w-[46px] h-[46px] bg-rose-600 text-white rounded-[18px] flex items-center justify-center hover:bg-rose-700 transition-all shadow-glow-rose active:scale-95 btn-chiclet" title="Exportar Pdf">
-                                    <FileDown size={22} strokeWidth={2.5} />
+                                    className="w-11 h-11 bg-rose-600 text-white rounded-[18px] flex items-center justify-center hover:bg-rose-700 transition-all shadow-glow-rose active:scale-95 btn-chiclet" title="Exportar Pdf">
+                                    <FileDown size={20} strokeWidth={2.5} />
                                 </button>
                                 {!effectiveReadOnly && (
                                     <button onClick={handleSave} disabled={isExporting} 
-                                        className="w-[46px] h-[46px] bg-indigo-600 text-white rounded-[18px] flex items-center justify-center hover:bg-indigo-700 transition-all shadow-glow-indigo active:scale-95 btn-chiclet" title="Guardar Cambios">
-                                        {isSaving ? <div className="loader !w-5 !h-5 !border-white"></div> : <Save size={22} strokeWidth={2.5} />}
+                                        className="w-11 h-11 bg-indigo-600 text-white rounded-[18px] flex items-center justify-center hover:bg-indigo-700 transition-all shadow-glow-indigo active:scale-95 btn-chiclet" title="Guardar Cambios">
+                                        {isSaving ? <div className="loader !w-5 !h-5 !border-white"></div> : <Save size={20} strokeWidth={2.5} />}
                                     </button>
                                 )}
-                                <div className="w-[1px] h-8 bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                                <div className="flex items-center bg-white dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-slate-700 gap-1 shadow-sm">
+                                <div className="w-[1.5px] h-8 bg-slate-200/50 dark:bg-slate-700/50 mx-1"></div>
+                                <div className="flex items-center bg-white/60 dark:bg-slate-800/60 p-1 rounded-full border border-slate-200/50 dark:border-white/5 gap-1 shadow-sm">
                                     <button onClick={() => setViewMode('SHIFTS')} className={`w-[34px] h-[34px] flex items-center justify-center rounded-full transition-all ${viewMode === 'SHIFTS' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
                                         <Calendar size={16} strokeWidth={2.5} />
                                     </button>
@@ -1371,7 +1371,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     
                     <div className="overflow-x-auto">
                             <footer className="mt-8 mb-4 text-center">
-                                <div className="version-tag-subtle">SISTEMA V13.9.42-PREMIUM-AI</div>
+                                <div className="version-tag-subtle">SISTEMA V13.9.43-PREMIUM-AI</div>
                             </footer>
                             <table className="w-full border-collapse">
                                 <thead>
