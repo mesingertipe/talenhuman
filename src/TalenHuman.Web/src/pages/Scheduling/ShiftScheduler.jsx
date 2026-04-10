@@ -143,240 +143,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const [dragSource, setDragSource] = useState(null);
     const [draggedData, setDraggedData] = useState(null);
 
-    const handlePdfExport = useCallback(() => {
-        const element = document.getElementById('printable-area');
-        if (!element) {
-            showToast("No se encontró el área de impresión", "error");
-            return;
-        }
 
-        if (!window.html2pdf) {
-            showToast("Cargando motor de PDF... Reintente en 3 segundos", "info");
-            return;
-        }
-
-        if (isExporting) return;
-        setIsExporting(true);
-        showToast("Generando reporte PDF HD... Espere por favor", "success");
-        const storeName = stores.find(s => s.id === selectedStore)?.name || 'Sede';
-        const safeName = storeName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20);
-        const fileName = `Programacion_${safeName}.pdf`;
-        
-        const style = document.createElement('style');
-        style.innerHTML = `
-            #printable-area { 
-                background: white !important; 
-                padding: 20px 40px !important; 
-                width: 1700px !important; 
-                color: black !important;
-            }
-            #printable-area .print-only { display: block !important; visibility: visible !important; }
-            #printable-area .no-print { display: none !important; height: 0 !important; margin: 0 !important; padding: 0 !important; }
-            
-            /* Elite V12 PDF Contrast Fix */
-            #printable-area * { 
-                backdrop-filter: none !important; 
-                -webkit-backdrop-filter: none !important;
-                text-shadow: none !important;
-                box-shadow: none !important;
-            }
-            
-            #printable-area h1, #printable-area h2, #printable-area h3, #printable-area h4, #printable-area p, #printable-area span {
-                color: #000000 !important;
-                opacity: 1 !important;
-            }
-
-            #printable-area .card, #printable-area .bg-white, #printable-area .bg-slate-50, #printable-area .bg-indigo-50 {
-                background: #ffffff !important;
-                border: 1px solid #e2e8f0 !important;
-                opacity: 1 !important;
-            }
-
-            #printable-area .turno-bubble { 
-                padding: 6px 10px !important; 
-                font-size: 11px !important; 
-                font-weight: 800 !important;
-                min-width: 100px !important;
-                white-space: nowrap !important;
-                border-radius: 8px !important;
-                color: white !important;
-                opacity: 1 !important;
-                -webkit-print-color-adjust: exact;
-            }
-
-            #printable-area .bg-indigo-600 { background-color: #4f46e5 !important; }
-            #printable-area .bg-amber-500 { background-color: #f59e0b !important; }
-            #printable-area .bg-purple-600 { background-color: #9333ea !important; }
-
-            #printable-area th { 
-                background-color: #f8fafc !important;
-                color: #1e293b !important;
-                font-weight: 900 !important;
-                text-transform: uppercase !important;
-                border: 1px solid #e2e8f0 !important;
-            }
-
-            #printable-area td { 
-                border: 1px solid #f1f5f9 !important;
-                padding: 12px 8px !important;
-            }
-
-            #printable-area .grid-container { width: 100% !important; }
-        `;
-        document.head.appendChild(style);
-
-        const opt = {
-            margin: 0,
-            filename: fileName,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { 
-                scale: 2, 
-                useCORS: true, 
-                logging: false,
-                width: 1700,
-                backgroundColor: '#ffffff'
-            },
-            jsPDF: { unit: 'px', format: [1700, 1200], orientation: 'landscape' }
-        };
-
-        window.html2pdf().from(element).set(opt).outputPdf('blob').then((blob) => {
-            const fileNameFinal = `Turnos_${safeName}_${Math.floor(Date.now()/1000)}.pdf`;
-            const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/octet-stream' }));
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileNameFinal;
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => {
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-            }, 5000);
-            
-            document.head.removeChild(style);
-            setIsExporting(false);
-            showToast("PDF generado con éxito");
-        }).catch(err => {
-            console.error("PDF Error:", err);
-            setIsExporting(false);
-            showToast("Error al generar PDF", "error");
-            document.head.removeChild(style);
-        });
-    }, [isExporting, stores, selectedStore]);
-
-    const handleExcelExport = useCallback(async () => {
-        if (isExporting) return;
-        try {
-            setIsExporting(true);
-            showToast("Preparando Excel Corporativo...", "success");
-            const workbook = new ExcelJS.Workbook();
-            const worksheet = workbook.addWorksheet('Programación');
-            const storeNameOrg = stores.find(s => s.id === selectedStore)?.name || 'Sede';
-            const safeStoreName = storeNameOrg.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20);
-            const fileNameExcel = `Programacion_${safeStoreName}.xlsx`;
-            const dateRange = `${formatDate(currentWeekStart)} — ${formatDate(new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000))}`;
-
-            // Configuración de Columnas
-            worksheet.columns = [
-                { header: 'ID/CÉDULA', key: 'id', width: 18 },
-                { header: 'COLABORADOR', key: 'name', width: 35 },
-                ...days.map((day, i) => ({ 
-                    header: day.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric' }).toUpperCase(), 
-                    key: `day_${i}`, 
-                    width: 15 
-                })),
-                { header: 'TOTAL HRS', key: 'total', width: 15 }
-            ];
-
-            // 1. Título TalenHuman
-            worksheet.mergeCells('A1:J1');
-            const titleRow = worksheet.getRow(1);
-            titleRow.getCell(1).value = 'PROGRAMACION DE TURNOS TALENHUMAN';
-            titleRow.getCell(1).font = { name: 'Segoe UI', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
-            titleRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
-            titleRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
-            titleRow.height = 40;
-
-            // 2. Metadatos
-            worksheet.addRow([]);
-            const sedeRow = worksheet.addRow([`SEDE: ${storeNameOrg.toUpperCase()}`]);
-            worksheet.mergeCells(`A3:J3`);
-            sedeRow.getCell(1).font = { bold: true };
-            sedeRow.getCell(1).alignment = { horizontal: 'center' };
-
-            const periodRow = worksheet.addRow([`PERIODO: ${dateRange}`]);
-            worksheet.mergeCells(`A4:J4`);
-            periodRow.getCell(1).alignment = { horizontal: 'center' };
-            worksheet.addRow([]);
-
-            // 3. Encabezados
-            const headerRow = worksheet.addRow(['ID/CÉDULA', 'COLABORADOR', ...days.map(d => d.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric' }).toUpperCase()), 'TOTAL HRS']);
-            headerRow.eachCell((cell) => {
-                cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
-                cell.alignment = { horizontal: 'center' };
-                cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
-            });
-
-            // 4. Datos con Zebra
-            const getShiftHours = (s) => {
-                if (!s || s.isDescanso) return 0;
-                const start = new Date(s.startTime); const end = new Date(s.endTime);
-                let diff = (end - start) / (1000 * 60 * 60);
-                if (diff < 0) diff += 24; return diff;
-            };
-
-            employees.forEach((emp, idx) => {
-                const empShifts = shifts.filter(s => s.employeeId === emp.id);
-                const totalHours = empShifts.reduce((acc, s) => acc + getShiftHours(s), 0);
-                const rowValues = [emp.documento || '---', `${emp.firstName} ${emp.lastName}`.toUpperCase()];
-                days.forEach(day => {
-                    const shift = empShifts.find(s => new Date(s.startTime).toDateString() === day.toDateString());
-                    if (shift) {
-                        if (shift.isDescanso) rowValues.push("DESCANSO");
-                        else if (shift.isFuera) rowValues.push("FUERA");
-                        else {
-                            const st = new Date(shift.startTime); const et = new Date(shift.endTime);
-                            rowValues.push(`${String(st.getHours()).padStart(2, '0')}:${String(st.getMinutes()).padStart(2, '0')} - ${String(et.getHours()).padStart(2, '0')}:${String(et.getMinutes()).padStart(2, '0')}`);
-                        }
-                    } else rowValues.push("—");
-                });
-                rowValues.push(formatHours(totalHours));
-                const dr = worksheet.addRow(rowValues);
-                if (idx % 2 !== 0) dr.eachCell(c => c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } });
-                dr.eachCell(c => c.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } });
-            });
-
-            // 5. Firma y Descarga
-            worksheet.addRow([]); worksheet.addRow([]);
-            const signRow = worksheet.addRow(['', '_______________________', '', '', '', '', '', '', '_______________________']);
-            const signText = worksheet.addRow(['', 'FIRMA JEFE DE SEDE', '', '', '', '', '', '', 'FIRMA TALENTO HUMANO']);
-            signText.eachCell(c => { c.font = { bold: true }; c.alignment = { horizontal: 'center' }; });
-
-            const buffer = await workbook.xlsx.writeBuffer();
-            const fileNameFinal = `Excel_${safeStoreName}_${Math.floor(Date.now()/1000)}.xlsx`;
-            const url = window.URL.createObjectURL(new Blob([buffer], { type: 'application/octet-stream' }));
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileNameFinal;
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => {
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-            }, 5000);
-            
-            setIsExporting(false);
-            showToast("Excel generado con éxito");
-        } catch (error) {
-            console.error("Excel Error:", error);
-            setIsExporting(false);
-            showToast("Error al generar Excel", "error");
-        }
-    }, [isExporting, stores, selectedStore, currentWeekStart, days, employees, shifts]);
-
-    // 🛡️ ALIAS DE SEGURIDAD ELITE: Garantiza que el botón funcione incluso si el navegador carga código antiguo
-    const exportToExcel = handleExcelExport;
-    const exportToPDF = handlePdfExport;
 
     const getMonday = (offset = 0) => {
         const now = new Date();
@@ -1088,7 +855,239 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         } catch (err) { showToast("Error al clonar semana", "error"); } finally { setLoading(false); }
     };
 
+    const handlePdfExport = useCallback(() => {
+        const element = document.getElementById('printable-area');
+        if (!element) {
+            showToast("No se encontró el área de impresión", "error");
+            return;
+        }
 
+        if (!window.html2pdf) {
+            showToast("Cargando motor de PDF... Reintente en 3 segundos", "info");
+            return;
+        }
+
+        if (isExporting) return;
+        setIsExporting(true);
+        showToast("Generando reporte PDF HD... Espere por favor", "success");
+        const storeName = stores.find(s => s.id === selectedStore)?.name || 'Sede';
+        const safeName = storeName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20);
+        const fileName = `Programacion_${safeName}.pdf`;
+        
+        const style = document.createElement('style');
+        style.innerHTML = `
+            #printable-area { 
+                background: white !important; 
+                padding: 20px 40px !important; 
+                width: 1700px !important; 
+                color: black !important;
+            }
+            #printable-area .print-only { display: block !important; visibility: visible !important; }
+            #printable-area .no-print { display: none !important; height: 0 !important; margin: 0 !important; padding: 0 !important; }
+            
+            /* Elite V12 PDF Contrast Fix */
+            #printable-area * { 
+                backdrop-filter: none !important; 
+                -webkit-backdrop-filter: none !important;
+                text-shadow: none !important;
+                box-shadow: none !important;
+            }
+            
+            #printable-area h1, #printable-area h2, #printable-area h3, #printable-area h4, #printable-area p, #printable-area span {
+                color: #000000 !important;
+                opacity: 1 !important;
+            }
+
+            #printable-area .card, #printable-area .bg-white, #printable-area .bg-slate-50, #printable-area .bg-indigo-50 {
+                background: #ffffff !important;
+                border: 1px solid #e2e8f0 !important;
+                opacity: 1 !important;
+            }
+
+            #printable-area .turno-bubble { 
+                padding: 6px 10px !important; 
+                font-size: 11px !important; 
+                font-weight: 800 !important;
+                min-width: 100px !important;
+                white-space: nowrap !important;
+                border-radius: 8px !important;
+                color: white !important;
+                opacity: 1 !important;
+                -webkit-print-color-adjust: exact;
+            }
+
+            #printable-area .bg-indigo-600 { background-color: #4f46e5 !important; }
+            #printable-area .bg-amber-500 { background-color: #f59e0b !important; }
+            #printable-area .bg-purple-600 { background-color: #9333ea !important; }
+
+            #printable-area th { 
+                background-color: #f8fafc !important;
+                color: #1e293b !important;
+                font-weight: 900 !important;
+                text-transform: uppercase !important;
+                border: 1px solid #e2e8f0 !important;
+            }
+
+            #printable-area td { 
+                border: 1px solid #f1f5f9 !important;
+                padding: 12px 8px !important;
+            }
+
+            #printable-area .grid-container { width: 100% !important; }
+        `;
+        document.head.appendChild(style);
+
+        const opt = {
+            margin: 0,
+            filename: fileName,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 2, 
+                useCORS: true, 
+                logging: false,
+                width: 1700,
+                backgroundColor: '#ffffff'
+            },
+            jsPDF: { unit: 'px', format: [1700, 1200], orientation: 'landscape' }
+        };
+
+        window.html2pdf().from(element).set(opt).outputPdf('blob').then((blob) => {
+            const fileNameFinal = `Turnos_${safeName}_${Math.floor(Date.now()/1000)}.pdf`;
+            const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/octet-stream' }));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileNameFinal;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 5000);
+            
+            document.head.removeChild(style);
+            setIsExporting(false);
+            showToast("PDF generado con éxito");
+        }).catch(err => {
+            console.error("PDF Error:", err);
+            setIsExporting(false);
+            showToast("Error al generar PDF", "error");
+            document.head.removeChild(style);
+        });
+    }, [isExporting, stores, selectedStore]);
+
+    const handleExcelExport = useCallback(async () => {
+        if (isExporting) return;
+        try {
+            setIsExporting(true);
+            showToast("Preparando Excel Corporativo...", "success");
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Programación');
+            const storeNameOrg = stores.find(s => s.id === selectedStore)?.name || 'Sede';
+            const safeStoreName = storeNameOrg.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20);
+            const fileNameExcel = `Programacion_${safeStoreName}.xlsx`;
+            const dateRange = `${formatDate(currentWeekStart)} — ${formatDate(new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000))}`;
+
+            // Configuración de Columnas
+            worksheet.columns = [
+                { header: 'ID/CÉDULA', key: 'id', width: 18 },
+                { header: 'COLABORADOR', key: 'name', width: 35 },
+                ...days.map((day, i) => ({ 
+                    header: day.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric' }).toUpperCase(), 
+                    key: `day_${i}`, 
+                    width: 15 
+                })),
+                { header: 'TOTAL HRS', key: 'total', width: 15 }
+            ];
+
+            // 1. Título TalenHuman
+            worksheet.mergeCells('A1:J1');
+            const titleRow = worksheet.getRow(1);
+            titleRow.getCell(1).value = 'PROGRAMACION DE TURNOS TALENHUMAN';
+            titleRow.getCell(1).font = { name: 'Segoe UI', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+            titleRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
+            titleRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+            titleRow.height = 40;
+
+            // 2. Metadatos
+            worksheet.addRow([]);
+            const sedeRow = worksheet.addRow([`SEDE: ${storeNameOrg.toUpperCase()}`]);
+            worksheet.mergeCells(`A3:J3`);
+            sedeRow.getCell(1).font = { bold: true };
+            sedeRow.getCell(1).alignment = { horizontal: 'center' };
+
+            const periodRow = worksheet.addRow([`PERIODO: ${dateRange}`]);
+            worksheet.mergeCells(`A4:J4`);
+            periodRow.getCell(1).alignment = { horizontal: 'center' };
+            worksheet.addRow([]);
+
+            // 3. Encabezados
+            const headerRow = worksheet.addRow(['ID/CÉDULA', 'COLABORADOR', ...days.map(d => d.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric' }).toUpperCase()), 'TOTAL HRS']);
+            headerRow.eachCell((cell) => {
+                cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
+                cell.alignment = { horizontal: 'center' };
+                cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+            });
+
+            // 4. Datos con Zebra
+            const getShiftHours = (s) => {
+                if (!s || s.isDescanso) return 0;
+                const start = new Date(s.startTime); const end = new Date(s.endTime);
+                let diff = (end - start) / (1000 * 60 * 60);
+                if (diff < 0) diff += 24; return diff;
+            };
+
+            employees.forEach((emp, idx) => {
+                const empShifts = shifts.filter(s => s.employeeId === emp.id);
+                const totalHours = empShifts.reduce((acc, s) => acc + getShiftHours(s), 0);
+                const rowValues = [emp.documento || '---', `${emp.firstName} ${emp.lastName}`.toUpperCase()];
+                days.forEach(day => {
+                    const shift = empShifts.find(s => new Date(s.startTime).toDateString() === day.toDateString());
+                    if (shift) {
+                        if (shift.isDescanso) rowValues.push("DESCANSO");
+                        else if (shift.isFuera) rowValues.push("FUERA");
+                        else {
+                            const st = new Date(shift.startTime); const et = new Date(shift.endTime);
+                            rowValues.push(`${String(st.getHours()).padStart(2, '0')}:${String(st.getMinutes()).padStart(2, '0')} - ${String(et.getHours()).padStart(2, '0')}:${String(et.getMinutes()).padStart(2, '0')}`);
+                        }
+                    } else rowValues.push("—");
+                });
+                rowValues.push(formatHours(totalHours));
+                const dr = worksheet.addRow(rowValues);
+                if (idx % 2 !== 0) dr.eachCell(c => c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } });
+                dr.eachCell(c => c.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } });
+            });
+
+            // 5. Firma y Descarga
+            worksheet.addRow([]); worksheet.addRow([]);
+            const signRow = worksheet.addRow(['', '_______________________', '', '', '', '', '', '', '_______________________']);
+            const signText = worksheet.addRow(['', 'FIRMA JEFE DE SEDE', '', '', '', '', '', '', 'FIRMA TALENTO HUMANO']);
+            signText.eachCell(c => { c.font = { bold: true }; c.alignment = { horizontal: 'center' }; });
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const fileNameFinal = `Excel_${safeStoreName}_${Math.floor(Date.now()/1000)}.xlsx`;
+            const url = window.URL.createObjectURL(new Blob([buffer], { type: 'application/octet-stream' }));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileNameFinal;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 5000);
+            
+            setIsExporting(false);
+            showToast("Excel generado con éxito");
+        } catch (error) {
+            console.error("Excel Error:", error);
+            setIsExporting(false);
+            showToast("Error al generar Excel", "error");
+        }
+    }, [isExporting, stores, selectedStore, currentWeekStart, days, employees, shifts]);
+
+    const exportToExcel = handleExcelExport;
+    const exportToPDF = handlePdfExport;
 
     return (
         <>
