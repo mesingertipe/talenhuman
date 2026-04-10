@@ -142,6 +142,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const [isDragging, setIsDragging] = useState(false);
     const [dragSource, setDragSource] = useState(null);
     const [draggedData, setDraggedData] = useState(null);
+    const [isProcessingStatus, setIsProcessingStatus] = useState(false);
 
 
 
@@ -1109,27 +1110,34 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         .grid-event-fuera { background: #9333ea !important; color: #ffffff !important; border: none !important; }
                         .grid-event-incapacidad { background: #f1f7ff !important; color: #3b82f6 !important; border: 1px solid #3b82f6 !important; }
                         
-                        .th-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-weight: 950; font-size: 9px; text-transform: uppercase; }
+                        .th-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9999px; font-weight: 950; font-size: 9px; }
                         .th-badge-hours { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
                         .dark .th-badge-hours { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
                         
                         .elite-drop-active { background-color: rgba(79, 70, 229, 0.08) !important; border: 2px dashed #4f46e5 !important; transition: all 0.2s ease; }
                         .dark .elite-drop-active { background-color: rgba(79, 70, 229, 0.15) !important; border-color: #6366f1 !important; }
-                    `}
+
+                        /* Premium Glow Effects */
+                        .shadow-glow-amber { box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4), 0 8px 10px -6px rgba(245, 158, 11, 0.4); }
+                        .shadow-glow-indigo { box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4), 0 8px 10px -6px rgba(79, 70, 229, 0.4); }
+                        .shadow-glow-purple { box-shadow: 0 10px 25px -5px rgba(147, 51, 234, 0.4), 0 8px 10px -6px rgba(147, 51, 234, 0.4); }
+                        .shadow-glow-emerald { box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4), 0 8px 10px -6px rgba(16, 185, 129, 0.4); }
+                        .shadow-glow-rose { box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.4), 0 8px 10px -6px rgba(225, 29, 72, 0.4); }
+                    `},StartLine:1112,TargetContent:`}
                 </style>
 
                 {/* 1. Header para Impresión (Solo Visible al Imprimir) */}
                 <div className="print-only mb-12 border-b-4 border-slate-900 pb-6">
                     <div className="flex justify-between items-end">
                         <div>
-                            <h1 className="text-4xl font-[950] uppercase text-slate-900 tracking-tighter">Programación de Turnos</h1>
-                            <p className="text-slate-500 font-bold mt-2 text-xs uppercase tracking-widest">
-                                Generado por: {user?.fullName || user?.name || 'ADMINISTRADOR'} | {formatTenantDate(new Date(), tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour12: true })}
+                            <h1 className="text-4xl font-[950] text-slate-900 tracking-tighter">Programación de Turnos</h1>
+                            <p className="text-slate-500 font-bold mt-2 text-xs tracking-widest">
+                                Generado por: {user?.fullName || user?.name || 'Administrador'} | {formatTenantDate(new Date(), tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour12: true })}
                             </p>
                         </div>
                         <div className="text-right">
                             <p className="text-xl font-[950] text-slate-900">{stores.find(s => s.id === selectedStore)?.name}</p>
-                            <p className="text-slate-500 font-black text-xs uppercase tracking-widest mt-1">
+                            <p className="text-slate-500 font-black text-xs tracking-widest mt-1">
                                 {formatDate(currentWeekStart)} — {formatDate(new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000))}
                             </p>
                         </div>
@@ -1139,11 +1147,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 {/* 2. Centro de Comando Premium (v13.0) */}
                 <div className="no-print space-y-4 mb-32">
                     
-                    {/* 2.1 Fila 1: Selectores Maestros */}
-                    <div className="flex flex-col lg:flex-row items-center justify-between gap-4 p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-slate-200/50 dark:border-white/5 sticky top-4 z-[1001]" style={{ borderRadius: '32px' }}>
+                    {/* 2.1 Fila 1: Selectores Maestros Compactos */}
+                    <div className="flex flex-row items-center justify-between gap-3 p-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-slate-200/50 dark:border-white/5 sticky top-4 z-[1001] shadow-xl overflow-x-auto" style={{ borderRadius: '32px' }}>
                         
                         {/* Sedes */}
-                        <div className="flex-1 w-full lg:w-[320px]">
+                        <div className="flex-[1.2] min-w-[200px]">
                             <SearchableSelect
                                 options={stores}
                                 value={selectedStore}
@@ -1155,28 +1163,28 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             />
                         </div>
 
-                        {/* Semana (Navegación) */}
-                        <div className="flex-1 flex items-center justify-center gap-4 bg-slate-50/50 dark:bg-slate-800/40 p-2 rounded-2xl border border-slate-100 dark:border-white/5 mx-4">
+                        {/* Semana (Navegación Compacta) */}
+                        <div className="flex-1 flex items-center justify-center gap-3 bg-slate-50/50 dark:bg-slate-800/40 p-1.5 rounded-2xl border border-slate-100 dark:border-white/5 mx-2">
                             <button onClick={() => setWeekOffset(prev => prev - 1)} 
                                     disabled={readOnly}
-                                    className={`p-2 rounded-xl transition-all active:scale-90 ${readOnly ? 'text-slate-200 pointer-events-none opacity-20' : 'text-slate-400 hover:text-indigo-500 hover:bg-white dark:hover:bg-slate-700 shadow-sm'}`} 
-                                    title="Semana Anterior"><ChevronLeft size={20} strokeWidth={3} /></button>
+                                    className={`p-1.5 rounded-xl transition-all active:scale-90 ${readOnly ? 'text-slate-200 pointer-events-none opacity-20' : 'text-slate-400 hover:text-indigo-500 hover:bg-white dark:hover:bg-slate-700 shadow-sm'}`} 
+                                    title="Anterior"><ChevronLeft size={18} strokeWidth={3} /></button>
                             
-                            <div className="flex flex-col items-center min-w-[200px]">
-                                <span className="text-[10px] font-black uppercase text-indigo-500/70 tracking-widest mb-0.5">Programación Semanal</span>
-                                <span className={`text-[13px] font-black text-center whitespace-nowrap ${readOnly ? 'text-slate-400' : 'text-slate-800 dark:text-white'}`}>
+                            <div className="flex flex-col items-center min-w-[160px]">
+                                <span className="text-[9px] font-bold text-indigo-500/70 tracking-tight mb-0">Programación Semanal</span>
+                                <span className={`text-[12px] font-black text-center whitespace-nowrap ${readOnly ? 'text-slate-400' : 'text-slate-800 dark:text-white'}`}>
                                     {currentWeekStart.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} — {new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
                                 </span>
                             </div>
 
                             <button onClick={() => setWeekOffset(prev => prev + 1)} 
                                     disabled={readOnly}
-                                    className={`p-2 rounded-xl transition-all active:scale-90 ${readOnly ? 'text-slate-200 pointer-events-none opacity-20' : 'text-slate-400 hover:text-indigo-500 hover:bg-white dark:hover:bg-slate-700 shadow-sm'}`} 
-                                    title="Semana Siguiente"><ChevronRight size={20} strokeWidth={3} /></button>
+                                    className={`p-1.5 rounded-xl transition-all active:scale-90 ${readOnly ? 'text-slate-200 pointer-events-none opacity-20' : 'text-slate-400 hover:text-indigo-500 hover:bg-white dark:hover:bg-slate-700 shadow-sm'}`} 
+                                    title="Siguiente"><ChevronRight size={18} strokeWidth={3} /></button>
                         </div>
 
-                        {/* Puestos (Z-Index Blindado) */}
-                        <div className="flex-1 w-full lg:w-[320px] relative" style={{ zIndex: 1000000 }}>
+                        {/* Puestos (Compacto) */}
+                        <div className="flex-1 min-w-[200px] relative" style={{ zIndex: 1000000 }}>
                             <SearchableSelect
                                 options={profiles.map(p => ({ id: p.id, name: p.name }))}
                                 value={selectedProfile}
@@ -1188,84 +1196,84 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         </div>
                     </div>
 
-                    {/* 2.2 Fila 2: Barra de Herramientas Squircle */}
-                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-stretch">
+                    {/* 2.2 Fila 2: Barra de Herramientas Compacta Horizontal */}
+                    <div className="flex flex-row items-center gap-4 w-full overflow-x-auto pb-2">
                         
                         {/* Inteligencia */}
-                        <div className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-md p-3 rounded-[32px] border border-slate-100 dark:border-white/5 shadow-xl flex flex-col items-center">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Inteligencia</span>
-                            <div className="flex items-center gap-3">
+                        <div className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-md p-2 px-4 rounded-[28px] border border-slate-100 dark:border-white/5 shadow-xl flex items-center gap-4">
+                            <span className="text-[11px] font-bold text-slate-400 tracking-tight whitespace-nowrap">Inteligencia</span>
+                            <div className="flex items-center gap-2">
                                 {!effectiveReadOnly && (
                                     <>
                                         <button onClick={() => setShowBulkModal(true)}
-                                            className="w-[58px] h-[58px] bg-amber-500 text-white rounded-[22px] flex items-center justify-center hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/20 active:scale-90" title="Masiva">
-                                            <Sparkles size={26} strokeWidth={2.5} />
+                                            className="w-[46px] h-[46px] bg-amber-500 text-white rounded-[18px] flex items-center justify-center hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/30 active:scale-90" title="Programación Masiva">
+                                            <Sparkles size={22} strokeWidth={2.5} />
                                         </button>
                                         <button onClick={copyFromPreviousWeek} 
-                                            className="w-[58px] h-[58px] bg-indigo-500 text-white rounded-[22px] flex items-center justify-center hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-500/20 active:scale-90" title="Clonar">
-                                            <CopyIcon size={26} strokeWidth={2.5} />
+                                            className="w-[46px] h-[46px] bg-indigo-500 text-white rounded-[18px] flex items-center justify-center hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-500/30 active:scale-90" title="Clonar Semana">
+                                            <CopyIcon size={22} strokeWidth={2.5} />
                                         </button>
                                     </>
                                 )}
                                 <button onClick={() => setShowPredictiveModal(true)}
-                                    className="w-[58px] h-[58px] bg-purple-600 text-white rounded-[22px] flex items-center justify-center hover:bg-purple-700 transition-all shadow-lg shadow-purple-500/20 active:scale-90" title="Predictivo">
-                                    <Cpu size={26} strokeWidth={2.5} />
+                                    className="w-[46px] h-[46px] bg-purple-600 text-white rounded-[18px] flex items-center justify-center hover:bg-purple-700 transition-all shadow-lg shadow-purple-500/30 active:scale-90" title="Análisis Predictivo">
+                                    <Cpu size={22} strokeWidth={2.5} />
                                 </button>
                             </div>
                         </div>
 
                         {/* Eventos */}
-                        <div className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-md p-3 rounded-[32px] border border-slate-100 dark:border-white/5 shadow-xl flex flex-col items-center">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Eventos</span>
-                            <div className="flex items-center gap-3">
+                        <div className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-md p-2 px-4 rounded-[28px] border border-slate-100 dark:border-white/5 shadow-xl flex items-center gap-4">
+                            <span className="text-[11px] font-bold text-slate-400 tracking-tight whitespace-nowrap">Eventos</span>
+                            <div className="flex items-center gap-2">
                                 {!effectiveReadOnly ? (
                                     <>
                                         {[
-                                            { type: 'Turno', color: 'bg-indigo-600', icon: Clock, title: 'Turno' },
-                                            { type: 'Descanso', color: 'bg-amber-500', icon: Calendar, title: 'Descanso' },
-                                            { type: 'Turno Fuera', color: 'bg-purple-600', icon: AlertCircle, title: 'Fuera' }
+                                            { type: 'Turno', color: 'bg-indigo-600', icon: Clock, title: 'Nuevo Turno' },
+                                            { type: 'Descanso', color: 'bg-amber-500', icon: Calendar, title: 'Día de Descanso' },
+                                            { type: 'Turno Fuera', color: 'bg-purple-600', icon: AlertCircle, title: 'Asignación Fuera' }
                                         ].map((tool, idx) => (
                                             <div key={idx} draggable onDragStart={(e) => handleDragStart(e, 'PANEL', { type: tool.type })} 
-                                                className={`w-[58px] h-[58px] ${tool.color} text-white rounded-[22px] flex items-center justify-center cursor-grab hover:scale-105 transition-all shadow-lg active:scale-90`} title={tool.title}>
-                                                <tool.icon size={26} strokeWidth={2.5} />
+                                                className={`w-[46px] h-[46px] ${tool.color} text-white rounded-[18px] flex items-center justify-center cursor-grab hover:scale-105 transition-all shadow-lg active:scale-90`} title={tool.title}>
+                                                <tool.icon size={22} strokeWidth={2.5} />
                                             </div>
                                         ))}
                                         <div onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnTrash} 
-                                            className="w-[58px] h-[58px] bg-rose-50 dark:bg-rose-900/20 text-rose-500 rounded-[22px] flex items-center justify-center border-2 border-dashed border-rose-200 dark:border-rose-800 hover:bg-rose-600 hover:text-white transition-all cursor-pointer shadow-sm active:scale-90" title="Borrar">
-                                            <Trash2 size={26} strokeWidth={2.5} />
+                                            className="w-[46px] h-[46px] bg-rose-50 dark:bg-rose-900/20 text-rose-500 rounded-[18px] flex items-center justify-center border-2 border-dashed border-rose-200 dark:border-rose-800 hover:bg-rose-600 hover:text-white transition-all cursor-pointer shadow-sm active:scale-90" title="Borrar Turno">
+                                            <Trash2 size={22} strokeWidth={2.5} />
                                         </div>
                                     </>
                                 ) : (
-                                    <div className="h-[58px] flex items-center text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] px-8 bg-slate-100 dark:bg-slate-800/40 rounded-[22px]">Semana Cerrada</div>
+                                    <div className="h-[46px] flex items-center text-slate-400 font-bold text-[10px] tracking-tight px-4 bg-slate-100 dark:bg-slate-800/40 rounded-[18px]">Semana cerrada</div>
                                 )}
                             </div>
                         </div>
 
                         {/* Utilidades */}
-                        <div className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-md p-3 rounded-[32px] border border-slate-100 dark:border-white/5 shadow-xl flex flex-col items-center">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Utilidades</span>
-                            <div className="flex items-center gap-3">
+                        <div className="flex-1 bg-white/60 dark:bg-slate-900/40 backdrop-blur-md p-2 px-4 rounded-[28px] border border-slate-100 dark:border-white/5 shadow-xl flex items-center justify-between gap-4">
+                            <span className="text-[11px] font-bold text-slate-400 tracking-tight whitespace-nowrap">Utilidades</span>
+                            <div className="flex items-center gap-2">
                                 <button onClick={handleExcelExport} disabled={isExporting} 
-                                    className="w-[58px] h-[58px] bg-emerald-600 text-white rounded-[22px] flex items-center justify-center hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20 active:scale-90" title="Excel">
-                                    <FileSpreadsheet size={26} strokeWidth={2.5} />
+                                    className="w-[46px] h-[46px] bg-emerald-600 text-white rounded-[18px] flex items-center justify-center hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/30 active:scale-90" title="Exportar Excel">
+                                    <FileSpreadsheet size={22} strokeWidth={2.5} />
                                 </button>
                                 <button onClick={handlePdfExport} disabled={isExporting}
-                                    className="w-[58px] h-[58px] bg-rose-600 text-white rounded-[22px] flex items-center justify-center hover:bg-rose-700 transition-all shadow-lg shadow-rose-500/20 active:scale-90" title="Pdf">
-                                    <FileDown size={26} strokeWidth={2.5} />
+                                    className="w-[46px] h-[46px] bg-rose-600 text-white rounded-[18px] flex items-center justify-center hover:bg-rose-700 transition-all shadow-lg shadow-rose-500/30 active:scale-90" title="Exportar Pdf">
+                                    <FileDown size={22} strokeWidth={2.5} />
                                 </button>
                                 {!effectiveReadOnly && (
                                     <button onClick={handleSave} disabled={isExporting} 
-                                        className="w-[58px] h-[58px] bg-indigo-600 text-white rounded-[22px] flex items-center justify-center hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20 active:scale-90" title="Guardar">
-                                        {isSaving ? <div className="loader !w-5 !h-5 !border-white"></div> : <Save size={26} strokeWidth={2.5} />}
+                                        className="w-[46px] h-[46px] bg-indigo-600 text-white rounded-[18px] flex items-center justify-center hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/30 active:scale-90" title="Guardar Cambios">
+                                        {isSaving ? <div className="loader !w-5 !h-5 !border-white"></div> : <Save size={22} strokeWidth={2.5} />}
                                     </button>
                                 )}
-                                <div className="w-[1px] h-10 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                                <div className="w-[1px] h-8 bg-slate-200 dark:bg-slate-700 mx-1"></div>
                                 <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-slate-700 gap-1">
-                                    <button onClick={() => setViewMode('SHIFTS')} className={`w-[38px] h-[38px] flex items-center justify-center rounded-full transition-all ${viewMode === 'SHIFTS' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
-                                        <Calendar size={18} strokeWidth={2.5} />
+                                    <button onClick={() => setViewMode('SHIFTS')} className={`w-[34px] h-[34px] flex items-center justify-center rounded-full transition-all ${viewMode === 'SHIFTS' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                                        <Calendar size={16} strokeWidth={2.5} />
                                     </button>
-                                    <button onClick={() => setViewMode('ATTENDANCE')} className={`w-[38px] h-[38px] flex items-center justify-center rounded-full transition-all ${viewMode === 'ATTENDANCE' ? 'bg-white dark:bg-slate-700 text-emerald-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
-                                        <Clock size={18} strokeWidth={2.5} />
+                                    <button onClick={() => setViewMode('ATTENDANCE')} className={`w-[34px] h-[34px] flex items-center justify-center rounded-full transition-all ${viewMode === 'ATTENDANCE' ? 'bg-white dark:bg-slate-700 text-emerald-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                                        <Clock size={16} strokeWidth={2.5} />
                                     </button>
                                 </div>
                             </div>
@@ -1277,8 +1285,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     <div className="flex justify-end pr-8 -mt-4 mb-4">
                         <div className="flex items-center gap-2 px-4 py-2 bg-slate-100/50 dark:bg-slate-800/30 backdrop-blur-md rounded-full border border-slate-200/50 dark:border-slate-700/50">
                             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                            <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">
-                                {employees.length} Colaboradores Activos en esta Sede
+                            <span className="text-[9px] font-black text-slate-500 dark:text-slate-400 tracking-[0.2em]">
+                                {employees.length} colaboradores activos en esta sede
                             </span>
                         </div>
                     </div>
@@ -1288,7 +1296,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         <div className="no-print flex items-center gap-3 p-3 bg-indigo-50/30 dark:bg-indigo-900/5 border border-indigo-100/50 rounded-2xl mb-4">
                             <FileText size={14} className="text-indigo-400" />
                             <p className="text-[11px] font-bold text-slate-500 leading-none m-0 truncate">
-                                <span className="text-indigo-500 font-black uppercase text-[9px] mr-2">Observación:</span>
+                                <span className="text-indigo-500 font-black text-[9px] mr-2 italic">Observación:</span>
                                 {lastSaveComment}
                             </p>
                         </div>
@@ -1321,10 +1329,10 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             </div>
                                         </div>
                                     </div>
-                                    <h3 className="text-xl font-[950] text-slate-800 dark:text-white mb-2 uppercase tracking-tight">
-                                        {syncPhase < 30 ? "Iniciando Consola" : 
-                                         syncPhase < 70 ? "Sincronizando Nómina" : 
-                                         syncPhase < 95 ? "Validando Registros" : "¡Consola Lista!"}
+                                    <h3 className="text-xl font-[950] text-slate-800 dark:text-white mb-2 tracking-tight">
+                                        {syncPhase < 30 ? "Iniciando consola" : 
+                                         syncPhase < 70 ? "Sincronizando nómina" : 
+                                         syncPhase < 95 ? "Validando registros" : "¡Consola lista!"}
                                     </h3>
                                     <p className="text-sm font-bold text-slate-400 leading-relaxed px-4">
                                         {syncPhase < 30 ? "Preparando entorno de auditoría..." : 
@@ -1361,7 +1369,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                         <Square size={18} className="text-slate-400" />
                                                     )}
                                                 </button>
-                                                <span className="text-[11px] font-[1000] uppercase tracking-[0.2em]"
+                                                <span className="text-[11px] font-[1000] tracking-[0.2em]"
                                                       style={{ color: isDarkMode ? '#cbd5e1' : '#64748b' }}>
                                                     Colaborador / Jornada
                                                 </span>
@@ -1369,11 +1377,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         </th>
                                         {days.map((day, i) => (
                                             <th key={i} className="p-4 text-center border-r dark:border-slate-700 min-w-[140px]">
-                                                <p className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 uppercase tracking-[0.2em] mb-1">{day.toLocaleDateString('es-CO', { weekday: 'short' })}</p>
+                                                <p className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 tracking-[0.2em] mb-1">{day.toLocaleDateString('es-CO', { weekday: 'short' })}</p>
                                                 <p className="text-2xl font-[950] text-slate-800 dark:text-white leading-none tracking-tighter">{day.getDate()}</p>
                                             </th>
                                         ))}
-                                        <th className="p-4 text-center bg-slate-100/30 dark:bg-slate-800/40 w-[160px] min-w-[160px] font-[950] text-[11px] uppercase text-slate-400 dark:text-indigo-300 tracking-[0.2em] border-l dark:border-slate-700">Hrs</th>
+                                        <th className="p-4 text-center bg-slate-100/30 dark:bg-slate-800/40 w-[160px] min-w-[160px] font-[950] text-[11px] text-slate-400 dark:text-indigo-300 tracking-[0.2em] border-l dark:border-slate-700">Horas</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1408,9 +1416,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                         <div className="flex flex-col">
                                                             <span className="text-[15px] font-[950] text-slate-800 dark:text-white leading-tight mb-1">{emp.firstName} {emp.lastName}</span>
                                                             <div className="flex items-center gap-2">
-                                                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tighter">{emp.documento}</span>
+                                                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-tighter">{emp.documento}</span>
                                                                 <span className="text-[10px] text-slate-300 dark:text-slate-700 font-black">|</span>
-                                                                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-black text-[10px] uppercase">
+                                                                <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-black text-[10px]">
                                                                     <Clock size={12} strokeWidth={3} />
                                                                     {jornadas.find(j => j.id === emp.jornadaId)?.horasSemanales || 48}h
                                                                 </div>
@@ -1438,7 +1446,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                 {nov && (
                                                                     <div onClick={() => { setSelectedNov({ ...nov, empName: `${emp.firstName} ${emp.lastName}` }); setShowNovModal(true); }}
                                                                          className="rounded-2xl h-12 flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition-all border-2 border-blue-200 bg-blue-50 dark:bg-blue-900/10 dark:border-blue-800 shrink-0">
-                                                                        <span className="text-[8px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-1 leading-none">NOVEDAD</span>
+                                                                        <span className="text-[8px] font-black tracking-widest text-blue-600 dark:text-blue-400 mb-1 leading-none">Novedad</span>
                                                                         <div className="h-4 w-4 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center text-blue-500">
                                                                             <Info size={10} strokeWidth={3} />
                                                                         </div>
@@ -1617,7 +1625,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 {/* Justificación de la semana (Print) */}
                 {(saveComment || lastSaveComment) && (
                     <div className="print-only print-comment-box mt-10 p-6 bg-slate-50 border-2 border-slate-200 rounded-3xl">
-                        <p className="text-[10px] font-black uppercase text-indigo-600 mb-2 tracking-widest">Observaciones de la programación:</p>
+                        <p className="text-[10px] font-black text-indigo-600 mb-2 tracking-widest">Observaciones de la programación:</p>
                         <p className="text-[13px] font-bold text-slate-800 leading-relaxed italic">
                             "{saveComment || lastSaveComment}"
                         </p>
@@ -1626,8 +1634,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
                 {/* Print Footer */}
                 <div className="print-only mt-12 grid grid-cols-2 gap-16 border-t-2 border-slate-900 pt-8">
-                    <div className="text-center"><p className="text-xs font-black uppercase">Firma Jefe de Sede</p></div>
-                    <div className="text-center"><p className="text-xs font-black uppercase">Firma Talento Humano</p></div>
+                    <div className="text-center"><p className="text-xs font-black">Firma Jefe de Sede</p></div>
+                    <div className="text-center"><p className="text-xs font-black">Firma Talento Humano</p></div>
                 </div>
             </div>
 
@@ -1710,7 +1718,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         <button 
                                             onClick={confirmReject}
                                             disabled={loading}
-                                            style={{ width: '100%', padding: '24px', borderRadius: '22px', border: 'none', background: '#ef4444', color: 'white', fontWeight: '950', fontSize: '12px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 35px rgba(239, 68, 68, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', transition: 'all 0.2s' }}
+                                            style={{ width: '100%', padding: '24px', borderRadius: '22px', border: 'none', background: '#ef4444', color: 'white', fontWeight: '950', fontSize: '12px', cursor: 'pointer', boxShadow: '0 15px 35px rgba(239, 68, 68, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', transition: 'all 0.2s' }}
                                             className="hover:scale-[1.02] active:scale-95"
                                         >
                                             {loading ? <div className="loader !w-5 !h-5 !border-white"></div> : 'Confirmar Rechazo'}
