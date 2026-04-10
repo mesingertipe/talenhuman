@@ -19,5 +19,6 @@ jobs:
         key: ${{ secrets.DO_SSH_KEY }}
         script: |
           cd /var/www/talenhuman
-          git pull origin main
+          git fetch --all
+          git reset --hard origin/main
           docker compose up -d --build
