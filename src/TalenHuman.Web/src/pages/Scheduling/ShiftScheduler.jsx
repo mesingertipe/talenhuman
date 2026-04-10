@@ -1118,12 +1118,15 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         .dark .elite-drop-active { background-color: rgba(79, 70, 229, 0.15) !important; border-color: #6366f1 !important; }
 
                         /* Premium Glow Effects */
-                        .shadow-glow-amber { box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4), 0 8px 10px -6px rgba(245, 158, 11, 0.4); }
-                        .shadow-glow-indigo { box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4), 0 8px 10px -6px rgba(79, 70, 229, 0.4); }
-                        .shadow-glow-purple { box-shadow: 0 10px 25px -5px rgba(147, 51, 234, 0.4), 0 8px 10px -6px rgba(147, 51, 234, 0.4); }
-                        .shadow-glow-emerald { box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4), 0 8px 10px -6px rgba(16, 185, 129, 0.4); }
-                        .shadow-glow-rose { box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.4), 0 8px 10px -6px rgba(225, 29, 72, 0.4); }
-                    `},StartLine:1112,TargetContent:`}
+                        .shadow-glow-amber { box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), 0 10px 25px -5px rgba(245, 158, 11, 0.4), 0 8px 10px -6px rgba(245, 158, 11, 0.4); }
+                        .shadow-glow-indigo { box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), 0 10px 25px -5px rgba(79, 70, 229, 0.4), 0 8px 10px -6px rgba(79, 70, 229, 0.4); }
+                        .shadow-glow-purple { box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), 0 10px 25px -5px rgba(147, 51, 234, 0.4), 0 8px 10px -6px rgba(147, 51, 234, 0.4); }
+                        .shadow-glow-emerald { box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), 0 10px 25px -5px rgba(16, 185, 129, 0.4), 0 8px 10px -6px rgba(16, 185, 129, 0.4); }
+                        .shadow-glow-rose { box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), 0 10px 25px -5px rgba(225, 29, 72, 0.4), 0 8px 10px -6px rgba(225, 29, 72, 0.4); }
+                        
+                        .btn-chiclet { position: relative; border: 1px solid rgba(255,255,255,0.1); border-top: 2px solid rgba(255,255,255,0.3); }
+                        .btn-chiclet-trash { box-shadow: inset 0 2px 4px rgba(255,255,255,0.1); }
+                    `}
                 </style>
 
                 {/* 1. Header para Impresión (Solo Visible al Imprimir) */}
@@ -1151,7 +1154,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     <div className="flex flex-row items-center justify-between gap-3 p-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-slate-200/50 dark:border-white/5 sticky top-4 z-[1001] shadow-xl overflow-x-auto" style={{ borderRadius: '32px' }}>
                         
                         {/* Sedes */}
-                        <div className="flex-[1.2] min-w-[200px]">
+                        <div className="flex-1 min-w-[200px]">
                             <SearchableSelect
                                 options={stores}
                                 value={selectedStore}
@@ -1196,50 +1199,50 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         </div>
                     </div>
 
-                    {/* 2.2 Fila 2: Barra de Herramientas Compacta Horizontal */}
-                    <div className="flex flex-row items-center gap-4 w-full overflow-x-auto pb-2">
+                    {/* 2.2 Fila 2: Barra de Herramientas Premium (Vertical Layout) */}
+                    <div className="grid grid-cols-3 items-start gap-6 w-full mt-2">
                         
-                        {/* Inteligencia */}
-                        <div className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-md p-2 px-4 rounded-[28px] border border-slate-100 dark:border-white/5 shadow-xl flex items-center gap-4">
-                            <span className="text-[11px] font-bold text-slate-400 tracking-tight whitespace-nowrap">Inteligencia</span>
-                            <div className="flex items-center gap-2">
+                        {/* Inteligencia (Izquierda) */}
+                        <div className="flex flex-col items-start gap-2">
+                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-[0.2em] ml-2">Inteligencia</span>
+                            <div className="flex items-center gap-2 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md p-1.5 rounded-[24px] border border-slate-200/50 dark:border-white/5 shadow-sm">
                                 {!effectiveReadOnly && (
                                     <>
                                         <button onClick={() => setShowBulkModal(true)}
-                                            className="w-[46px] h-[46px] bg-amber-500 text-white rounded-[18px] flex items-center justify-center hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/30 active:scale-90" title="Programación Masiva">
+                                            className="w-[46px] h-[46px] bg-amber-500 text-white rounded-[18px] flex items-center justify-center hover:bg-amber-600 transition-all shadow-glow-amber active:scale-95 btn-chiclet" title="Programación Masiva">
                                             <Sparkles size={22} strokeWidth={2.5} />
                                         </button>
                                         <button onClick={copyFromPreviousWeek} 
-                                            className="w-[46px] h-[46px] bg-indigo-500 text-white rounded-[18px] flex items-center justify-center hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-500/30 active:scale-90" title="Clonar Semana">
+                                            className="w-[46px] h-[46px] bg-indigo-500 text-white rounded-[18px] flex items-center justify-center hover:bg-indigo-600 transition-all shadow-glow-indigo active:scale-95 btn-chiclet" title="Clonar Semana">
                                             <CopyIcon size={22} strokeWidth={2.5} />
                                         </button>
                                     </>
                                 )}
                                 <button onClick={() => setShowPredictiveModal(true)}
-                                    className="w-[46px] h-[46px] bg-purple-600 text-white rounded-[18px] flex items-center justify-center hover:bg-purple-700 transition-all shadow-lg shadow-purple-500/30 active:scale-90" title="Análisis Predictivo">
+                                    className="w-[46px] h-[46px] bg-purple-600 text-white rounded-[18px] flex items-center justify-center hover:bg-purple-700 transition-all shadow-glow-purple active:scale-95 btn-chiclet" title="Análisis Predictivo">
                                     <Cpu size={22} strokeWidth={2.5} />
                                 </button>
                             </div>
                         </div>
 
-                        {/* Eventos */}
-                        <div className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-md p-2 px-4 rounded-[28px] border border-slate-100 dark:border-white/5 shadow-xl flex items-center gap-4">
-                            <span className="text-[11px] font-bold text-slate-400 tracking-tight whitespace-nowrap">Eventos</span>
-                            <div className="flex items-center gap-2">
+                        {/* Eventos (Centro) */}
+                        <div className="flex flex-col items-center gap-2">
+                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-[0.2em]">Centro de Eventos</span>
+                            <div className="flex items-center gap-2 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md p-1.5 rounded-[24px] border border-slate-200/50 dark:border-white/5 shadow-sm">
                                 {!effectiveReadOnly ? (
                                     <>
                                         {[
-                                            { type: 'Turno', color: 'bg-indigo-600', icon: Clock, title: 'Nuevo Turno' },
-                                            { type: 'Descanso', color: 'bg-amber-500', icon: Calendar, title: 'Día de Descanso' },
-                                            { type: 'Turno Fuera', color: 'bg-purple-600', icon: AlertCircle, title: 'Asignación Fuera' }
+                                            { type: 'Turno', shadow: 'shadow-glow-indigo', color: 'bg-indigo-600', icon: Clock, title: 'Nuevo Turno' },
+                                            { type: 'Descanso', shadow: 'shadow-glow-amber', color: 'bg-amber-500', icon: Calendar, title: 'Día de Descanso' },
+                                            { type: 'Turno Fuera', shadow: 'shadow-glow-purple', color: 'bg-purple-600', icon: AlertCircle, title: 'Asignación Fuera' }
                                         ].map((tool, idx) => (
                                             <div key={idx} draggable onDragStart={(e) => handleDragStart(e, 'PANEL', { type: tool.type })} 
-                                                className={`w-[46px] h-[46px] ${tool.color} text-white rounded-[18px] flex items-center justify-center cursor-grab hover:scale-105 transition-all shadow-lg active:scale-90`} title={tool.title}>
+                                                className={`w-[46px] h-[46px] ${tool.color} text-white rounded-[18px] flex items-center justify-center cursor-grab hover:scale-105 transition-all ${tool.shadow} active:scale-95 btn-chiclet`} title={tool.title}>
                                                 <tool.icon size={22} strokeWidth={2.5} />
                                             </div>
                                         ))}
                                         <div onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnTrash} 
-                                            className="w-[46px] h-[46px] bg-rose-50 dark:bg-rose-900/20 text-rose-500 rounded-[18px] flex items-center justify-center border-2 border-dashed border-rose-200 dark:border-rose-800 hover:bg-rose-600 hover:text-white transition-all cursor-pointer shadow-sm active:scale-90" title="Borrar Turno">
+                                            className="w-[46px] h-[46px] bg-rose-50 dark:bg-rose-900/20 text-rose-500 rounded-[18px] flex items-center justify-center border-2 border-dashed border-rose-200 dark:border-rose-800 hover:bg-rose-600 hover:text-white transition-all cursor-pointer shadow-sm active:scale-95 btn-chiclet-trash" title="Borrar Turno">
                                             <Trash2 size={22} strokeWidth={2.5} />
                                         </div>
                                     </>
@@ -1249,30 +1252,30 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             </div>
                         </div>
 
-                        {/* Utilidades */}
-                        <div className="flex-1 bg-white/60 dark:bg-slate-900/40 backdrop-blur-md p-2 px-4 rounded-[28px] border border-slate-100 dark:border-white/5 shadow-xl flex items-center justify-between gap-4">
-                            <span className="text-[11px] font-bold text-slate-400 tracking-tight whitespace-nowrap">Utilidades</span>
-                            <div className="flex items-center gap-2">
+                        {/* Utilidades (Derecha) */}
+                        <div className="flex flex-col items-end gap-2">
+                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-[0.2em] mr-2">Utilidades</span>
+                            <div className="flex items-center gap-2 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md p-1.5 rounded-[24px] border border-slate-200/50 dark:border-white/5 shadow-sm">
                                 <button onClick={handleExcelExport} disabled={isExporting} 
-                                    className="w-[46px] h-[46px] bg-emerald-600 text-white rounded-[18px] flex items-center justify-center hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/30 active:scale-90" title="Exportar Excel">
+                                    className="w-[46px] h-[46px] bg-emerald-600 text-white rounded-[18px] flex items-center justify-center hover:bg-emerald-700 transition-all shadow-glow-emerald active:scale-95 btn-chiclet" title="Exportar Excel">
                                     <FileSpreadsheet size={22} strokeWidth={2.5} />
                                 </button>
                                 <button onClick={handlePdfExport} disabled={isExporting}
-                                    className="w-[46px] h-[46px] bg-rose-600 text-white rounded-[18px] flex items-center justify-center hover:bg-rose-700 transition-all shadow-lg shadow-rose-500/30 active:scale-90" title="Exportar Pdf">
+                                    className="w-[46px] h-[46px] bg-rose-600 text-white rounded-[18px] flex items-center justify-center hover:bg-rose-700 transition-all shadow-glow-rose active:scale-95 btn-chiclet" title="Exportar Pdf">
                                     <FileDown size={22} strokeWidth={2.5} />
                                 </button>
                                 {!effectiveReadOnly && (
                                     <button onClick={handleSave} disabled={isExporting} 
-                                        className="w-[46px] h-[46px] bg-indigo-600 text-white rounded-[18px] flex items-center justify-center hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/30 active:scale-90" title="Guardar Cambios">
+                                        className="w-[46px] h-[46px] bg-indigo-600 text-white rounded-[18px] flex items-center justify-center hover:bg-indigo-700 transition-all shadow-glow-indigo active:scale-95 btn-chiclet" title="Guardar Cambios">
                                         {isSaving ? <div className="loader !w-5 !h-5 !border-white"></div> : <Save size={22} strokeWidth={2.5} />}
                                     </button>
                                 )}
                                 <div className="w-[1px] h-8 bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                                <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-slate-700 gap-1">
-                                    <button onClick={() => setViewMode('SHIFTS')} className={`w-[34px] h-[34px] flex items-center justify-center rounded-full transition-all ${viewMode === 'SHIFTS' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                                <div className="flex items-center bg-white dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-slate-700 gap-1 shadow-sm">
+                                    <button onClick={() => setViewMode('SHIFTS')} className={`w-[34px] h-[34px] flex items-center justify-center rounded-full transition-all ${viewMode === 'SHIFTS' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
                                         <Calendar size={16} strokeWidth={2.5} />
                                     </button>
-                                    <button onClick={() => setViewMode('ATTENDANCE')} className={`w-[34px] h-[34px] flex items-center justify-center rounded-full transition-all ${viewMode === 'ATTENDANCE' ? 'bg-white dark:bg-slate-700 text-emerald-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                                    <button onClick={() => setViewMode('ATTENDANCE')} className={`w-[34px] h-[34px] flex items-center justify-center rounded-full transition-all ${viewMode === 'ATTENDANCE' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
                                         <Clock size={16} strokeWidth={2.5} />
                                     </button>
                                 </div>
