@@ -129,11 +129,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const [showApprovalModal, setShowApprovalModal] = useState(false);
     const [rejectionComment, setRejectionComment] = useState('');
     const [approvalComment, setApprovalComment] = useState('');
-    const [isProcessingStatus, setIsProcessingStatus] = useState(false);
+    const [showPredictiveModal, setShowPredictiveModal] = useState(false);
     const [syncPhase, setSyncPhase] = useState(0); // 0: Init, 1: Validating, 2: Syncing, 3: Notifying, 4: Done
     const [dataLoaded, setDataLoaded] = useState(false);
 
-    // V19.2: BLINDAJE DE SEGURIDAD ELITE - Modo Inspección Auditoría
+    // V19.2: BLINDAJE DE SEGURIDAD PREMIUM - Modo Inspección Auditoría
     const effectiveReadOnly = useMemo(() => {
         if (readOnly) return true;
         if (weeklyStatus.status === 'Approved') return true;
@@ -479,14 +479,14 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     };
 
     const handleDragStart = (e, source, data) => {
-        // V17.2 ELITE CLEANUP: Desactivar tooltips inmediatamente para que no se vean en el arrastre
+        // V17.2 PREMIUM CLEANUP: Desactivar tooltips inmediatamente para que no se vean en el arrastre
         setHoveredShiftData(null);
         
         setIsDragging(true);
         setDragSource(source);
         setDraggedData(data);
 
-        // V13.0 ELITE HIGH-FIDELITY GHOST IMAGE
+        // V13.0 PREMIUM HIGH-FIDELITY GHOST IMAGE
         const ghost = document.createElement('div');
         ghost.className = 'elite-drag-ghost';
         
@@ -1136,156 +1136,142 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     </div>
                 </div>
 
-                {/* 2. UI Principal (V12.20 Command Center) */}
-                <div className="no-print space-y-32 mb-32">
-                    {/* 2. UI Principal: COMANDO CENTRAL V12.21 (Floating Glassmorphism Dock) */}
-                    <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-8 sticky top-4 z-[100] transition-all duration-500">
+                {/* 2. Centro de Comando Premium (v13.0) */}
+                <div className="no-print space-y-4 mb-32">
+                    
+                    {/* 2.1 Fila 1: Selectores Maestros */}
+                    <div className="flex flex-col lg:flex-row items-center justify-between gap-4 p-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-slate-200/50 dark:border-white/5 sticky top-4 z-[1001]" style={{ borderRadius: '32px' }}>
                         
-                        {/* 2.1 Dock de Filtros (Glassmorphism) */}
-                        <div className="flex-1 flex flex-col md:flex-row items-center gap-3 p-4 bg-white/70 dark:bg-slate-900/60 backdrop-blur-3xl border border-white/20 dark:border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.1)]"
-                             style={{ borderRadius: '32px' }}>
-                            
-                            <div className="w-full md:w-[260px]" data-v12-tooltip="Filtrar por Sede Operativa">
-                                <SearchableSelect
-                                    options={stores}
-                                    value={selectedStore}
-                                    onChange={(val) => setSelectedStore(val)}
-                                    placeholder="SELECCIONAR SEDE..."
-                                    icon={Store}
-                                    variant="minimal"
-                                    disabled={readOnly}
-                                />
-                            </div>
-
-                            <div className="hidden md:block w-[1px] h-8 bg-slate-200/50 dark:bg-slate-700/50"></div>
-
-                            <div className="w-full md:w-[240px]" data-v12-tooltip="Filtrar por Puesto (Hacer clic sobre el seleccionado para desmarcar)">
-                                <SearchableSelect
-                                    options={profiles.map(p => ({ id: p.id, name: p.name }))}
-                                    value={selectedProfile}
-                                    onChange={(val) => setSelectedProfile(prev => prev === val ? '' : val)}
-                                    placeholder="TODOS LOS PUESTOS..."
-                                    icon={ShieldCheck}
-                                    variant="minimal"
-                                />
-                            </div>
-
-                            <div className="flex items-center gap-4 px-6 py-3 bg-white dark:bg-slate-800 border-slate-100 rounded-[20px] border shadow-sm min-w-[200px]">
-                                {isProcessingStatus ? (
-                                    <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                                ) : (
-                                    <>
-                                        <div className={`w-3 h-3 rounded-full animate-pulse ${weeklyStatus.status === 'Approved' ? 'bg-emerald-500' : (weeklyStatus.status === 'Rejected' ? 'bg-rose-500' : (weeklyStatus.status === 'Empty' ? 'bg-slate-300' : 'bg-amber-500'))}`}></div>
-                                        <div className="flex flex-col leading-none">
-                                            <span className={`text-[8px] font-black uppercase tracking-[0.2em] mb-1 leading-none ${weeklyStatus.status === 'Approved' ? 'text-emerald-500' : (weeklyStatus.status === 'Rejected' ? 'text-rose-500' : 'text-slate-400')}`}>
-                                                ESTADO SEMANAL
-                                            </span>
-                                            <span className={`text-[11px] font-[1000] uppercase tracking-tighter ${weeklyStatus.status === 'Approved' ? 'text-emerald-600' : (weeklyStatus.status === 'Rejected' ? 'text-rose-600' : 'text-amber-600')}`}>
-                                                {weeklyStatus.status === 'Approved' ? 'Semana Cerrada' : (weeklyStatus.status === 'Rejected' ? 'Ajustar Turnos' : (weeklyStatus.status === 'Published' ? 'Validando...' : 'En Edición'))}
-                                            </span>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
+                        {/* Sedes */}
+                        <div className="flex-1 w-full lg:w-[320px]">
+                            <SearchableSelect
+                                options={stores}
+                                value={selectedStore}
+                                onChange={(val) => setSelectedStore(val)}
+                                placeholder="Seleccionar Sede..."
+                                icon={Store}
+                                variant="minimal"
+                                disabled={readOnly}
+                            />
                         </div>
 
-                        {/* 2.2 Comando Central Ultra-Compacto V12.24 */}
-                        <div className="flex flex-wrap items-center justify-between gap-4 p-2.5 bg-white dark:bg-slate-900 shadow-xl border border-slate-100 dark:border-slate-800 w-full" 
-                             style={{ borderRadius: '32px' }}>
+                        {/* Semana (Navegación) */}
+                        <div className="flex-1 flex items-center justify-center gap-4 bg-slate-50/50 dark:bg-slate-800/40 p-2 rounded-2xl border border-slate-100 dark:border-white/5 mx-4">
+                            <button onClick={() => setWeekOffset(prev => prev - 1)} 
+                                    disabled={readOnly}
+                                    className={`p-2 rounded-xl transition-all active:scale-90 ${readOnly ? 'text-slate-200 pointer-events-none opacity-20' : 'text-slate-400 hover:text-indigo-500 hover:bg-white dark:hover:bg-slate-700 shadow-sm'}`} 
+                                    title="Semana Anterior"><ChevronLeft size={20} strokeWidth={3} /></button>
                             
-                            {/* Navegación de Fecha (Bloqueada en Auditoría V12.24) */}
-                            <div className="flex-shrink-0 flex items-center pr-4 border-r border-slate-100 dark:border-slate-800">
-                                <button onClick={() => setWeekOffset(prev => prev - 1)} 
-                                        disabled={readOnly}
-                                        className={`p-2.5 rounded-xl transition-all active:scale-90 ${readOnly ? 'text-slate-200 cursor-not-allowed' : 'text-slate-400 hover:text-indigo-500 hover:bg-slate-50'}`} 
-                                        data-v12-tooltip={readOnly ? "Semana bloqueada en Auditoría" : "Semana Anterior"}><ChevronLeft size={18} strokeWidth={3} /></button>
-                                
-                                <div className="flex flex-col items-center px-4 min-w-[160px]">
-                                    <span className={`text-[12px] font-[1000] uppercase tracking-tight text-center whitespace-nowrap ${readOnly ? 'text-slate-400' : 'text-slate-800 dark:text-white'}`}>
-                                        {currentWeekStart.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} — {new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
-                                    </span>
-                                </div>
-
-                                <button onClick={() => setWeekOffset(prev => prev + 1)} 
-                                        disabled={readOnly}
-                                        className={`p-2.5 rounded-xl transition-all active:scale-90 ${readOnly ? 'text-slate-200 cursor-not-allowed' : 'text-slate-400 hover:text-indigo-500 hover:bg-slate-50'}`} 
-                                        data-v12-tooltip={readOnly ? "Semana bloqueada en Auditoría" : "Semana Siguiente"}><ChevronRight size={18} strokeWidth={3} /></button>
+                            <div className="flex flex-col items-center min-w-[200px]">
+                                <span className="text-[10px] font-black uppercase text-indigo-500/70 tracking-widest mb-0.5">Programación Semanal</span>
+                                <span className={`text-[13px] font-black text-center whitespace-nowrap ${readOnly ? 'text-slate-400' : 'text-slate-800 dark:text-white'}`}>
+                                    {currentWeekStart.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} — {new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
+                                </span>
                             </div>
 
-                            {/* Acciones Globales Linealizadas */}
-                            <div className="flex-1 flex items-center justify-center gap-2">
-                                <button onClick={handleExcelExport} disabled={isExporting} 
-                                    className="flex items-center gap-2 px-4 h-[44px] bg-emerald-600 text-white rounded-[16px] hover:bg-emerald-700 transition-all font-black text-[10px] active:scale-95 shadow-lg shadow-emerald-500/20" data-v12-tooltip="Exportar Excel">
-                                    <FileSpreadsheet size={16} /> <span className="hidden xl:inline">EXCEL</span>
-                                </button>
-                                <button onClick={handlePdfExport} disabled={isExporting}
-                                    className="flex items-center gap-2 px-4 h-[44px] bg-rose-600 text-white rounded-[16px] hover:bg-rose-700 transition-all font-black text-[10px] active:scale-95 shadow-lg shadow-rose-500/20" data-v12-tooltip="Generar PDF">
-                                    <FileDown size={16} /> <span className="hidden xl:inline">PDF</span>
-                                </button>
-                                
+                            <button onClick={() => setWeekOffset(prev => prev + 1)} 
+                                    disabled={readOnly}
+                                    className={`p-2 rounded-xl transition-all active:scale-90 ${readOnly ? 'text-slate-200 pointer-events-none opacity-20' : 'text-slate-400 hover:text-indigo-500 hover:bg-white dark:hover:bg-slate-700 shadow-sm'}`} 
+                                    title="Semana Siguiente"><ChevronRight size={20} strokeWidth={3} /></button>
+                        </div>
+
+                        {/* Puestos (Z-Index Blindado) */}
+                        <div className="flex-1 w-full lg:w-[320px] relative" style={{ zIndex: 1000000 }}>
+                            <SearchableSelect
+                                options={profiles.map(p => ({ id: p.id, name: p.name }))}
+                                value={selectedProfile}
+                                onChange={(val) => setSelectedProfile(prev => prev === val ? '' : val)}
+                                placeholder="Todos los Puestos..."
+                                icon={ShieldCheck}
+                                variant="minimal"
+                            />
+                        </div>
+                    </div>
+
+                    {/* 2.2 Fila 2: Barra de Herramientas Squircle */}
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-stretch">
+                        
+                        {/* Inteligencia */}
+                        <div className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-md p-3 rounded-[32px] border border-slate-100 dark:border-white/5 shadow-xl flex flex-col items-center">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Inteligencia</span>
+                            <div className="flex items-center gap-3">
                                 {!effectiveReadOnly && (
                                     <>
                                         <button onClick={() => setShowBulkModal(true)}
-                                            className="flex items-center gap-2 px-4 h-[44px] bg-amber-500 text-white rounded-[16px] hover:bg-amber-600 transition-all font-black text-[10px] active:scale-95 shadow-lg shadow-amber-500/20" data-v12-tooltip="Programación Masiva">
-                                            <Sparkles size={16} /> <span className="hidden xl:inline">MASIVA</span>
+                                            className="w-[58px] h-[58px] bg-amber-500 text-white rounded-[22px] flex items-center justify-center hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/20 active:scale-90" title="Masiva">
+                                            <Sparkles size={26} strokeWidth={2.5} />
                                         </button>
-                                        <div className="w-[1px] h-6 bg-slate-200 mx-1"></div>
-                                        <button onClick={copyFromPreviousWeek} className="flex items-center gap-2 px-4 h-[44px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-[16px] hover:bg-indigo-600 hover:text-white transition-all font-black text-[10px] active:scale-95" data-v12-tooltip="Clonar Semana Anterior">
-                                            <CopyIcon size={16} /> <span className="hidden xl:inline">CLONAR</span>
-                                        </button>
-                                        <button onClick={handleSave} disabled={isExporting} 
-                                            className="flex items-center gap-2 px-6 h-[44px] bg-indigo-600 text-white rounded-[16px] hover:bg-indigo-700 transition-all font-black text-[10px] active:scale-95 shadow-lg shadow-indigo-500/20" data-v12-tooltip="Guardar Cambios">
-                                            {isSaving ? <div className="loader !w-4 !h-4 !border-white"></div> : <><Save size={16} /> <span className="hidden xl:inline">GUARDAR</span></>}
+                                        <button onClick={copyFromPreviousWeek} 
+                                            className="w-[58px] h-[58px] bg-indigo-500 text-white rounded-[22px] flex items-center justify-center hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-500/20 active:scale-90" title="Clonar">
+                                            <CopyIcon size={26} strokeWidth={2.5} />
                                         </button>
                                     </>
                                 )}
-                            </div>
-
-                            {/* Switches de Vista */}
-                            <div className="flex items-center bg-slate-100 dark:bg-slate-800/80 p-1 rounded-full border border-slate-200 dark:border-slate-700/50 gap-1">
-                                <button onClick={() => setViewMode('SHIFTS')} className={`w-9 h-9 flex items-center justify-center rounded-full transition-all ${viewMode === 'SHIFTS' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
-                                    <Calendar size={16} strokeWidth={2.5} />
-                                </button>
-                                <button onClick={() => setViewMode('ATTENDANCE')} className={`w-9 h-9 flex items-center justify-center rounded-full transition-all ${viewMode === 'ATTENDANCE' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
-                                    <Clock size={16} strokeWidth={2.5} />
+                                <button onClick={() => setShowPredictiveModal(true)}
+                                    className="w-[58px] h-[58px] bg-purple-600 text-white rounded-[22px] flex items-center justify-center hover:bg-purple-700 transition-all shadow-lg shadow-purple-500/20 active:scale-90" title="Predictivo">
+                                    <Cpu size={26} strokeWidth={2.5} />
                                 </button>
                             </div>
                         </div>
 
-                        {/* 2.3 Barra de Herramientas de Arrastre (Manager Only - Slim Style) */}
-                        {!effectiveReadOnly && (
-                            <div className="flex items-center justify-between gap-4 p-2 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-700/50 w-full" style={{ borderRadius: '20px' }}>
-                                <div className="flex items-center gap-3 pl-2">
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-2">Herramientas:</span>
-                                    {[
-                                        { type: 'Turno', hex: '#4f46e5', icon: Clock, label: 'TURNO' },
-                                        { type: 'Descanso', hex: '#f59e0b', icon: Calendar, label: 'DESC' },
-                                        { type: 'Turno Fuera', hex: '#9333ea', icon: AlertCircle, label: 'FUERA' }
-                                    ].map((tool, idx) => (
-                                        <div key={idx} draggable onDragStart={(e) => handleDragStart(e, 'PANEL', { type: tool.type })} 
-                                            style={{ backgroundColor: tool.hex }}
-                                            className="text-white flex items-center gap-2 px-4 h-[38px] rounded-xl cursor-grab hover:scale-105 active:scale-95 transition-all shadow-sm">
-                                            <tool.icon size={14} strokeWidth={3} />
-                                            <span className="text-[9px] font-black uppercase tracking-tight">{tool.label}</span>
+                        {/* Eventos */}
+                        <div className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-md p-3 rounded-[32px] border border-slate-100 dark:border-white/5 shadow-xl flex flex-col items-center">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Eventos</span>
+                            <div className="flex items-center gap-3">
+                                {!effectiveReadOnly ? (
+                                    <>
+                                        {[
+                                            { type: 'Turno', color: 'bg-indigo-600', icon: Clock, title: 'Turno' },
+                                            { type: 'Descanso', color: 'bg-amber-500', icon: Calendar, title: 'Descanso' },
+                                            { type: 'Turno Fuera', color: 'bg-purple-600', icon: AlertCircle, title: 'Fuera' }
+                                        ].map((tool, idx) => (
+                                            <div key={idx} draggable onDragStart={(e) => handleDragStart(e, 'PANEL', { type: tool.type })} 
+                                                className={`w-[58px] h-[58px] ${tool.color} text-white rounded-[22px] flex items-center justify-center cursor-grab hover:scale-105 transition-all shadow-lg active:scale-90`} title={tool.title}>
+                                                <tool.icon size={26} strokeWidth={2.5} />
+                                            </div>
+                                        ))}
+                                        <div onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnTrash} 
+                                            className="w-[58px] h-[58px] bg-rose-50 dark:bg-rose-900/20 text-rose-500 rounded-[22px] flex items-center justify-center border-2 border-dashed border-rose-200 dark:border-rose-800 hover:bg-rose-600 hover:text-white transition-all cursor-pointer shadow-sm active:scale-90" title="Borrar">
+                                            <Trash2 size={26} strokeWidth={2.5} />
                                         </div>
-                                    ))}
-                                    <div onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnTrash} 
-                                        className="flex items-center gap-2 px-4 h-[38px] bg-rose-50 text-rose-500 rounded-xl border-2 border-dashed border-rose-200 hover:bg-rose-600 hover:text-white transition-all cursor-pointer">
-                                        <Trash2 size={14} strokeWidth={3} />
-                                        <span className="text-[9px] font-black uppercase">BORRAR</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-center pr-4">
-                                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse mr-2"></div>
-                                    <span className="text-[9px] font-black text-slate-500 uppercase">
-                                        {employees.length} Activos
-                                    </span>
+                                    </>
+                                ) : (
+                                    <div className="h-[58px] flex items-center text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] px-8 bg-slate-100 dark:bg-slate-800/40 rounded-[22px]">Semana Cerrada</div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Utilidades */}
+                        <div className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-md p-3 rounded-[32px] border border-slate-100 dark:border-white/5 shadow-xl flex flex-col items-center">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Utilidades</span>
+                            <div className="flex items-center gap-3">
+                                <button onClick={handleExcelExport} disabled={isExporting} 
+                                    className="w-[58px] h-[58px] bg-emerald-600 text-white rounded-[22px] flex items-center justify-center hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20 active:scale-90" title="Excel">
+                                    <FileSpreadsheet size={26} strokeWidth={2.5} />
+                                </button>
+                                <button onClick={handlePdfExport} disabled={isExporting}
+                                    className="w-[58px] h-[58px] bg-rose-600 text-white rounded-[22px] flex items-center justify-center hover:bg-rose-700 transition-all shadow-lg shadow-rose-500/20 active:scale-90" title="Pdf">
+                                    <FileDown size={26} strokeWidth={2.5} />
+                                </button>
+                                {!effectiveReadOnly && (
+                                    <button onClick={handleSave} disabled={isExporting} 
+                                        className="w-[58px] h-[58px] bg-indigo-600 text-white rounded-[22px] flex items-center justify-center hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20 active:scale-90" title="Guardar">
+                                        {isSaving ? <div className="loader !w-5 !h-5 !border-white"></div> : <Save size={26} strokeWidth={2.5} />}
+                                    </button>
+                                )}
+                                <div className="w-[1px] h-10 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                                <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-full border border-slate-200 dark:border-slate-700 gap-1">
+                                    <button onClick={() => setViewMode('SHIFTS')} className={`w-[38px] h-[38px] flex items-center justify-center rounded-full transition-all ${viewMode === 'SHIFTS' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                                        <Calendar size={18} strokeWidth={2.5} />
+                                    </button>
+                                    <button onClick={() => setViewMode('ATTENDANCE')} className={`w-[38px] h-[38px] flex items-center justify-center rounded-full transition-all ${viewMode === 'ATTENDANCE' ? 'bg-white dark:bg-slate-700 text-emerald-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                                        <Clock size={18} strokeWidth={2.5} />
+                                    </button>
                                 </div>
                             </div>
-                        )}
-
-
+                        </div>
                     </div>
+                </div>
 
                     {/* Fila Opcional: Contador Flotante Minimalista */}
                     <div className="flex justify-end pr-8 -mt-4 mb-4">
@@ -1296,7 +1282,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             </span>
                         </div>
                     </div>
-                </div>
+
 
                     {lastSaveComment && (
                         <div className="no-print flex items-center gap-3 p-3 bg-indigo-50/30 dark:bg-indigo-900/5 border border-indigo-100/50 rounded-2xl mb-4">
@@ -1357,7 +1343,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     
                     <div className="overflow-x-auto">
                             <footer className="mt-8 mb-4 text-center">
-                                <div className="version-tag-subtle">SISTEMA V12.20</div>
+                                <div className="version-tag-subtle">SISTEMA V13.9.40-PREMIUM-AI</div>
                             </footer>
                             <table className="w-full border-collapse">
                                 <thead>
@@ -1658,7 +1644,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             {/* Global Portals */}
             {createPortal(
                 <>
-                    {/* V13.0 ELITE APPROVAL MODAL */}
+                    {/* V13.0 PREMIUM APPROVAL MODAL */}
                     {showApprovalModal && (
                         <div style={{ position: 'fixed', inset: 0, zIndex: 200000, background: 'rgba(6, 9, 20, 0.6)', backdropFilter: 'blur(15px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} className="animate-in fade-in duration-300">
                             <div style={{ background: activeColors.card, width: '100%', maxWidth: '500px', borderRadius: '40px', padding: '50px', border: `1px solid ${activeColors.border}`, boxShadow: '0 30px 100px rgba(0,0,0,0.4)', textAlign: 'center' }} className="animate-in zoom-in-95 duration-500">
@@ -1694,7 +1680,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         </div>
                     )}
 
-                    {/* V13.0 ELITE REJECTION MODAL */}
+                    {/* V13.0 PREMIUM REJECTION MODAL */}
                     {showRejectionModal && (
                         <div style={{ position: 'fixed', inset: 0, zIndex: 200000, background: 'rgba(6, 9, 20, 0.6)', backdropFilter: 'blur(15px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} className="animate-in fade-in duration-300">
                              <div style={{ background: isDarkMode ? '#1e293b' : '#ffffff', width: '100%', maxWidth: '500px', borderRadius: '48px', overflow: 'hidden', border: isDarkMode ? '1px solid #334155' : 'none', boxShadow: '0 50px 100px rgba(0,0,0,0.5)', animation: 'modalSlideUp 0.4s cubic-bezier(0.165, 0.84, 0.44, 1)' }}>
@@ -2033,7 +2019,53 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             </div>
                         </div>
                     )}
-                    {/* V18.6 ELITE SYNC MONITOR - PIXEL PERFECT UNIFICATION */}
+                    {/* PREDICTIVE AI - COMING SOON MODAL */}
+                    {showPredictiveModal && (
+                        <div style={{ position: 'fixed', inset: 0, zIndex: 1000000, background: 'rgba(6, 9, 20, 0.7)', backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} className="animate-in fade-in duration-300">
+                             <div style={{ background: isDarkMode ? '#1e293b' : '#ffffff', width: '100%', maxWidth: '540px', borderRadius: '48px', overflow: 'hidden', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.05)', boxShadow: '0 50px 100px rgba(0,0,0,0.5)', position: 'relative' }} className="animate-in zoom-in-95 duration-500">
+                                
+                                {/* Background Decorative Elements */}
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/10 blur-[80px] rounded-full -mr-32 -mt-32"></div>
+                                <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-600/10 blur-[80px] rounded-full -ml-32 -mb-32"></div>
+
+                                <div style={{ padding: '60px 40px', position: 'relative', zIndex: 1, textAlign: 'center' }}>
+                                    <div style={{ width: '90px', height: '90px', background: 'linear-gradient(135deg, #4f46e5, #9333ea)', color: 'white', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 30px', boxShadow: '0 20px 40px rgba(79, 70, 229, 0.3)', transform: 'rotate(-4deg)' }}>
+                                        <Cpu size={44} strokeWidth={2.5} className="animate-pulse" />
+                                    </div>
+                                    
+                                    <h2 style={{ fontSize: '2.2rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', letterSpacing: '-0.04em', margin: '0 0 12px', lineHeight: '1.1' }}>
+                                        Inteligencia<br />Predictiva
+                                    </h2>
+                                    <p style={{ color: '#6366f1', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '30px' }}>
+                                        Próxima Generación
+                                    </p>
+
+                                    <div style={{ display: 'grid', gap: '16px', textAlign: 'left', marginBottom: '40px' }}>
+                                        {[
+                                            { title: 'Pronóstico de Demanda', desc: 'IA que anticipa picos de tráfico para sugerir personal.' },
+                                            { title: 'Optimización de Nómina', desc: 'Algoritmos que minimizan horas extras automáticamente.' },
+                                            { title: 'Distribución Equitativa', desc: 'Balanceo inteligente de cargas de trabajo por colaborador.' }
+                                        ].map((item, idx) => (
+                                            <div key={idx} style={{ padding: '20px', background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc', borderRadius: '24px', border: '1px solid rgba(0,0,0,0.02)' }}>
+                                                <h4 style={{ fontSize: '13px', fontWeight: '950', color: isDarkMode ? '#f8fafc' : '#1e293b', marginBottom: '4px' }}>{item.title}</h4>
+                                                <p style={{ fontSize: '11px', fontWeight: '600', color: '#64748b' }}>{item.desc}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <button 
+                                        onClick={() => setShowPredictiveModal(false)}
+                                        style={{ width: '100%', padding: '22px', borderRadius: '24px', border: 'none', background: 'linear-gradient(90deg, #4f46e5, #6366f1)', color: 'white', fontWeight: '950', fontSize: '12px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 35px rgba(79, 70, 229, 0.4)', transition: 'all 0.3s' }}
+                                        className="hover:scale-[1.02] active:scale-95 transition-all"
+                                    >
+                                        ENTENDIDO
+                                    </button>
+                                </div>
+                             </div>
+                        </div>
+                    )}
+
+                    {/* V18.6 PREMIUM SYNC MONITOR - PIXEL PERFECT UNIFICATION */}
                     {isSaving && createPortal(
                         <div style={{
                             position: 'fixed',

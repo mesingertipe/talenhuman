@@ -48,7 +48,7 @@ import DebugPortal from './components/Shared/DebugPortal'
 import MobileCommunicationModal from './components/Mobile/MobileCommunicationModal'
 
 // V65.2.18 STABILITY UPDATE
-const APP_VERSION = "V12.26-ELITE-FIX-3.8";
+const APP_VERSION = "V13.9.40-PREMIUM-AI";
 
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION

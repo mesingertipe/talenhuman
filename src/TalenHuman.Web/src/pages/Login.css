@@ -728,7 +728,7 @@
     margin-bottom: 0.75rem;
 }
 
-.elite-tag {
+.premium-tag {
     display: inline-block;
     padding: 0.25rem 0.75rem;
     background: #1e293b;
@@ -763,7 +763,7 @@
     align-items: center; /* Centrar en pantallas anchas */
 }
 
-.elite-mobile-header {
+.premium-mobile-header {
     background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
     height: 70px;
     display: flex;
@@ -776,7 +776,7 @@
     z-index: 1000;
 }
 
-.elite-back-btn {
+.premium-back-btn {
     background: none;
     border: none;
     color: white;
@@ -784,7 +784,7 @@
     cursor: pointer;
 }
 
-.elite-header-title {
+.premium-header-title {
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -794,7 +794,7 @@
     letter-spacing: 0.2em;
 }
 
-.elite-mobile-content {
+.premium-mobile-content {
     width: 100%;
     max-width: 500px; /* Limitar ancho del contenido móvil incluso en PC */
     padding: 2.5rem 1.25rem;
@@ -878,12 +878,12 @@
     box-shadow: 0 20px 45px rgba(79, 70, 229, 0.5);
 }
 
-.elite-mobile-footer {
+.premium-mobile-footer {
     text-align: center;
     padding: 2rem 0;
 }
 
-.elite-mobile-footer p {
+.premium-mobile-footer p {
     font-size: 0.61rem;
     font-weight: 900;
     color: #94a3b8;
@@ -891,7 +891,7 @@
     margin-bottom: 0.75rem;
 }
 
-.elite-version {
+.premium-version {
     display: inline-block;
     padding: 0.2rem 1rem;
     background: #1e293b;
@@ -902,14 +902,14 @@
 }
 
 /* 🔐 V65.2.15 PIXEL-PERFECT SECURITY UI */
-.elite-field-group {
+.premium-field-group {
     display: flex;
     flex-direction: column;
     gap: 8px;
     margin-bottom: 5px;
 }
 
-.elite-field-label {
+.premium-field-label {
     display: block;
     font-size: 0.725rem;
     font-weight: 800;
@@ -919,7 +919,7 @@
     padding-left: 4px;
 }
 
-.elite-input-container {
+.premium-input-container {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -931,21 +931,21 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.elite-input-container:focus-within {
+.premium-input-container:focus-within {
     border-color: #4f46e5 !important;
     background: white !important;
     box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
     transform: translateY(-1px);
 }
 
-.elite-input-icon {
+.premium-input-icon {
     color: #4f46e5 !important;
     display: flex;
     align-items: center;
     flex-shrink: 0;
 }
 
-.elite-native-input {
+.premium-native-input {
     background: none !important;
     border: none !important;
     outline: none !important;
@@ -957,7 +957,7 @@
     box-shadow: none !important;
 }
 
-.elite-native-input::placeholder {
+.premium-native-input::placeholder {
     color: #94a3b8 !important;
     opacity: 1 !important;
 }

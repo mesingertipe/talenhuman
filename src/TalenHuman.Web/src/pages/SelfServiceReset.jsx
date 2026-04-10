@@ -16,17 +16,17 @@ const ValidationItem = ({ label, passed }) => (
 );
 
 const TalenHumanInput = ({ label, icon, value, onChange, type, placeholder, suffix }) => (
-  <div className="elite-field-group">
-      <label className="elite-field-label">{label}</label>
-      <div className="elite-input-container">
-          <div className="elite-input-icon">{icon}</div>
+  <div className="premium-field-group">
+      <label className="premium-field-label">{label}</label>
+      <div className="premium-input-container">
+          <div className="premium-input-icon">{icon}</div>
           <input 
               type={type}
               required
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder={placeholder}
-              className="elite-native-input"
+              className="premium-native-input"
               style={{ color: '#1E293B', WebkitTextFillColor: '#1E293B' }}
           />
           {suffix}
@@ -85,16 +85,16 @@ const SelfServiceReset = ({ onBack }) => {
 
   return (
     <div className="mobile-premium-flow-root animate-in fade-in duration-500">
-        <header className="elite-mobile-header">
-            <button onClick={onBack} className="elite-back-btn"><ArrowLeft size={22} /></button>
-            <div className="elite-header-title">
+        <header className="premium-mobile-header">
+            <button onClick={onBack} className="premium-back-btn"><ArrowLeft size={22} /></button>
+            <div className="premium-header-title">
                 <TalenHumanLogo size={24} white={true} />
                 <span>Acceso seguro</span>
             </div>
             <div style={{ width: 40 }} />
         </header>
 
-        <main className="elite-mobile-content">
+        <main className="premium-mobile-content">
             <div className="premium-recovery-card-v2 animate-in slide-in-from-bottom-10">
                 {success ? (
                 <div className="success-state-premium text-center py-8">
@@ -116,8 +116,8 @@ const SelfServiceReset = ({ onBack }) => {
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <TalenHumanInput label="Número de Identificación" icon={<User size={18} />} value={formData.identificationNumber} onChange={(v) => setFormData({...formData, identificationNumber:v})} type="text" placeholder="Número de Identificación" />
                         
-                        <div className="elite-field-group">
-                            <label className="elite-field-label">Fecha de Nacimiento *</label>
+                        <div className="premium-field-group">
+                            <label className="premium-field-label">Fecha de Nacimiento *</label>
                             <TalenHumanDatePicker 
                                 value={formData.birthDate || ''}
                                 onChange={(iso) => setFormData({...formData, birthDate: iso})}
@@ -141,8 +141,8 @@ const SelfServiceReset = ({ onBack }) => {
                 </div>
                 )}
             </div>
-            <footer className="elite-mobile-footer text-center mt-4">
-                <div className="version-tag-subtle">V12.24</div>
+            <footer className="premium-mobile-footer text-center mt-4">
+                <div className="version-tag-subtle">V13.9.40-PREMIUM-AI</div>
             </footer>
         </main>
     </div>

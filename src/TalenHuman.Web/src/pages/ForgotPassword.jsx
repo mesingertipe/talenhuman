@@ -32,18 +32,18 @@ const ForgotPassword = ({ onBack, onNext }) => {
     <div className="mobile-premium-flow-root animate-in fade-in duration-500">
         
         {/* 🏔️ ELITE STICKY HEADER */}
-        <header className="elite-mobile-header">
-            <button onClick={onBack} className="elite-back-btn">
+        <header className="premium-mobile-header">
+            <button onClick={onBack} className="premium-back-btn">
                 <ArrowLeft size={22} />
             </button>
-            <div className="elite-header-title">
+            <div className="premium-header-title">
                 <TalenHumanLogo size={24} white={true} />
                 <span>ACCESO SEGURO</span>
             </div>
             <div style={{ width: 40 }} />
         </header>
 
-        <main className="elite-mobile-content">
+        <main className="premium-mobile-content">
             <div className="premium-recovery-card-v2 animate-in slide-in-from-bottom-10">
                 
                 <div className="form-state-premium">
@@ -63,14 +63,14 @@ const ForgotPassword = ({ onBack, onNext }) => {
                     )}
 
                     <form onSubmit={handleSubmit} className="premium-form-layout">
-                        <div className="elite-field-group">
-                            <label className="elite-field-label">Correo corporativo</label>
-                            <div className="elite-input-container">
-                                <Mail className="elite-input-icon" size={18} />
+                        <div className="premium-field-group">
+                            <label className="premium-field-label">Correo corporativo</label>
+                            <div className="premium-input-container">
+                                <Mail className="premium-input-icon" size={18} />
                                 <input 
                                     required
                                     type="email"
-                                    className="elite-native-input"
+                                    className="premium-native-input"
                                     placeholder="nombre@empresa.com"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -95,8 +95,8 @@ const ForgotPassword = ({ onBack, onNext }) => {
                 </div>
             </div>
             
-            <footer className="elite-mobile-footer text-center mt-4">
-                <div className="elite-version">V12.19</div>
+            <footer className="premium-mobile-footer text-center mt-4">
+                <div className="premium-version">V13.9.40-PREMIUM-AI</div>
             </footer>
         </main>
     </div>
