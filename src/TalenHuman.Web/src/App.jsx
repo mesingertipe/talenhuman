@@ -77,7 +77,7 @@ function App() {
   const [showPRModal, setShowPRModal] = useState(false);
   const [notification, setNotification] = useState({ show: false, title: '', body: '' });
 
-  const CURRENT_VERSION = "V66.3.0";
+  const CURRENT_VERSION = "V66.4.0";
   
   
   useEffect(() => {

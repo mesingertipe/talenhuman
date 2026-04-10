@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
 import { createPortal } from 'react-dom';
@@ -143,7 +143,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const [dragSource, setDragSource] = useState(null);
     const [draggedData, setDraggedData] = useState(null);
 
-    function exportToPDF() {
+    const handlePdfExport = useCallback(() => {
         const element = document.getElementById('printable-area');
         if (!element) {
             showToast("No se encontró el área de impresión", "error");
@@ -261,9 +261,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             showToast("Error al generar PDF", "error");
             document.head.removeChild(style);
         });
-    };
+    }, [isExporting, stores, selectedStore]);
 
-    async function exportToExcel() {
+    const handleExcelExport = useCallback(async () => {
         if (isExporting) return;
         try {
             setIsExporting(true);
@@ -372,7 +372,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             setIsExporting(false);
             showToast("Error al generar Excel", "error");
         }
-    };
+    }, [isExporting, stores, selectedStore, currentWeekStart, days, employees, shifts]);;
 
     const getMonday = (offset = 0) => {
         const now = new Date();
@@ -1211,11 +1211,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
                             {/* Acciones Globales Linealizadas */}
                             <div className="flex-1 flex items-center justify-center gap-2">
-                                <button onClick={exportToExcel} disabled={isExporting} 
+                                <button onClick={handleExcelExport} disabled={isExporting} 
                                     className="flex items-center gap-2 px-4 h-[44px] bg-emerald-600 text-white rounded-[16px] hover:bg-emerald-700 transition-all font-black text-[10px] active:scale-95 shadow-lg shadow-emerald-500/20" data-v12-tooltip="Exportar Excel">
                                     <FileSpreadsheet size={16} /> <span className="hidden xl:inline">EXCEL</span>
                                 </button>
-                                <button onClick={exportToPDF} disabled={isExporting}
+                                <button onClick={handlePdfExport} disabled={isExporting}
                                     className="flex items-center gap-2 px-4 h-[44px] bg-rose-600 text-white rounded-[16px] hover:bg-rose-700 transition-all font-black text-[10px] active:scale-95 shadow-lg shadow-rose-500/20" data-v12-tooltip="Generar PDF">
                                     <FileDown size={16} /> <span className="hidden xl:inline">PDF</span>
                                 </button>
