@@ -372,7 +372,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             setIsExporting(false);
             showToast("Error al generar Excel", "error");
         }
-    }, [isExporting, stores, selectedStore, currentWeekStart, days, employees, shifts]);;
+    }, [isExporting, stores, selectedStore, currentWeekStart, days, employees, shifts]);
+
+    // 🛡️ ALIAS DE SEGURIDAD ELITE: Garantiza que el botón funcione incluso si el navegador carga código antiguo
+    const exportToExcel = handleExcelExport;
+    const exportToPDF = handlePdfExport;
 
     const getMonday = (offset = 0) => {
         const now = new Date();
