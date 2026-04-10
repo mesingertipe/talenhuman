@@ -143,7 +143,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const [dragSource, setDragSource] = useState(null);
     const [draggedData, setDraggedData] = useState(null);
 
-    const exportToPDF = () => {
+    function exportToPDF() {
         const element = document.getElementById('printable-area');
         if (!element) {
             showToast("No se encontró el área de impresión", "error");
@@ -263,7 +263,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         });
     };
 
-    const exportToExcel = async () => {
+    async function exportToExcel() {
         if (isExporting) return;
         try {
             setIsExporting(true);
