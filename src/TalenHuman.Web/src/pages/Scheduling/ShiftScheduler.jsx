@@ -645,12 +645,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             };
 
             setShifts(prev => {
-                // Evitar duplicados exactos en el mismo empleado/día/hora
-                const isOverlap = prev.some(s => s.employeeId === targetEmployeeId && s.startTime === newShift.startTime && s.endTime === newShift.endTime);
-                if (isOverlap) return prev;
-                return [...prev, newShift];
+                // V13.9.42: Limpiar destino para evitar "pegado" de turnos anteriores
+                const filtered = prev.filter(s => !(s.employeeId === targetEmployeeId && new Date(s.startTime).toDateString() === targetDate.toDateString()));
+                return [...filtered, newShift];
             });
-            showToast("Turno copiado");
+            showToast(newShift.isDescanso ? "Descanso clonado" : "Turno clonado");
         }
     };
 
@@ -1199,8 +1198,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         </div>
                     </div>
 
-                    {/* 2.2 Fila 2: Barra de Herramientas Premium (Vertical Layout) */}
-                    <div className="grid grid-cols-3 items-start gap-6 w-full mt-2">
+                    {/* 2.2 Fila 2: Barra de Herramientas Premium Unificada (Una sola línea) */}
+                    <div className="flex flex-row items-center justify-between gap-4 w-full mt-2 overflow-x-auto pb-1">
                         
                         {/* Inteligencia (Izquierda) */}
                         <div className="flex flex-col items-start gap-2">
@@ -1295,15 +1294,33 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     </div>
 
 
-                    {lastSaveComment && (
-                        <div className="no-print flex items-center gap-3 p-3 bg-indigo-50/30 dark:bg-indigo-900/5 border border-indigo-100/50 rounded-2xl mb-4">
-                            <FileText size={14} className="text-indigo-400" />
-                            <p className="text-[11px] font-bold text-slate-500 leading-none m-0 truncate">
-                                <span className="text-indigo-500 font-black text-[9px] mr-2 italic">Observación:</span>
-                                {lastSaveComment}
-                            </p>
+                    <div className="flex flex-wrap items-center gap-3 mb-4 no-print">
+                        {/* Status Badge Chiclet */}
+                        <div className={`px-4 py-2 rounded-[20px] flex items-center gap-2 shadow-sm border transition-all animate-in zoom-in-95 duration-500 btn-chiclet ${
+                            weeklyStatus.status === 'Approved' ? 'bg-emerald-600 border-emerald-400/30 text-white shadow-glow-emerald' :
+                            weeklyStatus.status === 'Rejected' ? 'bg-rose-600 border-rose-400/30 text-white shadow-glow-rose' :
+                            'bg-amber-500 border-amber-400/30 text-white shadow-glow-amber'
+                        }`}>
+                            {weeklyStatus.status === 'Approved' ? <CheckCircle size={16} strokeWidth={3} /> :
+                             weeklyStatus.status === 'Rejected' ? <XCircle size={16} strokeWidth={3} /> :
+                             <Clock size={16} strokeWidth={3} className="animate-pulse" />}
+                            <span className="text-[10px] font-black tracking-[0.1em] uppercase">
+                                {weeklyStatus.status === 'Approved' ? 'Semana Aprobada' :
+                                 weeklyStatus.status === 'Rejected' ? 'Semana Rechazada' :
+                                 'Estado: Pendiente de Aprobación'}
+                            </span>
                         </div>
-                    )}
+
+                        {lastSaveComment && (
+                            <div className="flex-1 flex items-center gap-3 p-2.5 px-4 bg-white/60 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200/50 dark:border-white/5 rounded-[22px] shadow-sm">
+                                <FileText size={14} className="text-indigo-500" />
+                                <p className="text-[11px] font-bold text-slate-500 leading-none m-0 truncate">
+                                    <span className="text-indigo-600 font-black text-[9px] mr-2 italic tracking-tighter">ÚLTIMA OBSERVACIÓN:</span>
+                                    {lastSaveComment}
+                                </p>
+                            </div>
+                        )}
+                    </div>
                 
                 <div className="card shadow-[0_40px_100px_rgba(0,0,0,0.12)] bg-white dark:bg-slate-900 border-2 dark:border-slate-800 relative" style={{ borderRadius: '48px', overflow: 'hidden', minHeight: '600px' }}>
                     {createPortal(
@@ -1354,7 +1371,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     
                     <div className="overflow-x-auto">
                             <footer className="mt-8 mb-4 text-center">
-                                <div className="version-tag-subtle">SISTEMA V13.9.40-PREMIUM-AI</div>
+                                <div className="version-tag-subtle">SISTEMA V13.9.42-PREMIUM-AI</div>
                             </footer>
                             <table className="w-full border-collapse">
                                 <thead>
