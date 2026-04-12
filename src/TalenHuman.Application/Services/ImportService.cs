@@ -269,7 +269,45 @@ public class ImportService : IImportService
             wsHelp.Cell(1, 1).Value = "Instrucciones";
             wsHelp.Cell(1, 1).Style.Font.Bold = true;
             wsHelp.Cell(2, 1).Value = "- Rol: Admin, Gerente, Distrital o Supervisor.";
-            wsHelp.Cell(3, 1).Value = "- Número: Se usará como contraseña inicial.";
+        }
+        else if (type.ToLower() == "sales")
+        {
+            var ws = workbook.Worksheets.Add("Ventas");
+            ws.Cell(1, 1).Value = "Fecha y Hora (Inicio Segmento)";
+            ws.Cell(1, 2).Value = "Venta Neta";
+            ws.Cell(1, 3).Value = "Cantidad Tickets";
+            ws.Cell(1, 4).Value = "Canal";
+            ws.Cell(1, 5).Value = "Comensales";
+            ws.Cell(1, 6).Value = "Cuentas";
+            ws.Cell(1, 7).Value = "ID Tienda";
+
+            var headerRange = ws.Range("A1:G1");
+            headerRange.Style.Font.Bold = true;
+            headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#4f46e5");
+            headerRange.Style.Font.FontColor = XLColor.White;
+
+            ws.Cell(2, 1).Value = DateTime.Today.AddHours(8).ToString("yyyy-MM-dd HH:mm");
+            ws.Cell(2, 2).Value = 500000;
+            ws.Cell(2, 3).Value = 15;
+            ws.Cell(2, 4).Value = "Comedor";
+            ws.Cell(2, 5).Value = 45;
+            ws.Cell(2, 6).Value = 12;
+            ws.Cell(2, 7).Value = "CH-001";
+
+            ws.Column(1).Width = 25;
+            ws.Column(2).Width = 15;
+            ws.Column(3).Width = 20;
+            ws.Column(4).Width = 15;
+            ws.Column(5).Width = 15;
+            ws.Column(6).Width = 15;
+            ws.Column(7).Width = 15;
+
+            var wsHelp = workbook.Worksheets.Add("Instrucciones");
+            wsHelp.Cell(1, 1).Value = "Instrucciones Ventas";
+            wsHelp.Cell(1, 1).Style.Font.Bold = true;
+            wsHelp.Cell(2, 1).Value = "- Fecha y Hora: Formato YYYY-MM-DD HH:MM. Normalizado a cada 30 min para mejor predicción.";
+            wsHelp.Cell(3, 1).Value = "- Canal: Por ejemplo: Comedor, Domicilio, App.";
+            wsHelp.Cell(4, 1).Value = "- ID Tienda: Código único de la sede registrado en el sistema.";
             wsHelp.Columns().AdjustToContents();
         }
 
@@ -368,9 +406,20 @@ public class ImportService : IImportService
                 if (string.IsNullOrEmpty(email))
                     importRow.Errors.Add(new ImportFieldError { Field = "Email", Message = "Email requerido" });
 
-                var numero = importRow.Data.GetValueOrDefault("Número (Cédula)");
-                if (string.IsNullOrEmpty(numero))
-                    importRow.Errors.Add(new ImportFieldError { Field = "Número", Message = "Número requerido" });
+            }
+            else if (type.ToLower() == "sales")
+            {
+                var fecha = importRow.Data.GetValueOrDefault("Fecha y Hora (Inicio Segmento)");
+                if (string.IsNullOrEmpty(fecha))
+                    importRow.Errors.Add(new ImportFieldError { Field = "Fecha y Hora (Inicio Segmento)", Message = "La fecha y hora es requerida" });
+
+                var venta = importRow.Data.GetValueOrDefault("Venta Neta");
+                if (!decimal.TryParse(venta, out _))
+                    importRow.Errors.Add(new ImportFieldError { Field = "Venta Neta", Message = "Venta neta debe ser un valor numérico" });
+
+                var storeId = importRow.Data.GetValueOrDefault("ID Tienda");
+                if (string.IsNullOrEmpty(storeId))
+                    importRow.Errors.Add(new ImportFieldError { Field = "ID Tienda", Message = "El ID de la tienda es requerido" });
             }
 
             preview.Rows.Add(importRow);
@@ -611,7 +660,60 @@ public class ImportService : IImportService
             }
             await _context.SaveChangesAsync(CancellationToken.None);
         }
-        
+        else if (type.ToLower() == "sales")
+        {
+            foreach (var row in rows)
+            {
+                try
+                {
+                    var externalId = row.Data["ID Tienda"];
+                    var store = await _context.Stores.FirstOrDefaultAsync(s => s.ExternalId == externalId && s.CompanyId == companyId);
+                    
+                    if (store == null)
+                    {
+                        result.ErrorCount++;
+                        result.Messages.Add($"Fila {row.RowNumber}: Tienda '{externalId}' no encontrada.");
+                        continue;
+                    }
+
+                    var fechaStr = row.Data["Fecha y Hora (Inicio Segmento)"];
+                    if (DateTime.TryParse(fechaStr, out var recordDate))
+                    {
+                        var ventaNeta = decimal.TryParse(row.Data["Venta Neta"], out var v) ? v : 0;
+                        var tickets = int.TryParse(row.Data["Cantidad Tickets"], out var t) ? t : 0;
+                        var canal = row.Data.GetValueOrDefault("Canal", "General");
+                        var comensales = int.TryParse(row.Data.GetValueOrDefault("Comensales"), out var com) ? com : 0;
+                        var cuentas = int.TryParse(row.Data.GetValueOrDefault("Cuentas"), out var cue) ? cue : 0;
+
+                        // Calculate average if possible
+                        var promedio = tickets > 0 ? ventaNeta / tickets : 0;
+
+                        var sales = new SalesData
+                        {
+                            StoreId = store.Id,
+                            RecordDate = recordDate,
+                            VentaNeta = ventaNeta,
+                            CantidadTickets = tickets,
+                            TicketPromedio = promedio,
+                            Canal = canal,
+                            Comensales = comensales,
+                            Cuentas = cuentas,
+                            CompanyId = companyId
+                        };
+
+                        _context.SalesData.Add(sales);
+                        result.SuccessCount++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    result.ErrorCount++;
+                    result.Messages.Add($"Fila {row.RowNumber}: {ex.Message}");
+                }
+            }
+            await _context.SaveChangesAsync(CancellationToken.None);
+        }
+
         return result;
     }
 

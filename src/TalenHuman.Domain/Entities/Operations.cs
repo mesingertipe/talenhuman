@@ -240,10 +240,15 @@ public class NovedadLog : BaseEntity, IMultitenant
 
 public class SalesData : BaseEntity, IMultitenant
 {
-    public DateTime Timestamp { get; set; }
-    public decimal Amount { get; set; }
-    public int TicketCount { get; set; }
-    public int OrderCount { get; set; }
+    public DateTime RecordDate { get; set; } // Normalized to 30-min intervals (e.g., 08:00, 08:30)
+    public decimal VentaNeta { get; set; }
+    public int CantidadTickets { get; set; }
+    public decimal TicketPromedio { get; set; }
+    public string Canal { get; set; } = "General"; // e.g., Comedor, Domicilio, App
+    public int Comensales { get; set; }
+    public int Cuentas { get; set; }
+    
+    public DateTime Timestamp { get; set; } = ColombiaTime.Now; // Original audit timestamp
     
     public Guid StoreId { get; set; }
     public Store Store { get; set; } = null!;

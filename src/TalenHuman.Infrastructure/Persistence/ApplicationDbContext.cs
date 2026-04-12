@@ -176,7 +176,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<AuditLog>().HasIndex(a => new { a.CompanyId, a.CreatedAt });
         builder.Entity<AuditLog>().HasIndex(a => new { a.UserId, a.CreatedAt });
         builder.Entity<SyncLog>().HasIndex(s => new { s.CompanyId, s.CreatedAt });
-        builder.Entity<SalesData>().HasIndex(s => new { s.CompanyId, s.StoreId, s.Timestamp });
+        builder.Entity<SalesData>().HasIndex(s => new { s.CompanyId, s.StoreId, s.RecordDate, s.Canal });
         builder.Entity<NovedadLog>().HasIndex(n => new { n.CompanyId, n.NovedadId, n.CreatedAt });
         builder.Entity<NovedadAdjunto>().HasIndex(n => new { n.CompanyId, n.NovedadId });
         builder.Entity<NotificationLog>().HasIndex(n => new { n.CompanyId, n.UserId, n.CreatedAt });

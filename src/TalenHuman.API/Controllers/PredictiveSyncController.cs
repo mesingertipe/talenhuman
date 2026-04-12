@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TalenHuman.Domain.Entities;
+using TalenHuman.Domain.Common;
 using TalenHuman.Infrastructure.Persistence;
 
 namespace TalenHuman.API.Controllers;
@@ -36,11 +37,12 @@ public class PredictiveSyncController : ControllerBase
             var record = new SalesData
             {
                 StoreId = store.Id,
-                Timestamp = dto.Timestamp,
-                Amount = dto.Amount,
-                TicketCount = dto.TicketCount,
-                OrderCount = dto.OrderCount,
-                CompanyId = tenantId
+                RecordDate = dto.Timestamp, // Using Timestamp from DTO as the RecordDate
+                VentaNeta = dto.Amount,
+                CantidadTickets = dto.TicketCount,
+                Cuentas = dto.OrderCount,
+                CompanyId = tenantId,
+                Timestamp = ColombiaTime.Now // Automatic audit timestamp
             };
 
             _context.SalesData.Add(record);

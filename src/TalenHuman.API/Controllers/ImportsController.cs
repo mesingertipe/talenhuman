@@ -42,4 +42,14 @@ public class ImportsController : ControllerBase
         var result = await _importService.ImportEmployeesAsync(file);
         return Ok(result);
     }
+
+    [HttpPost("sales")]
+    public async Task<IActionResult> ImportSales(IFormFile file)
+    {
+        var preview = await _importService.ValidateImportAsync("sales", file);
+        if (preview.HasErrors) return BadRequest(preview);
+        
+        var result = await _importService.ExecuteImportAsync("sales", preview.Rows);
+        return Ok(result);
+    }
 }
