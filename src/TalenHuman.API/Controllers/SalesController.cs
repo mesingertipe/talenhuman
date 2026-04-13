@@ -159,4 +159,78 @@ public class SalesController : ControllerBase
 
         return Ok(new { items, totalCount });
     }
+
+    [HttpGet("analytics/summary")]
+    public async Task<ActionResult> GetSummary([FromQuery] DateTime date, [FromQuery] Guid? storeId, [FromQuery] Guid? channelId)
+    {
+        var companyId = _tenantProvider.GetTenantId();
+        var startOfDate = date.Date;
+        var endOfDate = startOfDate.AddDays(1);
+
+        var bands = await _context.SalesTimeBands
+            .Where(b => b.CompanyId == companyId && b.IsActive)
+            .OrderBy(b => b.StartTime)
+            .ToListAsync();
+
+        var sales = await _context.SalesData
+            .Where(s => s.CompanyId == companyId && s.RecordDate >= startOfDate && s.RecordDate < endOfDate)
+            .Where(s => !storeId.HasValue || s.StoreId == storeId.Value)
+            .Where(s => !channelId.HasValue || s.SalesChannelId == channelId.Value)
+            .ToListAsync();
+
+        var results = bands.Select(band => new
+        {
+            band.Name,
+            band.Color,
+            VentaNeta = sales.Where(s => s.RecordDate.TimeOfDay >= band.StartTime && s.RecordDate.TimeOfDay < band.EndTime).Sum(s => s.VentaNeta),
+            CantidadTickets = sales.Where(s => s.RecordDate.TimeOfDay >= band.StartTime && s.RecordDate.TimeOfDay < band.EndTime).Sum(s => s.CantidadTickets),
+            Comensales = sales.Where(s => s.RecordDate.TimeOfDay >= band.StartTime && s.RecordDate.TimeOfDay < band.EndTime).Sum(s => s.Comensales),
+            TicketPromedio = sales.Where(s => s.RecordDate.TimeOfDay >= band.StartTime && s.RecordDate.TimeOfDay < band.EndTime).Any() 
+                ? sales.Where(s => s.RecordDate.TimeOfDay >= band.StartTime && s.RecordDate.TimeOfDay < band.EndTime).Average(s => s.TicketPromedio) : 0
+        });
+
+        return Ok(results);
+    }
+
+    [HttpGet("analytics/evolution")]
+    public async Task<ActionResult> GetEvolution([FromQuery] DateTime date, [FromQuery] Guid? storeId, [FromQuery] Guid? channelId)
+    {
+        var companyId = _tenantProvider.GetTenantId();
+        var targetDate = date.Date;
+        
+        // Cargar data del día actual
+        var currentDayData = await _context.SalesData
+            .Where(s => s.CompanyId == companyId && s.RecordDate >= targetDate && s.RecordDate < targetDate.AddDays(1))
+            .Where(s => !storeId.HasValue || s.StoreId == storeId.Value)
+            .Where(s => !channelId.HasValue || s.SalesChannelId == channelId.Value)
+            .OrderBy(s => s.RecordDate)
+            .Select(s => new { s.RecordDate, s.VentaNeta, s.CantidadTickets, s.Comensales, s.TicketPromedio })
+            .ToListAsync();
+
+        // Cargar histórico de las últimas 3 semanas (mismo día de la semana)
+        var historicalDates = new List<DateTime> { targetDate.AddDays(-7), targetDate.AddDays(-14), targetDate.AddDays(-21) };
+        
+        var historicalData = await _context.SalesData
+            .Where(s => s.CompanyId == companyId)
+            .Where(s => historicalDates.Contains(s.RecordDate.Date))
+            .Where(s => !storeId.HasValue || s.StoreId == storeId.Value)
+            .Where(s => !channelId.HasValue || s.SalesChannelId == channelId.Value)
+            .ToListAsync();
+
+        // Agrupar histórico por hora/minuto para promediar
+        var averagedHistory = historicalData
+            .GroupBy(s => s.RecordDate.TimeOfDay)
+            .Select(g => new
+            {
+                Time = g.Key,
+                VentaNetaAvg = g.Average(x => x.VentaNeta),
+                TicketsAvg = g.Average(x => x.CantidadTickets),
+                ComensalesAvg = g.Average(x => (decimal)x.Comensales),
+                TicketPromedioAvg = g.Average(x => x.TicketPromedio)
+            })
+            .OrderBy(x => x.Time)
+            .ToList();
+
+        return Ok(new { current = currentDayData, history = averagedHistory });
+    }
 }

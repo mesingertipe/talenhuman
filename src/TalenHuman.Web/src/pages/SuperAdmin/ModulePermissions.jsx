@@ -32,7 +32,9 @@ const ModulePermissions = ({ user }) => {
     ],
     'SALES': [
       { code: 'SALES_DATA', name: 'Gestión de Ventas', icon: TrendingUp, desc: 'Administración de data histórica de ventas' },
-      { code: 'SALES_CHANNELS', name: 'Canales de Venta', icon: Filter, desc: 'Configuración de canales (Comedor, Uber, etc.)' }
+      { code: 'SALES_CHANNELS', name: 'Canales de Venta', icon: Filter, desc: 'Configuración de canales (Comedor, Uber, etc.)' },
+      { code: 'SALES_ANALYTICS', name: 'Analítica BI', icon: Presentation, desc: 'Dashboard de análisis predictivo y evolutivo' },
+      { code: 'SALES_TIME_BANDS', name: 'Franjas Horarias', icon: Clock, desc: 'Configuración de periodos operativos (Mañana, Almuerzo, etc.)' }
     ],
     'OPERATIONS': [
       { code: 'SHIFTS', name: 'Programación Turnos', icon: Activity, desc: 'Malla horaria y asignaciones' },

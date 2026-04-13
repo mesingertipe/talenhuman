@@ -30,6 +30,8 @@ import AuditLogs from './pages/Core/AuditLogs';
 import CommunicationsCenter from './pages/Admin/CommunicationsCenter';
 import SalesData from './pages/Core/SalesData';
 import SalesChannels from './pages/Core/SalesChannels';
+import SalesAnalytics from './pages/Core/SalesAnalytics';
+import SalesTimeBands from './pages/Core/SalesTimeBands';
 import SecurityService from './services/securityService';
 import { initializeFirebase, requestForToken, onMessageListener } from './firebase';
 
@@ -388,6 +390,8 @@ function App() {
         case 'Aprobación de turnos': return <ShiftApproval user={user} />;
         case 'Gestión de Ventas': return <SalesData user={user} />;
         case 'Canales de Venta': return <SalesChannels user={user} />;
+        case 'Analítica BI': return <SalesAnalytics user={user} />;
+        case 'Franjas Horarias': return <SalesTimeBands user={user} />;
         case 'Permisos': return <ModulePermissions user={user} />;
         case 'Configuración Sistema': return <SystemSettings user={user} />;
         case 'Auditoría': return <AuditLogs user={user} />;

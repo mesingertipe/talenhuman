@@ -28,6 +28,7 @@ public interface IApplicationDbContext
     DbSet<Role> Roles { get; }
     DbSet<SalesData> SalesData { get; }
     DbSet<SalesChannel> SalesChannels { get; }
+    DbSet<SalesTimeBand> SalesTimeBands { get; }
     DbSet<SyncLog> SyncLogs { get; }
     DbSet<AuditLog> AuditLogs { get; }
     DbSet<District> Districts { get; }

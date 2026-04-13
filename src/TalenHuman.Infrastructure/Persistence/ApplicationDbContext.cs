@@ -42,6 +42,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<ExternalApiConfig> ExternalApiConfigs => Set<ExternalApiConfig>();
     public DbSet<SalesData> SalesData => Set<SalesData>();
     public DbSet<SalesChannel> SalesChannels => Set<SalesChannel>();
+    public DbSet<SalesTimeBand> SalesTimeBands => Set<SalesTimeBand>();
     public DbSet<BiometricRecord> BiometricRecords => Set<BiometricRecord>();
     public DbSet<District> Districts => Set<District>();
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
@@ -80,6 +81,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<ExternalApiConfig>().HasQueryFilter(e => e.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<SalesData>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<SalesChannel>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<SalesTimeBand>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<BiometricRecord>().HasQueryFilter(b => b.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<NovedadAdjunto>().HasQueryFilter(n => n.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<AuditLog>().HasQueryFilter(a => a.CompanyId == TenantId || TenantId == Guid.Empty);
@@ -200,6 +202,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<WeeklyApprovalLog>().HasIndex(w => new { w.CompanyId, w.WeeklyApprovalId, w.ActionAt });
         builder.Entity<User>().HasIndex(u => u.CompanyId);
         builder.Entity<UserCredential>().HasIndex(u => u.UserId);
+        builder.Entity<SalesTimeBand>().HasIndex(s => new { s.CompanyId, s.Name }).IsUnique();
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

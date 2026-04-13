@@ -53,6 +53,8 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
       children: [
         { icon: <TrendingUp size={20} />, label: 'Gestión de Ventas', sub: 'SALES_DATA' },
         { icon: <Filter size={20} />, label: 'Canales de Venta', sub: 'SALES_CHANNELS' },
+        { icon: <BarChart3 size={20} />, label: 'Analítica BI', sub: 'SALES_ANALYTICS' },
+        { icon: <Clock size={20} />, label: 'Franjas Horarias', sub: 'SALES_TIME_BANDS' },
       ]
     },
     { 
@@ -224,6 +226,8 @@ const getPageInfo = (page) => {
     case 'Centro de Comunicados': return { title: 'Centro de Comunicados', subtitle: 'Difusión estratégica y masiva de cultura corporativa' };
     case 'Gestión de Ventas': return { title: 'Gestión de Ventas', subtitle: 'Consolidación y analítica de ingresos operativos' };
     case 'Canales de Venta': return { title: 'Canales de Venta', subtitle: 'Administración de orígenes de venta y plataformas' };
+    case 'Analítica BI': return { title: 'Analítica de Negocio', subtitle: 'Inteligencia de ventas y comparación histórica de 4 semanas' };
+    case 'Franjas Horarias': return { title: 'Parámetros de Tiempo', subtitle: 'Definición de periodos operativos para análisis segmentado' };
     default: return { title: page, subtitle: '' };
   }
 };

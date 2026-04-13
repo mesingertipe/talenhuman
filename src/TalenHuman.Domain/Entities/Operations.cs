@@ -248,6 +248,18 @@ public class SalesChannel : BaseEntity, IMultitenant
     public Company Company { get; set; } = null!;
 }
 
+public class SalesTimeBand : BaseEntity, IMultitenant
+{
+    public string Name { get; set; } = string.Empty; // e.g. Mañana, Almuerzo
+    public TimeSpan StartTime { get; set; }
+    public TimeSpan EndTime { get; set; }
+    public string? Color { get; set; } // Color for charts
+    public bool IsActive { get; set; } = true;
+
+    public Guid CompanyId { get; set; }
+    public Company Company { get; set; } = null!;
+}
+
 public class SalesData : BaseEntity, IMultitenant
 {
     public DateTime RecordDate { get; set; } // Normalized to 30-min intervals (e.g., 08:00, 08:30)
