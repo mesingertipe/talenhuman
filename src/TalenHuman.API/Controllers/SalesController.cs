@@ -33,8 +33,9 @@ public class SalesController : ControllerBase
         {
             try
             {
+                var cleanExternalId = item.StoreExternalId?.Trim();
                 var store = await _context.Stores
-                    .FirstOrDefaultAsync(s => s.ExternalId == item.StoreExternalId && s.CompanyId == companyId);
+                    .FirstOrDefaultAsync(s => (s.ExternalId.Trim() == cleanExternalId || s.Code.Trim() == cleanExternalId) && s.CompanyId == companyId);
 
                 if (store == null)
                 {

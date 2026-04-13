@@ -665,8 +665,8 @@ public class ImportService : IImportService
             {
                 try
                 {
-                    var externalId = row.Data["ID Tienda"];
-                    var store = await _context.Stores.FirstOrDefaultAsync(s => s.ExternalId == externalId && s.CompanyId == companyId);
+                    var externalId = row.Data["ID Tienda"]?.Trim();
+                    var store = await _context.Stores.FirstOrDefaultAsync(s => (s.ExternalId.Trim() == externalId || s.Code.Trim() == externalId) && s.CompanyId == companyId);
                     
                     if (store == null)
                     {

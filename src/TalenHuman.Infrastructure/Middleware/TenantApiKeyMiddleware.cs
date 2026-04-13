@@ -18,7 +18,7 @@ public class TenantApiKeyMiddleware
     public async Task InvokeAsync(HttpContext context, IApplicationDbContext dbContext)
     {
         // Only process integration endpoints
-        if (context.Request.Path.StartsWithSegments("/api/integration"))
+        if (context.Request.Path.StartsWithSegments("/api/integration") || context.Request.Path.StartsWithSegments("/api/Sales"))
         {
             if (!context.Request.Headers.TryGetValue(API_KEY_HEADER, out var extractedApiKey))
             {
