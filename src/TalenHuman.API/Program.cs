@@ -132,10 +132,11 @@ app.UseCors("AllowAll");
 
 app.UseSession();
 
+app.UseAuthentication();
+
 // Middleware for API Key authentication and Tenant resolution
 app.UseMiddleware<TalenHuman.Infrastructure.Middleware.TenantApiKeyMiddleware>();
 
-app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

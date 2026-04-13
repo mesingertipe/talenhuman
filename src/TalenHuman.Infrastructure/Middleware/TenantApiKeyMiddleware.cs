@@ -17,9 +17,17 @@ public class TenantApiKeyMiddleware
 
     public async Task InvokeAsync(HttpContext context, IApplicationDbContext dbContext)
     {
-        // Only process integration endpoints
+        // Only process integration and sales endpoints
         if (context.Request.Path.StartsWithSegments("/api/integration") || context.Request.Path.StartsWithSegments("/api/Sales"))
         {
+            // If the user is already authenticated (via JWT/Bearer), we allow them through.
+            // This enables the dashboard to use these APIs without an API Key.
+            if (context.User.Identity?.IsAuthenticated ?? false)
+            {
+                await _next(context);
+                return;
+            }
+
             if (!context.Request.Headers.TryGetValue(API_KEY_HEADER, out var extractedApiKey))
             {
                 context.Response.StatusCode = 401; // Unauthorized
