@@ -41,6 +41,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
     public DbSet<ExternalApiConfig> ExternalApiConfigs => Set<ExternalApiConfig>();
     public DbSet<SalesData> SalesData => Set<SalesData>();
+    public DbSet<SalesChannel> SalesChannels => Set<SalesChannel>();
     public DbSet<BiometricRecord> BiometricRecords => Set<BiometricRecord>();
     public DbSet<District> Districts => Set<District>();
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
@@ -78,6 +79,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<ApiKey>().HasQueryFilter(a => a.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<ExternalApiConfig>().HasQueryFilter(e => e.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<SalesData>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<SalesChannel>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<BiometricRecord>().HasQueryFilter(b => b.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<NovedadAdjunto>().HasQueryFilter(n => n.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<AuditLog>().HasQueryFilter(a => a.CompanyId == TenantId || TenantId == Guid.Empty);
@@ -176,7 +178,21 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<AuditLog>().HasIndex(a => new { a.CompanyId, a.CreatedAt });
         builder.Entity<AuditLog>().HasIndex(a => new { a.UserId, a.CreatedAt });
         builder.Entity<SyncLog>().HasIndex(s => new { s.CompanyId, s.CreatedAt });
-        builder.Entity<SalesData>().HasIndex(s => new { s.CompanyId, s.StoreId, s.RecordDate, s.Canal });
+        builder.Entity<SalesData>().HasIndex(s => new { s.CompanyId, s.StoreId, s.RecordDate, s.Canal }).IsUnique();
+
+        builder.Entity<SalesData>()
+            .Property(s => s.VentaNeta)
+            .HasPrecision(18, 2);
+
+        builder.Entity<SalesData>()
+            .Property(s => s.TicketPromedio)
+            .HasPrecision(18, 2);
+
+        builder.Entity<SalesData>()
+            .HasOne(s => s.SalesChannel)
+            .WithMany()
+            .HasForeignKey(s => s.SalesChannelId)
+            .OnDelete(DeleteBehavior.SetNull);
         builder.Entity<NovedadLog>().HasIndex(n => new { n.CompanyId, n.NovedadId, n.CreatedAt });
         builder.Entity<NovedadAdjunto>().HasIndex(n => new { n.CompanyId, n.NovedadId });
         builder.Entity<NotificationLog>().HasIndex(n => new { n.CompanyId, n.UserId, n.CreatedAt });

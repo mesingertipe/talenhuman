@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TalenHuman.Application.Common.Interfaces;
 using TalenHuman.Application.Common.Models;
 using TalenHuman.Domain.Entities;
+using TalenHuman.Domain.Common;
 
 namespace TalenHuman.API.Controllers;
 
@@ -25,6 +26,9 @@ public class SalesController : ControllerBase
         var result = new SalesImportResultDto();
         var companyId = _tenantProvider.GetTenantId();
 
+        // Caché local para evitar consultas repetitivas de canales en el mismo lote
+        var channelsCache = new Dictionary<string, Guid>();
+
         foreach (var item in data)
         {
             try
@@ -39,21 +43,58 @@ public class SalesController : ControllerBase
                     continue;
                 }
 
-                var sales = new SalesData
+                // Lógica de Canal Dinámico
+                if (!channelsCache.TryGetValue(item.Canal, out var channelId))
                 {
-                    StoreId = store.Id,
-                    RecordDate = item.RecordDate,
-                    VentaNeta = item.VentaNeta,
-                    CantidadTickets = item.CantidadTickets,
-                    TicketPromedio = item.TicketPromedio > 0 ? item.TicketPromedio : 
-                                    (item.CantidadTickets > 0 ? item.VentaNeta / item.CantidadTickets : 0),
-                    Canal = item.Canal,
-                    Comensales = item.Comensales,
-                    Cuentas = item.Cuentas,
-                    CompanyId = companyId
-                };
+                    var channel = await _context.SalesChannels
+                        .FirstOrDefaultAsync(c => c.Name == item.Canal && c.CompanyId == companyId);
+                    
+                    if (channel == null)
+                    {
+                        channel = new SalesChannel { Name = item.Canal, CompanyId = companyId };
+                        _context.SalesChannels.Add(channel);
+                        await _context.SaveChangesAsync(CancellationToken.None);
+                    }
+                    channelId = channel.Id;
+                    channelsCache[item.Canal] = channelId;
+                }
 
-                _context.SalesData.Add(sales);
+                var promedio = item.TicketPromedio > 0 ? item.TicketPromedio : 
+                                    (item.CantidadTickets > 0 ? item.VentaNeta / item.CantidadTickets : 0);
+
+                var existingSales = await _context.SalesData.FirstOrDefaultAsync(s => 
+                    s.StoreId == store.Id && 
+                    s.RecordDate == item.RecordDate && 
+                    s.Canal == item.Canal && 
+                    s.CompanyId == companyId);
+
+                if (existingSales != null)
+                {
+                    existingSales.VentaNeta = item.VentaNeta;
+                    existingSales.CantidadTickets = item.CantidadTickets;
+                    existingSales.TicketPromedio = promedio;
+                    existingSales.Comensales = item.Comensales;
+                    existingSales.SalesChannelId = channelId;
+                    existingSales.Timestamp = ColombiaTime.Now;
+                    _context.SalesData.Update(existingSales);
+                }
+                else
+                {
+                    var sales = new SalesData
+                    {
+                        StoreId = store.Id,
+                        RecordDate = item.RecordDate,
+                        VentaNeta = item.VentaNeta,
+                        CantidadTickets = item.CantidadTickets,
+                        TicketPromedio = promedio,
+                        Canal = item.Canal,
+                        Comensales = item.Comensales,
+                        SalesChannelId = channelId,
+                        CompanyId = companyId,
+                        Timestamp = ColombiaTime.Now
+                    };
+                    _context.SalesData.Add(sales);
+                }
                 result.SuccessCount++;
             }
             catch (Exception ex)
@@ -68,15 +109,54 @@ public class SalesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<SalesData>>> GetSales([FromQuery] DateTime start, [FromQuery] DateTime end, [FromQuery] Guid? storeId)
+    public async Task<ActionResult> GetSales(
+        [FromQuery] DateTime? startDate, 
+        [FromQuery] DateTime? endDate, 
+        [FromQuery] Guid? storeId,
+        [FromQuery] Guid? channelId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20)
     {
-        var query = _context.SalesData.AsQueryable();
+        var companyId = _tenantProvider.GetTenantId();
+        var query = _context.SalesData
+            .Include(s => s.Store)
+            .Include(s => s.SalesChannel)
+            .Where(s => s.CompanyId == companyId)
+            .AsQueryable();
 
         if (storeId.HasValue)
             query = query.Where(s => s.StoreId == storeId.Value);
+            
+        if (channelId.HasValue)
+            query = query.Where(s => s.SalesChannelId == channelId.Value);
 
-        query = query.Where(s => s.RecordDate >= start && s.RecordDate <= end);
+        if (startDate.HasValue)
+            query = query.Where(s => s.RecordDate >= startDate.Value);
+            
+        if (endDate.HasValue)
+            query = query.Where(s => s.RecordDate <= endDate.Value);
 
-        return await query.OrderByDescending(s => s.RecordDate).ToListAsync();
+        var totalCount = await query.CountAsync();
+        
+        var items = await query
+            .OrderByDescending(s => s.RecordDate)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(s => new {
+                s.Id,
+                s.RecordDate,
+                s.StoreId,
+                StoreName = s.Store.Name,
+                s.VentaNeta,
+                s.CantidadTickets,
+                s.TicketPromedio,
+                s.Canal,
+                s.Comensales,
+                s.SalesChannelId,
+                ChannelName = s.SalesChannel != null ? s.SalesChannel.Name : s.Canal
+            })
+            .ToListAsync();
+
+        return Ok(new { items, totalCount });
     }
 }

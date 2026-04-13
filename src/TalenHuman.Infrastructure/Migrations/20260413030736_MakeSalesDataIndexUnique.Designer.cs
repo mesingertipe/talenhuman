@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TalenHuman.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using TalenHuman.Infrastructure.Persistence;
 namespace TalenHuman.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260413030736_MakeSalesDataIndexUnique")]
+    partial class MakeSalesDataIndexUnique
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1150,38 +1153,6 @@ namespace TalenHuman.Infrastructure.Migrations
                     b.ToTable("AspNetRoles", (string)null);
                 });
 
-            modelBuilder.Entity("TalenHuman.Domain.Entities.SalesChannel", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CompanyId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CompanyId");
-
-                    b.ToTable("SalesChannels");
-                });
-
             modelBuilder.Entity("TalenHuman.Domain.Entities.SalesData", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1204,18 +1175,17 @@ namespace TalenHuman.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<int>("Cuentas")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("RecordDate")
                         .HasColumnType("timestamp without time zone");
-
-                    b.Property<Guid?>("SalesChannelId")
-                        .HasColumnType("uuid");
 
                     b.Property<Guid>("StoreId")
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("TicketPromedio")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("timestamp without time zone");
@@ -1224,12 +1194,9 @@ namespace TalenHuman.Infrastructure.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<decimal>("VentaNeta")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("SalesChannelId");
 
                     b.HasIndex("StoreId");
 
@@ -2132,17 +2099,6 @@ namespace TalenHuman.Infrastructure.Migrations
                     b.Navigation("Company");
                 });
 
-            modelBuilder.Entity("TalenHuman.Domain.Entities.SalesChannel", b =>
-                {
-                    b.HasOne("TalenHuman.Domain.Entities.Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Company");
-                });
-
             modelBuilder.Entity("TalenHuman.Domain.Entities.SalesData", b =>
                 {
                     b.HasOne("TalenHuman.Domain.Entities.Company", "Company")
@@ -2151,11 +2107,6 @@ namespace TalenHuman.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("TalenHuman.Domain.Entities.SalesChannel", "SalesChannel")
-                        .WithMany()
-                        .HasForeignKey("SalesChannelId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("TalenHuman.Domain.Entities.Store", "Store")
                         .WithMany()
                         .HasForeignKey("StoreId")
@@ -2163,8 +2114,6 @@ namespace TalenHuman.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Company");
-
-                    b.Navigation("SalesChannel");
 
                     b.Navigation("Store");
                 });

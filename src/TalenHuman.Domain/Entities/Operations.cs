@@ -238,15 +238,29 @@ public class NovedadLog : BaseEntity, IMultitenant
     public Company Company { get; set; } = null!;
 }
 
+public class SalesChannel : BaseEntity, IMultitenant
+{
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public bool IsActive { get; set; } = true;
+
+    public Guid CompanyId { get; set; }
+    public Company Company { get; set; } = null!;
+}
+
 public class SalesData : BaseEntity, IMultitenant
 {
     public DateTime RecordDate { get; set; } // Normalized to 30-min intervals (e.g., 08:00, 08:30)
     public decimal VentaNeta { get; set; }
     public int CantidadTickets { get; set; }
     public decimal TicketPromedio { get; set; }
-    public string Canal { get; set; } = "General"; // e.g., Comedor, Domicilio, App
+    
+    // Vinculación a Canal Maestro
+    public Guid? SalesChannelId { get; set; }
+    public SalesChannel? SalesChannel { get; set; }
+    
+    public string Canal { get; set; } = "General"; // Keeping string for faster batch processing and legacy support
     public int Comensales { get; set; }
-    public int Cuentas { get; set; }
     
     public DateTime Timestamp { get; set; } = ColombiaTime.Now; // Original audit timestamp
     

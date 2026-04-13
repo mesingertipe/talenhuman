@@ -30,6 +30,10 @@ const ModulePermissions = ({ user }) => {
       { code: 'EMPLOYEES', name: 'Empleados', icon: Users, desc: 'Base de datos de capital humano' },
       { code: 'SCHEDULES', name: 'Jornadas Base', icon: Clock, desc: 'Configuración de horarios estándar' }
     ],
+    'SALES': [
+      { code: 'SALES_DATA', name: 'Gestión de Ventas', icon: TrendingUp, desc: 'Administración de data histórica de ventas' },
+      { code: 'SALES_CHANNELS', name: 'Canales de Venta', icon: Filter, desc: 'Configuración de canales (Comedor, Uber, etc.)' }
+    ],
     'OPERATIONS': [
       { code: 'SHIFTS', name: 'Programación Turnos', icon: Activity, desc: 'Malla horaria y asignaciones' },
       { code: 'SHIFT_APPROVAL', name: 'Aprobación de Turnos', icon: CheckCircle, desc: 'Flujo jerárquico de validación (RH/Distrital)' },

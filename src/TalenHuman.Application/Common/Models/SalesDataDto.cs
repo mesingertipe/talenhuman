@@ -7,8 +7,8 @@ public class SalesDataDto
     public int CantidadTickets { get; set; }
     public decimal TicketPromedio { get; set; }
     public string Canal { get; set; } = "General";
+    public Guid? SalesChannelId { get; set; }
     public int Comensales { get; set; }
-    public int Cuentas { get; set; }
     public string StoreExternalId { get; set; } = null!; // "ID Tienda" or Code
 }
 

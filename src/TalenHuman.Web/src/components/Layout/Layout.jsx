@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Users, Clock, Calendar, FileText, Settings, 
   LogOut, Store, Sun, Moon, Pin, PinOff, ChevronLeft, ChevronRight,
   Briefcase, Boxes, Building, Link, ChevronDown, ChevronUp, User as UserIcon, MapPin, Cpu, Globe, Activity, ShieldAlert, Building2, Shield,
-  Megaphone, CheckCircle
+  Megaphone, CheckCircle, TrendingUp, Filter, BarChart3, Database
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
@@ -12,7 +12,7 @@ import TalenHumanLogo from '../Shared/TalenHumanLogo';
 
 const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePage, setPage, onLogout, user, companies, selectedTenant, onTenantChange, tenantSettings }) => {
   const isSuperAdmin = user?.roles?.includes('SuperAdmin');
-  const [expandedHeaders, setExpandedHeaders] = useState(['Configuración Core', 'Operaciones', 'Gestión del Modelo', 'Panel de Sistema']);
+  const [expandedHeaders, setExpandedHeaders] = useState(['Configuración Core', 'Operaciones', 'Ventas Maestras', 'Gestión del Modelo', 'Panel de Sistema']);
 
   const toggleHeader = (label) => {
     setExpandedHeaders(prev => 
@@ -44,6 +44,15 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
         { icon: <CheckCircle size={20} />, label: 'Aprobación de turnos', sub: 'SHIFT_APPROVAL' },
         { icon: <Clock size={20} />, label: 'Marcaciones', sub: 'RECORDS' },
         { icon: <FileText size={20} />, label: 'Novedades', sub: 'NOVELTIES' },
+      ]
+    },
+    {
+      label: 'Ventas Maestras',
+      isHeader: true,
+      module: 'SALES',
+      children: [
+        { icon: <TrendingUp size={20} />, label: 'Gestión de Ventas', sub: 'SALES_DATA' },
+        { icon: <Filter size={20} />, label: 'Canales de Venta', sub: 'SALES_CHANNELS' },
       ]
     },
     { 
@@ -213,6 +222,8 @@ const getPageInfo = (page) => {
     case 'Configuración Sistema': return { title: 'Parámetros del Sistema', subtitle: 'Configuración de infraestructura y servicios core' };
     case 'Diseñador de Plantillas': return { title: 'Catálogo de Plantillas', subtitle: 'Diseño de novedades globales para el ecosistema' };
     case 'Centro de Comunicados': return { title: 'Centro de Comunicados', subtitle: 'Difusión estratégica y masiva de cultura corporativa' };
+    case 'Gestión de Ventas': return { title: 'Gestión de Ventas', subtitle: 'Consolidación y analítica de ingresos operativos' };
+    case 'Canales de Venta': return { title: 'Canales de Venta', subtitle: 'Administración de orígenes de venta y plataformas' };
     default: return { title: page, subtitle: '' };
   }
 };

@@ -278,10 +278,9 @@ public class ImportService : IImportService
             ws.Cell(1, 3).Value = "Cantidad Tickets";
             ws.Cell(1, 4).Value = "Canal";
             ws.Cell(1, 5).Value = "Comensales";
-            ws.Cell(1, 6).Value = "Cuentas";
-            ws.Cell(1, 7).Value = "ID Tienda";
+            ws.Cell(1, 6).Value = "ID Tienda";
 
-            var headerRange = ws.Range("A1:G1");
+            var headerRange = ws.Range("A1:F1");
             headerRange.Style.Font.Bold = true;
             headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#4f46e5");
             headerRange.Style.Font.FontColor = XLColor.White;
@@ -291,8 +290,7 @@ public class ImportService : IImportService
             ws.Cell(2, 3).Value = 15;
             ws.Cell(2, 4).Value = "Comedor";
             ws.Cell(2, 5).Value = 45;
-            ws.Cell(2, 6).Value = 12;
-            ws.Cell(2, 7).Value = "CH-001";
+            ws.Cell(2, 6).Value = "CH-001";
 
             ws.Column(1).Width = 25;
             ws.Column(2).Width = 15;
@@ -300,7 +298,6 @@ public class ImportService : IImportService
             ws.Column(4).Width = 15;
             ws.Column(5).Width = 15;
             ws.Column(6).Width = 15;
-            ws.Column(7).Width = 15;
 
             var wsHelp = workbook.Worksheets.Add("Instrucciones");
             wsHelp.Cell(1, 1).Value = "Instrucciones Ventas";
@@ -662,6 +659,8 @@ public class ImportService : IImportService
         }
         else if (type.ToLower() == "sales")
         {
+            var channelsCache = new Dictionary<string, Guid>();
+
             foreach (var row in rows)
             {
                 try
@@ -683,25 +682,59 @@ public class ImportService : IImportService
                         var tickets = int.TryParse(row.Data["Cantidad Tickets"], out var t) ? t : 0;
                         var canal = row.Data.GetValueOrDefault("Canal", "General");
                         var comensales = int.TryParse(row.Data.GetValueOrDefault("Comensales"), out var com) ? com : 0;
-                        var cuentas = int.TryParse(row.Data.GetValueOrDefault("Cuentas"), out var cue) ? cue : 0;
+
+                        // Lógica de Canal Dinámico
+                        if (!channelsCache.TryGetValue(canal, out var channelId))
+                        {
+                            var channel = await _context.SalesChannels
+                                .FirstOrDefaultAsync(c => c.Name == canal && c.CompanyId == companyId);
+                            
+                            if (channel == null)
+                            {
+                                channel = new SalesChannel { Name = canal, CompanyId = companyId };
+                                _context.SalesChannels.Add(channel);
+                                await _context.SaveChangesAsync(CancellationToken.None);
+                            }
+                            channelId = channel.Id;
+                            channelsCache[canal] = channelId;
+                        }
 
                         // Calculate average if possible
                         var promedio = tickets > 0 ? ventaNeta / tickets : 0;
 
-                        var sales = new SalesData
-                        {
-                            StoreId = store.Id,
-                            RecordDate = recordDate,
-                            VentaNeta = ventaNeta,
-                            CantidadTickets = tickets,
-                            TicketPromedio = promedio,
-                            Canal = canal,
-                            Comensales = comensales,
-                            Cuentas = cuentas,
-                            CompanyId = companyId
-                        };
+                        var existingSales = await _context.SalesData.FirstOrDefaultAsync(s => 
+                            s.StoreId == store.Id && 
+                            s.RecordDate == recordDate && 
+                            s.Canal == canal && 
+                            s.CompanyId == companyId);
 
-                        _context.SalesData.Add(sales);
+                        if (existingSales != null)
+                        {
+                            existingSales.VentaNeta = ventaNeta;
+                            existingSales.CantidadTickets = tickets;
+                            existingSales.TicketPromedio = promedio;
+                            existingSales.Comensales = comensales;
+                            existingSales.SalesChannelId = channelId;
+                            existingSales.Timestamp = ColombiaTime.Now;
+                            _context.SalesData.Update(existingSales);
+                        }
+                        else
+                        {
+                            var sales = new SalesData
+                            {
+                                StoreId = store.Id,
+                                RecordDate = recordDate,
+                                VentaNeta = ventaNeta,
+                                CantidadTickets = tickets,
+                                TicketPromedio = promedio,
+                                Canal = canal,
+                                Comensales = comensales,
+                                SalesChannelId = channelId,
+                                CompanyId = companyId,
+                                Timestamp = ColombiaTime.Now
+                            };
+                            _context.SalesData.Add(sales);
+                        }
                         result.SuccessCount++;
                     }
                 }

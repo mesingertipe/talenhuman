@@ -34,18 +34,33 @@ public class PredictiveSyncController : ControllerBase
                 continue;
             }
 
-            var record = new SalesData
-            {
-                StoreId = store.Id,
-                RecordDate = dto.Timestamp, // Using Timestamp from DTO as the RecordDate
-                VentaNeta = dto.Amount,
-                CantidadTickets = dto.TicketCount,
-                Cuentas = dto.OrderCount,
-                CompanyId = tenantId,
-                Timestamp = ColombiaTime.Now // Automatic audit timestamp
-            };
+            var existingSales = await _context.SalesData.FirstOrDefaultAsync(s => 
+                s.StoreId == store.Id && 
+                s.RecordDate == dto.Timestamp && 
+                s.CompanyId == tenantId);
 
-            _context.SalesData.Add(record);
+            if (existingSales != null)
+            {
+                existingSales.VentaNeta = dto.Amount;
+                existingSales.CantidadTickets = dto.TicketCount;
+                existingSales.Canal = dto.Canal ?? "General";
+                existingSales.Timestamp = ColombiaTime.Now;
+                _context.SalesData.Update(existingSales);
+            }
+            else
+            {
+                var record = new SalesData
+                {
+                    StoreId = store.Id,
+                    RecordDate = dto.Timestamp,
+                    VentaNeta = dto.Amount,
+                    CantidadTickets = dto.TicketCount,
+                    Canal = dto.Canal ?? "General",
+                    CompanyId = tenantId,
+                    Timestamp = ColombiaTime.Now
+                };
+                _context.SalesData.Add(record);
+            }
             results.Created++;
         }
 
@@ -61,5 +76,5 @@ public class SalesDataSyncDto
     public DateTime Timestamp { get; set; }
     public decimal Amount { get; set; }
     public int TicketCount { get; set; }
-    public int OrderCount { get; set; }
+    public string? Canal { get; set; }
 }

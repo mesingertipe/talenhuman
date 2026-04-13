@@ -28,6 +28,8 @@ import SystemSettings from './pages/SuperAdmin/SystemSettings';
 import NewsTemplateDesigner from './pages/SuperAdmin/NewsTemplateDesigner';
 import AuditLogs from './pages/Core/AuditLogs';
 import CommunicationsCenter from './pages/Admin/CommunicationsCenter';
+import SalesData from './pages/Core/SalesData';
+import SalesChannels from './pages/Core/SalesChannels';
 import SecurityService from './services/securityService';
 import { initializeFirebase, requestForToken, onMessageListener } from './firebase';
 
@@ -384,6 +386,8 @@ function App() {
         case 'Centro de Comunicados': return <CommunicationsCenter user={user} />;
         case 'Turnos': return <ShiftScheduler user={user} />;
         case 'Aprobación de turnos': return <ShiftApproval user={user} />;
+        case 'Gestión de Ventas': return <SalesData user={user} />;
+        case 'Canales de Venta': return <SalesChannels user={user} />;
         case 'Permisos': return <ModulePermissions user={user} />;
         case 'Configuración Sistema': return <SystemSettings user={user} />;
         case 'Auditoría': return <AuditLogs user={user} />;
