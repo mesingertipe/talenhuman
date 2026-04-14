@@ -601,8 +601,7 @@ const Stores = ({ user }) => {
           `}</style>
         </div>
       )}
-        </div>
-        )}
+
 
       {showConfirm && (
         <div className="modal-overlay">
