@@ -1535,70 +1535,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     </div>
                 
                 <div className="card shadow-[0_40px_100px_rgba(0,0,0,0.12)] bg-white dark:bg-slate-900 border-2 dark:border-slate-800 relative" style={{ borderRadius: '48px', overflow: 'hidden', minHeight: '600px' }}>
-                    {(loading || isProcessingStatus || isSaving || isExporting) && createPortal(
-                        <div style={{
-                            position: 'fixed',
-                            top: 0,
-                            left: 0,
-                            width: '100vw',
-                            height: '100vh',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            background: 'rgba(15, 23, 42, 0.65)',
-                            backdropFilter: 'blur(12px)',
-                            WebkitBackdropFilter: 'blur(12px)',
-                            zIndex: 99999999,
-                            pointerEvents: 'all'
-                        }}>
-                            <div className="animate-in zoom-in-95 duration-300" style={{
-                                background: isDarkMode ? '#0f172a' : '#ffffff',
-                                padding: '3.5rem 3rem',
-                                borderRadius: '3.5rem',
-                                boxShadow: '0 40px 100px -20px rgba(0,0,0,0.6)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                width: '100%',
-                                maxWidth: '440px',
-                                textAlign: 'center',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center'
-                            }}>
-                                <div className="relative mb-8">
-                                    <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 animate-pulse"></div>
-                                    <div style={{ position: 'relative', width: '90px', height: '90px' }}>
-                                        <svg style={{ transform: 'rotate(-90deg)', width: '90px', height: '90px' }}>
-                                            <circle cx="45" cy="45" r="40" stroke={isDarkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9'} strokeWidth="6" fill="transparent" />
-                                            <circle 
-                                                cx="45" cy="45" r="40" 
-                                                stroke="#4f46e5" 
-                                                strokeWidth="6" 
-                                                fill="transparent" 
-                                                strokeDasharray="251.2" 
-                                                strokeDashoffset={251.2 - (251.2 * (syncPhase || (loading ? 45 : (isExporting ? 25 : 95)))) / 100}
-                                                strokeLinecap="round"
-                                                style={{ transition: 'stroke-dashoffset 0.8s ease' }}
-                                            />
-                                        </svg>
-                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
-                                            {syncPhase >= 95 || (!loading && !isSaving && !isExporting) ? <CheckCircle size={32} strokeWidth={3} /> : <Cpu size={32} className="animate-pulse" />}
-                                        </div>
-                                    </div>
-                                </div>
-                                <h3 style={{ fontSize: '1.5rem', fontWeight: '950', color: isDarkMode ? '#f8fafc' : '#0f172a', margin: '0 0 0.5rem 0', letterSpacing: '-0.02em' }}>
-                                    {isSaving ? "Publicando Cambios" : (isExporting ? "Generando Reporte" : (syncPhase < 1 ? "Iniciando Consola" : "Sincronizando Datos"))}
-                                </h3>
-                                <p style={{ fontSize: '0.85rem', fontWeight: '700', color: '#64748b', margin: 0, lineHeight: '1.5' }}>
-                                    {isSaving ? "Tu programación se está sincronizando..." : (isExporting ? "Preparando datos HD..." : "Conectando con el motor TalenHuman...")}
-                                </p>
-                            </div>
-                        </div>,
-                        document.body
-                    )}
-                    
                     <div className="overflow-x-auto">
                             <footer className="mt-8 mb-4 text-center">
-                                <div className="version-tag-subtle">SISTEMA V13.9.44-PREMIUM-STABLE</div>
+                                <div className="version-tag-subtle">SISTEMA V13.9.45-STABLE-ELITE</div>
                             </footer>
                             <table className="w-full border-collapse">
                                 <thead>
@@ -2366,179 +2305,92 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         borderLeft: hoverPos.y < 350 ? '' : 'none',
                                         borderBottom: hoverPos.y < 350 ? 'none' : '',
                                         borderRight: hoverPos.y < 350 ? 'none' : '',
-                                        zIndex: -1
-                                    }}
-                                ></div>
-                          {/* V13.0 ELITE PREDICTIVE IQ HUB */}
-                    {showPredictiveModal && (
-                        <div style={{ position: 'fixed', inset: 0, zIndex: 1000000, background: 'rgba(6, 9, 20, 0.8)', backdropFilter: 'blur(30px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-                             <div style={{ background: isDarkMode ? '#1e293b' : '#ffffff', width: '100%', maxWidth: '650px', borderRadius: '48px', overflow: 'hidden', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none', boxShadow: '0 50px 100px rgba(0,0,0,0.5)', position: 'relative' }} className="animate-in zoom-in-95 duration-500">
-                                
-                                {/* Header */}
-                                <div style={{ padding: '50px 50px 30px', textAlign: 'center' }}>
-                                    <div style={{ width: '80px', height: '80px', background: 'linear-gradient(135deg, #4f46e5, #9333ea)', color: 'white', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 25px', boxShadow: '0 20px 40px rgba(79, 70, 229, 0.3)', transform: 'rotate(-5deg)' }}>
-                                        <Cpu size={40} className={isOptimizing ? "animate-spin" : "animate-pulse"} />
-                                    </div>
-                                    <h2 style={{ fontSize: '2rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', letterSpacing: '-0.03em', margin: 0 }}>Hub de Inteligencia</h2>
-                                    <p style={{ color: '#6366f1', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.2em', mt: '8px' }}>Optimización Basada en Datos</p>
-                                </div>
+                                        zInd                           </div>,
+                           document.body
+                        )}
 
-                                <div style={{ padding: '0 50px 50px' }}>
-                                    {/* Stats Grid */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '40px' }}>
-                                        <div style={{ padding: '24px', background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc', borderRadius: '32px', border: '1px solid rgba(0,0,0,0.05)' }}>
-                                            <p style={{ fontSize: '10px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '5px' }}>Reglas Activas</p>
-                                            <p style={{ fontSize: '1.5rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>{predictiveRules.length}</p>
+                        {/* ========================================================================= */}
+                        {/* 🧠 ELITE LAYER: OVERLAYS, MODALS & GLOBAL MONITORS                      */}
+                        {/* ========================================================================= */}
+
+                        {/* 1. PREDICTIVE IQ HUB (PURPLE BUTTON MODAL) */}
+                        {showPredictiveModal && createPortal(
+                            <div style={{ position: 'fixed', inset: 0, zIndex: 100000000, background: 'rgba(6, 9, 20, 0.85)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                                <div style={{ background: isDarkMode ? '#1e293b' : '#ffffff', width: '100%', maxWidth: '650px', borderRadius: '4rem', overflow: 'hidden', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.05)', boxShadow: '0 50px 100px rgba(0,0,0,0.6)', position: 'relative' }} className="animate-in zoom-in-95 duration-500">
+                                    <div style={{ padding: '50px', textAlign: 'center' }}>
+                                        <div style={{ width: '80px', height: '80px', background: 'linear-gradient(135deg, #4f46e5, #9333ea)', color: 'white', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 25px', boxShadow: '0 20px 40px rgba(79, 70, 229, 0.3)', transform: 'rotate(-5deg)' }}>
+                                            <Cpu size={40} className={isOptimizing ? "animate-spin" : "animate-pulse"} />
                                         </div>
-                                        <div style={{ padding: '24px', background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc', borderRadius: '32px', border: '1px solid rgba(0,0,0,0.05)' }}>
-                                            <p style={{ fontSize: '10px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '5px' }}>Dato Histórico</p>
-                                            <p style={{ fontSize: '1.5rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>3 Semanas</p>
-                                        </div>
+                                        <h2 style={{ fontSize: '2.2rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', letterSpacing: '-0.04em', margin: 0 }}>Hub de Inteligencia</h2>
+                                        <p style={{ color: '#6366f1', fontSize: '11px', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '0.2em', marginTop: '10px' }}>Optimización Basada en Demanda</p>
                                     </div>
 
-                                    {/* Strategy Info */}
-                                    <div style={{ marginBottom: '40px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                            <div style={{ width: '40px', height: '40px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <Sparkles size={20} />
+                                    <div style={{ padding: '0 50px 50px' }}>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '40px' }}>
+                                            <div style={{ padding: '24px', background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc', borderRadius: '32px', border: '1px solid rgba(0,0,0,0.05)' }}>
+                                                <p style={{ fontSize: '10px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '5px' }}>Reglas Operativas</p>
+                                                <p style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>{predictiveRules.length}</p>
                                             </div>
-                                            <div className="flex flex-col">
-                                                <h4 style={{ fontSize: '14px', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>Estrategia: Balance de Nómina</h4>
-                                                <p style={{ fontSize: '11px', fontWeight: '600', color: '#64748b' }}>IA priorizará colaboradores con menos horas para evitar sobrecostos.</p>
+                                            <div style={{ padding: '24px', background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc', borderRadius: '32px', border: '1px solid rgba(0,0,0,0.05)' }}>
+                                                <p style={{ fontSize: '10px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '5px' }}>Data Histórica</p>
+                                                <p style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>3 SEMANAS</p>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* Actions */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                        <button 
-                                            onClick={performOptimization}
-                                            disabled={isOptimizing || !selectedStore || predictiveRules.length === 0}
-                                            style={{ width: '100%', padding: '24px', borderRadius: '24px', border: 'none', background: 'linear-gradient(90deg, #4f46e5, #9333ea)', color: 'white', fontWeight: '950', fontSize: '13px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 35px rgba(79, 70, 229, 0.4)', transition: 'all 0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}
-                                            className="hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:grayscale"
-                                        >
-                                            {isOptimizing ? (
-                                                <><div className="loader !w-6 !h-6 !border-white"></div> CALCULANDO MALLA...</>
-                                            ) : (
-                                                <><Sparkles size={22} /> OPTIMIZAR SEMANA AHORA</>
-                                            )}
-                                        </button>
-
-                                        {shifts.some(s => s.isAutoGenerated) && (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                             <button 
-                                                onClick={() => {
-                                                    setShifts(prev => prev.filter(s => !s.isAutoGenerated));
-                                                    showToast("Sugerencias IA eliminadas", "info");
-                                                }}
-                                                style={{ width: '100%', padding: '18px', borderRadius: '18px', border: '1px solid #ef4444', background: 'rgba(239, 68, 68, 0.05)', color: '#ef4444', fontWeight: '800', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}
-                                                className="hover:bg-rose-500 hover:text-white transition-colors"
+                                                onClick={performOptimization}
+                                                disabled={isOptimizing || !selectedStore || predictiveRules.length === 0}
+                                                className="group relative overflow-hidden active:scale-95 transition-all text-white font-[950] text-[14px] uppercase tracking-wider"
+                                                style={{ width: '100%', padding: '24px', borderRadius: '24px', border: 'none', background: 'linear-gradient(90deg, #4f46e5, #9333ea)', cursor: 'pointer', boxShadow: '0 20px 40px rgba(79, 70, 229, 0.4)' }}
                                             >
-                                                <Trash2 size={16} className="inline mr-2" /> Descartar Sugerencias IA
+                                                {isOptimizing ? <><div className="loader !border-white mr-3 inline-block"></div> CALCULANDO...</> : <><Sparkles size={20} className="inline mr-2" /> OPTIMIZAR AHORA</>}
                                             </button>
-                                        )}
 
-                                        <button 
-                                            onClick={() => { setShowPredictiveOverlay(!showPredictiveOverlay); setShowPredictiveModal(false); }}
-                                            style={{ width: '100%', padding: '18px', borderRadius: '18px', border: `1px solid ${activeColors.border}`, background: 'transparent', color: isDarkMode ? '#cbd5e1' : '#64748b', fontWeight: '800', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}
-                                        >
-                                            {showPredictiveOverlay ? 'Ocultar Guía de Gaps' : 'Ver Guía de Gaps'}
-                                        </button>
-                                        <button onClick={() => setShowPredictiveModal(false)} style={{ width: '100%', padding: '15px', borderRadius: '15px', border: 'none', background: 'transparent', color: '#94a3b8', fontWeight: '800', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer' }}>Cerrar Hub</button>
+                                            {shifts.some(s => s.isAutoGenerated) && (
+                                                <button 
+                                                    onClick={() => { setShifts(prev => prev.filter(s => !s.isAutoGenerated)); setShowPredictiveOverlay(false); }}
+                                                    style={{ width: '100%', padding: '18px', borderRadius: '18px', border: '1px solid #ef4444', background: 'rgba(239, 68, 68, 0.05)', color: '#ef4444', fontWeight: '900', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}
+                                                >
+                                                    <Trash2 size={16} className="inline mr-2" /> Eliminar Sugerencias
+                                                </button>
+                                            )}
+
+                                            <button onClick={() => setShowPredictiveModal(false)} style={{ width: '100%', padding: '15px', borderRadius: '15px', border: 'none', background: 'transparent', color: '#94a3b8', fontWeight: '900', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}>Cerrar Sistema</button>
+                                        </div>
                                     </div>
                                 </div>
-                             </div>
-                        </div>
-                    )}
+                            </div>,
+                            document.body
+                        )}
 
-                             </div>
-                        </div>
-                    )}
-
-                    {/* V18.6 PREMIUM SYNC MONITOR - PIXEL PERFECT UNIFICATION */}
-                    {isSaving && createPortal(
-                        <div style={{
-                            position: 'fixed',
-                            inset: 0,
-                            zIndex: 10000000,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            padding: '2rem',
-                            background: isDarkMode ? 'rgba(15, 23, 42, 0.85)' : 'rgba(30, 27, 75, 0.85)',
-                            backdropFilter: 'blur(12px)',
-                            WebkitBackdropFilter: 'blur(12px)'
-                        }}>
-                             <div className="animate-in zoom-in-95 duration-500" style={{
-                                background: isDarkMode ? '#1e293b' : '#ffffff',
-                                padding: '3.5rem 3rem',
-                                borderRadius: '3.5rem',
-                                boxShadow: '0 40px 100px -20px rgba(0, 0, 0, 0.6)',
-                                border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.05)',
-                                width: '100%',
-                                maxWidth: '440px',
-                                textAlign: 'center',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center'
-                             }}>
-                                {/* Elegant Progress Ring */}
-                                <div style={{ position: 'relative', width: '90px', height: '90px', marginBottom: '2rem' }}>
-                                    <svg style={{ transform: 'rotate(-90deg)', width: '90px', height: '90px' }}>
-                                        <circle cx="45" cy="45" r="40" stroke={isDarkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9'} strokeWidth="6" fill="transparent" />
-                                        <circle 
-                                            cx="45" cy="45" r="40" 
-                                            stroke="#4f46e5" 
-                                            strokeWidth="6" 
-                                            fill="transparent" 
-                                            strokeDasharray="251.2" 
-                                            strokeDashoffset={251.2 - (251.2 * Math.min(syncPhase * 25, 100)) / 100}
-                                            strokeLinecap="round"
-                                            style={{ transition: 'stroke-dashoffset 0.8s ease' }}
-                                        />
-                                    </svg>
-                                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
-                                        {syncPhase >= 4 ? <CheckCircle size={32} strokeWidth={3} /> : <Cpu size={32} className="animate-pulse" />}
+                        {/* 2. SLEDGEHAMMER LOADING MONITOR (BULLETPROOF) */}
+                        {(loading || isProcessingStatus || isSaving || isExporting) && createPortal(
+                            <div style={{ position: 'fixed', inset: 0, zIndex: 99999999, background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(15px)', WebkitBackdropFilter: 'blur(15px)', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'all' }}>
+                                <div className="animate-in zoom-in-95 duration-300 mx-auto" style={{ background: isDarkMode ? '#0f172a' : '#ffffff', padding: '3.5rem', borderRadius: '4.5rem', boxShadow: '0 60px 120px -20px rgba(0,0,0,0.7)', border: '1px solid rgba(255,255,255,0.1)', width: '100%', maxWidth: '440px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <div style={{ position: 'relative', width: '90px', height: '90px', marginBottom: '2.5rem' }}>
+                                        <svg style={{ transform: 'rotate(-90deg)', width: '90px', height: '90px' }}>
+                                            <circle cx="45" cy="45" r="40" stroke={isDarkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9'} strokeWidth="6" fill="transparent" />
+                                            <circle cx="45" cy="45" r="40" stroke="#4f46e5" strokeWidth="6" fill="transparent" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * (syncPhase || (loading ? 45 : (isExporting ? 25 : 65)))) / 100} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.8s ease' }} />
+                                        </svg>
+                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
+                                            <Cpu size={36} className="animate-pulse" />
+                                        </div>
                                     </div>
-                                </div>
-
-                                <div style={{ marginBottom: '2.5rem' }}>
-                                    <h3 style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? '#f8fafc' : '#0f172a', margin: '0 0 0.75rem 0', letterSpacing: '-0.02em', lineHeight: '1.1' }}>
-                                        {syncPhase === 1 && "Analizando Estructura"}
-                                        {syncPhase === 2 && "Sincronizando Core"}
-                                        {syncPhase === 3 && "Ejecutando Notificaciones"}
-                                        {syncPhase >= 4 && "¡Proceso Exitoso!"}
+                                    <h3 style={{ fontSize: '1.7rem', fontWeight: '1000', color: isDarkMode ? '#f8fafc' : '#0f172a', margin: '0 0 0.5rem 0', letterSpacing: '-0.03em' }}>
+                                        {isSaving ? "Publicando Cambios" : (isExporting ? "Preparando Reporte" : "Sincronizando Core")}
                                     </h3>
-                                    <p style={{ fontSize: '0.85rem', fontWeight: '600', color: '#64748b', margin: 0, lineHeight: '1.6', maxWidth: '280px' }}>
-                                        {syncPhase === 1 && "Verificando consistencia de datos..."}
-                                        {syncPhase === 2 && "Sincronizando cambios con la base central..."}
-                                        {syncPhase === 3 && "Disparando alertas de aprobación..."}
-                                        {syncPhase >= 4 && "Tu programación ha sido publicada correctamente."}
-                                    </p>
+                                    <p style={{ fontSize: '0.9rem', fontWeight: '800', color: '#64748b', margin: 0, lineHeight: '1.4' }}>Optimizando datos HD en la nube segura...</p>
                                 </div>
+                            </div>,
+                            document.body
+                        )}
+                    </div>
+                </div>
+            </div>
+        </>
+    );
 
-                                {/* Premium Linear Progress Bar */}
-                                <div style={{ width: '100%', marginBottom: '1.5rem' }}>
-                                    <div style={{ height: '6px', background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9', borderRadius: '10px', overflow: 'hidden' }}>
-                                        <div 
-                                            style={{ 
-                                                height: '100%', 
-                                                width: `${Math.min(syncPhase * 25, 100)}%`, 
-                                                background: 'linear-gradient(90deg, #4f46e5, #818cf8)',
-                                                borderRadius: '10px',
-                                                transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)'
-                                            }} 
-                                        />
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.75rem' }}>
-                                        <span style={{ fontSize: '0.7rem', fontWeight: '900', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Progreso Total</span>
-                                        <span style={{ fontSize: '0.85rem', fontWeight: '950', color: isDarkMode ? '#f8fafc' : '#0f172a' }}>{Math.min(syncPhase * 25, 100)}%</span>
-                                    </div>
-                                </div>
-                             </div>
-                        </div>,
-                        document.body
-                    )}
-                </>,
                 document.getElementById('modal-root') || document.body
             )}
             {isExporting && (

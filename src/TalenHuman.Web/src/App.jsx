@@ -53,8 +53,8 @@ import { useTheme } from './context/ThemeContext'
 import DebugPortal from './components/Shared/DebugPortal'
 import MobileCommunicationModal from './components/Mobile/MobileCommunicationModal'
 
-// V13.9.44 MASTER SYNC
-const APP_VERSION = "V13.9.44-PREMIUM-STABLE";
+// V13.9.45 FUNCTIONAL MASTER SYNC
+const APP_VERSION = "V13.9.45-PREMIUM-STABLE";
 
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION
@@ -83,7 +83,7 @@ function App() {
   const [showPRModal, setShowPRModal] = useState(false);
   const [notification, setNotification] = useState({ show: false, title: '', body: '' });
 
-  const CURRENT_VERSION = "V66.6.7_FORCE_SYNC";
+  const CURRENT_VERSION = "v45_functional_repair";
   
   
   useEffect(() => {
