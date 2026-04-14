@@ -1403,7 +1403,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     </div>
 
                     {/* 2.2 Fila 2: Barra de Herramientas Premium (Módulos de Control Pods) */}
-                    <div className="flex flex-row items-stretch justify-center gap-6 w-full mt-4 no-print overflow-x-auto pb-6 px-2 relative z-[10]">
+                    <div className="flex flex-row items-stretch justify-center gap-6 w-full mt-4 no-print overflow-x-auto pb-6 px-2 relative z-[1]">
                         
                         {/* Módulo A: Inteligencia (Glass Pod) */}
                         <div className="flex flex-col gap-2 p-4 px-8 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.8rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod">
@@ -1531,49 +1531,41 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     </div>
                 
                 <div className="card shadow-[0_40px_100px_rgba(0,0,0,0.12)] bg-white dark:bg-slate-900 border-2 dark:border-slate-800 relative" style={{ borderRadius: '48px', overflow: 'hidden', minHeight: '600px' }}>
-                    {createPortal(
-                        (loading || isProcessingStatus) && !suppressOverlay && (
-                            <div className="fixed inset-0 z-[20000000] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
-                                <div className="bg-white dark:bg-slate-900 p-8 md:p-12 rounded-[3.5rem] shadow-2xl border border-white/10 flex flex-col items-center max-w-md w-full text-center animate-in zoom-in-95 duration-300">
-                                    <div className="relative mb-8">
-                                        <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 animate-pulse"></div>
-                                        {/* Elegant Progress Ring */}
-                                        <div style={{ position: 'relative', width: '90px', height: '90px' }}>
-                                            <svg style={{ transform: 'rotate(-90deg)', width: '90px', height: '90px' }}>
-                                                <circle cx="45" cy="45" r="40" stroke={isDarkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9'} strokeWidth="6" fill="transparent" />
-                                                <circle 
-                                                    cx="45" cy="45" r="40" 
-                                                    stroke="#4f46e5" 
-                                                    strokeWidth="6" 
-                                                    fill="transparent" 
-                                                    strokeDasharray="251.2" 
-                                                    strokeDashoffset={251.2 - (251.2 * (syncPhase || (loading ? 45 : 95))) / 100}
-                                                    strokeLinecap="round"
-                                                    style={{ transition: 'stroke-dashoffset 0.8s ease' }}
-                                                />
-                                            </svg>
-                                            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
-                                                {syncPhase >= 95 ? <CheckCircle size={32} strokeWidth={3} /> : <Clock size={32} className="animate-pulse" />}
-                                            </div>
+                    {(loading || isProcessingStatus || isSaving || isExporting) && createPortal(
+                        <div className="fixed inset-0 z-[20000000] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
+                            <div className="bg-white dark:bg-slate-900 p-8 md:p-12 rounded-[3.5rem] shadow-2xl border border-white/10 flex flex-col items-center max-w-md w-full text-center animate-in zoom-in-95 duration-300">
+                                <div className="relative mb-8">
+                                    <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 animate-pulse"></div>
+                                    <div style={{ position: 'relative', width: '90px', height: '90px' }}>
+                                        <svg style={{ transform: 'rotate(-90deg)', width: '90px', height: '90px' }}>
+                                            <circle cx="45" cy="45" r="40" stroke={isDarkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9'} strokeWidth="6" fill="transparent" />
+                                            <circle 
+                                                cx="45" cy="45" r="40" 
+                                                stroke="#4f46e5" 
+                                                strokeWidth="6" 
+                                                fill="transparent" 
+                                                strokeDasharray="251.2" 
+                                                strokeDashoffset={251.2 - (251.2 * (syncPhase || (loading ? 45 : (isExporting ? 25 : 95)))) / 100}
+                                                strokeLinecap="round"
+                                                style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+                                            />
+                                        </svg>
+                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
+                                            {syncPhase >= 95 || (!loading && !isSaving) ? <CheckCircle size={32} strokeWidth={3} /> : <Cpu size={32} className="animate-pulse" />}
                                         </div>
                                     </div>
-                                    <h3 className="text-xl font-[950] text-slate-800 dark:text-white mb-2 tracking-tight">
-                                        {syncPhase < 30 ? "Iniciando consola" : 
-                                         syncPhase < 70 ? "Sincronizando nómina" : 
-                                         syncPhase < 95 ? "Validando registros" : "¡Consola lista!"}
-                                    </h3>
-                                    <p className="text-sm font-bold text-slate-400 leading-relaxed px-4">
-                                        {syncPhase < 30 ? "Preparando entorno de auditoría..." : 
-                                         syncPhase < 70 ? "Cargando programación desde el servidor central..." : 
-                                         syncPhase < 95 ? "Verificando consistencia de turnos y estados..." : "Sincronización completada exitosamente."}
-                                    </p>
-                                    
-                                    <div className="w-full mt-6 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                                        <div className="bg-indigo-600 h-full transition-all duration-700" style={{ width: `${syncPhase || (loading ? 45 : 95)}%` }}></div>
-                                    </div>
+                                </div>
+                                <h3 className="text-xl font-[950] text-slate-800 dark:text-white mb-2 tracking-tight">
+                                    {isSaving ? "Publicando Cambios" : (isExporting ? "Generando Reporte" : (syncPhase < 30 ? "Iniciando Consola" : "Sincronizando Nómina"))}
+                                </h3>
+                                <p className="text-sm font-bold text-slate-400 leading-relaxed px-4">
+                                    {isSaving ? "Tu programación está siendo publicada..." : (isExporting ? "Preparando datos seguros HD..." : "Sincronización en curso...")}
+                                </p>
+                                <div className="w-full mt-6 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                    <div className="bg-indigo-600 h-full transition-all duration-700" style={{ width: `${loading || isSaving ? 45 : 100}%` }}></div>
                                 </div>
                             </div>
-                        ),
+                        </div>,
                         document.body
                     )}
                     
@@ -1653,30 +1645,36 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                 <span className="text-[8px] font-black text-rose-400 uppercase tracking-tighter">Faltante IA</span>
                                                                 
                                                                 {/* Hover Detail */}
-                                                                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 p-3 bg-slate-900 text-white rounded-2xl z-[100] w-48 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-2xl">
-                                                                    <p className="text-[9px] font-black text-indigo-400 mb-2 uppercase tracking-widest">Dimensionamiento IA</p>
-                                                                    {Object.keys(needs).map(pId => {
-                                                                        const p = profiles.find(pr => pr.id === pId);
-                                                                        const pDeficit = needs[pId].reduce((acc, n, h) => {
-                                                                            const scheduled = shifts.filter(s => {
-                                                                                const sD = new Date(s.startTime);
-                                                                                if (sD.toDateString() !== dayStr || s.isDescanso) return false;
-                                                                                const emp = employees.find(e => e.id === s.employeeId);
-                                                                                const sS = sD.getHours();
-                                                                                const sE = new Date(s.endTime).getHours();
-                                                                                const isAtHour = sE < sS ? (h >= sS || h < sE) : (sS <= h && sE > h);
-                                                                                return emp?.profileId === pId && isAtHour;
-                                                                            }).length;
-                                                                            return acc + Math.max(0, n - scheduled);
-                                                                        }, 0);
-                                                                        if (pDeficit <= 0) return null;
-                                                                        return (
-                                                                            <div key={pId} className="flex justify-between items-center mb-1">
-                                                                                <span className="text-[10px] font-bold">{p?.name || '---'}:</span>
-                                                                                <span className="text-[10px] font-black text-rose-400">-{pDeficit}</span>
-                                                                            </div>
-                                                                        );
-                                                                    })}
+                                                                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 p-3 bg-slate-900/95 backdrop-blur-xl text-white rounded-2xl z-[2000] w-52 opacity-0 group-hover:opacity-100 transition-all pointer-events-none shadow-2xl border border-white/10">
+                                                                     <p className="text-[9px] font-black text-indigo-400 mb-3 uppercase tracking-widest text-center border-b border-white/5 pb-2">Dimensionamiento IA</p>
+                                                                     {(() => {
+                                                                         const groupedGaps = {};
+                                                                         Object.keys(needs).forEach(pId => {
+                                                                             const p = profiles.find(pr => pr.id === pId);
+                                                                             const pName = p?.name || '---';
+                                                                             const pDeficit = needs[pId].reduce((acc, n, h) => {
+                                                                                 const scheduled = shifts.filter(s => {
+                                                                                     const sD = new Date(s.startTime);
+                                                                                     if (sD.toDateString() !== dayStr || s.isDescanso) return false;
+                                                                                     const emp = employees.find(e => e.id === s.employeeId);
+                                                                                     const sS = sD.getHours();
+                                                                                     const sE = new Date(s.endTime).getHours();
+                                                                                     const isAtHour = sE < sS ? (h >= sS || h < sE) : (sS <= h && sE > h);
+                                                                                     return emp?.profileId === pId && isAtHour;
+                                                                                 }).length;
+                                                                                 return acc + Math.max(0, n - scheduled);
+                                                                             }, 0);
+                                                                             if (pDeficit > 0) {
+                                                                                 groupedGaps[pName] = (groupedGaps[pName] || 0) + pDeficit;
+                                                                             }
+                                                                         });
+                                                                         return Object.entries(groupedGaps).map(([name, deficit]) => (
+                                                                             <div key={name} className="flex justify-between items-center mb-1.5 px-1">
+                                                                                 <span className="text-[9px] font-bold text-slate-300 truncate mr-2">{name}:</span>
+                                                                                 <span className="text-[10px] font-black text-rose-400">-{deficit}</span>
+                                                                             </div>
+                                                                         ));
+                                                                     })()}
                                                                 </div>
                                                             </div>
                                                         ) : (
@@ -1728,15 +1726,15 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                             <div className="flex flex-col gap-0.5">
                                                                 <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-tighter">{emp.documento}</span>
                                                                 <div className="flex items-center gap-2">
-                                                                    <span className="text-[9px] font-black text-indigo-500/70 dark:text-indigo-400/70 uppercase tracking-tighter">
-                                                                        {profiles.find(p => p.id === emp.profileId)?.name || 'Sin Cargo'}
-                                                                    </span>
-                                                                    <span className="text-[10px] text-slate-200 dark:text-slate-800 font-black">|</span>
-                                                                    <div className="flex items-center gap-1 text-emerald-600/80 dark:text-emerald-400/80 font-black text-[9px]">
-                                                                        <Clock size={10} strokeWidth={3} />
-                                                                        {jornadas.find(j => j.id === emp.jornadaId)?.horasSemanales || 48}h
-                                                                    </div>
-                                                                </div>
+                                                                     <span className="text-[8px] font-bold text-indigo-500/60 dark:text-indigo-400/50 uppercase tracking-tighter">
+                                                                         {profiles.find(p => p.id === emp.profileId)?.name || 'Sin Cargo'}
+                                                                     </span>
+                                                                     <span className="text-[10px] text-slate-200 dark:text-slate-800 font-black">|</span>
+                                                                     <div className="flex items-center gap-1 text-emerald-600/80 dark:text-emerald-400/80 font-black text-[9px]">
+                                                                         <Clock size={10} strokeWidth={3} />
+                                                                         {jornadas.find(j => j.id === emp.jornadaId)?.horasSemanales || 48}h
+                                                                     </div>
+                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
