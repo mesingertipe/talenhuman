@@ -13,6 +13,7 @@
     "@github/webauthn-json": "^2.1.1",
     "axios": "^1.13.6",
     "exceljs": "^4.4.0",
+    "framer-motion": "^12.4.7",
     "firebase": "^12.11.0",
     "lucide-react": "^0.577.0",
     "react": "^19.2.4",
