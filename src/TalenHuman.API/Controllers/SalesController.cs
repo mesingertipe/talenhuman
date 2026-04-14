@@ -234,4 +234,32 @@ public class SalesController : ControllerBase
 
         return Ok(new { current = currentDayData, history = averagedHistory });
     }
+
+    [HttpGet("analytics/channels")]
+    public async Task<ActionResult> GetChannelSummary([FromQuery] DateTime date, [FromQuery] Guid? storeId)
+    {
+        var companyId = _tenantProvider.GetTenantId();
+        var startOfDate = date.Date;
+        var endOfDate = startOfDate.AddDays(1);
+
+        var sales = await _context.SalesData
+            .Include(s => s.SalesChannel)
+            .Where(s => s.CompanyId == companyId && s.RecordDate >= startOfDate && s.RecordDate < endOfDate)
+            .Where(s => !storeId.HasValue || s.StoreId == storeId.Value)
+            .ToListAsync();
+
+        var results = sales.GroupBy(s => s.SalesChannel != null ? s.SalesChannel.Name : (s.Canal ?? "General"))
+            .Select(g => new
+            {
+                Name = g.Key,
+                VentaNeta = g.Sum(x => x.VentaNeta),
+                CantidadTickets = g.Sum(x => x.CantidadTickets),
+                Comensales = g.Sum(x => x.Comensales),
+                TicketPromedio = g.Average(x => (decimal)x.TicketPromedio)
+            })
+            .OrderByDescending(x => x.VentaNeta)
+            .ToList();
+
+        return Ok(results);
+    }
 }
