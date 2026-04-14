@@ -1,4 +1,5 @@
 using TalenHuman.Domain.Common;
+using System.Text.Json.Serialization;
 
 namespace TalenHuman.Domain.Entities;
 
@@ -32,8 +33,11 @@ public class Employee : BaseEntity, IMultitenant
     public DateTime? DateOfTermination { get; set; }
 
     // Relationships
+    [JsonIgnore]
     public ICollection<Shift> Shifts { get; set; } = new List<Shift>();
+    [JsonIgnore]
     public ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
+    [JsonIgnore]
     public ICollection<Absence> Absences { get; set; } = new List<Absence>();
 }
 
@@ -43,9 +47,11 @@ public class Shift : BaseEntity, IMultitenant
     public DateTime EndTime { get; set; }
     
     public Guid EmployeeId { get; set; }
+    [JsonIgnore]
     public Employee Employee { get; set; } = null!;
     
     public Guid StoreId { get; set; }
+    [JsonIgnore]
     public Store Store { get; set; } = null!;
     
     public Guid CompanyId { get; set; }
@@ -144,6 +150,7 @@ public class Jornada : BaseEntity, IMultitenant
     public Guid CompanyId { get; set; }
     public Company Company { get; set; } = null!;
     
+    [JsonIgnore]
     public ICollection<Employee> Employees { get; set; } = new List<Employee>();
 }
 
@@ -169,6 +176,7 @@ public class NovedadTipo : BaseEntity, IMultitenant
     public Guid CompanyId { get; set; }
     public Company Company { get; set; } = null!;
     
+    [JsonIgnore]
     public ICollection<Novedad> Novedades { get; set; } = new List<Novedad>();
 }
 
@@ -377,15 +385,18 @@ public class PredictiveShiftRule : BaseEntity, IMultitenant
     public Company Company { get; set; } = null!;
 
     // Relationships
+    [JsonIgnore]
     public ICollection<PredictiveShiftRuleProfile> RuleProfiles { get; set; } = new List<PredictiveShiftRuleProfile>();
 }
 
 public class PredictiveShiftRuleProfile : IMultitenant
 {
     public Guid RuleId { get; set; }
+    [JsonIgnore]
     public PredictiveShiftRule Rule { get; set; } = null!;
     
     public Guid ProfileId { get; set; }
+    [JsonIgnore]
     public Profile Profile { get; set; } = null!;
 
     public Guid CompanyId { get; set; }

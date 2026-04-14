@@ -40,6 +40,7 @@ public class Brand : BaseEntity, IMultitenant
     public bool IsActive { get; set; } = true;
 
     // Relationships
+    [System.Text.Json.Serialization.JsonIgnore]
     public ICollection<Store> Stores { get; set; } = new List<Store>();
 }
 
@@ -71,10 +72,13 @@ public class Store : BaseEntity, IMultitenant
     public District? District { get; set; }
 
     public Guid StoreTypeId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public StoreType? StoreType { get; set; }
     
     // Relationships
+    [System.Text.Json.Serialization.JsonIgnore]
     public ICollection<Employee> Employees { get; set; } = new List<Employee>();
+    [System.Text.Json.Serialization.JsonIgnore]
     public ICollection<SupervisorStore> SupervisorStores { get; set; } = new List<SupervisorStore>();
 }
 
@@ -89,6 +93,7 @@ public class District : BaseEntity, IMultitenant
     public User? Supervisor { get; set; }
     
     // Relationships
+    [System.Text.Json.Serialization.JsonIgnore]
     public ICollection<Store> Stores { get; set; } = new List<Store>();
 }
 
@@ -123,6 +128,7 @@ public class StoreType : BaseEntity, IMultitenant
     public Company? Company { get; set; }
 
     // Relationships
+    [System.Text.Json.Serialization.JsonIgnore]
     public ICollection<Store> Stores { get; set; } = new List<Store>();
 }
 
@@ -135,6 +141,7 @@ public class City : BaseEntity, IMultitenant
     public Company? Company { get; set; }
     
     // Relationships
+    [System.Text.Json.Serialization.JsonIgnore]
     public ICollection<Store> Stores { get; set; } = new List<Store>();
 }
 

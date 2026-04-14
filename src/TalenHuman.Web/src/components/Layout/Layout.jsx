@@ -32,7 +32,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
         { icon: <Calendar size={20} />, label: 'Jornadas', sub: 'SCHEDULES' },
         { icon: <Building size={20} />, label: 'Distritos', sub: 'DISTRICTS' },
         { icon: <Store size={20} />, label: 'Tiendas', sub: 'STORES' },
-        { icon: <Layout size={20} />, label: 'Tipos de Tienda', sub: 'STORE_TYPES' },
+        { icon: <Target size={20} />, label: 'Tipos de Tienda', sub: 'STORE_TYPES' },
         { icon: <Users size={20} />, label: 'Empleados', sub: 'EMPLOYEES' },
       ]
     },
@@ -138,11 +138,25 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
       onMouseEnter={() => !isPinned && setIsCollapsed(false)}
       onMouseLeave={() => !isPinned && setIsCollapsed(true)}
     >
-      <div className="brand" style={{ padding: '1.5rem 1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: isCollapsed ? 'center' : 'flex-start' }}>
-        <TalenHumanLogo size={isCollapsed ? 42 : 42} type={isCollapsed ? 'icon' : 'full'} />
+      <div className="brand" style={{ 
+        padding: isCollapsed ? '1.5rem 0' : '2rem 1.5rem', 
+        marginBottom: '1rem', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: isCollapsed ? 'center' : 'flex-start',
+        borderBottom: '1px solid rgba(255,255,255,0.05)'
+      }}>
+        <TalenHumanLogo size={isCollapsed ? 42 : 46} type={isCollapsed ? 'icon' : 'full'} />
       </div>
       
-      <nav style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '0 0' }}>
+      <nav style={{ 
+        flex: 1, 
+        overflowY: 'auto', 
+        overflowX: 'hidden', 
+        padding: '1rem 0',
+        scrollbarWidth: 'thin',
+        scrollbarColor: 'rgba(255,255,255,0.2) transparent'
+      }}>
         {renderNavButton({ icon: <LayoutDashboard size={20} />, label: 'Dashboard' })}
         
         {filteredStructure.map((section, idx) => (
