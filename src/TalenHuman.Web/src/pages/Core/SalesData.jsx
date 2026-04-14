@@ -177,7 +177,7 @@ const SalesData = ({ user }) => {
 
       {/* Advanced Filters Toolbar */}
       <div className="card" style={{ padding: '24px', borderRadius: '28px', marginBottom: '2.5rem', border: `1.5px solid ${activeColors.border}` }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', alignItems: 'flex-end' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(250px, 2.5fr) minmax(200px, 2fr) minmax(150px, 1.5fr) minmax(150px, 1.5fr) auto', gap: '20px', alignItems: 'flex-end' }}>
           
           <div style={{ flex: 1 }}>
             <label className="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-3 px-1">Tienda / Sede</label>

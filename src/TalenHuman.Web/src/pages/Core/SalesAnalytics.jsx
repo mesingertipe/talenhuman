@@ -176,7 +176,7 @@ const SalesAnalytics = ({ user }) => {
 
       {/* Control Panel (Filters) - REFACTORED TO INLINE */}
       <section style={{ background: activeColors.card, padding: '40px', borderRadius: '48px', border: `1.5px solid ${activeColors.border}`, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', position: 'relative', zIndex: 50 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '30px', alignItems: 'flex-end' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(400px, 2.5fr) minmax(300px, 2fr) minmax(200px, 1fr)', gap: '30px', alignItems: 'flex-end' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.1em' }}>Fecha Inicio</label>
