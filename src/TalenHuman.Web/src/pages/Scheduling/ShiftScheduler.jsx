@@ -132,6 +132,12 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const [showPredictiveModal, setShowPredictiveModal] = useState(false);
     const [syncPhase, setSyncPhase] = useState(0); // 0: Init, 1: Validating, 2: Syncing, 3: Notifying, 4: Done
     const [dataLoaded, setDataLoaded] = useState(false);
+    
+    // V13.0 PREDICTIVE INTELLIGENCE STATES
+    const [predictiveRules, setPredictiveRules] = useState([]);
+    const [historicalAverages, setHistoricalAverages] = useState({}); // { 'ISO_DATE': [ { time, value } ] }
+    const [isOptimizing, setIsOptimizing] = useState(false);
+    const [showPredictiveOverlay, setShowPredictiveOverlay] = useState(false);
 
     // V19.2: BLINDAJE DE SEGURIDAD PREMIUM - Modo Inspección Auditoría
     const effectiveReadOnly = useMemo(() => {
@@ -303,6 +309,46 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         }
     };
 
+    // V13.0: PREDICTIVE DATA ORCHESTRATOR
+    useEffect(() => {
+        const fetchPredictiveContext = async () => {
+            if (!selectedStore || !dataLoaded) return;
+            
+            const store = stores.find(s => s.id === selectedStore);
+            if (!store || !store.storeTypeId) return;
+
+            try {
+                // 1. Fetch Rules for this Store Type
+                const rulesRes = await api.get('/PredictiveRules');
+                const filteredRules = rulesRes.data.filter(r => r.storeTypeId === store.storeTypeId && r.isActive);
+                setPredictiveRules(filteredRules);
+
+                // 2. Fetch Historical Averages for each day of the week
+                const daysInWeek = [];
+                for (let i = 0; i < 7; i++) {
+                    const d = new Date(currentWeekStart);
+                    d.setDate(d.getDate() + i);
+                    daysInWeek.push(toLocalISO(d));
+                }
+
+                const historyMap = {};
+                await Promise.all(daysInWeek.map(async (dayStr) => {
+                    try {
+                        const res = await api.get(`/sales/analytics/evolution?startDate=${dayStr}&storeId=${selectedStore}`);
+                        historyMap[dayStr] = res.data.history;
+                    } catch (e) {
+                        historyMap[dayStr] = [];
+                    }
+                }));
+                setHistoricalAverages(historyMap);
+            } catch (err) {
+                console.error("Error fetching predictive context", err);
+            }
+        };
+
+        fetchPredictiveContext();
+    }, [selectedStore, currentWeekStart, dataLoaded, stores]);
+
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });
         setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
@@ -399,6 +445,167 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             setShifts(normalizedShifts);
             setAttendances(normalizedAttendances);
             setNews(newsRes.data);
+        } catch (err) {
+            console.error("Fetch Data Error", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // V13.0.1: PREDICTIVE CALCULATION ENGINE (Strict store hours)
+    const calculateHourlyNeeds = useCallback((dayDate) => {
+        const dayStr = toLocalISO(dayDate);
+        const dayHistory = historicalAverages[dayStr] || [];
+        const needsPerProfile = {};
+
+        if (dayHistory.length === 0 || predictiveRules.length === 0) return {};
+
+        const store = stores.find(s => s.id === selectedStore);
+        const opStart = store?.defaultStartTime ? parseInt(store.defaultStartTime.split(':')[0]) : 8;
+        const opEndHour = store?.defaultEndTime ? parseInt(store.defaultEndTime.split(':')[0]) : 22;
+
+        predictiveRules.forEach(rule => {
+            const ruleNeeds = new Array(24).fill(0);
+            const metricKey = rule.metricType === 0 ? 'ventaNetaAvg' : 
+                               (rule.metricType === 1 ? 'ticketsAvg' : 
+                               (rule.metricType === 2 ? 'comensalesAvg' : 'ticketPromedioAvg'));
+
+            dayHistory.forEach(h => {
+                const hour = parseInt(h.time.split(':')[0]);
+                // Only count demand within store hours
+                if (hour < opStart || hour > opEndHour) return;
+
+                const forecastValue = h[metricKey] || 0;
+                const calculatedStaff = rule.ratio > 0 ? Math.ceil(forecastValue / rule.ratio) : 0;
+                ruleNeeds[hour] = Math.max(ruleNeeds[hour], calculatedStaff);
+            });
+
+            // Apply MinStaffOpening / MinStaffClosing based on STORE DOORS
+            for (let h = 0; h < 24; h++) {
+                if (h >= opStart && h < opStart + 3) {
+                    ruleNeeds[h] = Math.max(ruleNeeds[h], rule.minStaffOpening);
+                }
+                if (h > opEndHour - 3 && h <= opEndHour) {
+                    ruleNeeds[h] = Math.max(ruleNeeds[h], rule.minStaffClosing);
+                }
+            }
+
+            rule.profiles.forEach(p => {
+                const pId = p.profileId;
+                if (!needsPerProfile[pId]) needsPerProfile[pId] = new Array(24).fill(0);
+                for (let h = 0; h < 24; h++) {
+                    needsPerProfile[pId][h] = Math.max(needsPerProfile[pId][h], ruleNeeds[h]);
+                }
+            });
+        });
+
+        return needsPerProfile;
+    }, [historicalAverages, predictiveRules, stores, selectedStore]);
+
+    const performOptimization = async () => {
+        setIsOptimizing(true);
+        await new Promise(r => setTimeout(r, 1500)); 
+
+        try {
+            const newShifts = [...shifts];
+            const daysInWeek = [];
+            for(let i=0; i<7; i++) {
+                const d = new Date(currentWeekStart);
+                d.setDate(d.getDate() + i);
+                daysInWeek.push(d);
+            }
+
+            const store = stores.find(s => s.id === selectedStore);
+            const opStart = store?.defaultStartTime ? parseInt(store.defaultStartTime.split(':')[0]) : 8;
+            const opEndHour = store?.defaultEndTime ? parseInt(store.defaultEndTime.split(':')[0]) : 22;
+
+            daysInWeek.forEach(day => {
+                const needs = calculateHourlyNeeds(day);
+                const dayStr = day.toDateString();
+
+                Object.keys(needs).forEach(pId => {
+                    const hourlyNeed = needs[pId];
+                    const profilesEmployees = employees.filter(e => e.profileId === pId && e.isActive);
+                    
+                    for (let h = opStart; h <= opEndHour; h++) {
+                        if (hourlyNeed[h] <= 0) continue;
+
+                        const scheduledAtHour = newShifts.filter(s => {
+                            const sDate = new Date(s.startTime);
+                            if (sDate.toDateString() !== dayStr || s.isDescanso) return false;
+                            const sStart = sDate.getHours();
+                            const sEnd = new Date(s.endTime).getHours();
+                            if (sEnd < sStart) return h >= sStart || h < sEnd;
+                            return h >= sStart && h < sEnd;
+                        }).filter(s => {
+                            const emp = employees.find(e => e.id === s.employeeId);
+                            return emp?.profileId === pId;
+                        }).length;
+
+                        let deficit = hourlyNeed[h] - scheduledAtHour;
+
+                        while (deficit > 0) {
+                            const candidates = profilesEmployees.filter(emp => {
+                                const hasDayShift = newShifts.some(s => s.employeeId === emp.id && new Date(s.startTime).toDateString() === dayStr);
+                                if (hasDayShift) return false;
+                                const hasNov = news.some(n => n.empleadoId === emp.id && new Date(n.fechaInicio) <= day && new Date(n.fechaFin) >= day);
+                                if (hasNov) return false;
+                                return true;
+                            }).sort((a, b) => {
+                                const hoursA = newShifts.filter(s => s.employeeId === a.id).length; 
+                                const hoursB = newShifts.filter(s => s.employeeId === b.id).length;
+                                return hoursA - hoursB;
+                            });
+
+                            if (candidates.length === 0) break;
+
+                            const luckyOne = candidates[0];
+                            const jornada = jornadas.find(j => j.id === luckyOne.jornadaId);
+                            const dailyHours = jornada?.horasDiarias || 8;
+
+                            // Final constraint: Ensure shift fits in store hours
+                            let shiftStartHour = h;
+                            if (shiftStartHour + dailyHours > opEndHour) {
+                                shiftStartHour = Math.max(opStart, opEndHour - dailyHours);
+                            }
+
+                            const start = new Date(day);
+                            start.setHours(shiftStartHour, 0, 0, 0);
+                            const end = new Date(start);
+                            end.setHours(shiftStartHour + Math.floor(dailyHours), (dailyHours % 1) * 60, 0, 0);
+
+                            newShifts.push({
+                                id: `temp-${Math.random()}`,
+                                employeeId: luckyOne.id,
+                                storeId: selectedStore,
+                                companyId: user.companyId,
+                                startTime: start.toISOString(),
+                                endTime: end.toISOString(),
+                                status: 0,
+                                isDescanso: false,
+                                isFuera: false,
+                                isAutoGenerated: true,
+                                observation: 'Opt. por IA (Horario Sede)'
+                            });
+
+                            deficit--;
+                        }
+                    }
+                });
+            });
+
+            const createdCount = newShifts.length - shifts.length;
+            setShifts(newShifts);
+            showToast(`¡Sorpresa! IA sugirió ${createdCount} turnos para cubrir tu demanda operativa.`, "success");
+            setShowPredictiveModal(false);
+            setShowPredictiveOverlay(true);
+        } catch (err) {
+            console.error("Optimization failed", err);
+            showToast("Error en la optimización IA", "error");
+        } finally {
+            setIsOptimizing(false);
+        }
+    };
 
             // Extract the common observation/comment for this week
             const firstComment = normalizedShifts.find(s => s.observation)?.observation || '';
@@ -1403,6 +1610,88 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         ))}
                                         <th className="p-4 text-center bg-slate-100/30 dark:bg-slate-800/40 w-[160px] min-w-[160px] font-[950] text-[11px] text-slate-400 dark:text-indigo-300 tracking-[0.2em] border-l dark:border-slate-700">Horas</th>
                                     </tr>
+                                    
+                                    {/* V13.0 COORDINATED GAP ANALYSIS ROW */}
+                                    {showPredictiveOverlay && (
+                                        <tr className="border-b dark:border-slate-800 bg-indigo-50/10 dark:bg-indigo-900/10 animate-in slide-in-from-top duration-500">
+                                            <td className="sticky left-0 z-20 p-4 border-r dark:border-slate-800 bg-indigo-50/30 dark:bg-indigo-900/30 backdrop-blur-md">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200">
+                                                        <Cpu size={16} strokeWidth={3} className="animate-pulse" />
+                                                    </div>
+                                                    <span className="text-[10px] font-[1000] text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Guía IA</span>
+                                                </div>
+                                            </td>
+                                            {days.map((day, di) => {
+                                                const needs = calculateHourlyNeeds(day);
+                                                const dayStr = day.toDateString();
+                                                
+                                                // Calculate overall gap for this day (sum of deficits)
+                                                let totalDeficit = 0;
+                                                Object.values(needs).forEach(hourlyNeed => {
+                                                    hourlyNeed.forEach((need, hour) => {
+                                                        const scheduledAtHour = shifts.filter(s => {
+                                                            const sDate = new Date(s.startTime);
+                                                            if (sDate.toDateString() !== dayStr || s.isDescanso) return false;
+                                                            const sStart = sDate.getHours();
+                                                            const sEnd = new Date(s.endTime).getHours();
+                                                            if (sEnd < sStart) return hour >= sStart || hour < sEnd;
+                                                            return sStart <= hour && sEnd > hour;
+                                                        }).length;
+                                                        if (need > scheduledAtHour) totalDeficit += (need - scheduledAtHour);
+                                                    });
+                                                });
+
+                                                return (
+                                                    <td key={di} className="p-2 border-r dark:border-slate-800 text-center">
+                                                        {totalDeficit > 0 ? (
+                                                            <div className="flex flex-col items-center gap-1 group relative cursor-help">
+                                                                <div className="px-2 py-1 bg-rose-500 text-white rounded-lg text-[9px] font-black animate-bounce shadow-lg shadow-rose-200">
+                                                                    -{totalDeficit} STAFF
+                                                                </div>
+                                                                <span className="text-[8px] font-black text-rose-400 uppercase tracking-tighter">Faltante IA</span>
+                                                                
+                                                                {/* Hover Detail */}
+                                                                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 p-3 bg-slate-900 text-white rounded-2xl z-[100] w-48 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-2xl">
+                                                                    <p className="text-[9px] font-black text-indigo-400 mb-2 uppercase tracking-widest">Dimensionamiento IA</p>
+                                                                    {Object.keys(needs).map(pId => {
+                                                                        const p = profiles.find(pr => pr.id === pId);
+                                                                        const pDeficit = needs[pId].reduce((acc, n, h) => {
+                                                                            const scheduled = shifts.filter(s => {
+                                                                                const sD = new Date(s.startTime);
+                                                                                if (sD.toDateString() !== dayStr || s.isDescanso) return false;
+                                                                                const emp = employees.find(e => e.id === s.employeeId);
+                                                                                const sS = sD.getHours();
+                                                                                const sE = new Date(s.endTime).getHours();
+                                                                                const isAtHour = sE < sS ? (h >= sS || h < sE) : (sS <= h && sE > h);
+                                                                                return emp?.profileId === pId && isAtHour;
+                                                                            }).length;
+                                                                            return acc + Math.max(0, n - scheduled);
+                                                                        }, 0);
+                                                                        if (pDeficit <= 0) return null;
+                                                                        return (
+                                                                            <div key={pId} className="flex justify-between items-center mb-1">
+                                                                                <span className="text-[10px] font-bold">{p?.name || '---'}:</span>
+                                                                                <span className="text-[10px] font-black text-rose-400">-{pDeficit}</span>
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex flex-col items-center gap-1">
+                                                                <div className="px-2 py-1 bg-emerald-500 text-white rounded-lg text-[9px] font-black shadow-lg shadow-emerald-200">
+                                                                    CUBIERTO
+                                                                </div>
+                                                                <span className="text-[8px] font-black text-emerald-400 uppercase tracking-tighter">Meta Óptima</span>
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                );
+                                            })}
+                                            <td className="p-4 bg-indigo-50/20 dark:bg-indigo-900/20 border-l dark:border-slate-800"></td>
+                                        </tr>
+                                    )}
                                 </thead>
                                 <tbody>
                                     {filteredEmployees.map((emp) => {
@@ -1548,9 +1837,14 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                                  {isLocked && <Lock size={11} className="text-white opacity-70" />}
                                                                                  {att && <Activity size={12} className="text-white opacity-100 animate-pulse" />}
                                                                                  <span className="text-[7px] font-black uppercase tracking-[0.1em] opacity-80 leading-none">
-                                                                                    {viewMode === 'SHIFTS' ? (shift.isDescanso ? 'DESC' : shift.isFuera ? 'FUERA' : 'TURNO') : 'MARCACIÓN'}
+                                                                                   {viewMode === 'SHIFTS' ? (shift.isDescanso ? 'DESC' : shift.isFuera ? 'FUERA' : 'TURNO') : 'MARCACIÓN'}
                                                                                  </span>
                                                                              </div>
+                                                                             {shift.isAutoGenerated && (
+                                                                                 <div className="absolute top-1 right-1 animate-bounce">
+                                                                                     <Sparkles size={10} className="text-yellow-300" />
+                                                                                 </div>
+                                                                             )}
                                                                              <span className={`text-[8px] font-[1000] tracking-tighter whitespace-nowrap mt-0.5 ${viewMode === 'ATTENDANCE' && !att ? 'opacity-40 animate-pulse' : ''}`}>
                                                                                  {displayText}
                                                                              </span>
@@ -2044,51 +2338,87 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         zIndex: -1
                                     }}
                                 ></div>
-                            </div>
+                          {/* V13.0 ELITE PREDICTIVE IQ HUB */}
+                    {showPredictiveModal && (
+                        <div style={{ position: 'fixed', inset: 0, zIndex: 1000000, background: 'rgba(6, 9, 20, 0.8)', backdropFilter: 'blur(30px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                             <div style={{ background: isDarkMode ? '#1e293b' : '#ffffff', width: '100%', maxWidth: '650px', borderRadius: '48px', overflow: 'hidden', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : 'none', boxShadow: '0 50px 100px rgba(0,0,0,0.5)', position: 'relative' }} className="animate-in zoom-in-95 duration-500">
+                                
+                                {/* Header */}
+                                <div style={{ padding: '50px 50px 30px', textAlign: 'center' }}>
+                                    <div style={{ width: '80px', height: '80px', background: 'linear-gradient(135deg, #4f46e5, #9333ea)', color: 'white', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 25px', boxShadow: '0 20px 40px rgba(79, 70, 229, 0.3)', transform: 'rotate(-5deg)' }}>
+                                        <Cpu size={40} className={isOptimizing ? "animate-spin" : "animate-pulse"} />
+                                    </div>
+                                    <h2 style={{ fontSize: '2rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', letterSpacing: '-0.03em', margin: 0 }}>Hub de Inteligencia</h2>
+                                    <p style={{ color: '#6366f1', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.2em', mt: '8px' }}>Optimización Basada en Datos</p>
+                                </div>
+
+                                <div style={{ padding: '0 50px 50px' }}>
+                                    {/* Stats Grid */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '40px' }}>
+                                        <div style={{ padding: '24px', background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc', borderRadius: '32px', border: '1px solid rgba(0,0,0,0.05)' }}>
+                                            <p style={{ fontSize: '10px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '5px' }}>Reglas Activas</p>
+                                            <p style={{ fontSize: '1.5rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>{predictiveRules.length}</p>
+                                        </div>
+                                        <div style={{ padding: '24px', background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc', borderRadius: '32px', border: '1px solid rgba(0,0,0,0.05)' }}>
+                                            <p style={{ fontSize: '10px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '5px' }}>Dato Histórico</p>
+                                            <p style={{ fontSize: '1.5rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>3 Semanas</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Strategy Info */}
+                                    <div style={{ marginBottom: '40px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                            <div style={{ width: '40px', height: '40px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <Sparkles size={20} />
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <h4 style={{ fontSize: '14px', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>Estrategia: Balance de Nómina</h4>
+                                                <p style={{ fontSize: '11px', fontWeight: '600', color: '#64748b' }}>IA priorizará colaboradores con menos horas para evitar sobrecostos.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        <button 
+                                            onClick={performOptimization}
+                                            disabled={isOptimizing || !selectedStore || predictiveRules.length === 0}
+                                            style={{ width: '100%', padding: '24px', borderRadius: '24px', border: 'none', background: 'linear-gradient(90deg, #4f46e5, #9333ea)', color: 'white', fontWeight: '950', fontSize: '13px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 35px rgba(79, 70, 229, 0.4)', transition: 'all 0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}
+                                            className="hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:grayscale"
+                                        >
+                                            {isOptimizing ? (
+                                                <><div className="loader !w-6 !h-6 !border-white"></div> CALCULANDO MALLA...</>
+                                            ) : (
+                                                <><Sparkles size={22} /> OPTIMIZAR SEMANA AHORA</>
+                                            )}
+                                        </button>
+
+                                        {shifts.some(s => s.isAutoGenerated) && (
+                                            <button 
+                                                onClick={() => {
+                                                    setShifts(prev => prev.filter(s => !s.isAutoGenerated));
+                                                    showToast("Sugerencias IA eliminadas", "info");
+                                                }}
+                                                style={{ width: '100%', padding: '18px', borderRadius: '18px', border: '1px solid #ef4444', background: 'rgba(239, 68, 68, 0.05)', color: '#ef4444', fontWeight: '800', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}
+                                                className="hover:bg-rose-500 hover:text-white transition-colors"
+                                            >
+                                                <Trash2 size={16} className="inline mr-2" /> Descartar Sugerencias IA
+                                            </button>
+                                        )}
+
+                                        <button 
+                                            onClick={() => { setShowPredictiveOverlay(!showPredictiveOverlay); setShowPredictiveModal(false); }}
+                                            style={{ width: '100%', padding: '18px', borderRadius: '18px', border: `1px solid ${activeColors.border}`, background: 'transparent', color: isDarkMode ? '#cbd5e1' : '#64748b', fontWeight: '800', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}
+                                        >
+                                            {showPredictiveOverlay ? 'Ocultar Guía de Gaps' : 'Ver Guía de Gaps'}
+                                        </button>
+                                        <button onClick={() => setShowPredictiveModal(false)} style={{ width: '100%', padding: '15px', borderRadius: '15px', border: 'none', background: 'transparent', color: '#94a3b8', fontWeight: '800', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer' }}>Cerrar Hub</button>
+                                    </div>
+                                </div>
+                             </div>
                         </div>
                     )}
-                    {/* PREDICTIVE AI - COMING SOON MODAL */}
-                    {showPredictiveModal && (
-                        <div style={{ position: 'fixed', inset: 0, zIndex: 1000000, background: 'rgba(6, 9, 20, 0.7)', backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} className="animate-in fade-in duration-300">
-                             <div style={{ background: isDarkMode ? '#1e293b' : '#ffffff', width: '100%', maxWidth: '540px', borderRadius: '48px', overflow: 'hidden', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.05)', boxShadow: '0 50px 100px rgba(0,0,0,0.5)', position: 'relative' }} className="animate-in zoom-in-95 duration-500">
-                                
-                                {/* Background Decorative Elements */}
-                                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/10 blur-[80px] rounded-full -mr-32 -mt-32"></div>
-                                <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-600/10 blur-[80px] rounded-full -ml-32 -mb-32"></div>
 
-                                <div style={{ padding: '60px 40px', position: 'relative', zIndex: 1, textAlign: 'center' }}>
-                                    <div style={{ width: '90px', height: '90px', background: 'linear-gradient(135deg, #4f46e5, #9333ea)', color: 'white', borderRadius: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 30px', boxShadow: '0 20px 40px rgba(79, 70, 229, 0.3)', transform: 'rotate(-4deg)' }}>
-                                        <Cpu size={44} strokeWidth={2.5} className="animate-pulse" />
-                                    </div>
-                                    
-                                    <h2 style={{ fontSize: '2.2rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', letterSpacing: '-0.04em', margin: '0 0 12px', lineHeight: '1.1' }}>
-                                        Inteligencia<br />Predictiva
-                                    </h2>
-                                    <p style={{ color: '#6366f1', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '30px' }}>
-                                        Próxima Generación
-                                    </p>
-
-                                    <div style={{ display: 'grid', gap: '16px', textAlign: 'left', marginBottom: '40px' }}>
-                                        {[
-                                            { title: 'Pronóstico de Demanda', desc: 'IA que anticipa picos de tráfico para sugerir personal.' },
-                                            { title: 'Optimización de Nómina', desc: 'Algoritmos que minimizan horas extras automáticamente.' },
-                                            { title: 'Distribución Equitativa', desc: 'Balanceo inteligente de cargas de trabajo por colaborador.' }
-                                        ].map((item, idx) => (
-                                            <div key={idx} style={{ padding: '20px', background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc', borderRadius: '24px', border: '1px solid rgba(0,0,0,0.02)' }}>
-                                                <h4 style={{ fontSize: '13px', fontWeight: '950', color: isDarkMode ? '#f8fafc' : '#1e293b', marginBottom: '4px' }}>{item.title}</h4>
-                                                <p style={{ fontSize: '11px', fontWeight: '600', color: '#64748b' }}>{item.desc}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <button 
-                                        onClick={() => setShowPredictiveModal(false)}
-                                        style={{ width: '100%', padding: '22px', borderRadius: '24px', border: 'none', background: 'linear-gradient(90deg, #4f46e5, #6366f1)', color: 'white', fontWeight: '950', fontSize: '12px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 35px rgba(79, 70, 229, 0.4)', transition: 'all 0.3s' }}
-                                        className="hover:scale-[1.02] active:scale-95 transition-all"
-                                    >
-                                        ENTENDIDO
-                                    </button>
-                                </div>
                              </div>
                         </div>
                     )}
