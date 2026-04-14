@@ -356,11 +356,10 @@ const Stores = ({ user }) => {
             onItemsPerPageChange={setItemsPerPage}
           />
         )}
-      </div>
-
-      {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content animate-in zoom-in duration-300 shadow-2xl" style={{ maxWidth: '680px', borderRadius: '40px', padding: 0, overflow: 'hidden', border: 'none' }}>
+      </      {showModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.85)', backdropFilter: 'blur(30px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <div style={{ background: activeColors.card, width: '100%', maxWidth: '720px', maxHeight: '92vh', borderRadius: '48px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 50px 100px rgba(0,0,0,0.4)', animation: 'modalFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+            
             {/* Header Elite v3 */}
             <div style={{ padding: '40px 60px', borderBottom: `1px solid ${activeColors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: isDarkMode ? '#1e293b' : '#ffffff' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
@@ -385,8 +384,8 @@ const Stores = ({ user }) => {
               </button>
             </div>
             
-            <form onSubmit={handleSave}>
-              <div style={{ padding: '50px 60px', flex: 1, overflowY: 'auto', background: isDarkMode ? '#0f172a' : '#fcfdfe', maxHeight: '70vh' }} className="custom-scrollbar">
+            <form onSubmit={handleSave} style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <div style={{ padding: '50px 60px', flex: 1, overflowY: 'auto', background: isDarkMode ? '#0f172a' : '#fcfdfe' }} className="custom-scrollbar">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '56px' }}>
                   
                   {/* Sección 01 */}
@@ -513,7 +512,6 @@ const Stores = ({ user }) => {
                                         <span style={{ fontSize: '0.8rem', fontWeight: '950', color: formData.isActive ? '#10b981' : activeColors.textMuted }}>{formData.isActive ? 'TIENDA ACTIVA' : 'TIENDA CERRADA'}</span>
                                     </div>
                                 </div>
-                                </div>
                             </div>
                         </div>
 
@@ -539,29 +537,28 @@ const Stores = ({ user }) => {
                         </div>
 
                         <div style={{ padding: '40px', background: isDarkMode ? 'rgba(79, 70, 229, 0.05)' : '#f8faff', borderRadius: '32px', border: `1px dashed ${activeColors.border}`, animation: 'fadeIn 0.5s ease-out' }}>
-                                <h4 style={{ fontSize: '11px', fontWeight: '900', color: activeColors.accent, letterSpacing: '0.05em', marginBottom: '24px' }}>Horarios base de la sede</h4>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '36px' }}>
-                                    <div className="group">
-                                        <span style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '10px' }}>Entrada teórica</span>
-                                        <input 
-                                            type="time" value={formData.defaultStartTime}
-                                            onChange={(e) => setFormData({...formData, defaultStartTime: e.target.value})}
-                                            style={{ width: '100%', padding: '16px 20px', borderRadius: '16px', border: `2px solid ${activeColors.border}`, background: 'white', fontWeight: '750', textAlign: 'center' }}
-                                        />
-                                    </div>
-                                    <div className="group">
-                                        <span style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '10px' }}>Salida teórica</span>
-                                        <input 
-                                            type="time" value={formData.defaultEndTime}
-                                            onChange={(e) => setFormData({...formData, defaultEndTime: e.target.value})}
-                                            style={{ width: '100%', padding: '16px 20px', borderRadius: '16px', border: `2px solid ${activeColors.border}`, background: 'white', fontWeight: '750', textAlign: 'center' }}
-                                        />
-                                    </div>
+                            <h4 style={{ fontSize: '11px', fontWeight: '900', color: activeColors.accent, letterSpacing: '0.05em', marginBottom: '24px' }}>Horarios base de la sede</h4>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '36px' }}>
+                                <div className="group">
+                                    <span style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '10px' }}>Entrada teórica</span>
+                                    <input 
+                                        type="time" value={formData.defaultStartTime}
+                                        onChange={(e) => setFormData({...formData, defaultStartTime: e.target.value})}
+                                        style={{ width: '100%', padding: '16px 20px', borderRadius: '16px', border: `2px solid ${activeColors.border}`, background: 'white', fontWeight: '750', textAlign: 'center' }}
+                                    />
+                                </div>
+                                <div className="group">
+                                    <span style={{ display: 'block', fontSize: '10px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '10px' }}>Salida teórica</span>
+                                    <input 
+                                        type="time" value={formData.defaultEndTime}
+                                        onChange={(e) => setFormData({...formData, defaultEndTime: e.target.value})}
+                                        style={{ width: '100%', padding: '16px 20px', borderRadius: '16px', border: `2px solid ${activeColors.border}`, background: 'white', fontWeight: '750', textAlign: 'center' }}
+                                    />
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                  </div>
 
                   {/* Sección Footer de Seguridad */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '30px', background: isDarkMode ? 'rgba(79, 70, 229, 0.1)' : '#f1f5f9', borderRadius: '32px', color: activeColors.textMuted }}>
@@ -570,28 +567,39 @@ const Stores = ({ user }) => {
                         <span style={{ fontWeight: '950', color: activeColors.textMain }}>CONTROL DE SEDE:</span> Los horarios base definen la ventana operativa para la consolidación automática Min-Max de asistencia por sede.
                       </p>
                   </div>
-                
-                <div style={{ display: 'flex', gap: '24px', paddingTop: '60px' }}>
-                  <button 
-                    type="button" 
-                    onClick={() => setShowModal(false)}
-                    style={{ flex: 1, padding: '24px', borderRadius: '28px', border: `2px solid ${activeColors.border}`, background: 'white', color: activeColors.textMuted, fontWeight: '900', fontSize: '1rem', cursor: 'pointer', transition: 'all 0.2s' }}
-                    className="hover:bg-slate-50"
-                  >
-                    Descartar
-                  </button>
-                  <button 
-                    type="submit" 
-                    disabled={isSubmitting}
-                    style={{ flex: 2, padding: '24px', borderRadius: '28px', border: 'none', background: activeColors.accent, color: 'white', fontWeight: '950', fontSize: '1rem', cursor: 'pointer', boxShadow: '0 15px 35px rgba(79, 70, 229, 0.4)', transition: 'all 0.3s' }}
-                    className="hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    {isSubmitting ? 'Sincronizando...' : currentStore ? 'Guardar Cambios' : 'Confirmar Registro'}
-                  </button>
                 </div>
-              </form>
-            </div>
+              </div>
+                
+              <div style={{ padding: '40px 60px', background: isDarkMode ? '#1e293b' : '#ffffff', borderTop: `1px solid ${activeColors.border}`, display: 'flex', gap: '24px' }}>
+                <button 
+                  type="button" 
+                  onClick={() => setShowModal(false)}
+                  style={{ flex: 1, padding: '24px', borderRadius: '28px', border: `2px solid ${activeColors.border}`, background: 'white', color: activeColors.textMuted, fontWeight: '900', fontSize: '1rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                  className="hover:bg-slate-50"
+                  disabled={isSubmitting}
+                >
+                  Descartar
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  style={{ flex: 2, padding: '24px', borderRadius: '28px', border: 'none', background: activeColors.accent, color: 'white', fontWeight: '950', fontSize: '1rem', cursor: 'pointer', boxShadow: '0 15px 35px rgba(79, 70, 229, 0.4)', transition: 'all 0.3s' }}
+                  className="hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  {isSubmitting ? 'Sincronizando...' : currentStore ? 'Guardar Cambios' : 'Confirmar Registro'}
+                </button>
+              </div>
+            </form>
           </div>
+          <style>{`
+            @keyframes modalFadeIn {
+              from { opacity: 0; transform: scale(0.95) translateY(20px); }
+              to { opacity: 1; transform: scale(1) translateY(0); }
+            }
+          `}</style>
+        </div>
+      )}
+        </div>
         )}
 
       {showConfirm && (

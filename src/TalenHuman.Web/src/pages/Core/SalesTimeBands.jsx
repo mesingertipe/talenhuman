@@ -246,99 +246,132 @@ const SalesTimeBands = ({ user }) => {
       </div>
 
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '520px' }}>
-            <div className="modal-header">
-              <h2 className="text-lg font-bold flex items-center gap-2 dark:text-white" style={{ margin: 0 }}>
-                {currentBand ? <Edit size={22} className="text-violet-500" /> : <Plus size={22} className="text-violet-500" />}
-                {currentBand ? 'Ajustar Parámetros' : 'Configurar Nueva Franja'}
-              </h2>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors bg-transparent border-none cursor-pointer p-2 rounded-full">
-                <X size={22} />
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.85)', backdropFilter: 'blur(30px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <div style={{ background: activeColors.card, width: '100%', maxWidth: '520px', maxHeight: '92vh', borderRadius: '48px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 50px 100px rgba(0,0,0,0.4)', animation: 'modalFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+            
+            {/* Header Elite v3 */}
+            <div style={{ padding: '40px 60px', borderBottom: `1px solid ${activeColors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: isDarkMode ? '#1e293b' : '#ffffff' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+                <div style={{ width: '64px', height: '64px', background: activeColors.accentSoft, borderRadius: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.accent }}>
+                    {currentBand ? <Edit size={28} strokeWidth={2.5} /> : <Plus size={28} strokeWidth={2.5} />}
+                </div>
+                <div>
+                  <h2 style={{ fontSize: '1.8rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.03em' }}>
+                    {currentBand ? 'Ajustar Parámetros' : 'Configurar Nueva Franja'}
+                  </h2>
+                  <p style={{ fontSize: '0.85rem', color: activeColors.textMuted, fontWeight: '700', marginTop: '4px', letterSpacing: '0.02em' }}>
+                    Definición de periodos operativos BI
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowModal(false)}
+                style={{ background: activeColors.accentSoft, border: 'none', width: '52px', height: '52px', borderRadius: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.accent, transition: 'all 0.2s' }}
+                className="hover:rotate-90"
+              >
+                <X size={28} strokeWidth={3} />
               </button>
             </div>
             
-            <form onSubmit={handleSave}>
-              <div className="modal-body overflow-y-auto max-h-[70vh] custom-scrollbar" style={{ padding: '0 2.5rem 2.5rem' }}>
-                <div className="mb-8">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-8 h-8 rounded-lg bg-violet-50 text-violet-500 flex items-center justify-center font-bold text-xs">01</div>
-                    <h3 className="text-sm font-black text-slate-800 dark:text-white tracking-wider uppercase">Definición</h3>
-                    <div className="h-[1px] flex-1 bg-slate-100 dark:bg-slate-800 ml-2"></div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 tracking-wide mb-2 px-1 uppercase">Nombre del Periodo *</label>
-                      <div className="relative group">
-                        <Palette size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-violet-500 transition-colors" />
-                        <input 
-                          required 
-                          value={formData.name} 
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-                          className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-violet-500/5 focus:border-violet-500 transition-all font-bold text-sm uppercase" 
-                          placeholder="Ej. MAÑANA, ALMUERZO, PEAK..."
-                        />
-                      </div>
+            <form onSubmit={handleSave} style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <div style={{ padding: '50px 60px', flex: 1, overflowY: 'auto', background: isDarkMode ? '#0f172a' : '#fcfdfe' }} className="custom-scrollbar">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
+                  <div style={{ position: 'relative' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '36px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: '950', color: activeColors.accent, background: activeColors.accentSoft, padding: '4px 12px', borderRadius: '8px' }}>01</span>
+                      <h3 style={{ fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMain, letterSpacing: '0.05em', margin: 0 }}>Parámetros de Tiempo</h3>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-6">
                       <div>
-                        <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 tracking-wide mb-2 px-1 uppercase">Hora Inicio *</label>
-                        <input 
-                          type="time"
-                          required 
-                          value={formData.startTime} 
-                          onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} 
-                          className="w-full p-4 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-violet-500/5 focus:border-violet-500 transition-all font-black text-sm" 
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 tracking-wide mb-2 px-1 uppercase">Hora Fin *</label>
-                        <input 
-                          type="time"
-                          required 
-                          value={formData.endTime} 
-                          onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} 
-                          className="w-full p-4 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-violet-500/5 focus:border-violet-500 transition-all font-black text-sm" 
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 tracking-wide mb-2 px-1 uppercase">Color Identificador (HEX)</label>
-                      <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                        <div className="relative flex-1">
-                          <Palette size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em', paddingLeft: '4px' }}>Nombre del Periodo *</label>
+                        <div className="relative group">
+                          <Palette size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                           <input 
-                            value={formData.color} 
-                            onChange={(e) => setFormData({ ...formData, color: e.target.value })} 
-                            className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-sm uppercase" 
-                            placeholder="#8b5cf6"
+                            required 
+                            value={formData.name} 
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                            className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm" 
+                            placeholder="Ej. Mañana, Almuerzo, Peak..."
                           />
                         </div>
-                        <input 
-                          type="color" 
-                          value={formData.color} 
-                          onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                          style={{ width: '56px', height: '56px', borderRadius: '18px', border: 'none', cursor: 'pointer', padding: 0, overflow: 'hidden' }}
-                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em', paddingLeft: '4px' }}>Hora Inicio *</label>
+                          <input 
+                            type="time"
+                            required 
+                            value={formData.startTime} 
+                            onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} 
+                            className="w-full p-4 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-black text-sm" 
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em', paddingLeft: '4px' }}>Hora Fin *</label>
+                          <input 
+                            type="time"
+                            required 
+                            value={formData.endTime} 
+                            onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} 
+                            className="w-full p-4 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-black text-sm" 
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em', paddingLeft: '4px' }}>Color Identificador (HEX)</label>
+                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                          <div className="relative flex-1">
+                            <Palette size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input 
+                              value={formData.color} 
+                              onChange={(e) => setFormData({ ...formData, color: e.target.value })} 
+                              className="w-full p-4 pl-12 rounded-[20px] border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 font-bold text-sm" 
+                              placeholder="#8b5cf6"
+                            />
+                          </div>
+                          <input 
+                            type="color" 
+                            value={formData.color} 
+                            onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                            style={{ width: '56px', height: '56px', borderRadius: '18px', border: 'none', cursor: 'pointer', padding: 0, overflow: 'hidden' }}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="modal-footer">
-                <button type="button" onClick={() => setShowModal(false)} className="btn-premium btn-premium-secondary" disabled={isSubmitting}>
+              <div style={{ padding: '40px 60px', borderTop: `1px solid ${activeColors.border}`, display: 'flex', gap: '24px', background: isDarkMode ? '#1e293b' : '#ffffff' }}>
+                <button 
+                  type="button" 
+                  onClick={() => setShowModal(false)} 
+                  style={{ flex: 1, padding: '20px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: 'white', color: activeColors.textMuted, fontWeight: '900', fontSize: '0.95rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                  className="hover:bg-slate-50"
+                  disabled={isSubmitting}
+                >
                   Cerrar
                 </button>
-                <button type="submit" className="btn-premium btn-premium-primary" disabled={isSubmitting} style={{ background: activeColors.accent }}>
-                  {isSubmitting ? <div className="loader"></div> : <><Save size={18} /> {currentBand ? 'Guardar Cambios' : 'Crear Franja'}</>}
+                <button 
+                  type="submit" 
+                  style={{ flex: 2, padding: '20px', borderRadius: '24px', border: 'none', background: activeColors.accent, color: 'white', fontWeight: '950', fontSize: '0.95rem', cursor: 'pointer', boxShadow: `0 10px 25px ${activeColors.accent}33`, transition: 'all 0.3s' }}
+                  className="hover:scale-[1.02] active:scale-[0.98]"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Sincronizando...' : <><Save size={18} /> {currentBand ? 'Guardar Cambios' : 'Confirmar Registro'}</>}
                 </button>
               </div>
             </form>
           </div>
+          <style>{`
+            @keyframes modalFadeIn {
+              from { opacity: 0; transform: scale(0.95) translateY(20px); }
+              to { opacity: 1; transform: scale(1) translateY(0); }
+            }
+          `}</style>
         </div>
       )}
 

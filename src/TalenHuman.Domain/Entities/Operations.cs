@@ -245,7 +245,7 @@ public class SalesChannel : BaseEntity, IMultitenant
     public bool IsActive { get; set; } = true;
 
     public Guid CompanyId { get; set; }
-    public Company Company { get; set; } = null!;
+    public Company? Company { get; set; }
 }
 
 public class SalesTimeBand : BaseEntity, IMultitenant
@@ -257,7 +257,7 @@ public class SalesTimeBand : BaseEntity, IMultitenant
     public bool IsActive { get; set; } = true;
 
     public Guid CompanyId { get; set; }
-    public Company Company { get; set; } = null!;
+    public Company? Company { get; set; }
 }
 
 public class SalesData : BaseEntity, IMultitenant
@@ -277,10 +277,10 @@ public class SalesData : BaseEntity, IMultitenant
     public DateTime Timestamp { get; set; } = ColombiaTime.Now; // Original audit timestamp
     
     public Guid StoreId { get; set; }
-    public Store Store { get; set; } = null!;
+    public Store? Store { get; set; }
     
     public Guid CompanyId { get; set; }
-    public Company Company { get; set; } = null!;
+    public Company? Company { get; set; }
 }
 
 public class Comunicado : BaseEntity, IMultitenant
