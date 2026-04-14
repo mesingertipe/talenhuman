@@ -356,7 +356,9 @@ const Stores = ({ user }) => {
             onItemsPerPageChange={setItemsPerPage}
           />
         )}
-      </      {showModal && (
+      </div>
+
+      {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.85)', backdropFilter: 'blur(30px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
           <div style={{ background: activeColors.card, width: '100%', maxWidth: '720px', maxHeight: '92vh', borderRadius: '48px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 50px 100px rgba(0,0,0,0.4)', animation: 'modalFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
             
