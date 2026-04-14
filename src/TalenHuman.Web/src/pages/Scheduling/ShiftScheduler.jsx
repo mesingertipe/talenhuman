@@ -511,71 +511,128 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             `}</style>
 
             {/* Header / Command Center */}
-            <div className="no-print space-y-6 mb-12">
-                <div className="flex items-center justify-between gap-4 p-4 bg-white dark:bg-slate-900 rounded-[32px] shadow-xl border border-slate-200 dark:border-white/5 sticky top-4 z-[100]">
-                    <div className="flex-1 max-w-xs">
-                        <SearchableSelect options={stores} value={selectedStore} onChange={setSelectedStore} placeholder="Sede..." icon={Store} variant="minimal" disabled={readOnly} />
-                    </div>
-                    <div className="flex items-center gap-3 bg-slate-100 dark:bg-slate-800 p-2 rounded-2xl">
-                        <button onClick={() => setWeekOffset(v => v - 1)} className="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-xl"><ChevronLeft size={20}/></button>
-                        <div className="text-center min-w-[150px]">
-                            <p className="text-[10px] font-black text-indigo-500 uppercase">Semana</p>
-                            <p className="text-xs font-black dark:text-white">{currentWeekStart.toLocaleDateString()} - {new Date(currentWeekStart.getTime() + 6*24*60*60*1000).toLocaleDateString()}</p>
+            <div className="no-print mb-8">
+                {/* Upper Status Row (Elite Design) */}
+                <div className="flex flex-wrap items-center justify-between gap-6 mb-6">
+                    <div className="flex items-center gap-4 bg-white dark:bg-slate-900 p-2 pr-6 rounded-[32px] shadow-xl border border-slate-200 dark:border-white/5">
+                        <div className="w-14 h-14 bg-indigo-600 rounded-[28px] flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                            <Store size={28} />
                         </div>
-                        <button onClick={() => setWeekOffset(v => v + 1)} className="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-xl"><ChevronRight size={20}/></button>
+                        <div>
+                            <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest leading-none mb-1">Punto de Servicio</p>
+                            <div className="min-w-[200px]">
+                                <SearchableSelect 
+                                    options={stores} 
+                                    value={selectedStore} 
+                                    onChange={setSelectedStore} 
+                                    placeholder="Sede..." 
+                                    variant="minimal" 
+                                    disabled={loading || effectiveReadOnly} 
+                                />
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex-1 max-w-xs">
-                        <SearchableSelect options={profiles} value={selectedProfiles} onChange={setSelectedProfiles} multiple={true} placeholder="Puestos..." icon={ShieldCheck} variant="minimal" />
+
+                    <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-2 px-4 rounded-[32px] shadow-xl border border-slate-200 dark:border-white/5">
+                        <button onClick={() => setWeekOffset(v => v - 1)} className="w-10 h-10 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all flex items-center justify-center"><ChevronLeft size={20}/></button>
+                        <div className="text-center min-w-[160px]">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Semana Programada</p>
+                            <p className="text-xs font-black dark:text-white uppercase">
+                                {formatDate(currentWeekStart)} - {formatDate(new Date(currentWeekStart.getTime() + 6*24*60*60*1000))}
+                            </p>
+                        </div>
+                        <button onClick={() => setWeekOffset(v => v + 1)} className="w-10 h-10 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all flex items-center justify-center"><ChevronRight size={20}/></button>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        {/* Status Badge */}
+                        <div className={`p-4 px-6 rounded-[28px] border-2 flex flex-col items-center justify-center min-w-[140px] ${
+                            weeklyStatus.status === 'Approved' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
+                            weeklyStatus.status === 'Rejected' ? 'bg-rose-50 border-rose-100 text-rose-600' :
+                            weeklyStatus.status === 'Pending' ? 'bg-amber-50 border-amber-100 text-amber-600' :
+                            'bg-slate-50 border-slate-100 text-slate-400'
+                        }`}>
+                            <span className="text-[9px] font-black uppercase tracking-widest mb-0.5">Estado Global</span>
+                            <span className="text-xs font-black uppercase">{weeklyStatus.status === 'Empty' ? 'Borrador' : weeklyStatus.status === 'Pending' ? 'En Revisión' : weeklyStatus.status === 'Approved' ? 'Aprobado' : 'Rechazado'}</span>
+                        </div>
+
+                        {!effectiveReadOnly && (
+                            <button 
+                                onClick={() => { setSaveComment(''); setShowSaveModal(true); }}
+                                className="h-[64px] px-8 bg-indigo-600 text-white rounded-[28px] font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-200 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3"
+                            >
+                                <Save size={20} /> GUARDAR CAMBIOS
+                            </button>
+                        )}
+
+                        {(user?.roles?.includes('Administrador') || user?.roles?.includes('Talento Humano') || forceApprover) && weeklyStatus.status === 'Pending' && (
+                            <div className="flex gap-2">
+                                <button onClick={() => setShowApprovalModal(true)} className="h-[64px] px-6 bg-emerald-500 text-white rounded-[28px] font-black text-xs uppercase shadow-lg hover:bg-emerald-600 transition-all"><CheckCircle size={20}/></button>
+                                <button onClick={() => setShowRejectionModal(true)} className="h-[64px] px-6 bg-rose-500 text-white rounded-[28px] font-black text-xs uppercase shadow-lg hover:bg-rose-600 transition-all"><XCircle size={20}/></button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                <div className="flex justify-center gap-6">
-                    <div className="flex flex-col items-center p-4 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[40px] border border-white/20 shadow-lg group">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Herramientas IA</span>
-                        <div className="flex gap-3">
-                            <button onClick={() => setShowBulkModal(true)} className="w-12 h-12 bg-amber-500 text-white rounded-2xl flex items-center justify-center btn-chiclet hover:scale-110 transition-all"><Sparkles size={20}/></button>
-                            <button onClick={() => setShowPredictiveModal(true)} className="w-12 h-12 bg-purple-600 text-white rounded-2xl flex items-center justify-center btn-chiclet hover:scale-110 transition-all"><Cpu size={20}/></button>
+                {/* Lower Action Row (Elite Design) */}
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 bg-slate-100/50 dark:bg-slate-800/50 p-1.5 rounded-[24px] border border-slate-200 dark:border-white/5">
+                            <button onClick={() => setViewMode('SHIFTS')} className={`px-4 py-2 rounded-[20px] text-[10px] font-black uppercase transition-all ${viewMode === 'SHIFTS' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}>Turnos</button>
+                            <button onClick={() => setViewMode('ATTENDANCE')} className={`px-4 py-2 rounded-[20px] text-[10px] font-black uppercase transition-all ${viewMode === 'ATTENDANCE' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}>Asistencia</button>
+                        </div>
+
+                        <div className="w-[200px]">
+                            <SearchableSelect 
+                                options={profiles} 
+                                value={selectedProfiles} 
+                                onChange={setSelectedProfiles} 
+                                multiple={true} 
+                                placeholder="Filtrar Cargos..." 
+                                icon={UsersIcon} 
+                                variant="minimal" 
+                            />
                         </div>
                     </div>
-                    <div className="flex flex-col items-center p-4 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl rounded-[40px] border border-white/20 shadow-lg">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Eventos</span>
-                        <div className="flex gap-3">
-                            {['Turno', 'Descanso', 'Turno Fuera'].map(t => (
-                                <div key={t} draggable onDragStart={e => handleDragStart(e, 'PANEL', {type: t})} className={`w-12 h-12 ${t==='Turno'?'bg-indigo-600':t==='Descanso'?'bg-amber-500':'bg-purple-600'} text-white rounded-2xl flex items-center justify-center cursor-grab btn-chiclet hover:scale-110 transition-all`}>
-                                    {t==='Turno'?<Clock size={20}/>:t==='Descanso'?<Calendar size={20}/>:<AlertCircle size={20}/>}
-                                </div>
-                            ))}
-                        </div>
+
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => setShowBulkModal(true)} title="Carga Masiva" className="w-12 h-12 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl flex items-center justify-center border border-slate-200 dark:border-white/5 hover:bg-indigo-50 transition-all"><Plus size={20}/></button>
+                        <button onClick={() => setShowPredictiveModal(true)} title="IA Smart Filter" className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100 hover:scale-110 transition-all"><Sparkles size={20}/></button>
+                        <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-2" />
+                        <button onClick={() => window.print()} className="w-12 h-12 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl flex items-center justify-center border border-slate-200 dark:border-white/5 hover:bg-slate-50 transition-all"><Printer size={20}/></button>
+                        <button onClick={handleExcelExport} disabled={isExporting} className="h-12 px-6 bg-emerald-500 text-white rounded-2xl font-black text-[10px] uppercase shadow-lg shadow-emerald-100 flex items-center gap-2 hover:bg-emerald-600 disabled:opacity-50 transition-all">
+                            <FileSpreadsheet size={18} /> Exportar
+                        </button>
                     </div>
                 </div>
             </div>
 
             {/* Main Grid Card */}
-            <div className="bg-white dark:bg-slate-900 rounded-[48px] shadow-2xl border-2 dark:border-slate-800 overflow-hidden relative">
+            <div className="bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl border-2 dark:border-slate-800 overflow-hidden relative">
                 <table className="w-full border-collapse">
                     <thead>
                         <tr className="bg-slate-50 dark:bg-slate-800/50 border-b-2 dark:border-indigo-500/20">
-                            <th className="p-6 text-left sticky left-0 z-20 bg-inherit min-w-[300px]">
-                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Colaborador</span>
+                            <th className="p-6 text-left sticky left-0 z-20 bg-inherit min-w-[320px]">
+                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Colaborador / Perfil</span>
                             </th>
                             {days.map(d => (
                                 <th key={d.getTime()} className="p-4 text-center border-r dark:border-slate-800">
                                     <p className="text-[10px] font-black text-indigo-500 uppercase">{d.toLocaleDateString('es-CO', {weekday:'short'})}</p>
-                                    <p className="text-2xl font-black dark:text-white">{d.getDate()}</p>
+                                    <p className="text-2xl font-black dark:text-white leading-none">{d.getDate()}</p>
                                 </th>
                             ))}
-                            <th className="p-4 text-center bg-slate-100/30 dark:bg-slate-800/20 text-[10px] font-black text-slate-400 uppercase">Horas</th>
+                            <th className="p-4 text-center bg-slate-100/30 dark:bg-slate-800/20 text-[10px] font-black text-slate-400 uppercase">Resumen</th>
                         </tr>
                         {showPredictiveOverlay && (
                             <tr className="bg-indigo-50/20 dark:bg-indigo-900/10 border-b dark:border-slate-800 animate-in slide-in-from-top duration-500">
-                                <td className="p-4 sticky left-0 z-20 bg-inherit flex items-center gap-2"><Cpu size={16} className="text-indigo-500 animate-pulse"/><span className="text-[10px] font-black text-indigo-500">GUÍA IA</span></td>
+                                <td className="p-4 sticky left-0 z-20 bg-inherit flex items-center gap-2"><Cpu size={16} className="text-indigo-500 animate-pulse"/><span className="text-[10px] font-black text-indigo-500">OPTIMIZACIÓN IA</span></td>
                                 {days.map(d => {
                                     const needs = calculateHourlyNeeds(d); let def = 0;
                                     Object.values(needs).forEach(hn => hn.forEach((n, h) => {
                                         const sch = shifts.filter(s => { const sd = new Date(s.startTime); return sd.toDateString() === d.toDateString() && !s.isDescanso && (new Date(s.endTime).getHours() < sd.getHours() ? (h >= sd.getHours() || h < new Date(s.endTime).getHours()) : (h >= sd.getHours() && h < new Date(s.endTime).getHours())); }).length;
                                         if (n > sch) def += (n - sch);
                                     }));
-                                    return <td key={d.getTime()} className="p-2 text-center text-[10px] font-black">{def > 0 ? <span className="p-1 px-2 bg-rose-500 text-white rounded-lg">-{def} STAFF</span> : <span className="text-emerald-500">OK</span>}</td>;
+                                    return <td key={d.getTime()} className="p-2 text-center text-[10px] font-black">{def > 0 ? <span className="p-1 px-3 bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-100">-{def} GAPS</span> : <span className="text-emerald-500 font-black">FULL ✓</span>}</td>;
                                 })}
                                 <td></td>
                             </tr>
@@ -585,19 +642,26 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         {filteredEmployees.map(emp => {
                             const empShifts = shifts.filter(s => s.employeeId === emp.id);
                             const totalH = empShifts.reduce((acc, s) => { if(s.isDescanso) return acc; const d = (new Date(s.endTime) - new Date(s.startTime))/3600000; return acc + (d<0?d+24:d); }, 0);
+                            const empJornada = jornadas.find(j => j.id === emp.jornadaId);
+                            const profileName = profiles.find(p => p.id === emp.profileId)?.name || 'N/A';
+                            
                             return (
                                 <tr key={emp.id} className="border-b dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
-                                    <td className="p-6 sticky left-0 z-10 bg-inherit border-r dark:border-slate-800 shadow-xl">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-black">{emp.firstName[0]}{emp.lastName[0]}</div>
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <p className="text-sm font-black dark:text-white uppercase">{emp.firstName} {emp.lastName}</p>
-                                                    <span className="text-[9px] font-black bg-slate-100 dark:bg-slate-800 text-slate-500 p-1 px-2 rounded-lg border dark:border-slate-700 uppercase">
-                                                        {profiles.find(p => p.id === emp.profileId)?.name || 'N/A'}
+                                    <td className="p-5 sticky left-0 z-10 bg-inherit border-r dark:border-slate-800 shadow-xl">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-black shadow-lg shadow-indigo-100">{emp.firstName[0]}{emp.lastName[0]}</div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-[13px] font-black dark:text-white uppercase truncate">{emp.firstName} {emp.lastName}</p>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    <p className="text-[10px] font-bold text-slate-400">{emp.documento}</p>
+                                                    <span className="text-[8px] font-black bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 px-1.5 py-0.5 rounded-lg border border-indigo-100/50 dark:border-indigo-500/20 uppercase truncate max-w-[120px]">
+                                                        {profileName}
                                                     </span>
                                                 </div>
-                                                <p className="text-[10px] font-bold text-slate-400">{emp.documento}</p>
+                                                <div className="flex items-center gap-1.5 mt-1">
+                                                    <Clock size={10} className="text-slate-300" />
+                                                    <p className="text-[9px] font-black text-slate-400 uppercase">Jornada: <span className="text-indigo-500">{empJornada?.horasSemanales || 48}h/Sem</span></p>
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
@@ -605,26 +669,28 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         const s = empShifts.find(sh => new Date(sh.startTime).toDateString() === d.toDateString());
                                         const nov = getNovedad(emp.id, d);
                                         return (
-                                            <td key={d.getTime()} onDragOver={e => e.preventDefault()} onDragEnter={e => e.currentTarget.classList.add('elite-drop-active')} onDragLeave={e => e.currentTarget.classList.remove('elite-drop-active')} onDrop={e => handleDropOnGrid(e, emp.id, d)} className="p-2 border-r dark:border-slate-800 min-h-[100px] relative">
+                                            <td key={d.getTime()} onDragOver={e => e.preventDefault()} onDragEnter={e => e.currentTarget.classList.add('elite-drop-active')} onDragLeave={e => e.currentTarget.classList.remove('elite-drop-active')} onDrop={e => handleDropOnGrid(e, emp.id, d)} className="p-2 border-r dark:border-slate-800 min-h-[80px] relative">
                                                 {nov ? (
-                                                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-2xl text-center">
+                                                    <div className="p-1 px-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl text-center">
                                                         <span className="text-[8px] font-black text-blue-500 uppercase">Novedad</span>
                                                     </div>
                                                 ) : s ? (
-                                                    <div className={`p-2 rounded-2xl text-white text-[9px] font-black text-center shadow-lg transform transition-transform hover:scale-105 cursor-pointer ${s.isDescanso?'bg-amber-500':s.isFuera?'bg-purple-600':'bg-indigo-600'}`}>
+                                                    <div className={`p-2 rounded-xl text-white text-[9px] font-black text-center shadow-lg transform transition-transform hover:scale-105 cursor-pointer relative ${s.isDescanso?'bg-amber-500':s.isFuera?'bg-purple-600':'bg-indigo-600'}`}>
                                                         {s.isDescanso ? 'DESCANSO' : `${new Date(s.startTime).getHours().toString().padStart(2,'0')}:${new Date(s.startTime).getMinutes().toString().padStart(2,'0')} - ${new Date(s.endTime).getHours().toString().padStart(2,'0')}:${new Date(s.endTime).getMinutes().toString().padStart(2,'0')}`}
-                                                        {s.isAutoGenerated && <Sparkles size={10} className="absolute top-1 right-1"/>}
+                                                        {s.isAutoGenerated && <Sparkles size={8} className="absolute top-1 right-1"/>}
                                                     </div>
                                                 ) : (
-                                                    <div onClick={() => { setPendingEvent({employeeId: emp.id, date: d, type: 'Turno'}); setStartTime('08:00'); setEndTime('17:00'); setShowTimeModal(true); }} className="h-12 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl flex items-center justify-center hover:border-indigo-500 cursor-pointer text-slate-300">
-                                                        <Plus size={20}/>
+                                                    <div onClick={() => { if(effectiveReadOnly) return; setPendingEvent({employeeId: emp.id, date: d, type: 'Turno'}); setStartTime('08:00'); setEndTime('17:00'); setShowTimeModal(true); }} className={`h-10 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-xl flex items-center justify-center transition-all ${effectiveReadOnly ? 'opacity-0' : 'hover:border-indigo-500 hover:bg-indigo-50/30 cursor-pointer text-slate-200 hover:text-indigo-400'}`}>
+                                                        <Plus size={16}/>
                                                     </div>
                                                 )}
                                             </td>
                                         );
                                     })}
                                     <td className="p-4 text-center">
-                                        <div className="p-1 px-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 rounded-full font-black text-[10px]">{formatHours(totalH)}</div>
+                                        <div className={`p-1.5 px-3 rounded-full font-black text-[10px] ${totalH > (empJornada?.horasSemanales || 48) ? 'bg-rose-50 text-rose-600' : 'bg-indigo-50 text-indigo-600'}`}>
+                                            {formatHours(totalH)}
+                                        </div>
                                     </td>
                                 </tr>
                             );
@@ -632,12 +698,12 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     </tbody>
                 </table>
             </div>
-
             {/* Print Only Footer */}
             <div className="print-only mt-20 grid grid-cols-2 text-center gap-20">
                 <div className="border-t-2 border-slate-900 pt-4 font-black">Firma Jefe de Sede</div>
                 <div className="border-t-2 border-slate-900 pt-4 font-black">Firma Talento Humano</div>
             </div>
+
 
             {/* PORTALS */}
             {createPortal(
