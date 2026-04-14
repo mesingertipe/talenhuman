@@ -1353,7 +1353,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 <div className="no-print space-y-4 mb-32">
                     
                     {/* 2.1 Fila 1: Selectores Maestros Compactos */}
-                    <div className="flex flex-row items-center justify-between gap-3 p-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-slate-200/50 dark:border-white/5 sticky top-4 z-[1001] shadow-xl" style={{ borderRadius: '32px', overflow: 'visible' }}>
+                    <div className="flex flex-row items-center justify-between gap-3 p-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-slate-200/50 dark:border-white/5 sticky top-4 z-[100000] shadow-xl" style={{ borderRadius: '32px', overflow: 'visible' }}>
                         
                         {/* Sedes */}
                         <div className="flex-1 min-w-[200px]">
@@ -1403,17 +1403,21 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     </div>
 
                     {/* 2.2 Fila 2: Barra de Herramientas Premium (Módulos de Control Pods) */}
-                    <div className="flex flex-row items-stretch justify-center gap-6 w-full mt-4 no-print overflow-x-auto pb-6 px-2">
+                    <div className="flex flex-row items-stretch justify-center gap-6 w-full mt-4 no-print overflow-x-auto pb-6 px-2 relative z-[10]">
                         
                         {/* Módulo A: Inteligencia (Glass Pod) */}
                         <div className="flex flex-col gap-2 p-4 px-8 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.8rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod">
                             <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-[0.3em] uppercase mb-1 px-1 group-hover/pod:text-indigo-500 transition-colors text-center">Inteligencia</span>
                             <div className="flex items-center gap-3">
+                                <button onClick={() => setShowPredictiveOverlay(!showPredictiveOverlay)}
+                                    className={`w-11 h-11 transition-all rounded-[18px] flex items-center justify-center shadow-lg active:scale-95 btn-chiclet ${showPredictiveOverlay ? 'bg-indigo-600 text-white shadow-glow-indigo' : 'bg-white text-indigo-400 border border-indigo-100 hover:bg-slate-50'}`} title={showPredictiveOverlay ? 'Ocultar Guía IA' : 'Ver Guía IA'}>
+                                    <Sparkles size={20} strokeWidth={2.5} />
+                                </button>
                                 {!effectiveReadOnly && (
                                     <>
                                         <button onClick={() => setShowBulkModal(true)}
                                             className="w-11 h-11 bg-amber-500 text-white rounded-[18px] flex items-center justify-center hover:bg-amber-600 transition-all shadow-glow-amber active:scale-95 btn-chiclet" title="Programación Masiva">
-                                            <Sparkles size={20} strokeWidth={2.5} />
+                                            <Calendar size={20} strokeWidth={2.5} />
                                         </button>
                                         <button onClick={copyFromPreviousWeek} 
                                             className="w-11 h-11 bg-indigo-500 text-white rounded-[18px] flex items-center justify-center hover:bg-indigo-600 transition-all shadow-glow-indigo active:scale-95 btn-chiclet" title="Clonar Semana">
@@ -1422,7 +1426,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     </>
                                 )}
                                 <button onClick={() => setShowPredictiveModal(true)}
-                                    className="w-11 h-11 bg-purple-600 text-white rounded-[18px] flex items-center justify-center hover:bg-purple-700 transition-all shadow-glow-purple active:scale-95 btn-chiclet" title="Análisis Predictivo">
+                                    className="w-11 h-11 bg-purple-600 text-white rounded-[18px] flex items-center justify-center hover:bg-purple-700 transition-all shadow-glow-purple active:scale-95 btn-chiclet" title="Hub de Inteligencia">
                                     <Cpu size={20} strokeWidth={2.5} />
                                 </button>
                             </div>
@@ -1529,7 +1533,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 <div className="card shadow-[0_40px_100px_rgba(0,0,0,0.12)] bg-white dark:bg-slate-900 border-2 dark:border-slate-800 relative" style={{ borderRadius: '48px', overflow: 'hidden', minHeight: '600px' }}>
                     {createPortal(
                         (loading || isProcessingStatus) && !suppressOverlay && (
-                            <div className="fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
+                            <div className="fixed inset-0 z-[20000000] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
                                 <div className="bg-white dark:bg-slate-900 p-8 md:p-12 rounded-[3.5rem] shadow-2xl border border-white/10 flex flex-col items-center max-w-md w-full text-center animate-in zoom-in-95 duration-300">
                                     <div className="relative mb-8">
                                         <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 animate-pulse"></div>
