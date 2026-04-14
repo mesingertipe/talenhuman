@@ -40,6 +40,9 @@ public interface IApplicationDbContext
     DbSet<OperationalSetting> OperationalSettings { get; }
     DbSet<WeeklyApproval> WeeklyApprovals { get; }
     DbSet<WeeklyApprovalLog> WeeklyApprovalLogs { get; }
+    DbSet<StoreType> StoreTypes { get; }
+    DbSet<PredictiveShiftRule> PredictiveShiftRules { get; }
+    DbSet<PredictiveShiftRuleProfile> PredictiveShiftRuleProfiles { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

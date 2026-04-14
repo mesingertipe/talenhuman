@@ -162,11 +162,11 @@ public class SalesController : ControllerBase
     }
 
     [HttpGet("analytics/summary")]
-    public async Task<ActionResult> GetSummary([FromQuery] DateTime date, [FromQuery] Guid? storeId, [FromQuery] Guid? channelId)
+    public async Task<ActionResult> GetSummary([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] Guid? storeId, [FromQuery] Guid? channelId)
     {
         var companyId = _tenantProvider.GetTenantId();
-        var startOfDate = date.Date;
-        var endOfDate = startOfDate.AddDays(1);
+        var start = startDate?.Date ?? ColombiaTime.Now.Date;
+        var end = endDate?.Date.AddDays(1) ?? start.AddDays(1);
 
         var bands = await _context.SalesTimeBands
             .Where(b => b.CompanyId == companyId && b.IsActive)
@@ -174,7 +174,7 @@ public class SalesController : ControllerBase
             .ToListAsync();
 
         var sales = await _context.SalesData
-            .Where(s => s.CompanyId == companyId && s.RecordDate >= startOfDate && s.RecordDate < endOfDate)
+            .Where(s => s.CompanyId == companyId && s.RecordDate >= start && s.RecordDate < end)
             .Where(s => !storeId.HasValue || s.StoreId == storeId.Value)
             .Where(s => !channelId.HasValue || s.SalesChannelId == channelId.Value)
             .ToListAsync();
@@ -194,10 +194,10 @@ public class SalesController : ControllerBase
     }
 
     [HttpGet("analytics/evolution")]
-    public async Task<ActionResult> GetEvolution([FromQuery] DateTime date, [FromQuery] Guid? storeId, [FromQuery] Guid? channelId)
+    public async Task<ActionResult> GetEvolution([FromQuery] DateTime startDate, [FromQuery] Guid? storeId, [FromQuery] Guid? channelId)
     {
         var companyId = _tenantProvider.GetTenantId();
-        var targetDate = date.Date;
+        var targetDate = startDate.Date;
         
         // Cargar data del día actual
         var currentDayData = await _context.SalesData
@@ -236,15 +236,15 @@ public class SalesController : ControllerBase
     }
 
     [HttpGet("analytics/channels")]
-    public async Task<ActionResult> GetChannelSummary([FromQuery] DateTime date, [FromQuery] Guid? storeId)
+    public async Task<ActionResult> GetChannelSummary([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] Guid? storeId)
     {
         var companyId = _tenantProvider.GetTenantId();
-        var startOfDate = date.Date;
-        var endOfDate = startOfDate.AddDays(1);
+        var start = startDate?.Date ?? ColombiaTime.Now.Date;
+        var end = endDate?.Date.AddDays(1) ?? start.AddDays(1);
 
         var sales = await _context.SalesData
             .Include(s => s.SalesChannel)
-            .Where(s => s.CompanyId == companyId && s.RecordDate >= startOfDate && s.RecordDate < endOfDate)
+            .Where(s => s.CompanyId == companyId && s.RecordDate >= start && s.RecordDate < end)
             .Where(s => !storeId.HasValue || s.StoreId == storeId.Value)
             .ToListAsync();
 
@@ -255,9 +255,37 @@ public class SalesController : ControllerBase
                 VentaNeta = g.Sum(x => x.VentaNeta),
                 CantidadTickets = g.Sum(x => x.CantidadTickets),
                 Comensales = g.Sum(x => x.Comensales),
-                TicketPromedio = g.Average(x => (decimal)x.TicketPromedio)
+                TicketPromedio = g.Any() ? g.Average(x => (decimal)x.TicketPromedio) : 0
             })
             .OrderByDescending(x => x.VentaNeta)
+            .ToList();
+
+        return Ok(results);
+    }
+
+    [HttpGet("analytics/weekly-trend")]
+    public async Task<ActionResult> GetWeeklyTrend([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] Guid? storeId, [FromQuery] Guid? channelId)
+    {
+        var companyId = _tenantProvider.GetTenantId();
+        var start = startDate?.Date ?? ColombiaTime.Now.Date.AddDays(-6);
+        var end = endDate?.Date.AddDays(1) ?? start.AddDays(7);
+
+        var sales = await _context.SalesData
+            .Where(s => s.CompanyId == companyId && s.RecordDate >= start && s.RecordDate < end)
+            .Where(s => !storeId.HasValue || s.StoreId == storeId.Value)
+            .Where(s => !channelId.HasValue || s.SalesChannelId == channelId.Value)
+            .ToListAsync();
+
+        var results = sales.GroupBy(s => s.RecordDate.Date)
+            .Select(g => new
+            {
+                Date = g.Key,
+                VentaNeta = g.Sum(x => x.VentaNeta),
+                CantidadTickets = g.Sum(x => x.CantidadTickets),
+                Comensales = g.Sum(x => x.Comensales),
+                TicketPromedio = g.Average(x => x.TicketPromedio)
+            })
+            .OrderBy(x => x.Date)
             .ToList();
 
         return Ok(results);

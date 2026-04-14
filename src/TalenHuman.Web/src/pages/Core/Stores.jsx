@@ -25,6 +25,7 @@ const Stores = ({ user }) => {
   const [brands, setBrands] = useState([]);
   const [cities, setCities] = useState([]);
   const [districts, setDistricts] = useState([]);
+  const [storeTypes, setStoreTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showImport, setShowImport] = useState(false);
@@ -38,6 +39,7 @@ const Stores = ({ user }) => {
     brandId: '', 
     cityId: '', 
     districtId: '', 
+    storeTypeId: '',
     externalId: '', 
     biometricId: '', 
     isActive: true,
@@ -53,6 +55,7 @@ const Stores = ({ user }) => {
     ...s,
     cityName: cities.find(c => c.id === s.cityId)?.name || '',
     districtName: districts.find(d => d.id === s.districtId)?.name || '',
+    storeTypeName: storeTypes.find(st => st.id === s.storeTypeId)?.name || '',
     brandName: s.brandName || brands.find(b => b.id === s.brandId)?.name || ''
   }));
 
@@ -80,16 +83,18 @@ const Stores = ({ user }) => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [storesRes, brandsRes, citiesRes, districtsRes] = await Promise.all([
+      const [storesRes, brandsRes, citiesRes, districtsRes, typesRes] = await Promise.all([
         api.get('/stores'),
         api.get('/brands'),
         api.get('/cities'),
-        api.get('/districts')
+        api.get('/districts'),
+        api.get('/storetypes')
       ]);
       setStores(storesRes.data);
       setBrands(brandsRes.data);
       setCities(citiesRes.data);
       setDistricts(districtsRes.data);
+      setStoreTypes(typesRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -107,7 +112,8 @@ const Stores = ({ user }) => {
         ...formData,
         brandId: formData.brandId === '' ? null : formData.brandId,
         cityId: formData.cityId === '' ? null : formData.cityId,
-        districtId: formData.districtId === '' ? null : formData.districtId
+        districtId: formData.districtId === '' ? null : formData.districtId,
+        storeTypeId: formData.storeTypeId === '' ? null : formData.storeTypeId
       };
 
       if (currentStore) {
@@ -210,6 +216,7 @@ const Stores = ({ user }) => {
                     brandId: '', 
                     cityId: '', 
                     districtId: '', 
+                    storeTypeId: '',
                     externalId: '', 
                     biometricId: '', 
                     isActive: true,
@@ -244,6 +251,7 @@ const Stores = ({ user }) => {
               <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em' }}>Tienda / Local</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em' }}>Identificador / Ubicación</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em' }}>Categoría / Tipo</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em' }}>Estado</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em' }}>Marca Asociada</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', trackingWider: '0.05em', textAlign: 'right' }}>Gestión</th>
@@ -272,6 +280,11 @@ const Stores = ({ user }) => {
                         </span>
                       )}
                     </div>
+                  </td>
+                   <td style={{ padding: '1.25rem 1.5rem' }}>
+                    <span style={{ padding: '0.35rem 0.75rem', background: '#eef2ff', color: '#6366f1', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '800', display: 'inline-flex', alignItems: 'center', gap: '4.5px' }}>
+                       <Layout size={12} /> {store.storeTypeName || 'Normal'}
+                    </span>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
                     <span style={{ 
@@ -307,6 +320,7 @@ const Stores = ({ user }) => {
                             externalId: store.externalId || '',
                             biometricId: store.biometricId || '',
                             districtId: store.districtId || '',
+                            storeTypeId: store.storeTypeId || '',
                             isActive: store.isActive !== false,
                             operationalDayStart: store.operationalDayStart || '05:00',
                             defaultStartTime: store.defaultStartTime || '08:00',
@@ -437,17 +451,26 @@ const Stores = ({ user }) => {
                           />
                         </div>
                       </div>
-                      <div className="md:col-span-2">
-                         <SearchableSelect
-                            label="Marca Asociada *"
-                            options={brands.map(b => ({ value: b.id, label: b.name }))}
-                            value={formData.brandId}
-                            onChange={(val) => setFormData({...formData, brandId: val})}
-                            placeholder="Vincular a una marca..."
-                            icon={Tag}
-                            required
-                        />
-                      </div>
+                       <div className="md:col-span-2 grid grid-cols-2 gap-36">
+                          <SearchableSelect
+                              label="Marca Asociada *"
+                              options={brands.map(b => ({ value: b.id, label: b.name }))}
+                              value={formData.brandId}
+                              onChange={(val) => setFormData({...formData, brandId: val})}
+                              placeholder="Vincular a una marca..."
+                              icon={Tag}
+                              required
+                          />
+                          <SearchableSelect
+                              label="Tipo de Tienda *"
+                              options={storeTypes.map(st => ({ value: st.id, label: st.name }))}
+                              value={formData.storeTypeId}
+                              onChange={(val) => setFormData({...formData, storeTypeId: val})}
+                              placeholder="Categoría de reglas..."
+                              icon={Layout}
+                              required
+                          />
+                       </div>
                     </div>
                   </div>
 

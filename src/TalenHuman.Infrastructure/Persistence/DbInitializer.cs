@@ -88,6 +88,7 @@ public static class DbInitializer
             }
 
             await SeedPermissionsForCompanyAsync(context, comp.Id);
+            await SeedStoreTypesForCompanyAsync(context, comp.Id);
         }
         await context.SaveChangesAsync();
 
@@ -131,6 +132,7 @@ public static class DbInitializer
             new { Module = "CORE", Sub = "SCHEDULES" },
             new { Module = "CORE", Sub = "DISTRICTS" },
             new { Module = "CORE", Sub = "STORES" },
+            new { Module = "CORE", Sub = "STORE_TYPES" },
             new { Module = "CORE", Sub = "EMPLOYEES" },
             new { Module = "OPERATIONS", Sub = "SHIFTS" },
             new { Module = "OPERATIONS", Sub = "RECORDS" },
@@ -139,6 +141,8 @@ public static class DbInitializer
             new { Module = "ADVANCED", Sub = "MONITORING" },
             new { Module = "ADVANCED", Sub = "TEMPLATES" },
             new { Module = "ADVANCED", Sub = "NOVELTY_CONFIG" },
+            new { Module = "ADVANCED", Sub = "PREDICTIVE_RULES" },
+            new { Module = "ADVANCED", Sub = "SALES_BI" },
             new { Module = "SYSTEM", Sub = "USERS" },
             new { Module = "SYSTEM", Sub = "PERMISSIONS" },
             new { Module = "SYSTEM", Sub = "AUDIT" },
@@ -187,5 +191,39 @@ public static class DbInitializer
             }
         }
         await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedStoreTypesForCompanyAsync(ApplicationDbContext context, Guid companyId)
+    {
+        var defaultType = await context.StoreTypes.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(st => st.CompanyId == companyId && st.Name == "Tienda Normal");
+
+        if (defaultType == null)
+        {
+            defaultType = new StoreType 
+            { 
+                Name = "Tienda Normal", 
+                IsActive = true, 
+                CompanyId = companyId 
+            };
+            context.StoreTypes.Add(defaultType);
+            await context.SaveChangesAsync();
+        }
+
+        // Update stores without a type
+        var storesWithoutType = await context.Stores.IgnoreQueryFilters()
+            .Where(s => s.CompanyId == companyId && (s.StoreTypeId == Guid.Empty || s.StoreTypeId == null))
+            .ToListAsync();
+
+        foreach (var store in storesWithoutType)
+        {
+            store.StoreTypeId = defaultType.Id;
+            context.Stores.Update(store);
+        }
+
+        if (storesWithoutType.Any())
+        {
+            await context.SaveChangesAsync();
+        }
     }
 }

@@ -56,6 +56,9 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<OperationalSetting> OperationalSettings => Set<OperationalSetting>();
     public DbSet<WeeklyApproval> WeeklyApprovals => Set<WeeklyApproval>();
     public DbSet<WeeklyApprovalLog> WeeklyApprovalLogs => Set<WeeklyApprovalLog>();
+    public DbSet<StoreType> StoreTypes => Set<StoreType>();
+    public DbSet<PredictiveShiftRule> PredictiveShiftRules => Set<PredictiveShiftRule>();
+    public DbSet<PredictiveShiftRuleProfile> PredictiveShiftRuleProfiles => Set<PredictiveShiftRuleProfile>();
     public Guid TenantId => _tenantProvider.GetTenantId();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -92,6 +95,9 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<OperationalSetting>().HasQueryFilter(o => o.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<WeeklyApproval>().HasQueryFilter(w => w.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<WeeklyApprovalLog>().HasQueryFilter(w => w.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<StoreType>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<PredictiveShiftRule>().HasQueryFilter(p => p.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<PredictiveShiftRuleProfile>().HasQueryFilter(p => p.CompanyId == TenantId || TenantId == Guid.Empty);
 
         // Many-to-Many: Supervisor -> Stores
         builder.Entity<SupervisorStore>()
@@ -203,6 +209,31 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<User>().HasIndex(u => u.CompanyId);
         builder.Entity<UserCredential>().HasIndex(u => u.UserId);
         builder.Entity<SalesTimeBand>().HasIndex(s => new { s.CompanyId, s.Name }).IsUnique();
+
+        // Predictive Rules Many-to-Many
+        builder.Entity<PredictiveShiftRuleProfile>()
+            .HasKey(rp => new { rp.RuleId, rp.ProfileId });
+
+        builder.Entity<PredictiveShiftRuleProfile>()
+            .HasOne(rp => rp.Rule)
+            .WithMany(r => r.RuleProfiles)
+            .HasForeignKey(rp => rp.RuleId);
+
+        builder.Entity<Store>()
+            .HasOne(s => s.StoreType)
+            .WithMany(st => st.Stores)
+            .HasForeignKey(s => s.StoreTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+            
+        builder.Entity<PredictiveShiftRule>()
+            .HasOne(r => r.StoreType)
+            .WithMany()
+            .HasForeignKey(r => r.StoreTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<PredictiveShiftRule>()
+            .Property(r => r.Ratio)
+            .HasPrecision(18, 2);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

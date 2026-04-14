@@ -32,6 +32,8 @@ import SalesData from './pages/Core/SalesData';
 import SalesChannels from './pages/Core/SalesChannels';
 import SalesAnalytics from './pages/Core/SalesAnalytics';
 import SalesTimeBands from './pages/Core/SalesTimeBands';
+import StoreTypes from './pages/Core/StoreTypes';
+import PredictiveRules from './pages/Core/PredictiveRules';
 import SecurityService from './services/securityService';
 import { initializeFirebase, requestForToken, onMessageListener } from './firebase';
 
@@ -393,6 +395,8 @@ function App() {
         case 'Analítica BI': return <SalesAnalytics user={user} />;
         case 'Franjas Horarias': return <SalesTimeBands user={user} />;
         case 'Permisos': return <ModulePermissions user={user} />;
+        case 'Tipos de Tienda': return <StoreTypes user={user} />;
+        case 'Reglas Predictivas': return <PredictiveRules user={user} />;
         case 'Configuración Sistema': return <SystemSettings user={user} />;
         case 'Auditoría': return <AuditLogs user={user} />;
         case 'Dashboard':

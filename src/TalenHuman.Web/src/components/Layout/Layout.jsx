@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Users, Clock, Calendar, FileText, Settings, 
   LogOut, Store, Sun, Moon, Pin, PinOff, ChevronLeft, ChevronRight,
   Briefcase, Boxes, Building, Link, ChevronDown, ChevronUp, User as UserIcon, MapPin, Cpu, Globe, Activity, ShieldAlert, Building2, Shield,
-  Megaphone, CheckCircle, TrendingUp, Filter, BarChart3, Database
+  Megaphone, CheckCircle, TrendingUp, Filter, BarChart3, Database, Target, Presentation
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
@@ -32,6 +32,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
         { icon: <Calendar size={20} />, label: 'Jornadas', sub: 'SCHEDULES' },
         { icon: <Building size={20} />, label: 'Distritos', sub: 'DISTRICTS' },
         { icon: <Store size={20} />, label: 'Tiendas', sub: 'STORES' },
+        { icon: <Layout size={20} />, label: 'Tipos de Tienda', sub: 'STORE_TYPES' },
         { icon: <Users size={20} />, label: 'Empleados', sub: 'EMPLOYEES' },
       ]
     },
@@ -55,6 +56,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
         { icon: <Filter size={20} />, label: 'Canales de Venta', sub: 'SALES_CHANNELS' },
         { icon: <BarChart3 size={20} />, label: 'Analítica BI', sub: 'SALES_ANALYTICS' },
         { icon: <Clock size={20} />, label: 'Franjas Horarias', sub: 'SALES_TIME_BANDS' },
+        { icon: <Target size={20} />, label: 'Reglas Predictivas', sub: 'PREDICTIVE_RULES' },
       ]
     },
     { 
@@ -228,6 +230,8 @@ const getPageInfo = (page) => {
     case 'Canales de Venta': return { title: 'Canales de Venta', subtitle: 'Administración de orígenes de venta y plataformas' };
     case 'Analítica BI': return { title: 'Analítica de Negocio', subtitle: 'Inteligencia de ventas y comparación histórica de 4 semanas' };
     case 'Franjas Horarias': return { title: 'Parámetros de Tiempo', subtitle: 'Definición de periodos operativos para análisis segmentado' };
+    case 'Tipos de Tienda': return { title: 'Tipos de Tienda', subtitle: 'Categorización estratégica de sedes para motor predictivo' };
+    case 'Reglas Predictivas': return { title: 'Reglas Predictivas', subtitle: 'Configuración de inteligencia de carga operacional' };
     default: return { title: page, subtitle: '' };
   }
 };

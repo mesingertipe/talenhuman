@@ -345,3 +345,49 @@ public class WeeklyApprovalLog : BaseEntity, IMultitenant
     public Guid CompanyId { get; set; }
     public Company Company { get; set; } = null!;
 }
+
+public enum PredictiveMetricType
+{
+    NetSales,
+    Tickets,
+    Guests,
+    AverageTicket
+}
+
+public class PredictiveShiftRule : BaseEntity, IMultitenant
+{
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    
+    public Guid StoreTypeId { get; set; }
+    public StoreType? StoreType { get; set; }
+    
+    public PredictiveMetricType MetricType { get; set; }
+    
+    // The amount of "Metric" that requires 1 person (e.g., 1 person per 500k sales)
+    public decimal Ratio { get; set; } 
+    
+    // Min staffing required regardless of sales
+    public int MinStaffOpening { get; set; } = 1;
+    public int MinStaffClosing { get; set; } = 1;
+    
+    public bool IsActive { get; set; } = true;
+
+    public Guid CompanyId { get; set; }
+    public Company Company { get; set; } = null!;
+
+    // Relationships
+    public ICollection<PredictiveShiftRuleProfile> RuleProfiles { get; set; } = new List<PredictiveShiftRuleProfile>();
+}
+
+public class PredictiveShiftRuleProfile : IMultitenant
+{
+    public Guid RuleId { get; set; }
+    public PredictiveShiftRule Rule { get; set; } = null!;
+    
+    public Guid ProfileId { get; set; }
+    public Profile Profile { get; set; } = null!;
+
+    public Guid CompanyId { get; set; }
+    public Company Company { get; set; } = null!;
+}

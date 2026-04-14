@@ -69,6 +69,7 @@ public class StoresController : ControllerBase
         existing.OperationalDayStart = store.OperationalDayStart;
         existing.DefaultStartTime = store.DefaultStartTime;
         existing.DefaultEndTime = store.DefaultEndTime;
+        existing.StoreTypeId = store.StoreTypeId;
         
         await _context.SaveChangesAsync();
 

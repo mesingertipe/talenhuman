@@ -69,6 +69,9 @@ public class Store : BaseEntity, IMultitenant
 
     public Guid? DistrictId { get; set; }
     public District? District { get; set; }
+
+    public Guid StoreTypeId { get; set; }
+    public StoreType? StoreType { get; set; }
     
     // Relationships
     public ICollection<Employee> Employees { get; set; } = new List<Employee>();
@@ -109,6 +112,18 @@ public class Profile : BaseEntity, IMultitenant
     
     public Guid CompanyId { get; set; }
     public Company? Company { get; set; }
+}
+
+public class StoreType : BaseEntity, IMultitenant
+{
+    public string Name { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true;
+
+    public Guid CompanyId { get; set; }
+    public Company? Company { get; set; }
+
+    // Relationships
+    public ICollection<Store> Stores { get; set; } = new List<Store>();
 }
 
 public class City : BaseEntity, IMultitenant

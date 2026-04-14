@@ -9,6 +9,7 @@ import {
   ChevronDown, RefreshCw, BarChart3, Presentation, PieChart as PieIcon,
   Table as TableIcon, Download, Info, Search
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import api from '../../services/api';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
 import { useTheme } from '../../context/ThemeContext';
@@ -33,11 +34,14 @@ const SalesAnalytics = ({ user }) => {
   const [evolutionData, setEvolutionData] = useState({ current: [], history: [] });
   const [summaryData, setSummaryData] = useState([]);
   const [channelData, setChannelData] = useState([]);
+  const [weeklyTrendData, setWeeklyTrendData] = useState([]);
   const [detailedRecords, setDetailedRecords] = useState([]);
   const [metadata, setMetadata] = useState({ stores: [], channels: [] });
+  const [isExporting, setIsExporting] = useState(false);
   
   const [filters, setFilters] = useState({
-    date: new Date().toISOString().split('T')[0],
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
     storeId: '',
     channelId: ''
   });
@@ -72,16 +76,18 @@ const SalesAnalytics = ({ user }) => {
       setLoading(true);
       const params = new URLSearchParams(filters);
       
-      const [summaryRes, evolutionRes, channelRes, recordsRes] = await Promise.all([
+      const [summaryRes, evolutionRes, channelRes, weeklyTrendRes, recordsRes] = await Promise.all([
         api.get(`/sales/analytics/summary?${params.toString()}`),
         api.get(`/sales/analytics/evolution?${params.toString()}`),
         api.get(`/sales/analytics/channels?${params.toString()}`),
-        api.get(`/sales?startDate=${filters.date}&endDate=${filters.date}&pageSize=100${filters.storeId ? `&storeId=${filters.storeId}` : ''}`)
+        api.get(`/sales/analytics/weekly-trend?${params.toString()}`),
+        api.get(`/sales?${params.toString()}&pageSize=500`)
       ]);
       
       setSummaryData(summaryRes.data);
       setEvolutionData(evolutionRes.data);
       setChannelData(channelRes.data);
+      setWeeklyTrendData(weeklyTrendRes.data);
       setDetailedRecords(recordsRes.data.items || []);
     } catch (err) {
       console.error("Error fetching analytics:", err);
@@ -91,6 +97,8 @@ const SalesAnalytics = ({ user }) => {
   };
 
   const chartData = useMemo(() => {
+    if (!evolutionData.current) return [];
+    
     // Merge current and history for Recharts
     const timeSlots = Array.from(new Set([
       ...evolutionData.current.map(d => new Date(d.recordDate).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false })),
@@ -103,8 +111,8 @@ const SalesAnalytics = ({ user }) => {
       
       return {
         time,
-        Current: curr ? curr[activeMetric] : 0,
-        HistoryAvg: hist ? (
+        Actual: curr ? curr[activeMetric] : 0,
+        PromedioHistorico: hist ? (
           activeMetric === 'ventaNeta' ? hist.ventaNetaAvg :
           activeMetric === 'cantidadTickets' ? hist.ticketsAvg :
           activeMetric === 'comensales' ? hist.comensalesAvg :
@@ -114,35 +122,72 @@ const SalesAnalytics = ({ user }) => {
     });
   }, [evolutionData, activeMetric]);
 
+  const globalTotals = useMemo(() => {
+    if (!detailedRecords.length) return { ventaNeta: 0, cantidadTickets: 0, comensales: 0, ticketPromedio: 0 };
+    const totalVenta = detailedRecords.reduce((acc, curr) => acc + curr.ventaNeta, 0);
+    const totalTickets = detailedRecords.reduce((acc, curr) => acc + curr.cantidadTickets, 0);
+    const totalComensales = detailedRecords.reduce((acc, curr) => acc + curr.comensales, 0);
+    return {
+      ventaNeta: totalVenta,
+      cantidadTickets: totalTickets,
+      comensales: totalComensales,
+      ticketPromedio: totalTickets > 0 ? totalVenta / totalTickets : 0
+    };
+  }, [detailedRecords]);
+
   const formatCurrency = (val) => {
     return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
   };
 
+  const handleExportExcel = async () => {
+    try {
+      setIsExporting(true);
+      const dataToExport = detailedRecords.map(r => ({
+        'Tienda/Local': r.storeName,
+        'Fecha/Hora': r.recordDate,
+        'Canal': r.channelName,
+        'Venta Neta': r.ventaNeta,
+        'Tickets': r.cantidadTickets,
+        'Comensales': r.comensales,
+        'Ticket Promedio': r.ticketPromedio
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(dataToExport);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Reporte de Ventas");
+      XLSX.writeFile(wb, `Reporte_BI_Ventas_${filters.startDate}_al_${filters.endDate}.xlsx`);
+    } catch (err) {
+      console.error("Export error:", err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const metricsConfig = {
     ventaNeta: { label: 'Venta Neta', icon: DollarSign, color: '#6366f1', format: formatCurrency },
-    cantidadTickets: { label: 'Cant. Tickets', icon: Hash, color: '#8b5cf6', format: (v) => Math.round(v) },
+    cantidadTickets: { label: 'Tickets', icon: Hash, color: '#8b5cf6', format: (v) => Math.round(v) },
     comensales: { label: 'Comensales', icon: Users, color: '#10b981', format: (v) => Math.round(v) },
-    ticketPromedio: { label: 'Ticket Prom.', icon: BarChart3, color: '#f59e0b', format: formatCurrency }
+    ticketPromedio: { label: 'Ticket Promedio', icon: BarChart3, color: '#f59e0b', format: formatCurrency }
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 pb-20">
+    <div className="space-y-8 animate-in fade-in duration-700 pb-20 px-4 md:px-0">
       {/* Top Banner & Header */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <div className="flex items-center gap-3 mb-1">
              <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
-                <Presentation size={18} />
+                <BarChart3 size={18} />
              </div>
-             <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Master BI Dashboard</span>
+             <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Panel de Control BI</span>
           </div>
-          <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Intelligence Command Center</h1>
-          <p className="text-slate-500 dark:text-slate-400 font-medium italic">Visión 360° de la operación comercial y análisis predictivo de carga.</p>
+          <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Centro de Comando Inteligente</h1>
+          <p className="text-slate-500 dark:text-slate-400 font-medium italic">Visión 360° de la operación comercial y análisis predictivo.</p>
         </div>
         
         <div className="flex items-center gap-3">
            <div className="px-4 py-2 bg-emerald-500/10 text-emerald-500 rounded-full text-[10px] font-black uppercase tracking-wider border border-emerald-500/20">
-              Live Sync Active
+              Sincronización en Tiempo Real
            </div>
           <button 
             onClick={fetchAnalytics}
@@ -154,18 +199,32 @@ const SalesAnalytics = ({ user }) => {
       </header>
 
       {/* Control Panel (Filters) */}
-      <section className="bg-white dark:bg-slate-800 p-8 rounded-[48px] shadow-sm border border-slate-50 dark:border-slate-800 relative z-50">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div>
-            <label className="text-[10px] font-black text-slate-400 px-2 uppercase tracking-widest mb-3 block">Fecha de Operación</label>
-            <div className="relative group">
-              <Calendar size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors z-10" />
-              <input 
-                type="date"
-                value={filters.date}
-                onChange={(e) => setFilters({...filters, date: e.target.value})}
-                className="w-full p-5 pl-14 rounded-3xl border-2 border-slate-50 dark:border-slate-900 bg-slate-50 dark:bg-slate-900/50 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
-              />
+      <section className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[48px] shadow-sm border border-slate-50 dark:border-slate-800 relative z-50">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+          <div className="md:col-span-2 grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-[10px] font-black text-slate-400 px-2 tracking-widest mb-2 block">Fecha Inicio</label>
+              <div className="relative group">
+                <Calendar size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors z-10" />
+                <input 
+                  type="date"
+                  value={filters.startDate}
+                  onChange={(e) => setFilters({...filters, startDate: e.target.value})}
+                  className="w-full p-4 pl-14 rounded-3xl border-2 border-slate-50 dark:border-slate-900 bg-slate-50 dark:bg-slate-900/50 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] font-black text-slate-400 px-2 tracking-widest mb-2 block">Fecha Fin</label>
+              <div className="relative group">
+                <Calendar size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors z-10" />
+                <input 
+                  type="date"
+                  value={filters.endDate}
+                  onChange={(e) => setFilters({...filters, endDate: e.target.value})}
+                  className="w-full p-4 pl-14 rounded-3xl border-2 border-slate-50 dark:border-slate-900 bg-slate-50 dark:bg-slate-900/50 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold text-sm"
+                />
+              </div>
             </div>
           </div>
           <div>
@@ -180,7 +239,7 @@ const SalesAnalytics = ({ user }) => {
           </div>
           <div>
             <SearchableSelect 
-              label="Segmentación de Canal"
+              label="Canal"
               options={metadata.channels}
               value={filters.channelId}
               onChange={(val) => setFilters({...filters, channelId: val})}
@@ -191,138 +250,149 @@ const SalesAnalytics = ({ user }) => {
         </div>
       </section>
 
-      {/* Main Stats Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-         {/* Left Side: Metric Selectors */}
-         <div className="lg:col-span-1 flex flex-col gap-4">
-            {Object.keys(metricsConfig).map(k => {
-              const cfg = metricsConfig[k];
-              const Icon = cfg.icon;
-              const isActive = activeMetric === k;
-              
-              return (
-                <button 
-                  key={k}
-                  onClick={() => setActiveMetric(k)}
-                  className={`p-6 rounded-[32px] border-2 text-left transition-all relative overflow-hidden group ${
-                    isActive 
-                      ? 'bg-white dark:bg-slate-800 border-indigo-500 shadow-2xl shadow-indigo-500/10 -translate-x-2' 
-                      : 'bg-slate-100/30 dark:bg-slate-900/30 border-transparent grayscale opacity-60 hover:grayscale-0 hover:opacity-100 hover:bg-white dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <div className="flex items-center gap-5 relative z-10">
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg" style={{ background: isActive ? cfg.color : 'white', color: isActive ? 'white' : cfg.color }}>
-                      <Icon size={28} />
-                    </div>
-                    <div>
-                        <p className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-indigo-500' : 'text-slate-400'}`}>{cfg.label}</p>
-                        <h4 className="text-xl font-black text-slate-800 dark:text-white leading-tight">Master Metrics</h4>
-                    </div>
-                  </div>
-                  {isActive && <div className="absolute right-0 top-0 h-full w-1.5 bg-indigo-500"></div>}
-                </button>
-              );
-            })}
-         </div>
-
-         {/* Center: Band Cards */}
-         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
-            {summaryData.length > 0 ? summaryData.map((band, idx) => (
-               <div key={idx} className="bg-white dark:bg-slate-800 p-10 rounded-[48px] shadow-sm border border-slate-50 dark:border-slate-800 relative overflow-hidden group hover:scale-[1.02] transition-all flex flex-col justify-between">
-                  <div className="absolute top-0 right-0 w-40 h-40 bg-slate-50 dark:bg-slate-900/30 rounded-full -mr-20 -mt-20 group-hover:scale-125 transition-transform duration-700"></div>
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-8">
-                       <div style={{ background: `${band.color}15`, color: band.color }} className="w-12 h-12 rounded-2xl flex items-center justify-center">
-                          <Clock size={24} />
-                       </div>
-                       <span style={{ color: band.color, background: `${band.color}10` }} className="text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">{band.name}</span>
-                    </div>
-                    
-                    <div className="space-y-2">
-                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{metricsConfig[activeMetric].label}</p>
-                       <h3 className="text-3xl font-black text-slate-900 dark:text-white mt-1">
-                        {metricsConfig[activeMetric].format(band[activeMetric])}
-                       </h3>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-8 pt-8 border-t border-slate-50 dark:border-slate-900 grid grid-cols-2 gap-4 relative z-10">
-                    <div>
-                      <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Volumen Tickets</p>
-                      <p className="font-black dark:text-white text-base">{band.cantidadTickets}</p>
-                    </div>
-                    <div>
-                      <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Afluencia Guests</p>
-                      <p className="font-black dark:text-white text-base">{band.comensales}</p>
-                    </div>
-                  </div>
-               </div>
-            )) : (
-              <div className="col-span-3 bg-slate-100/50 dark:bg-slate-900/50 rounded-[48px] border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center p-20 text-slate-400">
-                  <BarChart3 size={64} className="mb-6 opacity-20" />
-                  <p className="font-black text-[11px] uppercase tracking-[0.3em] text-center max-w-xs">Define Franjas Horarias en Configuración para activar este reporte</p>
-              </div>
-            )}
-         </div>
+      {/* HORIZONTAL METRIC SELECTOR */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {Object.keys(metricsConfig).map(k => {
+            const cfg = metricsConfig[k];
+            const Icon = cfg.icon;
+            const isActive = activeMetric === k;
+            
+            return (
+              <button 
+                key={k}
+                onClick={() => setActiveMetric(k)}
+                className={`p-5 rounded-[32px] border-2 text-left transition-all relative overflow-hidden flex items-center gap-4 ${
+                  isActive 
+                    ? 'bg-white dark:bg-slate-800 border-indigo-500 shadow-xl' 
+                    : 'bg-slate-100/30 dark:bg-slate-900/30 border-transparent grayscale opacity-70 hover:grayscale-0 hover:opacity-100 hover:bg-white dark:hover:bg-slate-800'
+                }`}
+              >
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-md transition-all" style={{ background: isActive ? cfg.color : 'white', color: isActive ? 'white' : cfg.color }}>
+                  <Icon size={24} />
+                </div>
+                <div>
+                    <p className={`text-[10px] font-black tracking-widest mb-0.5 ${isActive ? 'text-indigo-500' : 'text-slate-400'}`}>{cfg.label}</p>
+                    <h4 className="text-lg font-black text-slate-800 dark:text-white leading-none">
+                      {cfg.format(globalTotals[k])}
+                    </h4>
+                </div>
+              </button>
+            );
+          })}
       </div>
 
-      {/* Advanced Visualizations Row */}
-      <section className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-         {/* Evolution Line Chart */}
-         <div className="bg-white dark:bg-slate-800 p-10 rounded-[56px] shadow-sm border border-slate-50 dark:border-slate-800">
-            <div className="flex items-center justify-between mb-12">
-               <div>
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Timeline Analytics</h2>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Comparativa Intradía (Franjas 30m)</p>
-               </div>
-               <TrendingUp className="text-indigo-500" size={32} />
-            </div>
+      {/* DASHBOARD GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* LEFT COLUMN: TRENDS & ANALYTICS */}
+          <div className="lg:col-span-2 space-y-8">
+              {/* Evolution Chart (Intraday) */}
+              <div className="bg-white dark:bg-slate-800 p-8 rounded-[56px] shadow-sm border border-slate-50 dark:border-slate-800">
+                <div className="flex items-center justify-between mb-10">
+                   <div>
+                      <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Evolución Intradía</h2>
+                      <p className="text-[10px] font-black text-slate-400 tracking-widest mt-1 uppercase">Basado en fecha de inicio seleccionada</p>
+                   </div>
+                   <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+                      <TrendingUp size={24} />
+                   </div>
+                </div>
 
-            <div className="w-full h-[400px]">
-              {loading ? <div className="h-full flex items-center justify-center">Cargando Trayectorias...</div> : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData}>
-                    <defs>
-                      <linearGradient id="colorArea" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={metricsConfig[activeMetric].color} stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor={metricsConfig[activeMetric].color} stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={activeColors.border} />
-                    <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800, fill: activeColors.textMuted }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800, fill: activeColors.textMuted }} tickFormatter={(v) => metricsConfig[activeMetric].format(v)} />
-                    <Tooltip 
-                      contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px rgba(0,0,0,0.1)', background: activeColors.card }}
-                      formatter={(v) => [metricsConfig[activeMetric].format(v), "Actual"]}
-                    />
-                    <Area type="monotone" dataKey="Current" stroke={metricsConfig[activeMetric].color} strokeWidth={4} fillOpacity={1} fill="url(#colorArea)" />
-                    <Line type="monotone" dataKey="HistoryAvg" stroke="#CBD5E1" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-         </div>
+                <div className="w-full h-[350px]">
+                  {loading ? <div className="h-full flex items-center justify-center text-slate-400 font-bold">Analizando trayectorias...</div> : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={chartData}>
+                        <defs>
+                          <linearGradient id="colorArea" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={metricsConfig[activeMetric].color} stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor={metricsConfig[activeMetric].color} stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={activeColors.border} />
+                        <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800, fill: activeColors.textMuted }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800, fill: activeColors.textMuted }} tickFormatter={(v) => metricsConfig[activeMetric].format(v)} />
+                        <Tooltip 
+                          contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px rgba(0,0,0,0.1)', background: activeColors.card }}
+                        />
+                        <Area type="monotone" dataKey="Actual" stroke={metricsConfig[activeMetric].color} strokeWidth={4} fillOpacity={1} fill="url(#colorArea)" />
+                        <Line type="monotone" dataKey="PromedioHistorico" stroke="#CBD5E1" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                        <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px', fontSize: '10px', fontWeight: 'bold' }} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
+              </div>
 
-         {/* Channel Distribution Pie Chart */}
-         <div className="bg-white dark:bg-slate-800 p-10 rounded-[56px] shadow-sm border border-slate-50 dark:border-slate-800">
-            <div className="flex items-center justify-between mb-12">
-               <div>
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Mix de Canales</h2>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Distribución de {metricsConfig[activeMetric].label}</p>
-               </div>
-               <PieIcon className="text-indigo-500" size={32} />
-            </div>
+              {/* Weekly Trend (Bar Chart) */}
+              <div className="bg-white dark:bg-slate-800 p-8 rounded-[56px] shadow-sm border border-slate-50 dark:border-slate-800">
+                <div className="flex items-center justify-between mb-10">
+                   <div>
+                      <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">Tendencia del Periodo</h2>
+                      <p className="text-[10px] font-black text-slate-400 tracking-widest mt-1 uppercase">Carga diaria por {metricsConfig[activeMetric].label}</p>
+                   </div>
+                   <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+                      <BarChart3 size={24} />
+                   </div>
+                </div>
 
-            <div className="flex flex-col md:flex-row items-center gap-10">
-               <div className="w-full md:w-[60%] h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
+                <div className="w-full h-[300px]">
+                  {loading ? <div className="h-full flex items-center justify-center text-slate-400 font-bold">Procesando tendencia...</div> : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={weeklyTrendData}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={activeColors.border} />
+                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800, fill: activeColors.textMuted }} tickFormatter={(d) => new Date(d).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800, fill: activeColors.textMuted }} tickFormatter={(v) => metricsConfig[activeMetric].format(v)} />
+                        <Tooltip 
+                          contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px rgba(0,0,0,0.1)', background: activeColors.card }}
+                          labelFormatter={(d) => new Date(d).toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
+                          formatter={(v) => [metricsConfig[activeMetric].format(v), metricsConfig[activeMetric].label]}
+                        />
+                        <Bar dataKey={activeMetric} fill={metricsConfig[activeMetric].color} radius={[10, 10, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
+              </div>
+          </div>
+
+          {/* RIGHT COLUMN: BAND SUMMARY & CHANNEL MIX */}
+          <div className="space-y-8">
+              {/* Bands breakdown */}
+              <div className="bg-white dark:bg-slate-800 p-8 rounded-[56px] shadow-sm border border-slate-50 dark:border-slate-800">
+                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6">Desglose por Franjas</h3>
+                <div className="space-y-4">
+                  {summaryData.map((band, idx) => (
+                    <div key={idx} className="p-5 bg-slate-50 dark:bg-slate-900/50 rounded-3xl group flex items-center justify-between border-l-4" style={{ borderColor: band.color }}>
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 tracking-widest uppercase">{band.name}</p>
+                        <p className="text-lg font-black dark:text-white">{metricsConfig[activeMetric].format(band[activeMetric])}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-medium text-slate-400 underline decoration-slate-200">Tickets: {band.cantidadTickets}</p>
+                        <p className="text-[10px] font-medium text-slate-400">Guests: {band.comensales}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {summaryData.length === 0 && (
+                     <div className="text-center py-10 opacity-30">
+                        <Clock size={48} className="mx-auto mb-2" />
+                        <p className="text-xs font-bold">Configure franjas en el módulo core</p>
+                     </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Channel Distribution */}
+              <div className="bg-white dark:bg-slate-800 p-8 rounded-[56px] shadow-sm border border-slate-50 dark:border-slate-800">
+                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6">Mix de Canales</h3>
+                <div className="h-[200px] mb-6">
+                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={channelData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
+                        innerRadius={50}
+                        outerRadius={80}
                         paddingAngle={5}
                         dataKey={activeMetric}
                       >
@@ -330,95 +400,75 @@ const SalesAnalytics = ({ user }) => {
                           <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip 
-                         contentStyle={{ borderRadius: '16px', border: 'none', background: activeColors.card }}
-                         formatter={(v) => metricsConfig[activeMetric].format(v)}
-                      />
+                      <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', background: activeColors.card }} />
                     </PieChart>
-                  </ResponsiveContainer>
-               </div>
-               <div className="w-full md:w-[40%] space-y-4">
-                  {channelData.map((d, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl">
-                       <div className="flex items-center gap-3">
-                          <div className="w-3 h-3 rounded-full" style={{ background: PIE_COLORS[index % PIE_COLORS.length] }}></div>
-                          <span className="text-xs font-black text-slate-700 dark:text-slate-300">{d.name || "General"}</span>
-                       </div>
-                       <span className="text-xs font-black dark:text-white uppercase tracking-widest">{metricsConfig[activeMetric].format(d[activeMetric])}</span>
-                    </div>
-                  ))}
-               </div>
-            </div>
-         </div>
-      </section>
+                   </ResponsiveContainer>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                   {channelData.slice(0, 4).map((d, index) => (
+                      <div key={index} className="flex items-center justify-between text-xs px-2">
+                         <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full" style={{ background: PIE_COLORS[index % PIE_COLORS.length] }}></div>
+                            <span className="font-bold text-slate-500">{d.name}</span>
+                         </div>
+                         <span className="font-black text-slate-800 dark:text-slate-200">{metricsConfig[activeMetric].format(d[activeMetric])}</span>
+                      </div>
+                   ))}
+                </div>
+              </div>
+          </div>
+      </div>
 
-      {/* Detailed Records Table */}
+      {/* DETAILED RECORDS TABLE (Collapsed and improved) */}
       <section className="bg-white dark:bg-slate-800 rounded-[56px] shadow-sm border border-slate-50 dark:border-slate-800 overflow-hidden">
-         <div className="p-10 flex flex-col md:flex-row md:items-center justify-between gap-6 border-bottom border-slate-50 dark:border-slate-900">
+         <div className="p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-5">
-               <div className="w-14 h-14 bg-indigo-500 rounded-3xl flex items-center justify-center text-white shadow-xl shadow-indigo-500/20">
-                  <TableIcon size={28} />
+               <div className="w-12 h-12 bg-indigo-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+                  <TableIcon size={24} />
                </div>
                <div>
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-white">Auditoría de Registros</h2>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Snapshot detallado del periodo actual</p>
+                  <h2 className="text-xl font-black text-slate-900 dark:text-white">Auditoría de Registros</h2>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Snapshot detallado del periodo</p>
                </div>
             </div>
             
-            <div className="flex items-center gap-4">
-               <div className="relative group flex-1 md:w-64">
-                  <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input placeholder="Filtrar por tienda..." className="w-full p-3 pl-10 rounded-2xl bg-slate-50 dark:bg-slate-900 font-bold text-xs border border-transparent focus:border-indigo-500 outline-none transition-all" />
-               </div>
-               <button className="flex items-center gap-2 px-6 py-3 bg-slate-100 dark:bg-slate-700 rounded-2xl text-slate-600 dark:text-slate-300 font-black text-xs hover:bg-slate-200 transition-all">
-                  <Download size={16} />
-                  Exportar
+            <div className="flex items-center gap-3">
+               <button 
+                  onClick={handleExportExcel}
+                  disabled={isExporting}
+                  className="flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-indigo-600 rounded-2xl text-white font-black text-xs hover:scale-105 transition-all"
+               >
+                  {isExporting ? <div className="loader mr-2"></div> : <Download size={16} />}
+                  Exportar Excel
                </button>
             </div>
          </div>
 
-         <div className="overflow-x-auto">
+         <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
             <table className="w-full text-left">
-               <thead className="bg-slate-50 dark:bg-slate-900/50">
+               <thead className="bg-slate-50 dark:bg-slate-900/50 sticky top-0 z-10">
                   <tr>
-                     <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tienda / Local</th>
-                     <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Hora</th>
-                     <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Canal</th>
-                     <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Venta Neta</th>
-                     <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Tickets</th>
-                     <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Guests</th>
-                     <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Ticket Prom.</th>
+                     <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tienda</th>
+                     <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Fecha/Hora</th>
+                     <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Canal</th>
+                     <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Venta</th>
+                     <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Tickets</th>
+                     <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Guests</th>
                   </tr>
                </thead>
                <tbody className="divide-y divide-slate-50 dark:divide-slate-900">
-                  {detailedRecords.map((rec, i) => (
-                    <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors group">
-                       <td className="px-10 py-6">
-                          <div className="flex items-center gap-3">
-                             <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/20"></div>
-                             <span className="font-black text-slate-800 dark:text-slate-200 text-sm">{rec.storeName}</span>
-                          </div>
-                       </td>
-                       <td className="px-10 py-6 text-center">
-                          <span className="px-3 py-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg text-xs font-black text-slate-600 dark:text-slate-400">
-                            {new Date(rec.recordDate).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                  {detailedRecords.slice(0, 100).map((rec, i) => (
+                    <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                       <td className="px-8 py-4"><span className="font-black text-slate-800 dark:text-slate-200 text-sm">{rec.storeName}</span></td>
+                       <td className="px-8 py-4 text-center">
+                          <span className="text-xs font-bold text-slate-500">
+                            {new Date(rec.recordDate).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                           </span>
                        </td>
-                       <td className="px-10 py-6">
-                          <span className="text-xs font-bold text-slate-500">{rec.channelName}</span>
-                       </td>
-                       <td className="px-10 py-6 text-right font-black text-slate-800 dark:text-white text-sm">
-                          {formatCurrency(rec.ventaNeta)}
-                       </td>
-                       <td className="px-10 py-6 text-center">
-                          <span className="font-bold text-slate-600 dark:text-slate-400 text-sm">{rec.cantidadTickets}</span>
-                       </td>
-                       <td className="px-10 py-6 text-center">
-                          <span className="font-bold text-slate-600 dark:text-slate-400 text-sm">{rec.comensales}</span>
-                       </td>
-                       <td className="px-10 py-6 text-right font-black text-indigo-500 text-sm">
-                          {formatCurrency(rec.ticketPromedio)}
-                       </td>
+                       <td className="px-8 py-4"><span className="text-xs font-bold text-slate-500">{rec.channelName}</span></td>
+                       <td className="px-8 py-4 text-right font-black text-slate-800 dark:text-white text-sm">{formatCurrency(rec.ventaNeta)}</td>
+                       <td className="px-8 py-4 text-center text-sm">{rec.cantidadTickets}</td>
+                       <td className="px-8 py-4 text-center text-sm">{rec.comensales}</td>
                     </tr>
                   ))}
                </tbody>
@@ -427,7 +477,7 @@ const SalesAnalytics = ({ user }) => {
             {detailedRecords.length === 0 && (
                <div className="p-20 flex flex-col items-center justify-center text-slate-400 gap-4 opacity-50">
                   <Hash size={48} strokeWidth={1} />
-                  <p className="font-black text-[12px] uppercase tracking-[0.2em]">No hay registros para este período</p>
+                  <p className="font-black text-[12px] uppercase text-center tracking-[0.2em]">Seleccione un periodo con datos cargados para auditar</p>
                </div>
             )}
          </div>

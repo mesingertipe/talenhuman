@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Building2, Save, CheckCircle, XCircle, ChevronRight, Activity, Boxes, Settings, Clock, Layout, Fingerprint, MapPin, Users, Briefcase, FileText, Monitor, Palette, Terminal, Search, ArrowLeft, ChevronDown, Check, X, Megaphone } from 'lucide-react';
+import { Shield, Building2, Save, CheckCircle, XCircle, ChevronRight, Activity, Boxes, Settings, Clock, Layout, Fingerprint, MapPin, Users, Briefcase, FileText, Monitor, Palette, Terminal, Search, ArrowLeft, ChevronDown, Check, X, Megaphone, Target, TrendingUp, Filter, Presentation } from 'lucide-react';
 import api from '../../services/api';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
 
@@ -27,6 +27,7 @@ const ModulePermissions = ({ user }) => {
       { code: 'DISTRICTS', name: 'Distritos', icon: Layout, desc: 'Zonificación y distritos de ventas' },
       { code: 'PROFILES', name: 'Cargos/Perfiles', icon: Briefcase, desc: 'Definición de cargos operativos' },
       { code: 'STORES', name: 'Tiendas', icon: Building2, desc: 'Administración de puntos de venta' },
+      { code: 'STORE_TYPES', name: 'Tipos de Tienda', icon: Layout, desc: 'Categorización para motor predictivo' },
       { code: 'EMPLOYEES', name: 'Empleados', icon: Users, desc: 'Base de datos de capital humano' },
       { code: 'SCHEDULES', name: 'Jornadas Base', icon: Clock, desc: 'Configuración de horarios estándar' }
     ],
@@ -51,7 +52,8 @@ const ModulePermissions = ({ user }) => {
       { code: 'MONITORING', name: 'Monitoreo Tiempo Real', icon: Monitor, desc: 'Panel de control de asistencia viva' },
       { code: 'BROADCAST', name: 'Centro de Comunicados', icon: Megaphone, desc: 'Difusión y PR corporativo' },
       { code: 'TEMPLATES', name: 'Plantillas Novedades', icon: Palette, desc: 'Diseño de tipos de novedades' },
-      { code: 'NOVELTY_CONFIG', name: 'Configuración Novedades', icon: Settings, desc: 'Reglas de negocio para incidencias' }
+      { code: 'NOVELTY_CONFIG', name: 'Configuración Novedades', icon: Settings, desc: 'Reglas de negocio para incidencias' },
+      { code: 'PREDICTIVE_RULES', name: 'Reglas Predictivas', icon: Target, desc: 'Configuración de motor de carga operacional' }
     ],
     'SYSTEM': [
       { code: 'USERS', name: 'Usuarios Sistema', icon: Users, desc: 'Cuentas de acceso a la plataforma' },
