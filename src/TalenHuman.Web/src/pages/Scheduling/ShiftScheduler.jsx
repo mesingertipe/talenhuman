@@ -2415,10 +2415,6 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         </div>
                     )}
 
-                             </div>
-                        </div>
-                    )}
-
                     {/* V18.6 PREMIUM SYNC MONITOR - PIXEL PERFECT UNIFICATION */}
                     {isSaving && createPortal(
                         <div style={{
