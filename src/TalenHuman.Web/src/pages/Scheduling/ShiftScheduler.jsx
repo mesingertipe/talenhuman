@@ -87,7 +87,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const [showSnapshotModal, setShowSnapshotModal] = useState(false);
     const [lastSaveComment, setLastSaveComment] = useState('');
     const [profiles, setProfiles] = useState([]);
-    const [selectedProfile, setSelectedProfile] = useState('');
+    const [selectedProfiles, setSelectedProfiles] = useState([]);
     const [selectedEmployees, setSelectedEmployees] = useState([]);
     const [showBulkModal, setShowBulkModal] = useState(false);
     const [viewMode, setViewMode] = useState('SHIFTS'); // 'SHIFTS' or 'ATTENDANCE'
@@ -624,9 +624,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     }, [currentWeekStart]);
 
     const filteredEmployees = useMemo(() => {
-        if (!selectedProfile) return employees;
-        return employees.filter(e => e.profileId === selectedProfile);
-    }, [employees, selectedProfile]);
+        if (!selectedProfiles || selectedProfiles.length === 0) return employees;
+        return employees.filter(e => selectedProfiles.includes(e.profileId));
+    }, [employees, selectedProfiles]);
 
     const handleSelectEmployee = (id) => {
         setSelectedEmployees(prev => 
@@ -1392,11 +1392,12 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         <div className="flex-1 min-w-[200px] relative" style={{ zIndex: 1000000 }}>
                             <SearchableSelect
                                 options={profiles.map(p => ({ id: p.id, name: p.name }))}
-                                value={selectedProfile}
-                                onChange={(val) => setSelectedProfile(prev => prev === val ? '' : val)}
+                                value={selectedProfiles}
+                                onChange={(val) => setSelectedProfiles(val)}
                                 placeholder="Todos los Puestos..."
                                 icon={ShieldCheck}
                                 variant="minimal"
+                                multiple={true}
                             />
                         </div>
                     </div>
@@ -1719,7 +1720,12 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                             {emp.firstName[0]}{emp.lastName[0]}
                                                         </div>
                                                         <div className="flex flex-col">
-                                                            <span className="text-[15px] font-[950] text-slate-800 dark:text-white leading-tight mb-1">{emp.firstName} {emp.lastName}</span>
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <span className="text-[15px] font-[950] text-slate-800 dark:text-white leading-tight">{emp.firstName} {emp.lastName}</span>
+                                                                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase bg-slate-100 dark:bg-slate-800/50 px-2 py-0.5 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
+                                                                    {profiles.find(p => p.id === emp.profileId)?.name || 'Sin Cargo'}
+                                                                </span>
+                                                            </div>
                                                             <div className="flex items-center gap-2">
                                                                 <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-tighter">{emp.documento}</span>
                                                                 <span className="text-[10px] text-slate-300 dark:text-slate-700 font-black">|</span>

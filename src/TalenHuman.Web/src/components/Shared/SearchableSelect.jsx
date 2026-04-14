@@ -10,14 +10,22 @@ const SearchableSelect = ({
   icon: Icon,
   disabled = false,
   required = false,
-  variant = "classic" // classic | minimal
+  variant = "classic", // classic | minimal
+  multiple = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const containerRef = useRef(null);
   const inputRef = useRef(null);
 
-  const selectedOption = options.find(opt => opt.id === value || opt.value === value);
+  const getLabel = () => {
+    if (multiple) {
+        if (!value || !Array.isArray(value) || value.length === 0) return placeholder;
+        return `${value.length} Seleccionados`;
+    }
+    const selectedOption = options.find(opt => opt.id === value || opt.value === value);
+    return selectedOption ? (selectedOption.name || selectedOption.label) : placeholder;
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -38,16 +46,27 @@ const SearchableSelect = ({
   });
 
   const handleSelect = (option) => {
-    onChange(option.id || option.value);
-    setIsOpen(false);
-    setSearchTerm("");
+    const optId = option.id || option.value;
+    if (multiple) {
+        let newValue = Array.isArray(value) ? [...value] : [];
+        if (newValue.includes(optId)) {
+            newValue = newValue.filter(id => id !== optId);
+        } else {
+            newValue.push(optId);
+        }
+        onChange(newValue);
+    } else {
+        onChange(optId);
+        setIsOpen(false);
+        setSearchTerm("");
+    }
   };
 
   return (
     <div 
       className="relative w-full" 
       ref={containerRef}
-      style={{ zIndex: isOpen ? 500 : 1 }}
+      style={{ zIndex: isOpen ? 1000000 : 1 }}
     >
       {label && (
         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
@@ -58,7 +77,7 @@ const SearchableSelect = ({
       {/* Visually hidden but focusable input for HTML5 validation popup */}
       <input 
         type="text"
-        value={value || ''}
+        value={Array.isArray(value) ? value.join(',') : (value || '')}
         onChange={() => {}}
         className="sr-only"
         style={{ opacity: 0, position: 'absolute', zIndex: -1, width: '1px', height: '1px', padding: 0, margin: 0, border: 'none' }}
@@ -77,18 +96,16 @@ const SearchableSelect = ({
         {Icon && <Icon size={18} className={`mr-3 ${isOpen ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}`} />}
         
         <div className="flex-1 truncate">
-          {selectedOption ? (
-            <span className="font-black text-slate-800 dark:text-white text-sm uppercase tracking-tight">{selectedOption.name || selectedOption.label}</span>
-          ) : (
-            <span className="text-slate-400 dark:text-slate-300 text-sm font-black uppercase tracking-widest">{placeholder}</span>
-          )}
+           <span className={`text-sm font-black uppercase tracking-tight ${(!value || (Array.isArray(value) && value.length === 0)) ? 'text-slate-400 dark:text-slate-300 tracking-widest' : 'text-slate-800 dark:text-white'}`}>
+             {getLabel()}
+           </span>
         </div>
         
         <ChevronDown size={18} className={`ml-2 text-slate-400 dark:text-slate-500 transition-transform duration-300 ${isOpen ? 'rotate-180 text-indigo-500 dark:text-indigo-400' : ''}`} />
       </div>
 
       {isOpen && (
-        <div className="absolute z-[1000] w-full mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute z-[1000000] w-full mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="p-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
             <div className="relative">
               <Search size={14} className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" />
@@ -106,12 +123,24 @@ const SearchableSelect = ({
           </div>
           
           <div className="max-h-64 overflow-y-auto p-2 bespoke-scrollbar">
+            {multiple && Array.isArray(value) && value.length > 0 && (
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onChange([]); }}
+                    className="w-full p-2 text-[10px] font-black uppercase text-rose-500 hover:bg-rose-50 rounded-lg mb-2 transition-colors border border-rose-100 border-dashed"
+                >
+                    Limpiar selección ({value.length})
+                </button>
+            )}
             {filteredOptions.length > 0 ? (
               filteredOptions.map((option) => {
-                const isSelected = (option.id || option.value) === value;
+                const optId = option.id || option.value;
+                const isSelected = multiple 
+                    ? (Array.isArray(value) && value.includes(optId))
+                    : optId === value;
+
                 return (
                   <div
-                    key={option.id || option.value}
+                    key={optId}
                     onClick={(e) => {
                         e.stopPropagation();
                         handleSelect(option);
@@ -125,8 +154,12 @@ const SearchableSelect = ({
                     <span className={`text-[13px] uppercase tracking-tight ${isSelected ? 'font-black' : 'font-bold'}`}>
                       {option.name || option.label}
                     </span>
-                    {isSelected && (
-                      <div className="w-6 h-6 rounded-lg bg-indigo-600 dark:bg-indigo-500 flex items-center justify-center text-white shadow-sm">
+                    {(isSelected || multiple) && (
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-all ${
+                        isSelected 
+                            ? 'bg-indigo-600 dark:bg-indigo-500 text-white shadow-sm' 
+                            : 'bg-slate-100 dark:bg-slate-800 text-transparent border border-slate-200 dark:border-slate-700'
+                      }`}>
                         <Check size={14} strokeWidth={4} />
                       </div>
                     )}
