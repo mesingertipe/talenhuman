@@ -223,6 +223,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
             .HasOne(s => s.StoreType)
             .WithMany(st => st.Stores)
             .HasForeignKey(s => s.StoreTypeId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
             
         builder.Entity<PredictiveShiftRule>()

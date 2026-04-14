@@ -71,7 +71,7 @@ public class Store : BaseEntity, IMultitenant
     public Guid? DistrictId { get; set; }
     public District? District { get; set; }
 
-    public Guid StoreTypeId { get; set; }
+    public Guid? StoreTypeId { get; set; }
     [System.Text.Json.Serialization.JsonIgnore]
     public StoreType? StoreType { get; set; }
     
