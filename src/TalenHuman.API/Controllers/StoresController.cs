@@ -24,9 +24,17 @@ public class StoresController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Store>>> GetStores()
+    public async Task<ActionResult> GetStores()
     {
-        return await _context.Stores.Include(s => s.Brand).ToListAsync();
+        try 
+        {
+            var stores = await _context.Stores.Include(s => s.Brand).ToListAsync();
+            return Ok(stores);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.ToString());
+        }
     }
 
     [HttpGet("{id}")]
