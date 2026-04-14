@@ -96,7 +96,7 @@ const ForgotPassword = ({ onBack, onNext }) => {
             </div>
             
             <footer className="premium-mobile-footer text-center mt-4">
-                <div className="premium-version">V13.9.40-PREMIUM-AI</div>
+                <div className="premium-version">V13.9.44-PREMIUM-STABLE</div>
             </footer>
         </main>
     </div>

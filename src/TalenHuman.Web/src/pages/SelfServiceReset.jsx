@@ -142,7 +142,7 @@ const SelfServiceReset = ({ onBack }) => {
                 )}
             </div>
             <footer className="premium-mobile-footer text-center mt-4">
-                <div className="version-tag-subtle">V13.9.40-PREMIUM-AI</div>
+                <div className="version-tag-subtle">V13.9.44-PREMIUM-STABLE</div>
             </footer>
         </main>
     </div>
