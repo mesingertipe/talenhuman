@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, ChevronDown, X, Check } from 'lucide-react';
 
 const SearchableSelect = ({ 
@@ -17,6 +18,7 @@ const SearchableSelect = ({
   const [searchTerm, setSearchTerm] = useState("");
   const containerRef = useRef(null);
   const inputRef = useRef(null);
+  const [menuStyle, setMenuStyle] = useState({});
 
   const getLabel = () => {
     if (multiple) {
@@ -27,15 +29,48 @@ const SearchableSelect = ({
     return selectedOption ? (selectedOption.name || selectedOption.label) : placeholder;
   };
 
+  // V26 SLEDGEHAMMER: Calculate physical screen position for the portal
+  useLayoutEffect(() => {
+    if (isOpen && containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const winHeight = window.innerHeight;
+        const menuHeight = Math.min(300, options.length * 50 + 100); // Rough estimate
+        
+        // Show above if not enough space below
+        const showAbove = (rect.bottom + menuHeight > winHeight) && (rect.top > menuHeight);
+        
+        setMenuStyle({
+            position: 'fixed',
+            top: showAbove ? 'auto' : `${rect.bottom + 8}px`,
+            bottom: showAbove ? `${winHeight - rect.top + 8}px` : 'auto',
+            left: `${rect.left}px`,
+            width: `${rect.width}px`,
+            zIndex: 20000000,
+            pointerEvents: 'auto'
+        });
+    }
+  }, [isOpen, options.length]);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (containerRef.current && !containerRef.current.contains(event.target)) {
+        // Check if click was on the portaled menu
+        const menu = document.getElementById('searchable-select-portal-menu');
+        if (menu && menu.contains(event.target)) return;
         setIsOpen(false);
       }
     };
+    
+    // Close on scroll to prevent detached menus
+    const handleScroll = () => { if(isOpen) setIsOpen(false); };
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    window.addEventListener("scroll", handleScroll, true);
+    return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+        window.removeEventListener("scroll", handleScroll, true);
+    }
+  }, [isOpen]);
 
   const filteredOptions = options.filter(opt => {
     if (!opt) return false;
@@ -62,50 +97,16 @@ const SearchableSelect = ({
     }
   };
 
-  return (
-    <div 
-      className="relative w-full" 
-      ref={containerRef}
-      style={{ zIndex: isOpen ? 1000000 : 1 }}
-    >
-      {label && (
-        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
-      )}
+  const renderDropdownMenu = () => {
+    if (!isOpen) return null;
 
-      {/* Visually hidden but focusable input for HTML5 validation popup */}
-      <input 
-        type="text"
-        value={Array.isArray(value) ? value.join(',') : (value || '')}
-        onChange={() => {}}
-        className="sr-only"
-        style={{ opacity: 0, position: 'absolute', zIndex: -1, width: '1px', height: '1px', padding: 0, margin: 0, border: 'none' }}
-      />
-      
-      <div 
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`relative flex items-center w-full p-3 rounded-xl transition-all cursor-pointer ${
-          variant === "minimal" 
-            ? (isOpen ? 'bg-white dark:bg-slate-900 border border-indigo-500 dark:border-indigo-400 ring-4 ring-indigo-50 dark:ring-indigo-900/20 shadow-sm' : 'bg-transparent border-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/30')
-            : (disabled ? 'bg-slate-100 dark:bg-slate-800/50 cursor-not-allowed opacity-80 border-slate-200 dark:border-slate-700' :
-               isOpen ? 'bg-white dark:bg-slate-900 border-indigo-500 dark:border-indigo-400 ring-4 ring-indigo-50 dark:ring-indigo-900/20 shadow-sm' : 
-               'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 border')
-        }`}
-      >
-        {Icon && <Icon size={18} className={`mr-3 ${isOpen ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}`} />}
-        
-        <div className="flex-1 truncate">
-           <span className={`text-sm font-black uppercase tracking-tight ${(!value || (Array.isArray(value) && value.length === 0)) ? 'text-slate-400 dark:text-slate-300 tracking-widest' : 'text-slate-800 dark:text-white'}`}>
-             {getLabel()}
-           </span>
-        </div>
-        
-        <ChevronDown size={18} className={`ml-2 text-slate-400 dark:text-slate-500 transition-transform duration-300 ${isOpen ? 'rotate-180 text-indigo-500 dark:text-indigo-400' : ''}`} />
-      </div>
-
-      {isOpen && (
-        <div className="absolute z-[1000000] w-full mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+    return createPortal(
+        <div 
+          id="searchable-select-portal-menu"
+          className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-[0_20px_100px_rgba(0,0,0,0.4)] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+          style={menuStyle}
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="p-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
             <div className="relative">
               <Search size={14} className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" />
@@ -117,7 +118,6 @@ const SearchableSelect = ({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full p-2.5 pl-10 text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all text-slate-800 dark:text-white"
-                onClick={(e) => e.stopPropagation()}
               />
             </div>
           </div>
@@ -175,8 +175,53 @@ const SearchableSelect = ({
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
+    );
+  };
+
+  return (
+    <div 
+      className="relative w-full" 
+      ref={containerRef}
+    >
+      {label && (
+        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
       )}
+
+      {/* Visually hidden for accessibility */}
+      <input 
+        type="text"
+        value={Array.isArray(value) ? value.join(',') : (value || '')}
+        readOnly
+        className="sr-only"
+        tabIndex="-1"
+      />
+      
+      <div 
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className={`relative flex items-center w-full p-3 rounded-xl transition-all cursor-pointer ${
+          variant === "minimal" 
+            ? (isOpen ? 'bg-white dark:bg-slate-900 border border-indigo-500 dark:border-indigo-400 ring-4 ring-indigo-50 dark:ring-indigo-900/20 shadow-sm' : 'bg-transparent border-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/30')
+            : (disabled ? 'bg-slate-100 dark:bg-slate-800/50 cursor-not-allowed opacity-80 border-slate-200 dark:border-slate-700' :
+               isOpen ? 'bg-white dark:bg-slate-900 border-indigo-500 dark:border-indigo-400 ring-4 ring-indigo-50 dark:ring-indigo-900/20 shadow-sm' : 
+               'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 border')
+        }`}
+      >
+        {Icon && <Icon size={18} className={`mr-3 ${isOpen ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}`} />}
+        
+        <div className="flex-1 truncate">
+           <span className={`text-sm font-black uppercase tracking-tight ${(!value || (Array.isArray(value) && value.length === 0)) ? 'text-slate-400 dark:text-slate-300 tracking-widest' : 'text-slate-800 dark:text-white'}`}>
+             {getLabel()}
+           </span>
+        </div>
+        
+        <ChevronDown size={18} className={`ml-2 text-slate-400 dark:text-slate-500 transition-transform duration-300 ${isOpen ? 'rotate-180 text-indigo-500 dark:text-indigo-400' : ''}`} />
+      </div>
+
+      {renderDropdownMenu()}
     </div>
   );
 };

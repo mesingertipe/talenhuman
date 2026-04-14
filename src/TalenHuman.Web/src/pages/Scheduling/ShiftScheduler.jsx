@@ -600,8 +600,12 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             });
 
             const createdCount = newShifts.length - shifts.length;
-            setShifts(newShifts);
-            showToast(`¡Sorpresa! IA sugirió ${createdCount} turnos para cubrir tu demanda operativa.`, "success");
+            if (createdCount > 0) {
+                setShifts(newShifts);
+                showToast(`¡Sorpresa! IA sugirió ${createdCount} turnos para cubrir tu demanda operativa.`, "success");
+            } else {
+                showToast("IA: Tu malla ya está optimizada según la demanda histórica.", "info");
+            }
             setShowPredictiveModal(false);
             setShowPredictiveOverlay(true);
         } catch (err) {
@@ -1532,8 +1536,34 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 
                 <div className="card shadow-[0_40px_100px_rgba(0,0,0,0.12)] bg-white dark:bg-slate-900 border-2 dark:border-slate-800 relative" style={{ borderRadius: '48px', overflow: 'hidden', minHeight: '600px' }}>
                     {(loading || isProcessingStatus || isSaving || isExporting) && createPortal(
-                        <div className="fixed inset-0 z-[20000000] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
-                            <div className="bg-white dark:bg-slate-900 p-8 md:p-12 rounded-[3.5rem] shadow-2xl border border-white/10 flex flex-col items-center max-w-md w-full text-center animate-in zoom-in-95 duration-300">
+                        <div style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            width: '100vw',
+                            height: '100vh',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'rgba(15, 23, 42, 0.65)',
+                            backdropFilter: 'blur(12px)',
+                            WebkitBackdropFilter: 'blur(12px)',
+                            zIndex: 99999999,
+                            pointerEvents: 'all'
+                        }}>
+                            <div className="animate-in zoom-in-95 duration-300" style={{
+                                background: isDarkMode ? '#0f172a' : '#ffffff',
+                                padding: '3.5rem 3rem',
+                                borderRadius: '3.5rem',
+                                boxShadow: '0 40px 100px -20px rgba(0,0,0,0.6)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                width: '100%',
+                                maxWidth: '440px',
+                                textAlign: 'center',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center'
+                            }}>
                                 <div className="relative mb-8">
                                     <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 animate-pulse"></div>
                                     <div style={{ position: 'relative', width: '90px', height: '90px' }}>
@@ -1551,19 +1581,16 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             />
                                         </svg>
                                         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
-                                            {syncPhase >= 95 || (!loading && !isSaving) ? <CheckCircle size={32} strokeWidth={3} /> : <Cpu size={32} className="animate-pulse" />}
+                                            {syncPhase >= 95 || (!loading && !isSaving && !isExporting) ? <CheckCircle size={32} strokeWidth={3} /> : <Cpu size={32} className="animate-pulse" />}
                                         </div>
                                     </div>
                                 </div>
-                                <h3 className="text-xl font-[950] text-slate-800 dark:text-white mb-2 tracking-tight">
-                                    {isSaving ? "Publicando Cambios" : (isExporting ? "Generando Reporte" : (syncPhase < 30 ? "Iniciando Consola" : "Sincronizando Nómina"))}
+                                <h3 style={{ fontSize: '1.5rem', fontWeight: '950', color: isDarkMode ? '#f8fafc' : '#0f172a', margin: '0 0 0.5rem 0', letterSpacing: '-0.02em' }}>
+                                    {isSaving ? "Publicando Cambios" : (isExporting ? "Generando Reporte" : (syncPhase < 1 ? "Iniciando Consola" : "Sincronizando Datos"))}
                                 </h3>
-                                <p className="text-sm font-bold text-slate-400 leading-relaxed px-4">
-                                    {isSaving ? "Tu programación está siendo publicada..." : (isExporting ? "Preparando datos seguros HD..." : "Sincronización en curso...")}
+                                <p style={{ fontSize: '0.85rem', fontWeight: '700', color: '#64748b', margin: 0, lineHeight: '1.5' }}>
+                                    {isSaving ? "Tu programación se está sincronizando..." : (isExporting ? "Preparando datos HD..." : "Conectando con el motor TalenHuman...")}
                                 </p>
-                                <div className="w-full mt-6 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                                    <div className="bg-indigo-600 h-full transition-all duration-700" style={{ width: `${loading || isSaving ? 45 : 100}%` }}></div>
-                                </div>
                             </div>
                         </div>,
                         document.body
@@ -1571,7 +1598,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     
                     <div className="overflow-x-auto">
                             <footer className="mt-8 mb-4 text-center">
-                                <div className="version-tag-subtle">SISTEMA V13.9.43-PREMIUM-AI</div>
+                                <div className="version-tag-subtle">SISTEMA V13.9.44-PREMIUM-STABLE</div>
                             </footer>
                             <table className="w-full border-collapse">
                                 <thead>
@@ -1726,7 +1753,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                             <div className="flex flex-col gap-0.5">
                                                                 <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-tighter">{emp.documento}</span>
                                                                 <div className="flex items-center gap-2">
-                                                                     <span className="text-[8px] font-bold text-indigo-500/60 dark:text-indigo-400/50 uppercase tracking-tighter">
+                                                                     <span style={{ fontSize: '7.5px', fontWeight: '800', color: isDarkMode ? '#818cf8' : '#6366f1', textTransform: 'uppercase', opacity: 0.8 }}>
                                                                          {profiles.find(p => p.id === emp.profileId)?.name || 'Sin Cargo'}
                                                                      </span>
                                                                      <span className="text-[10px] text-slate-200 dark:text-slate-800 font-black">|</span>
