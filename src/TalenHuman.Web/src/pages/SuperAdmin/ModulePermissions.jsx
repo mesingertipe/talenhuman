@@ -35,7 +35,8 @@ const ModulePermissions = ({ user }) => {
       { code: 'SALES_DATA', name: 'Gestión de Ventas', icon: TrendingUp, desc: 'Administración de data histórica de ventas' },
       { code: 'SALES_CHANNELS', name: 'Canales de Venta', icon: Filter, desc: 'Configuración de canales (Comedor, Uber, etc.)' },
       { code: 'SALES_ANALYTICS', name: 'Analítica BI', icon: Presentation, desc: 'Dashboard de análisis predictivo y evolutivo' },
-      { code: 'SALES_TIME_BANDS', name: 'Franjas Horarias', icon: Clock, desc: 'Configuración de periodos operativos (Mañana, Almuerzo, etc.)' }
+      { code: 'SALES_TIME_BANDS', name: 'Franjas Horarias', icon: Clock, desc: 'Configuración de periodos operativos (Mañana, Almuerzo, etc.)' },
+      { code: 'PREDICTIVE_RULES', name: 'Reglas Predictivas', icon: Target, desc: 'Configuración de motor de carga operacional' }
     ],
     'OPERATIONS': [
       { code: 'SHIFTS', name: 'Programación Turnos', icon: Activity, desc: 'Malla horaria y asignaciones' },
@@ -52,8 +53,7 @@ const ModulePermissions = ({ user }) => {
       { code: 'MONITORING', name: 'Monitoreo Tiempo Real', icon: Monitor, desc: 'Panel de control de asistencia viva' },
       { code: 'BROADCAST', name: 'Centro de Comunicados', icon: Megaphone, desc: 'Difusión y PR corporativo' },
       { code: 'TEMPLATES', name: 'Plantillas Novedades', icon: Palette, desc: 'Diseño de tipos de novedades' },
-      { code: 'NOVELTY_CONFIG', name: 'Configuración Novedades', icon: Settings, desc: 'Reglas de negocio para incidencias' },
-      { code: 'PREDICTIVE_RULES', name: 'Reglas Predictivas', icon: Target, desc: 'Configuración de motor de carga operacional' }
+      { code: 'NOVELTY_CONFIG', name: 'Configuración Novedades', icon: Settings, desc: 'Reglas de negocio para incidencias' }
     ],
     'SYSTEM': [
       { code: 'USERS', name: 'Usuarios Sistema', icon: Users, desc: 'Cuentas de acceso a la plataforma' },
@@ -164,6 +164,7 @@ const ModulePermissions = ({ user }) => {
     const subCount = subModulesByModule[mod.code]?.length || 0;
     const Icon = (mod.code === 'CORE') ? Boxes : 
                  (mod.code === 'OPERATIONS' || mod.code === 'ATTENDANCE') ? Activity : 
+                 (mod.code === 'SALES') ? TrendingUp :
                  (mod.code === 'SYSTEM' || mod.code === 'ADMIN') ? Settings : Shield;
     
     return (

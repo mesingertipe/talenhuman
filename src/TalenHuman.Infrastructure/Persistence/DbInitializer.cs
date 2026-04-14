@@ -24,8 +24,9 @@ public static class DbInitializer
         {
             new Module { Code = "CORE", Name = "Configuración Core", Icon = "Boxes", DisplayOrder = 1 },
             new Module { Code = "OPERATIONS", Name = "Operaciones Asistencia", Icon = "Activity", DisplayOrder = 2 },
-            new Module { Code = "ADVANCED", Name = "Gestión del Modelo", Icon = "Layout", DisplayOrder = 3 },
-            new Module { Code = "SYSTEM", Name = "Administración Sistema", Icon = "Settings", DisplayOrder = 4 }
+            new Module { Code = "SALES", Name = "Gestión Comercial", Icon = "TrendingUp", DisplayOrder = 3 },
+            new Module { Code = "ADVANCED", Name = "Gestión del Modelo", Icon = "Layout", DisplayOrder = 4 },
+            new Module { Code = "SYSTEM", Name = "Administración Sistema", Icon = "Settings", DisplayOrder = 5 }
         };
 
         foreach (var std in standardModules)
@@ -124,6 +125,7 @@ public static class DbInitializer
 
         var coreMod = allModules.FirstOrDefault(m => m.Code == "CORE");
         var opsMod = allModules.FirstOrDefault(m => m.Code == "OPERATIONS");
+        var salesMod = allModules.FirstOrDefault(m => m.Code == "SALES");
         var advMod = allModules.FirstOrDefault(m => m.Code == "ADVANCED");
         var sysMod = allModules.FirstOrDefault(m => m.Code == "SYSTEM");
 
@@ -142,11 +144,12 @@ public static class DbInitializer
             new { Module = "OPERATIONS", Sub = "RECORDS" },
             new { Module = "OPERATIONS", Sub = "NOVELTIES" },
             new { Module = "OPERATIONS", Sub = "SHIFT_APPROVAL" },
+            new { Module = "SALES", Sub = "SALES_DATA" },
+            new { Module = "SALES", Sub = "SALES_CHANNELS" },
+            new { Module = "SALES", Sub = "SALES_ANALYTICS" },
+            new { Module = "SALES", Sub = "SALES_TIME_BANDS" },
+            new { Module = "SALES", Sub = "PREDICTIVE_RULES" },
             new { Module = "ADVANCED", Sub = "MONITORING" },
-            new { Module = "ADVANCED", Sub = "TEMPLATES" },
-            new { Module = "ADVANCED", Sub = "NOVELTY_CONFIG" },
-            new { Module = "ADVANCED", Sub = "PREDICTIVE_RULES" },
-            new { Module = "ADVANCED", Sub = "SALES_BI" },
             new { Module = "SYSTEM", Sub = "USERS" },
             new { Module = "SYSTEM", Sub = "PERMISSIONS" },
             new { Module = "SYSTEM", Sub = "AUDIT" },
@@ -166,6 +169,7 @@ public static class DbInitializer
                     var mid = item.Module switch {
                         "CORE" => coreMod.Id,
                         "OPERATIONS" => opsMod.Id,
+                        "SALES" => salesMod?.Id ?? Guid.Empty,
                         "ADVANCED" => advMod?.Id ?? Guid.Empty,
                         "SYSTEM" => sysMod.Id,
                         _ => Guid.Empty
