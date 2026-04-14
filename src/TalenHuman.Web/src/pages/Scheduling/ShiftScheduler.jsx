@@ -445,8 +445,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             setShifts(normalizedShifts);
             setAttendances(normalizedAttendances);
             setNews(newsRes.data);
+
+            // Extract the common observation/comment for this week
+            const firstComment = normalizedShifts.find(s => s.observation)?.observation || '';
+            setLastSaveComment(firstComment);
         } catch (err) {
             console.error("Fetch Data Error", err);
+            showToast("Error al cargar datos", "error");
         } finally {
             setLoading(false);
         }
@@ -607,15 +612,6 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         }
     };
 
-            // Extract the common observation/comment for this week
-            const firstComment = normalizedShifts.find(s => s.observation)?.observation || '';
-            setLastSaveComment(firstComment);
-        } catch (err) {
-            showToast("Error al cargar datos", "error");
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const days = useMemo(() => {
         const d = [];
