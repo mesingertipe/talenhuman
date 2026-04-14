@@ -15,18 +15,23 @@ public class Employee : BaseEntity, IMultitenant
     public decimal DailySalary { get; set; }
     
     public Guid? JornadaId { get; set; }
+    [JsonIgnore]
     public Jornada? Jornada { get; set; }
     
     public Guid? UserId { get; set; }
+    [JsonIgnore]
     public User? User { get; set; }
     
     public Guid StoreId { get; set; }
+    [JsonIgnore]
     public Store Store { get; set; } = null!;
     
     public Guid ProfileId { get; set; }
+    [JsonIgnore]
     public Profile Profile { get; set; } = null!;
     
     public Guid CompanyId { get; set; }
+    [JsonIgnore]
     public Company Company { get; set; } = null!;
 
     public bool IsActive { get; set; } = true;
@@ -55,6 +60,7 @@ public class Shift : BaseEntity, IMultitenant
     public Store Store { get; set; } = null!;
     
     public Guid CompanyId { get; set; }
+    [JsonIgnore]
     public Company Company { get; set; } = null!;
 
     public ShiftStatus Status { get; set; } = ShiftStatus.Scheduled;
@@ -66,6 +72,7 @@ public class Shift : BaseEntity, IMultitenant
     // V13.0 Approval Workflow
     public string? ApprovalComment { get; set; }
     public Guid? ApprovedByUserId { get; set; }
+    [JsonIgnore]
     public User? ApprovedByUser { get; set; }
     public DateTime? ApprovedAt { get; set; }
 }
@@ -99,12 +106,15 @@ public class Attendance : BaseEntity, IMultitenant
     public string? Location { get; set; } // Optional GPS or Store Name
     
     public Guid EmployeeId { get; set; }
+    [JsonIgnore]
     public Employee Employee { get; set; } = null!;
     
     public Guid StoreId { get; set; }
+    [JsonIgnore]
     public Store Store { get; set; } = null!;
     
     public Guid CompanyId { get; set; }
+    [JsonIgnore]
     public Company Company { get; set; } = null!;
 
     public Guid? ShiftId { get; set; }
@@ -127,9 +137,11 @@ public class Absence : BaseEntity, IMultitenant
     public DateTime? ApprovedAt { get; set; }
     
     public Guid EmployeeId { get; set; }
+    [JsonIgnore]
     public Employee Employee { get; set; } = null!;
     
     public Guid CompanyId { get; set; }
+    [JsonIgnore]
     public Company Company { get; set; } = null!;
 }
 
@@ -148,6 +160,7 @@ public class Jornada : BaseEntity, IMultitenant
     public double HorasSemanales { get; set; }
     
     public Guid CompanyId { get; set; }
+    [JsonIgnore]
     public Company Company { get; set; } = null!;
     
     [JsonIgnore]
@@ -174,6 +187,7 @@ public class NovedadTipo : BaseEntity, IMultitenant
     public bool EsPlantilla { get; set; } = false; // Flag for Global Templates
     
     public Guid CompanyId { get; set; }
+    [JsonIgnore]
     public Company Company { get; set; } = null!;
     
     [JsonIgnore]
@@ -183,15 +197,19 @@ public class NovedadTipo : BaseEntity, IMultitenant
 public class Novedad : BaseEntity, IMultitenant
 {
     public Guid? EmpleadoId { get; set; }
+    [JsonIgnore]
     public Employee? Empleado { get; set; }
     
     public Guid? StoreId { get; set; }
+    [JsonIgnore]
     public Store? Store { get; set; }
     
     public Guid? BrandId { get; set; }
+    [JsonIgnore]
     public Brand? Brand { get; set; }
     
     public Guid NovedadTipoId { get; set; }
+    [JsonIgnore]
     public NovedadTipo NovedadTipo { get; set; } = null!;
     
     public DateTime FechaInicio { get; set; }
@@ -205,6 +223,7 @@ public class Novedad : BaseEntity, IMultitenant
     public int IdSolicitud { get; set; } // Human-readable auto-increment ID
     
     public Guid CompanyId { get; set; }
+    [JsonIgnore]
     public Company Company { get; set; } = null!;
     
     public ICollection<NovedadLog> Logs { get; set; } = new List<NovedadLog>();
@@ -217,9 +236,11 @@ public class NovedadAdjunto : BaseEntity, IMultitenant
     public string FileName { get; set; } = string.Empty;
     
     public Guid NovedadId { get; set; }
+    [JsonIgnore]
     public Novedad Novedad { get; set; } = null!;
     
     public Guid CompanyId { get; set; }
+    [JsonIgnore]
     public Company Company { get; set; } = null!;
 }
 
@@ -253,6 +274,7 @@ public class SalesChannel : BaseEntity, IMultitenant
     public bool IsActive { get; set; } = true;
 
     public Guid CompanyId { get; set; }
+    [JsonIgnore]
     public Company? Company { get; set; }
 }
 
@@ -265,6 +287,7 @@ public class SalesTimeBand : BaseEntity, IMultitenant
     public bool IsActive { get; set; } = true;
 
     public Guid CompanyId { get; set; }
+    [JsonIgnore]
     public Company? Company { get; set; }
 }
 
@@ -277,6 +300,7 @@ public class SalesData : BaseEntity, IMultitenant
     
     // Vinculación a Canal Maestro
     public Guid? SalesChannelId { get; set; }
+    [JsonIgnore]
     public SalesChannel? SalesChannel { get; set; }
     
     public string Canal { get; set; } = "General"; // Keeping string for faster batch processing and legacy support
@@ -285,9 +309,11 @@ public class SalesData : BaseEntity, IMultitenant
     public DateTime Timestamp { get; set; } = ColombiaTime.Now; // Original audit timestamp
     
     public Guid StoreId { get; set; }
+    [JsonIgnore]
     public Store? Store { get; set; }
     
     public Guid CompanyId { get; set; }
+    [JsonIgnore]
     public Company? Company { get; set; }
 }
 
@@ -304,9 +330,11 @@ public class Comunicado : BaseEntity, IMultitenant
     public bool IsActive { get; set; } = true;
 
     public Guid CreatedByUserId { get; set; }
+    [JsonIgnore]
     public User CreatedByUser { get; set; } = null!;
     
     public Guid CompanyId { get; set; }
+    [JsonIgnore]
     public Company Company { get; set; } = null!;
     
     // Future metrics
@@ -324,6 +352,7 @@ public enum WeeklyApprovalStatus
 public class WeeklyApproval : BaseEntity, IMultitenant
 {
     public Guid StoreId { get; set; }
+    [JsonIgnore]
     public Store Store { get; set; } = null!;
     
     public DateTime WeekStartDate { get; set; }
@@ -333,6 +362,7 @@ public class WeeklyApproval : BaseEntity, IMultitenant
     public DateTime? LatestActionAt { get; set; }
     
     public Guid CompanyId { get; set; }
+    [JsonIgnore]
     public Company Company { get; set; } = null!;
 
     public ICollection<WeeklyApprovalLog> Logs { get; set; } = new List<WeeklyApprovalLog>();
@@ -341,9 +371,11 @@ public class WeeklyApproval : BaseEntity, IMultitenant
 public class WeeklyApprovalLog : BaseEntity, IMultitenant
 {
     public Guid WeeklyApprovalId { get; set; }
+    [JsonIgnore]
     public WeeklyApproval WeeklyApproval { get; set; } = null!;
     
     public Guid UserId { get; set; }
+    [JsonIgnore]
     public User User { get; set; } = null!;
     
     public string Action { get; set; } = string.Empty; // Published, Approved, Rejected
@@ -351,6 +383,7 @@ public class WeeklyApprovalLog : BaseEntity, IMultitenant
     public DateTime ActionAt { get; set; } = ColombiaTime.Now;
 
     public Guid CompanyId { get; set; }
+    [JsonIgnore]
     public Company Company { get; set; } = null!;
 }
 
@@ -368,6 +401,7 @@ public class PredictiveShiftRule : BaseEntity, IMultitenant
     public string? Description { get; set; }
     
     public Guid StoreTypeId { get; set; }
+    [JsonIgnore]
     public StoreType? StoreType { get; set; }
     
     public PredictiveMetricType MetricType { get; set; }
@@ -382,6 +416,7 @@ public class PredictiveShiftRule : BaseEntity, IMultitenant
     public bool IsActive { get; set; } = true;
 
     public Guid CompanyId { get; set; }
+    [JsonIgnore]
     public Company Company { get; set; } = null!;
 
     // Relationships
@@ -400,5 +435,6 @@ public class PredictiveShiftRuleProfile : IMultitenant
     public Profile Profile { get; set; } = null!;
 
     public Guid CompanyId { get; set; }
+    [JsonIgnore]
     public Company Company { get; set; } = null!;
 }

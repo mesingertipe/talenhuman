@@ -28,7 +28,9 @@ public class Company : BaseEntity
     public string? PrivacyPolicyText { get; set; }
 
     // Relationships
+    [System.Text.Json.Serialization.JsonIgnore]
     public ICollection<Brand> Brands { get; set; } = new List<Brand>();
+    [System.Text.Json.Serialization.JsonIgnore]
     public ICollection<CompanyModule> CompanyModules { get; set; } = new List<CompanyModule>();
 }
 
@@ -36,6 +38,7 @@ public class Brand : BaseEntity, IMultitenant
 {
     public string Name { get; set; } = string.Empty;
     public Guid CompanyId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public Company? Company { get; set; }
     public bool IsActive { get; set; } = true;
 
@@ -60,15 +63,19 @@ public class Store : BaseEntity, IMultitenant
     public string DefaultEndTime { get; set; } = "17:00"; // Store standard end
     
     public Guid? CityId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public City? City { get; set; }
     
     public Guid BrandId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public Brand? Brand { get; set; }
     
     public Guid CompanyId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public Company? Company { get; set; }
 
     public Guid? DistrictId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public District? District { get; set; }
 
     public Guid? StoreTypeId { get; set; }
@@ -87,9 +94,11 @@ public class District : BaseEntity, IMultitenant
     public string Name { get; set; } = string.Empty;
     
     public Guid CompanyId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public Company? Company { get; set; }
     
     public Guid? SupervisorId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public User? Supervisor { get; set; }
     
     // Relationships
@@ -100,12 +109,15 @@ public class District : BaseEntity, IMultitenant
 public class SupervisorStore : IMultitenant
 {
     public Guid UserId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public User? User { get; set; }
     
     public Guid StoreId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public Store? Store { get; set; }
     
     public Guid CompanyId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public Company? Company { get; set; }
 }
 
@@ -116,6 +128,7 @@ public class Profile : BaseEntity, IMultitenant
     public bool IsActive { get; set; } = true;
     
     public Guid CompanyId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public Company? Company { get; set; }
 }
 
@@ -125,6 +138,7 @@ public class StoreType : BaseEntity, IMultitenant
     public bool IsActive { get; set; } = true;
 
     public Guid CompanyId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public Company? Company { get; set; }
 
     // Relationships
@@ -138,6 +152,7 @@ public class City : BaseEntity, IMultitenant
     public bool IsActive { get; set; } = true;
     
     public Guid CompanyId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public Company? Company { get; set; }
     
     // Relationships
@@ -168,9 +183,11 @@ public class Module : BaseEntity
 public class CompanyModule : BaseEntity
 {
     public Guid CompanyId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public Company? Company { get; set; }
 
     public Guid ModuleId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public Module? Module { get; set; }
 
     public bool IsActive { get; set; } = true;
@@ -181,6 +198,7 @@ public class ModulePermission : BaseEntity, IMultitenant
     public Guid RoleId { get; set; } // Reference to AspNetRoles
     
     public Guid ModuleId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public Module? Module { get; set; }
 
     public string? SubModuleCode { get; set; } // e.g., "CORE_STORES", "CORE_EMPLOYEES"
@@ -189,5 +207,6 @@ public class ModulePermission : BaseEntity, IMultitenant
     public bool IsAllowed { get; set; } = true;
 
     public Guid CompanyId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public Company? Company { get; set; }
 }

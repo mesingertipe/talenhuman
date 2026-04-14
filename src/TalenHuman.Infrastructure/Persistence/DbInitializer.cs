@@ -88,7 +88,11 @@ public static class DbInitializer
             }
 
             await SeedPermissionsForCompanyAsync(context, comp.Id);
-            await SeedStoreTypesForCompanyAsync(context, comp.Id);
+            try {
+                await SeedStoreTypesForCompanyAsync(context, comp.Id);
+            } catch (Exception ex) {
+                Console.WriteLine($"Error seeding StoreTypes for company {comp.Id}: {ex.Message}");
+            }
         }
         await context.SaveChangesAsync();
 
