@@ -47,7 +47,7 @@ import SearchableSelect from '../../components/Shared/SearchableSelect';
 const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId = null, initialDate = null, forceApprover = false, approvalId = null, onReady = null, suppressOverlay = false }) => {
     const { isDarkMode } = useTheme();
     
-    // Premium Design Tokens (Elite V12)
+    // V13.0 PREMIUM ELITE TOKENS - RESTORED PIXEL PERFECT
     const activeColors = {
         bg: isDarkMode ? '#060914' : '#f8fafc',
         card: isDarkMode ? '#0f172a' : '#ffffff',
@@ -82,22 +82,19 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [saveComment, setSaveComment] = useState('');
     const [profiles, setProfiles] = useState([]);
-    const [selectedProfiles, setSelectedProfiles] = useState([]);
+    const [selectedProfiles, setSelectedProfiles] = useState([]); 
     const [selectedEmployees, setSelectedEmployees] = useState([]);
     const [showBulkModal, setShowBulkModal] = useState(false);
-    const [viewMode, setViewMode] = useState('SHIFTS'); // 'SHIFTS' or 'ATTENDANCE'
+    const [viewMode, setViewMode] = useState('SHIFTS');
     const [hoveredShiftData, setHoveredShiftData] = useState(null);
     const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
     const [bulkData, setBulkData] = useState({
         startTime: '08:00',
         endTime: '17:00',
-        days: [true, true, true, true, true, true, false] // Mon-Sun
+        days: [true, true, true, true, true, true, false]
     });
 
-    // V12.24: Protección de concurrencia
     const fetchIdRef = useRef(0);
-
-    // V13.0 PREMIUM STATES
     const [weeklyStatus, setWeeklyStatus] = useState({ status: 'Empty', message: '', comment: '' });
     const [showRejectionModal, setShowRejectionModal] = useState(false);
     const [showApprovalModal, setShowApprovalModal] = useState(false);
@@ -109,7 +106,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const [dataLoaded, setDataLoaded] = useState(false);
     const [isOptimizing, setIsOptimizing] = useState(false);
     
-    // V13.0 PREDICTIVE INTELLIGENCE STATES
+    // V13.0 PREDICTIVE INTELLIGENCE
     const [predictiveRules, setPredictiveRules] = useState([]);
     const [historicalAverages, setHistoricalAverages] = useState({}); 
 
@@ -144,10 +141,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
     useEffect(() => {
         const newMonday = getMonday(weekOffset);
-        setCurrentWeekStart(prev => {
-            if (prev && prev.getTime() === newMonday.getTime()) return prev;
-            return newMonday;
-        });
+        setCurrentWeekStart(prev => (prev && prev.getTime() === newMonday.getTime()) ? prev : newMonday);
     }, [weekOffset]);
 
     useEffect(() => {
@@ -156,9 +150,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             const isDistrital = user?.roles?.includes('Distrital');
             let filteredStores = res.data.filter(s => s.isActive);
             setStores(filteredStores);
-
             if (initialStoreId) return;
-
             if (isManager && user?.storeId) {
                 filteredStores = filteredStores.filter(s => s.id === user.storeId);
                 setStores(filteredStores);
@@ -167,33 +159,18 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 filteredStores = filteredStores.filter(s => user.storeIds.includes(s.id));
                 setStores(filteredStores);
                 if (filteredStores.length > 0) setSelectedStore(filteredStores[0].id);
-            } else {
-                if (filteredStores.length > 0) setSelectedStore(filteredStores[0].id);
+            } else if (filteredStores.length > 0) {
+                setSelectedStore(filteredStores[0].id);
             }
         });
-
         api.get('/profiles').then(res => setProfiles(res.data));
         api.get('/operationalsettings').then(res => setOperationalSettings(res.data)).catch(() => {});
-
-        const loadScript = (src) => {
-            if (document.querySelector(`script[src="${src}"]`)) return;
-            const script = document.createElement('script');
-            script.src = src;
-            script.async = true;
-            document.head.appendChild(script);
-        };
-        loadScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
-        loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
-        loadScript("https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js");
     }, []);
 
     const toLocalISO = (date) => {
         if (!date) return null;
         const d = new Date(date);
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${y}-${m}-${day}`;
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     };
 
     const fetchWeeklyStatus = async () => {
@@ -207,15 +184,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             if (approvalId && res.data.weekStartDate) {
                 const dbDate = new Date(res.data.weekStartDate);
                 if (toLocalISO(dbDate) !== toLocalISO(currentWeekStart)) setCurrentWeekStart(dbDate);
-                if (res.data.storeId && res.data.storeId !== selectedStore) setSelectedStore(res.data.storeId);
+                if (res.data.storeId) setSelectedStore(res.data.storeId);
             }
             return res.data;
-        } catch (err) {
-            console.error("Error fetching status", err);
-            return null;
-        } finally {
-            setIsProcessingStatus(false);
-        }
+        } catch (err) { return null; }
+        finally { setIsProcessingStatus(false); }
     };
 
     const fetchData = async (overrideStoreId = null, overrideWeekStart = null) => {
@@ -224,7 +197,6 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             const targetStore = overrideStoreId || selectedStore;
             const targetWeekStart = overrideWeekStart || currentWeekStart;
             if (!targetStore) return;
-
             const startDateStr = toLocalISO(targetWeekStart);
             const endDate = new Date(targetWeekStart);
             endDate.setDate(endDate.getDate() + 7);
@@ -240,33 +212,21 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
             setJornadas(jornadaRes.data);
             setEmployees(empRes.data.filter(e => e.storeId === targetStore).map(e => ({
-                ...e,
-                id: e.id || e.Id,
-                documento: e.identificationNumber || e.IdentificationNumber
+                ...e, id: e.id || e.Id, documento: e.identificationNumber || e.IdentificationNumber
             })));
-
             setShifts(shiftRes.data.map(s => ({
                 ...s, id: s.id || s.Id, employeeId: s.employeeId || s.EmployeeId,
                 startTime: s.startTime || s.StartTime, endTime: s.endTime || s.EndTime,
-                isDescanso: !!(s.isDescanso ?? s.IsDescanso), isFuera: !!(s.isFuera ?? s.IsFuera),
-                status: s.status ?? s.Status, observation: s.observation || s.Observation
+                isDescanso: !!(s.isDescanso ?? s.IsDescanso), status: s.status ?? s.Status
             })));
-
             setAttendances((attRes.data || []).map(a => ({
                 ...a, id: a.id || a.Id, employeeId: a.employeeId || a.EmployeeId,
-                shiftId: a.shiftId || a.ShiftId, clockIn: a.clockIn || a.ClockIn,
-                clockOut: a.clockOut || a.ClockOut, status: a.status ?? a.Status ?? 0
+                status: a.status ?? a.Status ?? 0
             })));
-
             setNews(newsRes.data);
-            const firstComment = shiftRes.data.find(s => s.observation)?.observation || '';
-            setLastSaveComment(firstComment);
-        } catch (err) {
-            console.error("Fetch Data Error", err);
-            showToast("Error al cargar datos", "error");
-        } finally {
-            setLoading(false);
-        }
+            setLastSaveComment(shiftRes.data.find(s => s.observation)?.observation || '');
+        } catch (err) { console.error(err); }
+        finally { setLoading(false); }
     };
 
     useEffect(() => {
@@ -274,134 +234,17 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             if (!selectedStore && !approvalId) return;
             const currentFetchId = ++fetchIdRef.current;
             setLoading(true); 
-            setSyncPhase(20); 
             setDataLoaded(false);
             if (approvalId) {
                 const statusData = await fetchWeeklyStatus();
-                if (statusData && currentFetchId === fetchIdRef.current) {
-                    await fetchData(statusData.storeId, new Date(statusData.weekStartDate));
-                }
+                if (statusData && currentFetchId === fetchIdRef.current) await fetchData(statusData.storeId, new Date(statusData.weekStartDate));
             } else {
                 await Promise.all([fetchData(), fetchWeeklyStatus()]);
             }
-            if (currentFetchId === fetchIdRef.current) {
-                setDataLoaded(true);
-                setSyncPhase(100);
-            }
+            if (currentFetchId === fetchIdRef.current) setDataLoaded(true);
         };
         runFetch();
     }, [selectedStore, currentWeekStart, approvalId]);
-
-    useEffect(() => {
-        if (loading && dataLoaded) {
-            const timer = setTimeout(() => { setLoading(false); setSyncPhase(0); if (onReady) onReady(); }, 600);
-            return () => clearTimeout(timer);
-        }
-    }, [loading, dataLoaded]);
-
-    const calculateHourlyNeeds = useCallback((dayDate) => {
-        const dayStr = toLocalISO(dayDate);
-        const dayHistory = historicalAverages[dayStr] || [];
-        const needsPerProfile = {};
-        if (dayHistory.length === 0 || predictiveRules.length === 0) return {};
-        const store = stores.find(s => s.id === selectedStore);
-        const opStart = store?.defaultStartTime ? parseInt(store.defaultStartTime.split(':')[0]) : 8;
-        const opEndHour = store?.defaultEndTime ? parseInt(store.defaultEndTime.split(':')[0]) : 22;
-
-        predictiveRules.forEach(rule => {
-            const ruleNeeds = new Array(24).fill(0);
-            const metricKey = rule.metricType === 0 ? 'ventaNetaAvg' : (rule.metricType === 1 ? 'ticketsAvg' : (rule.metricType === 2 ? 'comensalesAvg' : 'ticketPromedioAvg'));
-            dayHistory.forEach(h => {
-                const hour = parseInt(h.time.split(':')[0]);
-                if (hour < opStart || hour > opEndHour) return;
-                const forecastValue = h[metricKey] || 0;
-                const calculatedStaff = rule.ratio > 0 ? Math.ceil(forecastValue / rule.ratio) : 0;
-                ruleNeeds[hour] = Math.max(ruleNeeds[hour], calculatedStaff);
-            });
-            for (let h = 0; h < 24; h++) {
-                if (h >= opStart && h < opStart + 3) ruleNeeds[h] = Math.max(ruleNeeds[h], rule.minStaffOpening);
-                if (h > opEndHour - 3 && h <= opEndHour) ruleNeeds[h] = Math.max(ruleNeeds[h], rule.minStaffClosing);
-            }
-            rule.profiles.forEach(p => {
-                if (!needsPerProfile[p.profileId]) needsPerProfile[p.profileId] = new Array(24).fill(0);
-                for (let h = 0; h < 24; h++) needsPerProfile[p.profileId][h] = Math.max(needsPerProfile[p.profileId][h], ruleNeeds[h]);
-            });
-        });
-        return needsPerProfile;
-    }, [historicalAverages, predictiveRules, stores, selectedStore]);
-
-    useEffect(() => {
-        const fetchPredictiveContext = async () => {
-            if (!selectedStore || !dataLoaded) return;
-            const store = stores.find(s => s.id === selectedStore);
-            if (!store?.storeTypeId) return;
-            try {
-                const rulesRes = await api.get('/PredictiveRules');
-                setPredictiveRules(rulesRes.data.filter(r => r.storeTypeId === store.storeTypeId && r.isActive));
-                const daysInWeek = Array.from({length: 7}, (_, i) => { const d = new Date(currentWeekStart); d.setDate(d.getDate() + i); return toLocalISO(d); });
-                const historyMap = {};
-                await Promise.all(daysInWeek.map(async (dayStr) => {
-                    try { const res = await api.get(`/sales/analytics/evolution?startDate=${dayStr}&storeId=${selectedStore}`); historyMap[dayStr] = res.data.history; }
-                    catch { historyMap[dayStr] = []; }
-                }));
-                setHistoricalAverages(historyMap);
-            } catch (err) { console.error("Predictive Error", err); }
-        };
-        fetchPredictiveContext();
-    }, [selectedStore, currentWeekStart, dataLoaded, stores]);
-
-    const performOptimization = async () => {
-        setIsOptimizing(true);
-        await new Promise(r => setTimeout(r, 1500));
-        try {
-            const newShifts = [...shifts];
-            const store = stores.find(s => s.id === selectedStore);
-            const opStart = store?.defaultStartTime ? parseInt(store.defaultStartTime.split(':')[0]) : 8;
-            const opEndHour = store?.defaultEndTime ? parseInt(store.defaultEndTime.split(':')[0]) : 22;
-
-            for(let i=0; i<7; i++) {
-                const day = new Date(currentWeekStart); day.setDate(day.getDate() + i);
-                const dayStr = day.toDateString();
-                const needs = calculateHourlyNeeds(day);
-                Object.keys(needs).forEach(pId => {
-                    const hourlyNeed = needs[pId];
-                    const profilesEmployees = employees.filter(e => e.profileId === pId && e.isActive);
-                    for (let h = opStart; h <= opEndHour; h++) {
-                        let deficit = hourlyNeed[h] - newShifts.filter(s => {
-                            const sd = new Date(s.startTime);
-                            if (sd.toDateString() !== dayStr || s.isDescanso) return false;
-                            const ss = sd.getHours(); const se = new Date(s.endTime).getHours();
-                            const isAtHour = se < ss ? (h >= ss || h < se) : (h >= ss && h < se);
-                            return isAtHour && employees.find(e => e.id === s.employeeId)?.profileId === pId;
-                        }).length;
-
-                        while (deficit > 0) {
-                            const candidates = profilesEmployees.filter(emp => {
-                                if (newShifts.some(s => s.employeeId === emp.id && new Date(s.startTime).toDateString() === dayStr)) return false;
-                                if (news.some(n => n.empleadoId === emp.id && new Date(n.fechaInicio) <= day && new Date(n.fechaFin) >= day)) return false;
-                                return true;
-                            }).sort((a, b) => newShifts.filter(s => s.employeeId === a.id).length - newShifts.filter(s => s.employeeId === b.id).length);
-                            if (candidates.length === 0) break;
-                            const luckyOne = candidates[0];
-                            const dailyHours = jornadas.find(j => j.id === luckyOne.jornadaId)?.horasDiarias || 8;
-                            let shiftStartHour = Math.max(opStart, Math.min(h, opEndHour - dailyHours));
-                            const start = new Date(day); start.setHours(shiftStartHour, 0, 0, 0);
-                            const end = new Date(start); end.setHours(shiftStartHour + Math.floor(dailyHours), (dailyHours % 1) * 60, 0, 0);
-                            newShifts.push({
-                                id: `temp-${Math.random()}`, employeeId: luckyOne.id, storeId: selectedStore,
-                                companyId: user.companyId, startTime: start.toISOString(), endTime: end.toISOString(),
-                                status: 0, isDescanso: false, isFuera: false, isAutoGenerated: true, observation: 'Opt. por IA'
-                            });
-                            deficit--;
-                        }
-                    }
-                });
-            }
-            setShifts(newShifts); showToast(`IA sugirió ${newShifts.length - shifts.length} turnos`, "success");
-            setShowPredictiveModal(false); setShowPredictiveOverlay(true);
-        } catch (err) { console.error(err); showToast("Error en optimización", "error"); }
-        finally { setIsOptimizing(false); }
-    };
 
     const days = useMemo(() => Array.from({length: 7}, (_, i) => { const d = new Date(currentWeekStart); d.setDate(d.getDate() + i); return d; }), [currentWeekStart]);
     const filteredEmployees = useMemo(() => (!selectedProfiles?.length ? employees : employees.filter(e => selectedProfiles.includes(e.profileId))), [employees, selectedProfiles]);
@@ -410,30 +253,24 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const formatHours = (hours) => `${Math.floor(hours)}h ${Math.round((hours - Math.floor(hours)) * 60).toString().padStart(2, '0')}m`;
 
     const handleDragStart = (e, source, data) => { 
-        setHoveredShiftData(null); setIsDragging(true); setDragSource(source); setDraggedData(data);
-        const ghost = document.createElement('div');
-        ghost.className = 'elite-drag-ghost'; ghost.style.cssText = `width: 110px; height: 48px; background: #4f46e5; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; font-weight: 950; text-transform: uppercase; box-shadow: 0 30px 60px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.4); position: absolute; top: -1000px; z-index: 999999;`;
-        ghost.innerText = data.type || 'EVENTO'; document.body.appendChild(ghost); 
-        e.dataTransfer.setDragImage(ghost, 55, 24); setTimeout(() => document.body.removeChild(ghost), 100);
-        e.dataTransfer.setData("source", source); e.dataTransfer.setData("payload", JSON.stringify(data));
+        e.dataTransfer.setData("source", source);
+        e.dataTransfer.setData("payload", JSON.stringify(data));
     };
 
     const handleDropOnGrid = (e, targetEmpId, targetDate) => {
-        e.preventDefault(); e.currentTarget.classList.remove('elite-drop-active'); setIsDragging(false);
+        e.preventDefault(); e.currentTarget.classList.remove('elite-drop-active');
         const source = e.dataTransfer.getData("source"); 
         const payload = JSON.parse(e.dataTransfer.getData("payload"));
-        const today = new Date(); today.setHours(0,0,0,0);
-        if (targetDate.getTime() < today.getTime()) { showToast("Día bloqueado", "error"); return; }
-        if (news.some(n => n.empleadoId === targetEmpId && new Date(n.fechaInicio) <= targetDate && new Date(n.fechaFin) >= targetDate)) { showToast("Novedad detectada", "error"); return; }
+        if (targetDate.getTime() < new Date().setHours(0,0,0,0)) return;
         
         if (source === 'PANEL') {
             if (payload.type === 'Turno') { setPendingEvent({ employeeId: targetEmpId, date: targetDate, type: 'Turno' }); setShowTimeModal(true); }
             else {
-                const ns = { employeeId: targetEmpId, startTime: targetDate.toISOString(), endTime: targetDate.toISOString(), status: 0, isDescanso: payload.type === 'Descanso', isFuera: payload.type === 'Turno Fuera' };
+                const ns = { employeeId: targetEmpId, storeId: selectedStore, startTime: targetDate.toISOString(), endTime: targetDate.toISOString(), status: 0, isDescanso: payload.type === 'Descanso' };
                 setShifts(prev => [...prev.filter(s => !(s.employeeId === targetEmpId && new Date(s.startTime).toDateString() === targetDate.toDateString())), ns]);
             }
         } else {
-            const s = shifts.find(sh => sh.id === payload.shiftId || (sh.employeeId === payload.employeeId && new Date(sh.startTime).toDateString() === new Date(payload.date).toDateString()));
+            const s = shifts.find(sh => sh.id === payload.shiftId);
             if (!s) return;
             const start = new Date(targetDate); const os = new Date(s.startTime); start.setHours(os.getHours(), os.getMinutes());
             const end = new Date(targetDate); const oe = new Date(s.endTime); end.setHours(oe.getHours(), oe.getMinutes());
@@ -444,40 +281,36 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     };
 
     const performSave = async () => {
-        if (saveComment.length < 10) { showToast("Comentario muy corto", "error"); return; }
+        if (saveComment.length < 10) return;
         try {
             setIsSaving(true); setSyncPhase(1); setShowSaveModal(false);
-            const body = { storeId: selectedStore, startDate: toLocalISO(currentWeekStart), endDate: toLocalISO(new Date(currentWeekStart.getTime() + 7*24*60*60*1000)), shifts, comment: saveComment };
-            setTimeout(() => setSyncPhase(2), 600);
+            const body = { storeId: selectedStore, startDate: toLocalISO(currentWeekStart), shifts, comment: saveComment };
             await api.post('/shifts/bulk', body);
-            setSyncPhase(3); setTimeout(() => { setSyncPhase(4); showToast("Guardado con éxito"); fetchData(); }, 800);
-        } catch { showToast("Error al guardar", "error"); }
-        finally { setTimeout(() => { setIsSaving(false); setSyncPhase(0); }, 2500); }
+            setSyncPhase(4); showToast("Sincronizado correctamente"); fetchData();
+        } catch { showToast("Error", "error"); }
+        finally { setTimeout(() => { setIsSaving(false); setSyncPhase(0); }, 1500); }
     };
 
     const confirmApprove = async () => {
         try { 
-            setIsSaving(true); setSyncPhase(1); setShowApprovalModal(false);
-            setTimeout(() => setSyncPhase(2), 600);
+            setIsSaving(true); setShowApprovalModal(false);
             await api.post('/ShiftApproval/approve', { storeId: selectedStore, startDate: toLocalISO(currentWeekStart), comment: approvalComment || "Aprobado" });
-            setSyncPhase(3); setTimeout(() => { setSyncPhase(4); showToast("Aprobado"); fetchData(); fetchWeeklyStatus(); }, 800);
+            showToast("Semana Aprobada"); fetchData(); fetchWeeklyStatus();
         } catch { showToast("Error", "error"); }
-        finally { setTimeout(() => { setIsSaving(false); setSyncPhase(0); }, 2500); }
+        finally { setIsSaving(false); }
     };
 
     const confirmReject = async () => {
-        if (rejectionComment.length < 5) return;
         try {
-            setIsSaving(true); setSyncPhase(1); setShowRejectionModal(false);
-            setTimeout(() => setSyncPhase(2), 600);
+            setIsSaving(true); setShowRejectionModal(false);
             await api.post('/ShiftApproval/reject', { storeId: selectedStore, startDate: toLocalISO(currentWeekStart), comment: rejectionComment });
-            setSyncPhase(3); setTimeout(() => { setSyncPhase(4); showToast("Rechazado"); fetchData(); fetchWeeklyStatus(); }, 800);
+            showToast("Semana Rechazada"); fetchData(); fetchWeeklyStatus();
         } catch { showToast("Error", "error"); }
-        finally { setTimeout(() => { setIsSaving(false); setSyncPhase(0); }, 2500); }
+        finally { setIsSaving(false); }
     };
 
-    const handleExcelExport = useCallback(async () => {
-        setIsExporting(true); showToast("Generando Excel...");
+    const handleExcelExport = async () => {
+        setIsExporting(true);
         try {
             const workbook = new ExcelJS.Workbook(); const worksheet = workbook.addWorksheet('Programación');
             worksheet.columns = [{header: 'CÉDULA', key: 'id'}, {header: 'NOMBRE', key: 'name'}, ...days.map((d, i) => ({header: d.toLocaleDateString(), key: `d${i}`}))];
@@ -490,205 +323,203 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 worksheet.addRow(row);
             });
             const buff = await workbook.xlsx.writeBuffer();
-            const url = URL.createObjectURL(new Blob([buff])); const a = document.createElement('a'); a.href = url; a.download = 'Programacion.xlsx'; a.click();
+            const url = URL.createObjectURL(new Blob([buff])); const a = document.createElement('a'); a.href = url; a.download = `Programacion_${toLocalISO(currentWeekStart)}.xlsx`; a.click();
         } catch { showToast("Error Excel", "error"); }
         finally { setIsExporting(false); }
-    }, [days, employees, shifts]);
-
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragSource, setDragSource] = useState(null);
-    const [draggedData, setDraggedData] = useState(null);
-
-    const getNovedad = (empId, date) => news.find(n => n.empleadoId === empId && new Date(n.fechaInicio).getTime() <= date.getTime() && new Date(n.fechaFin).getTime() >= date.getTime() && n.status === 1);
+    };
 
     return (
-        <div id="printable-area" className="p-8 animate-in fade-in duration-500 bg-slate-50 dark:bg-[#060914] min-h-screen">
+        <div id="printable-area" style={{ padding: '60px 40px', minHeight: '100vh', background: activeColors.bg, color: activeColors.textMain, transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}>
             <style>{`
-                .btn-chiclet { border-top: 2px solid rgba(255,255,255,0.3); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-                .elite-drop-active { background: rgba(79, 70, 229, 0.1) !important; border: 2px dashed #4f46e5 !important; }
-                .grid-event { transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-                @media print { .no-print { display: none !important; } #printable-area { background: white !important; color: black !important; } }
+                .elite-pill { border-radius: 50px !important; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
+                .elite-pill:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
+                .elite-drop-active { background: ${isDarkMode ? 'rgba(79, 70, 229, 0.1)' : '#f5f7ff'} !important; border: 2px dashed #4f46e5 !important; }
+                @media print { .no-print { display: none !important; } #printable-area { background: white !important; padding: 0 !important; color: black !important; } }
             `}</style>
 
-            {/* Header / Command Center */}
-            <div className="no-print mb-8">
-                {/* Upper Status Row (Elite Design) */}
-                <div className="flex flex-wrap items-center justify-between gap-6 mb-6">
-                    <div className="flex items-center gap-4 bg-white dark:bg-slate-900 p-2 pr-6 rounded-[32px] shadow-xl border border-slate-200 dark:border-white/5">
-                        <div className="w-14 h-14 bg-indigo-600 rounded-[28px] flex items-center justify-center text-white shadow-lg shadow-indigo-200">
-                            <Store size={28} />
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest leading-none mb-1">Punto de Servicio</p>
-                            <div className="min-w-[200px]">
-                                <SearchableSelect 
-                                    options={stores} 
-                                    value={selectedStore} 
-                                    onChange={setSelectedStore} 
-                                    placeholder="Sede..." 
-                                    variant="minimal" 
-                                    disabled={loading || effectiveReadOnly} 
-                                />
-                            </div>
-                        </div>
+            {/* V13.0 ELITE COMMAND CENTER - FLOATING UI (RESTORED PIXEL PERFECT) */}
+            <div className="no-print" style={{ 
+                marginBottom: '50px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between', 
+                gap: '25px', 
+                padding: '24px 32px', 
+                background: isDarkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(255, 255, 255, 0.8)', 
+                borderRadius: '48px', 
+                backdropFilter: 'blur(30px)', 
+                border: isDarkMode ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.03)',
+                boxShadow: '0 40px 100px -20px rgba(0,0,0,0.15)',
+                position: 'sticky',
+                top: '30px',
+                zIndex: 100
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
+                    <div style={{ width: '220px' }}>
+                        <p style={{ fontSize: '9px', fontWeight: '950', color: '#4f46e5', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.15em', marginLeft: '12px' }}>Punto de Servicio</p>
+                        <SearchableSelect options={stores} value={selectedStore} onChange={setSelectedStore} placeholder="Sede..." variant="minimal" disabled={effectiveReadOnly} />
                     </div>
 
-                    <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-2 px-4 rounded-[32px] shadow-xl border border-slate-200 dark:border-white/5">
-                        <button onClick={() => setWeekOffset(v => v - 1)} className="w-10 h-10 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all flex items-center justify-center"><ChevronLeft size={20}/></button>
-                        <div className="text-center min-w-[160px]">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Semana Programada</p>
-                            <p className="text-xs font-black dark:text-white uppercase">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc', padding: '8px 24px', borderRadius: '40px', border: '1px solid rgba(0,0,0,0.05)' }}>
+                        <button onClick={() => setWeekOffset(v => v - 1)} className="elite-pill" style={{ color: '#4f46e5', background: 'transparent', border: 'none', padding: '10px' }}><ChevronLeft size={22}/></button>
+                        <div style={{ textAlign: 'center', minWidth: '160px' }}>
+                            <p style={{ fontSize: '9px', fontWeight: '950', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px' }}>Semana Programada</p>
+                            <p style={{ fontSize: '11px', fontVariantNumeric: 'tabular-nums', fontWeight: '900', color: isDarkMode ? 'white' : '#1e293b' }}>
                                 {formatDate(currentWeekStart)} - {formatDate(new Date(currentWeekStart.getTime() + 6*24*60*60*1000))}
                             </p>
                         </div>
-                        <button onClick={() => setWeekOffset(v => v + 1)} className="w-10 h-10 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all flex items-center justify-center"><ChevronRight size={20}/></button>
+                        <button onClick={() => setWeekOffset(v => v + 1)} className="elite-pill" style={{ color: '#4f46e5', background: 'transparent', border: 'none', padding: '10px' }}><ChevronRight size={22}/></button>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        {/* Status Badge */}
-                        <div className={`p-4 px-6 rounded-[28px] border-2 flex flex-col items-center justify-center min-w-[140px] ${
-                            weeklyStatus.status === 'Approved' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
-                            weeklyStatus.status === 'Rejected' ? 'bg-rose-50 border-rose-100 text-rose-600' :
-                            weeklyStatus.status === 'Pending' ? 'bg-amber-50 border-amber-100 text-amber-600' :
-                            'bg-slate-50 border-slate-100 text-slate-400'
-                        }`}>
-                            <span className="text-[9px] font-black uppercase tracking-widest mb-0.5">Estado Global</span>
-                            <span className="text-xs font-black uppercase">{weeklyStatus.status === 'Empty' ? 'Borrador' : weeklyStatus.status === 'Pending' ? 'En Revisión' : weeklyStatus.status === 'Approved' ? 'Aprobado' : 'Rechazado'}</span>
-                        </div>
-
-                        {!effectiveReadOnly && (
-                            <button 
-                                onClick={() => { setSaveComment(''); setShowSaveModal(true); }}
-                                className="h-[64px] px-8 bg-indigo-600 text-white rounded-[28px] font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-200 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3"
-                            >
-                                <Save size={20} /> GUARDAR CAMBIOS
-                            </button>
-                        )}
-
-                        {(user?.roles?.includes('Administrador') || user?.roles?.includes('Talento Humano') || forceApprover) && weeklyStatus.status === 'Pending' && (
-                            <div className="flex gap-2">
-                                <button onClick={() => setShowApprovalModal(true)} className="h-[64px] px-6 bg-emerald-500 text-white rounded-[28px] font-black text-xs uppercase shadow-lg hover:bg-emerald-600 transition-all"><CheckCircle size={20}/></button>
-                                <button onClick={() => setShowRejectionModal(true)} className="h-[64px] px-6 bg-rose-500 text-white rounded-[28px] font-black text-xs uppercase shadow-lg hover:bg-rose-600 transition-all"><XCircle size={20}/></button>
-                            </div>
-                        )}
+                    <div style={{ width: '220px' }}>
+                        <p style={{ fontSize: '9px', fontWeight: '950', color: '#4f46e5', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.15em', marginLeft: '12px' }}>Filtro Cargos</p>
+                        <SearchableSelect options={profiles} value={selectedProfiles} onChange={setSelectedProfiles} multiple={true} placeholder="Todos los Cargos" variant="minimal" icon={UsersIcon} />
                     </div>
                 </div>
 
-                {/* Lower Action Row (Elite Design) */}
-                <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 bg-slate-100/50 dark:bg-slate-800/50 p-1.5 rounded-[24px] border border-slate-200 dark:border-white/5">
-                            <button onClick={() => setViewMode('SHIFTS')} className={`px-4 py-2 rounded-[20px] text-[10px] font-black uppercase transition-all ${viewMode === 'SHIFTS' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}>Turnos</button>
-                            <button onClick={() => setViewMode('ATTENDANCE')} className={`px-4 py-2 rounded-[20px] text-[10px] font-black uppercase transition-all ${viewMode === 'ATTENDANCE' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}>Asistencia</button>
-                        </div>
-
-                        <div className="w-[200px]">
-                            <SearchableSelect 
-                                options={profiles} 
-                                value={selectedProfiles} 
-                                onChange={setSelectedProfiles} 
-                                multiple={true} 
-                                placeholder="Filtrar Cargos..." 
-                                icon={UsersIcon} 
-                                variant="minimal" 
-                            />
-                        </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{ 
+                        padding: '12px 24px', 
+                        borderRadius: '32px', 
+                        background: weeklyStatus.status === 'Approved' ? 'rgba(16, 185, 129, 0.1)' : weeklyStatus.status === 'Pending' ? 'rgba(245, 158, 11, 0.1)' : isDarkMode ? 'rgba(255,255,255,0.05)' : '#f8fafc',
+                        border: '1px solid rgba(0,0,0,0.05)',
+                        textAlign: 'center'
+                    }}>
+                        <p style={{ fontSize: '8px', fontWeight: '950', color: weeklyStatus.status === 'Approved' ? '#10b981' : '#64748b', textTransform: 'uppercase', marginBottom: '2px' }}>Estado Global</p>
+                        <p style={{ fontSize: '10px', fontWeight: '950', color: weeklyStatus.status === 'Approved' ? '#10b981' : isDarkMode ? 'white' : '#1e293b' }}>
+                            {weeklyStatus.status === 'Approved' ? 'APROBADO ✓' : weeklyStatus.status === 'Pending' ? 'EN REVISIÓN' : 'BORRADOR'}
+                        </p>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <button onClick={() => setShowBulkModal(true)} title="Carga Masiva" className="w-12 h-12 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl flex items-center justify-center border border-slate-200 dark:border-white/5 hover:bg-indigo-50 transition-all"><Plus size={20}/></button>
-                        <button onClick={() => setShowPredictiveModal(true)} title="IA Smart Filter" className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-100 hover:scale-110 transition-all"><Sparkles size={20}/></button>
-                        <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-2" />
-                        <button onClick={() => window.print()} className="w-12 h-12 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl flex items-center justify-center border border-slate-200 dark:border-white/5 hover:bg-slate-50 transition-all"><Printer size={20}/></button>
-                        <button onClick={handleExcelExport} disabled={isExporting} className="h-12 px-6 bg-emerald-500 text-white rounded-2xl font-black text-[10px] uppercase shadow-lg shadow-emerald-100 flex items-center gap-2 hover:bg-emerald-600 disabled:opacity-50 transition-all">
-                            <FileSpreadsheet size={18} /> Exportar
+                    {!effectiveReadOnly && (
+                        <button onClick={() => { setSaveComment(''); setShowSaveModal(true); }} className="elite-pill" style={{ background: '#4f46e5', color: 'white', padding: '18px 32px', border: 'none', fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 20px 40px rgba(79, 70, 229, 0.4)' }}>
+                            <Save size={20}/> Guardar Cambios
                         </button>
-                    </div>
+                    )}
+
+                    {(user?.roles?.includes('Administrador') || forceApprover) && weeklyStatus.status === 'Pending' && (
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <button onClick={() => setShowApprovalModal(true)} className="elite-pill" style={{ width: '56px', height: '56px', background: '#10b981', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '24px', boxShadow: '0 15px 30px rgba(16, 185, 129, 0.3)' }}><CheckCircle size={22}/></button>
+                            <button onClick={() => setShowRejectionModal(true)} className="elite-pill" style={{ width: '56px', height: '56px', background: '#ef4444', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '24px', boxShadow: '0 15px 30px rgba(239, 68, 68, 0.3)' }}><XCircle size={22}/></button>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Main Grid Card */}
-            <div className="bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl border-2 dark:border-slate-800 overflow-hidden relative">
-                <table className="w-full border-collapse">
+            {/* V13.0 ELITE TOOLBAR - SECONDARY ACTIONS */}
+            <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px', padding: '0 20px' }}>
+                <div style={{ display: 'flex', gap: '15px' }}>
+                    <div style={{ display: 'flex', background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#ffffff', padding: '8px', borderRadius: '28px', border: '1px solid rgba(0,0,0,0.05)' }}>
+                        <button onClick={() => setViewMode('SHIFTS')} style={{ padding: '12px 24px', borderRadius: '20px', border: 'none', fontSize: '10px', fontWeight: '950', textTransform: 'uppercase', background: viewMode === 'SHIFTS' ? '#4f46e5' : 'transparent', color: viewMode === 'SHIFTS' ? 'white' : '#64748b' }}>Turnos</button>
+                        <button onClick={() => setViewMode('ATTENDANCE')} style={{ padding: '12px 24px', borderRadius: '20px', border: 'none', fontSize: '10px', fontWeight: '950', textTransform: 'uppercase', background: viewMode === 'ATTENDANCE' ? '#4f46e5' : 'transparent', color: viewMode === 'ATTENDANCE' ? 'white' : '#64748b' }}>Asistencia</button>
+                    </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '15px' }}>
+                    <button onClick={() => setShowPredictiveModal(true)} className="elite-pill" style={{ width: '56px', height: '56px', background: '#818cf8', color: 'white', border: 'none', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 15px 30px rgba(129, 140, 248, 0.3)' }}><Sparkles size={22}/></button>
+                    <button onClick={() => setShowBulkModal(true)} className="elite-pill" style={{ width: '56px', height: '56px', background: isDarkMode ? '#1e293b' : '#ffffff', color: '#4f46e5', border: '1px solid rgba(0,0,0,0.05)', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Plus size={22}/></button>
+                    <button onClick={handleExcelExport} disabled={isExporting} className="elite-pill" style={{ padding: '0 32px', background: '#10b981', color: 'white', border: 'none', borderRadius: '24px', fontSize: '10px', fontWeight: '950', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 15px 30px rgba(16, 185, 129, 0.2)' }}>
+                        <FileSpreadsheet size={20}/> Exportar Excel
+                    </button>
+                    <button onClick={() => window.print()} className="elite-pill" style={{ width: '56px', height: '56px', background: isDarkMode ? '#1e293b' : '#ffffff', color: '#64748b', border: '1px solid rgba(0,0,0,0.05)', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Printer size={20}/></button>
+                </div>
+            </div>
+
+            {/* V13.0 ELITE MASTER GRID (HYPER-ROUNDED) */}
+            <div style={{ background: activeColors.card, borderRadius: '60px', overflow: 'hidden', boxShadow: '0 60px 120px -20px rgba(0,0,0,0.2)', border: isDarkMode ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
-                        <tr className="bg-slate-50 dark:bg-slate-800/50 border-b-2 dark:border-indigo-500/20">
-                            <th className="p-6 text-left sticky left-0 z-20 bg-inherit min-w-[320px]">
-                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Colaborador / Perfil</span>
+                        <tr style={{ background: isDarkMode ? 'rgba(255,255,255,0.02)' : '#f8fafc', borderBottom: isDarkMode ? '1px solid #1e293b' : '1px solid #f1f5f9' }}>
+                            <th style={{ padding: '40px 30px', textAlign: 'left', minWidth: '340px', position: 'sticky', left: 0, background: 'inherit', zIndex: 10 }}>
+                                <p style={{ fontSize: '10px', fontWeight: '950', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.2em' }}>COLABORADOR / PERFIL</p>
                             </th>
                             {days.map(d => (
-                                <th key={d.getTime()} className="p-4 text-center border-r dark:border-slate-800">
-                                    <p className="text-[10px] font-black text-indigo-500 uppercase">{d.toLocaleDateString('es-CO', {weekday:'short'})}</p>
-                                    <p className="text-2xl font-black dark:text-white leading-none">{d.getDate()}</p>
+                                <th key={d.getTime()} style={{ padding: '25px', textAlign: 'center', borderRight: isDarkMode ? '1px solid #1e293b' : '1px solid #f1f5f9' }}>
+                                    <p style={{ fontSize: '9px', fontWeight: '950', color: '#64748b', textTransform: 'uppercase', marginBottom: '8px' }}>{d.toLocaleDateString('es-CO', {weekday: 'short'})}</p>
+                                    <p style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', margin: 0, lineHeight: 1 }}>{d.getDate()}</p>
                                 </th>
                             ))}
-                            <th className="p-4 text-center bg-slate-100/30 dark:bg-slate-800/20 text-[10px] font-black text-slate-400 uppercase">Resumen</th>
+                            <th style={{ padding: '25px', textAlign: 'center', background: isDarkMode ? 'rgba(255,255,255,0.01)' : '#f1f5f9' }}>
+                                <p style={{ fontSize: '9px', fontWeight: '950', color: '#64748b', textTransform: 'uppercase' }}>TOTAL</p>
+                            </th>
                         </tr>
-                        {showPredictiveOverlay && (
-                            <tr className="bg-indigo-50/20 dark:bg-indigo-900/10 border-b dark:border-slate-800 animate-in slide-in-from-top duration-500">
-                                <td className="p-4 sticky left-0 z-20 bg-inherit flex items-center gap-2"><Cpu size={16} className="text-indigo-500 animate-pulse"/><span className="text-[10px] font-black text-indigo-500">OPTIMIZACIÓN IA</span></td>
-                                {days.map(d => {
-                                    const needs = calculateHourlyNeeds(d); let def = 0;
-                                    Object.values(needs).forEach(hn => hn.forEach((n, h) => {
-                                        const sch = shifts.filter(s => { const sd = new Date(s.startTime); return sd.toDateString() === d.toDateString() && !s.isDescanso && (new Date(s.endTime).getHours() < sd.getHours() ? (h >= sd.getHours() || h < new Date(s.endTime).getHours()) : (h >= sd.getHours() && h < new Date(s.endTime).getHours())); }).length;
-                                        if (n > sch) def += (n - sch);
-                                    }));
-                                    return <td key={d.getTime()} className="p-2 text-center text-[10px] font-black">{def > 0 ? <span className="p-1 px-3 bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-100">-{def} GAPS</span> : <span className="text-emerald-500 font-black">FULL ✓</span>}</td>;
-                                })}
-                                <td></td>
-                            </tr>
-                        )}
                     </thead>
                     <tbody>
                         {filteredEmployees.map(emp => {
                             const empShifts = shifts.filter(s => s.employeeId === emp.id);
                             const totalH = empShifts.reduce((acc, s) => { if(s.isDescanso) return acc; const d = (new Date(s.endTime) - new Date(s.startTime))/3600000; return acc + (d<0?d+24:d); }, 0);
                             const empJornada = jornadas.find(j => j.id === emp.jornadaId);
-                            const profileName = profiles.find(p => p.id === emp.profileId)?.name || 'N/A';
-                            
+                            const cargoName = profiles.find(p => p.id === emp.profileId)?.name || 'N/A';
+
                             return (
-                                <tr key={emp.id} className="border-b dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
-                                    <td className="p-5 sticky left-0 z-10 bg-inherit border-r dark:border-slate-800 shadow-xl">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-black shadow-lg shadow-indigo-100">{emp.firstName[0]}{emp.lastName[0]}</div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-[13px] font-black dark:text-white uppercase truncate">{emp.firstName} {emp.lastName}</p>
-                                                <div className="flex items-center gap-2 mt-0.5">
-                                                    <p className="text-[10px] font-bold text-slate-400">{emp.documento}</p>
-                                                    <span className="text-[8px] font-black bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 px-1.5 py-0.5 rounded-lg border border-indigo-100/50 dark:border-indigo-500/20 uppercase truncate max-w-[120px]">
-                                                        {profileName}
+                                <tr key={emp.id} style={{ borderBottom: isDarkMode ? '1px solid #1e293b' : '1px solid #f1f5f9', transition: 'all 0.2s' }} className="hover:bg-slate-50/20">
+                                    <td style={{ padding: '30px', position: 'sticky', left: 0, background: activeColors.card, zIndex: 10, borderRight: isDarkMode ? '1px solid #1e293b' : '1px solid #f1f5f9' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                                            <div style={{ width: '56px', height: '56px', background: '#4f46e5', color: 'white', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: '950', boxShadow: '0 15px 30px rgba(79, 70, 229, 0.2)' }}>
+                                                {emp.firstName[0]}{emp.lastName[0]}
+                                            </div>
+                                            <div style={{ minWidth: 0 }}>
+                                                <p style={{ fontSize: '1rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', textTransform: 'uppercase', margin: '0 0 6px 0', letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {emp.firstName} {emp.lastName}
+                                                </p>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <p style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8', margin: 0 }}>{emp.documento}</p>
+                                                    <span style={{ fontSize: '8px', fontWeight: '950', background: isDarkMode ? 'rgba(79, 70, 229, 0.2)' : '#f5f7ff', color: '#4f46e5', padding: '4px 10px', borderRadius: '10px', textTransform: 'uppercase' }}>
+                                                        {cargoName}
                                                     </span>
                                                 </div>
-                                                <div className="flex items-center gap-1.5 mt-1">
-                                                    <Clock size={10} className="text-slate-300" />
-                                                    <p className="text-[9px] font-black text-slate-400 uppercase">Jornada: <span className="text-indigo-500">{empJornada?.horasSemanales || 48}h/Sem</span></p>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
+                                                    <Clock size={10} color="#94a3b8" />
+                                                    <p style={{ fontSize: '9px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', margin: 0 }}>
+                                                        JORNADA: <span style={{ color: '#4f46e5' }}>{empJornada?.horasSemanales || 48}H/SEM</span>
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
                                     {days.map(d => {
                                         const s = empShifts.find(sh => new Date(sh.startTime).toDateString() === d.toDateString());
-                                        const nov = getNovedad(emp.id, d);
+                                        const nov = news.find(n => n.empleadoId === emp.id && new Date(n.fechaInicio) <= d && new Date(n.fechaFin) >= d);
                                         return (
-                                            <td key={d.getTime()} onDragOver={e => e.preventDefault()} onDragEnter={e => e.currentTarget.classList.add('elite-drop-active')} onDragLeave={e => e.currentTarget.classList.remove('elite-drop-active')} onDrop={e => handleDropOnGrid(e, emp.id, d)} className="p-2 border-r dark:border-slate-800 min-h-[80px] relative">
+                                            <td key={d.getTime()} onDragOver={e => e.preventDefault()} onDrop={e => handleDropOnGrid(e, emp.id, d)} style={{ padding: '15px', borderRight: isDarkMode ? '1px solid #1e293b' : '1px solid #f1f5f9' }}>
                                                 {nov ? (
-                                                    <div className="p-1 px-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl text-center">
-                                                        <span className="text-[8px] font-black text-blue-500 uppercase">Novedad</span>
+                                                    <div style={{ padding: '15px', background: isDarkMode ? 'rgba(59, 130, 246, 0.1)' : '#eff6ff', borderRadius: '24px', border: '2px solid #3b82f6', textAlign: 'center' }}>
+                                                        <span style={{ fontSize: '8px', fontWeight: '950', color: '#3b82f6', textTransform: 'uppercase' }}>Novedad</span>
                                                     </div>
                                                 ) : s ? (
-                                                    <div className={`p-2 rounded-xl text-white text-[9px] font-black text-center shadow-lg transform transition-transform hover:scale-105 cursor-pointer relative ${s.isDescanso?'bg-amber-500':s.isFuera?'bg-purple-600':'bg-indigo-600'}`}>
-                                                        {s.isDescanso ? 'DESCANSO' : `${new Date(s.startTime).getHours().toString().padStart(2,'0')}:${new Date(s.startTime).getMinutes().toString().padStart(2,'0')} - ${new Date(s.endTime).getHours().toString().padStart(2,'0')}:${new Date(s.endTime).getMinutes().toString().padStart(2,'0')}`}
-                                                        {s.isAutoGenerated && <Sparkles size={8} className="absolute top-1 right-1"/>}
+                                                    <div 
+                                                        draggable 
+                                                        onDragStart={e => handleDragStart(e, 'GRID', { shiftId: s.id, employeeId: emp.id, date: d })}
+                                                        style={{ 
+                                                            padding: '20px 15px', 
+                                                            borderRadius: '24px', 
+                                                            background: s.isDescanso ? '#f59e0b' : '#4f46e5', 
+                                                            color: 'white', 
+                                                            textAlign: 'center', 
+                                                            boxShadow: '0 15px 35px rgba(0,0,0,0.2)',
+                                                            position: 'relative',
+                                                            cursor: 'grab'
+                                                        }}
+                                                    >
+                                                        <p style={{ fontSize: '10px', fontWeight: '950', margin: 0 }}>
+                                                            {s.isDescanso ? 'DESCANSO' : `${new Date(s.startTime).getHours().toString().padStart(2,'0')}:${new Date(s.startTime).getMinutes().toString().padStart(2,'0')} - ${new Date(s.endTime).getHours().toString().padStart(2,'0')}:${new Date(s.endTime).getMinutes().toString().padStart(2,'0')}`}
+                                                        </p>
+                                                        {s.isAutoGenerated && <Sparkles size={10} style={{ position: 'absolute', top: '8px', right: '8px' }} />}
                                                     </div>
                                                 ) : (
-                                                    <div onClick={() => { if(effectiveReadOnly) return; setPendingEvent({employeeId: emp.id, date: d, type: 'Turno'}); setStartTime('08:00'); setEndTime('17:00'); setShowTimeModal(true); }} className={`h-10 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-xl flex items-center justify-center transition-all ${effectiveReadOnly ? 'opacity-0' : 'hover:border-indigo-500 hover:bg-indigo-50/30 cursor-pointer text-slate-200 hover:text-indigo-400'}`}>
-                                                        <Plus size={16}/>
+                                                    <div 
+                                                        onClick={() => { if(!effectiveReadOnly) { setPendingEvent({employeeId: emp.id, date: d, type: 'Turno'}); setShowTimeModal(true); } }}
+                                                        style={{ height: '70px', borderRadius: '24px', border: '2px dashed rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
+                                                        className="hover:border-indigo-400 hover:bg-indigo-50/10"
+                                                    >
+                                                        {!effectiveReadOnly && <Plus size={24} color="#cbd5e1" />}
                                                     </div>
                                                 )}
                                             </td>
                                         );
                                     })}
-                                    <td className="p-4 text-center">
-                                        <div className={`p-1.5 px-3 rounded-full font-black text-[10px] ${totalH > (empJornada?.horasSemanales || 48) ? 'bg-rose-50 text-rose-600' : 'bg-indigo-50 text-indigo-600'}`}>
+                                    <td style={{ textAlign: 'center' }}>
+                                        <div style={{ display: 'inline-flex', padding: '10px 20px', borderRadius: '20px', background: totalH > (empJornada?.horasSemanales || 48) ? 'rgba(239, 68, 68, 0.1)' : 'rgba(79, 70, 229, 0.1)', color: totalH > (empJornada?.horasSemanales || 48) ? '#ef4444' : '#4f46e5', fontSize: '11px', fontWeight: '950' }}>
                                             {formatHours(totalH)}
                                         </div>
                                     </td>
@@ -698,115 +529,89 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     </tbody>
                 </table>
             </div>
-            {/* Print Only Footer */}
-            <div className="print-only mt-20 grid grid-cols-2 text-center gap-20">
-                <div className="border-t-2 border-slate-900 pt-4 font-black">Firma Jefe de Sede</div>
-                <div className="border-t-2 border-slate-900 pt-4 font-black">Firma Talento Humano</div>
-            </div>
 
-
-            {/* PORTALS */}
+            {/* V13.0 ELITE MODALS PORTAL (RESTORED GLASSMORPISM) */}
             {createPortal(
                 <>
-                    {/* Modal Fondo */}
-                    {(loading || isSaving || isExporting || showTimeModal || showBulkModal || showPredictiveModal || showSaveModal || showApprovalModal || showRejectionModal) && (
-                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200000]"/>
-                    )}
-
-                    {/* Loading/Saving Overlays */}
-                    {(loading || isSaving || isExporting) && (
-                        <div className="fixed inset-0 flex items-center justify-center z-[200001] p-8">
-                            <div className="bg-white dark:bg-slate-900 p-12 rounded-[50px] shadow-2xl border border-white/10 text-center animate-in zoom-in-95 duration-300 max-w-sm w-full">
-                                <div className="relative w-24 h-24 mx-auto mb-8">
-                                    <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 animate-pulse"/>
-                                    <div className="w-full h-full border-4 border-slate-100 dark:border-slate-800 border-t-indigo-600 rounded-full animate-spin relative z-10"/>
+                    {(loading || isSaving || isProcessingStatus || isExporting) && (
+                        <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 15, 0.6)', backdropFilter: 'blur(10px)', zIndex: 900000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                             <div style={{ background: isDarkMode ? '#1e293b' : 'white', padding: '60px', borderRadius: '60px', textAlign: 'center', boxShadow: '0 50px 150px rgba(0,0,0,0.5)', maxWidth: '400px', width: '90%' }}>
+                                <div style={{ position: 'relative', width: '90px', height: '90px', marginBottom: '2rem', margin: '0 auto' }}>
+                                    <svg style={{ transform: 'rotate(-90deg)', width: '90px', height: '90px' }}>
+                                        <circle cx="45" cy="45" r="40" stroke={isDarkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9'} strokeWidth="6" fill="transparent" />
+                                        <circle cx="45" cy="45" r="40" stroke="#4f46e5" strokeWidth="6" fill="transparent" strokeDasharray="251.2" strokeDashoffset="60" strokeLinecap="round" className="animate-pulse" />
+                                    </svg>
                                 </div>
-                                <h3 className="text-xl font-black dark:text-white uppercase tracking-tighter mb-2">
-                                    {isSaving ? (syncPhase >= 4 ? "¡Sincronizado!" : "Guardando Datos") : isExporting ? "Generando Reporte" : "Iniciando Consola"}
-                                </h3>
-                                <p className="text-xs font-bold text-slate-400 leading-relaxed">
-                                    {isSaving ? "Enviando programación al servidor central..." : "Sincronizando nómina en tiempo real..."}
-                                </p>
-                            </div>
+                                <h3 style={{ fontSize: '1.4rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', marginBottom: '10px' }}>Sincronizando Elite</h3>
+                                <p style={{ fontSize: '10px', fontWeight: '900', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.2em' }}>Por favor espere...</p>
+                             </div>
                         </div>
                     )}
 
-                    {/* Time Modal */}
-                    {showTimeModal && (
-                        <div className="fixed inset-0 flex items-center justify-center z-[200002] p-8">
-                            <div className="bg-white dark:bg-slate-900 p-10 rounded-[48px] shadow-2xl w-full max-w-sm animate-in zoom-in-95">
-                                <h3 className="text-xl font-black mb-8 text-center dark:text-white">HORARIO TURNO</h3>
-                                <div className="space-y-4 mb-8">
-                                    <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-3xl">
-                                        <label className="text-[9px] font-black text-slate-400 block text-center mb-1">ENTRADA</label>
-                                        <input type="time" value={startTime} onChange={e=>setStartTime(e.target.value)} className="w-full bg-transparent border-none text-center text-3xl font-black outline-none dark:text-white"/>
-                                    </div>
-                                    <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-3xl">
-                                        <label className="text-[9px] font-black text-slate-400 block text-center mb-1">SALIDA</label>
-                                        <input type="time" value={endTime} onChange={e=>setEndTime(e.target.value)} className="w-full bg-transparent border-none text-center text-3xl font-black outline-none dark:text-white"/>
+                    {showSaveModal && (
+                        <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 15, 0.85)', backdropFilter: 'blur(30px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                             <div className="animate-in zoom-in-95 duration-500" style={{ background: isDarkMode ? '#1e293b' : 'white', width: '100%', maxWidth: '540px', borderRadius: '56px', overflow: 'hidden', border: isDarkMode ? '1px solid #334155' : 'none', boxShadow: '0 80px 160px rgba(0,0,0,0.6)' }}>
+                                <div style={{ padding: '60px 40px 40px', textAlign: 'center' }}>
+                                    <div style={{ width: '80px', height: '80px', background: isDarkMode ? 'rgba(79, 70, 229, 0.2)' : '#f5f7ff', color: '#4f46e5', borderRadius: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 30px', boxShadow: '0 20px 40px rgba(79, 70, 229, 0.15)' }}><Save size={40}/></div>
+                                    <h2 style={{ fontSize: '1.8rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', letterSpacing: '-0.03em', margin: 0 }}>Publicar cambios</h2>
+                                    <p style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: '600', margin: '12px 0 0 0' }}>Se notificará a toda la sede de la nueva programación.</p>
+                                </div>
+                                <div style={{ padding: '0 50px 50px' }}>
+                                    <textarea value={saveComment} onChange={e => setSaveComment(e.target.value)} placeholder="Justificación obligatoria (mínimo 10 caracteres)..." style={{ width: '100%', padding: '24px', borderRadius: '28px', background: isDarkMode ? '#0f172a' : '#f8fafc', border: `2px solid ${saveComment.length >= 10 ? '#4f46e5' : '#f1f5f9'}`, color: isDarkMode ? 'white' : '#111827', fontWeight: '700', minHeight: '140px', outline: 'none', resize: 'none' }} />
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '30px' }}>
+                                        <button onClick={performSave} style={{ width: '100%', padding: '22px', borderRadius: '24px', border: 'none', background: '#4f46e5', color: 'white', fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 30px rgba(79, 70, 229, 0.4)' }}>Enviar Programación</button>
+                                        <button onClick={() => setShowSaveModal(false)} style={{ color: '#94a3b8', background: 'transparent', border: 'none', width: '100%', padding: '15px', fontWeight: '800', fontSize: '10px', textTransform: 'uppercase' }}>Cerrar</button>
                                     </div>
                                 </div>
-                                <div className="flex flex-col gap-3">
+                             </div>
+                        </div>
+                    )}
+
+                    {showTimeModal && (
+                        <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 15, 0.85)', backdropFilter: 'blur(30px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                             <div className="animate-in zoom-in-95" style={{ background: isDarkMode ? '#1e293b' : 'white', width: '100%', maxWidth: '420px', borderRadius: '56px', border: isDarkMode ? '1px solid #334155' : 'none', boxShadow: '0 80px 160px rgba(0,0,0,0.6)' }}>
+                                <div style={{ padding: '50px 40px 30px', textAlign: 'center' }}>
+                                    <div style={{ width: '70px', height: '70px', background: isDarkMode ? 'rgba(79, 70, 229, 0.2)' : '#f5f7ff', color: '#4f46e5', borderRadius: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 25px' }}><Clock size={36}/></div>
+                                    <h2 style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', letterSpacing: '-0.02em', margin: 0 }}>Fijar Horario</h2>
+                                </div>
+                                <div style={{ padding: '0 40px 40px' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '40px' }}>
+                                        <div style={{ background: isDarkMode ? '#0f172a' : '#f8fafc', padding: '20px', borderRadius: '28px', border: '1px solid rgba(0,0,0,0.05)' }}>
+                                            <p style={{ fontSize: '9px', fontWeight: '950', color: '#64748b', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>Entrada</p>
+                                            <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} style={{ width: '100%', background: 'transparent', border: 'none', color: isDarkMode ? 'white' : '#1e1e2d', textAlign: 'center', fontSize: '2rem', fontWeight: '950', outline: 'none' }} />
+                                        </div>
+                                        <div style={{ background: isDarkMode ? '#0f172a' : '#f8fafc', padding: '20px', borderRadius: '28px', border: '1px solid rgba(0,0,0,0.05)' }}>
+                                            <p style={{ fontSize: '9px', fontWeight: '950', color: '#64748b', textTransform: 'uppercase', textAlign: 'center', marginBottom: '8px' }}>Salida</p>
+                                            <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} style={{ width: '100%', background: 'transparent', border: 'none', color: isDarkMode ? 'white' : '#1e1e2d', textAlign: 'center', fontSize: '2rem', fontWeight: '950', outline: 'none' }} />
+                                        </div>
+                                    </div>
                                     <button onClick={() => {
-                                        const {employeeId, date, type} = pendingEvent;
+                                        const { employeeId, date } = pendingEvent;
                                         const sd = new Date(date); const [sh, sm] = startTime.split(':'); sd.setHours(parseInt(sh), parseInt(sm));
                                         const ed = new Date(date); const [eh, em] = endTime.split(':'); ed.setHours(parseInt(eh), parseInt(em));
                                         if (ed < sd) ed.setDate(ed.getDate() + 1);
-                                        const ns = { employeeId, startTime: sd.toISOString(), endTime: ed.toISOString(), status: 0, isDescanso: type==='Descanso', isFuera: type==='Turno Fuera' };
+                                        const ns = { employeeId, storeId: selectedStore, startTime: sd.toISOString(), endTime: ed.toISOString(), status: 0, isDescanso: false };
                                         setShifts(prev => [...prev.filter(sh => !(sh.employeeId === employeeId && new Date(sh.startTime).toDateString() === date.toDateString())), ns]);
                                         setShowTimeModal(false);
-                                    }} className="p-5 bg-indigo-600 text-white rounded-3xl font-black text-xs uppercase shadow-lg shadow-indigo-200">Asignar Horario</button>
-                                    <button onClick={()=>setShowTimeModal(false)} className="p-3 text-slate-400 font-black text-[10px] uppercase">Cancelar</button>
+                                    }} style={{ width: '100%', padding: '22px', borderRadius: '24px', border: 'none', background: '#4f46e5', color: 'white', fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 30px rgba(79, 70, 229, 0.4)' }}>Asignar Turno</button>
+                                    <button onClick={() => setShowTimeModal(false)} style={{ width: '100%', padding: '15px', color: '#94a3b8', background: 'transparent', border: 'none', fontWeight: '800', fontSize: '10px', textTransform: 'uppercase', marginTop: '10px' }}>Cancelar</button>
                                 </div>
-                            </div>
+                             </div>
                         </div>
                     )}
 
-                    {/* Save Modal */}
-                    {showSaveModal && (
-                        <div className="fixed inset-0 flex items-center justify-center z-[200002] p-8">
-                            <div className="bg-white dark:bg-slate-900 p-12 rounded-[50px] shadow-2xl w-full max-w-lg animate-in zoom-in-95">
-                                <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6"><Save size={32}/></div>
-                                <h3 className="text-xl font-black text-center mb-2 dark:text-white">PUBLICAR CAMBIOS</h3>
-                                <p className="text-center text-xs text-slate-400 font-bold mb-8">Esta acción notificará a todos los colaboradores de la sede.</p>
-                                <textarea placeholder="Justificación (Mín. 10 caracteres)..." value={saveComment} onChange={e=>setSaveComment(e.target.value)} className="w-full p-6 bg-slate-50 dark:bg-slate-800 rounded-3xl border-none outline-none font-bold text-sm mb-8 min-h-[150px] dark:text-white"/>
-                                <div className="flex flex-col gap-3">
-                                    <button onClick={performSave} className="p-5 bg-indigo-600 text-white rounded-3xl font-black text-xs uppercase shadow-lg">Finalizar y Enviar</button>
-                                    <button onClick={()=>setShowSaveModal(false)} className="p-3 text-slate-400 font-black text-[10px] uppercase">Cerrar</button>
+                    {showApprovalModal && (
+                        <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 15, 0.85)', backdropFilter: 'blur(30px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                             <div className="animate-in zoom-in-95" style={{ background: isDarkMode ? '#1e293b' : 'white', width: '100%', maxWidth: '500px', borderRadius: '56px', padding: '50px', border: isDarkMode ? '1px solid #334155' : 'none', boxShadow: '0 80px 160px rgba(0,0,0,0.6)', textAlign: 'center' }}>
+                                <div style={{ width: '80px', height: '80px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', borderRadius: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 25px' }}><CheckCircle size={40}/></div>
+                                <h2 style={{ fontSize: '1.8rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', marginBottom: '10px' }}>Aprobar Semana</h2>
+                                <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '30px' }}>Confirmar publicación oficial.</p>
+                                <textarea value={approvalComment} onChange={e => setApprovalComment(e.target.value)} placeholder="Comentarios finales..." style={{ width: '100%', padding: '20px', borderRadius: '24px', background: isDarkMode ? '#0f172a' : '#f8fafc', border: '1px solid rgba(0,0,0,0.05)', color: isDarkMode ? 'white' : '#111827', minHeight: '100px', marginBottom: '30px' }} />
+                                <div style={{ display: 'flex', gap: '15px' }}>
+                                    <button onClick={() => setShowApprovalModal(false)} style={{ flex: 1, padding: '20px', borderRadius: '24px', background: 'transparent', border: 'none', color: '#94a3b8', fontWeight: '800' }}>Cerrar</button>
+                                    <button onClick={confirmApprove} style={{ flex: 2, padding: '20px', borderRadius: '24px', border: 'none', background: '#10b981', color: 'white', fontWeight: '950', boxShadow: '0 15px 30px rgba(16, 185, 129, 0.3)' }}>APROBAR AHORA</button>
                                 </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Predictive Modal */}
-                    {showPredictiveModal && (
-                        <div className="fixed inset-0 flex items-center justify-center z-[200002] p-8">
-                            <div className="bg-white dark:bg-slate-900 p-12 rounded-[60px] shadow-2xl w-full max-w-xl animate-in zoom-in-95">
-                                <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl animate-pulse"><Cpu size={40}/></div>
-                                <h3 className="text-2xl font-black text-center mb-2 dark:text-white">HUB DE INTELIGENCIA</h3>
-                                <p className="text-center text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-10">Optimización Basada en Datos</p>
-                                
-                                <div className="grid grid-cols-2 gap-4 mb-10">
-                                    <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-[32px] text-center border border-slate-100 dark:border-white/5">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Reglas Activas</p>
-                                        <p className="text-2xl font-black dark:text-white">{predictiveRules.length}</p>
-                                    </div>
-                                    <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-[32px] text-center border border-slate-100 dark:border-white/5">
-                                        <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Dato Histórico</p>
-                                        <p className="text-2xl font-black dark:text-white">3 Semanas</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-col gap-4">
-                                    <button onClick={performOptimization} disabled={isOptimizing} className="p-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-3xl font-black text-sm uppercase shadow-2xl hover:scale-[1.02] transition-all flex items-center justify-center gap-3">
-                                        {isOptimizing ? <div className="loader !w-6 !h-6 !border-white"/> : <><Sparkles size={20}/> OPTIMIZAR AHORA</>}
-                                    </button>
-                                    <button onClick={()=>{ setShowPredictiveOverlay(!showPredictiveOverlay); setShowPredictiveModal(false); }} className="p-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl font-black text-[10px] uppercase">
-                                        {showPredictiveOverlay ? 'Ocultar Guía Visual' : 'Ver Gaps Operativos'}
-                                    </button>
-                                    <button onClick={()=>setShowPredictiveModal(false)} className="p-2 text-slate-400 font-black text-[10px] uppercase">Cerrar</button>
-                                </div>
-                            </div>
+                             </div>
                         </div>
                     )}
                 </>,
