@@ -4,6 +4,7 @@ import {
   FileSpreadsheet, Calendar, TrendingUp, BarChart3, Store as StoreIcon,
   Download, RefreshCw, Layers
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import api from '../../services/api';
 import BulkImportModal from '../../components/Shared/BulkImportModal';
 import PermissionGuard from '../../components/Shared/PermissionGuard';
@@ -44,6 +45,7 @@ const SalesData = ({ user }) => {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     fetchMetadata();
@@ -103,6 +105,43 @@ const SalesData = ({ user }) => {
     });
   };
 
+  const handleExportExcel = async () => {
+    try {
+      setIsExporting(true);
+      // Fetch data without pagination for export (limited to 1000 for safety)
+      const queryParams = new URLSearchParams({
+        pageNumber: 1,
+        pageSize: 1000,
+        startDate: filters.startDate,
+        endDate: filters.endDate
+      });
+      if (filters.storeId) queryParams.append('storeId', filters.storeId);
+      if (filters.channelId) queryParams.append('channelId', filters.channelId);
+
+      const res = await api.get(`/sales?${queryParams.toString()}`);
+      const dataToExport = (res.data.items || []).map(r => ({
+        'Tienda/Local': r.storeName,
+        'Fecha/Hora': new Date(r.recordDate).toLocaleString('es-CO'),
+        'Canal': r.canal || 'GENERAL',
+        'Venta Neta': r.ventaNeta,
+        'Tickets': r.cantidadTickets,
+        'Comensales': r.comensales,
+        'Ticket Promedio': r.ticketPromedio
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(dataToExport);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Ventas Maestras");
+      XLSX.writeFile(wb, `Ventas_Maestras_${filters.startDate}_al_${filters.endDate}.xlsx`);
+      showToast("Reporte generado exitosamente");
+    } catch (err) {
+      console.error("Export error:", err);
+      showToast("Error al exportar registros", "error");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="page-container animate-in fade-in duration-500" style={{ padding: '2rem 1.5rem', maxWidth: '1600px', margin: '0 auto' }}>
       {/* Header Section */}
@@ -114,8 +153,14 @@ const SalesData = ({ user }) => {
 
         <div style={{ display: 'flex', gap: '12px' }}>
           <PermissionGuard module="SALES:SALES_DATA" action="Export" user={user}>
-            <button className="btn-premium btn-premium-secondary" style={{ borderRadius: '18px', padding: '0 24px', height: '56px' }}>
-              <Download size={20} /> Exportar
+            <button 
+              onClick={handleExportExcel}
+              disabled={isExporting}
+              className="btn-premium btn-premium-secondary" 
+              style={{ borderRadius: '18px', padding: '0 24px', height: '56px' }}
+            >
+              {isExporting ? <div className="loader mr-2"></div> : <Download size={20} />} 
+              {isExporting ? 'Exportando...' : 'Exportar'}
             </button>
           </PermissionGuard>
           <PermissionGuard module="SALES:SALES_DATA" action="Create" user={user}>

@@ -62,6 +62,7 @@ const PredictiveRules = ({ user }) => {
 
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [profileSearch, setProfileSearch] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -380,8 +381,20 @@ const PredictiveRules = ({ user }) => {
                                 <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '700', marginTop: '10px' }}>Seleccione los perfiles que el motor dimensionará</p>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '15px', overflowY: 'auto', maxHeight: '400px', padding: '10px' }}>
-                                {profiles.map(p => {
+                            {/* Search Filter for agility */}
+                            <div style={{ position: 'relative' }}>
+                                <Search size={18} style={{ position: 'absolute', left: '20px', top: '22px', color: '#94a3b8' }} />
+                                <input 
+                                    type="text"
+                                    placeholder="Filtrar cargos por nombre (ej. Mesero, Cocinero...)"
+                                    value={profileSearch}
+                                    onChange={(e) => setProfileSearch(e.target.value)}
+                                    style={{ width: '100%', padding: '18px 24px 18px 54px', borderRadius: '20px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', fontSize: '0.95rem', outline: 'none' }}
+                                />
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px', overflowY: 'auto', maxHeight: '420px', padding: '10px' }}>
+                                {profiles.filter(p => p.name.toLowerCase().includes(profileSearch.toLowerCase())).map(p => {
                                     const isSelected = formData.profileIds.includes(p.id);
                                     return (
                                         <div 
