@@ -1571,10 +1571,10 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             <footer className="mt-8 mb-4 text-center">
                                 <div className="version-tag-subtle">SISTEMA V13.9.46-STABLE-ELITE</div>
                             </footer>
-                            <table className="border-collapse" style={{ tableLayout: 'fixed', width: '1460px', borderSpacing: 0 }}>
+                            <table className="border-collapse" style={{ tableLayout: 'fixed', width: '1565px', borderSpacing: 0 }}>
                                 <colgroup>
                                     <col style={{ width: '320px' }} />
-                                    {days.map((_, i) => <col key={i} style={{ width: '140px' }} />)}
+                                    {days.map((_, i) => <col key={i} style={{ width: '155px' }} />)}
                                     <col style={{ width: '160px' }} />
                                 </colgroup>
                                 <thead>
@@ -1599,7 +1599,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             </div>
                                         </th>
                                         {days.map((day, i) => (
-                                            <th key={i} className="p-4 text-center border-r dark:border-slate-700 min-w-[140px]">
+                                            <th key={i} className="p-4 text-center border-r dark:border-slate-700 min-w-[155px]">
                                                 <p className="text-[9px] font-bold text-indigo-500 dark:text-indigo-400 tracking-wider mb-1 capitalize">{day.toLocaleDateString('es-CO', { weekday: 'short' })}</p>
                                                 <p className="text-xl font-[900] text-slate-800 dark:text-white leading-none tracking-tighter">{day.getDate()}</p>
                                             </th>
@@ -1642,8 +1642,10 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                     <td key={di} className="p-2 border-r dark:border-slate-800 text-center align-middle" style={{ height: '70px' }}>
                                                         {totalDeficit > 0 ? (
                                                             <button 
-                                                                onClick={(e) => { e.preventDefault(); setSelectedCoverageDay({ day, needs, totalDeficit }); }}
-                                                                className="flex flex-col items-center gap-0.5 group transition-transform active:scale-95"
+                                                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedCoverageDay({ day, needs, totalDeficit }); }}
+                                                                className="flex flex-col items-center gap-1 group transition-all hover:scale-105 active:scale-95 bg-transparent border-none p-0 outline-none shadow-none"
+                                                                type="button"
+                                                                style={{ background: 'transparent', border: 'none', padding: 0 }}
                                                             >
                                                                 <div className="px-3 py-1 bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 rounded-full text-[9px] font-bold border border-rose-200 dark:border-rose-500/30 shadow-sm group-hover:shadow-glow-rose group-hover:bg-rose-500 group-hover:text-white transition-all">
                                                                     -{totalDeficit} Staff
@@ -2529,7 +2531,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="p-6 bg-rose-50 dark:bg-rose-500/10 rounded-3xl border border-rose-100 dark:border-rose-500/20">
                                     <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-2">Déficit Detectado</p>
-                                    <p className="text-4xl font-[950] text-rose-600">-{selectedCoverageDay.totalDeficit} <span className="text-lg">STAFF</span></p>
+                                    <p className="text-4xl font-[950] text-rose-600">-{selectedCoverageDay.totalDeficit} <span className="text-lg">Staff</span></p>
                                 </div>
                                 <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-100 dark:border-white/5">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Estado General</p>
@@ -2564,8 +2566,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         return (
                                             <div key={h} className="flex-1 flex flex-col gap-2 items-center group/h relative">
                                                 <div 
-                                                    className={`w-full rounded-t-lg transition-all ${isDeficit ? 'bg-rose-500' : isOptimal ? 'bg-emerald-500 opacity-60' : 'bg-slate-300 dark:bg-slate-700'}`}
-                                                    style={{ height: hourNeeds > 0 ? `${Math.min(100, (scheduled/hourNeeds)*100 + 10)}%` : '4px' }}
+                                                    className={`w-full rounded-t-lg transition-all shadow-sm ${isDeficit ? 'bg-rose-500 shadow-rose-200' : isOptimal ? 'bg-emerald-500 shadow-emerald-200' : 'bg-slate-300 dark:bg-slate-700'}`}
+                                                    style={{ height: hourNeeds > 0 ? `${Math.max(10, (scheduled/Math.max(1, hourNeeds))*100)}%` : '6px', minHeight: hourNeeds > 0 ? '8px' : '4px' }}
                                                 ></div>
                                                 {h % 4 === 0 && <span className="text-[7px] font-black text-slate-400">{h}h</span>}
                                                 
