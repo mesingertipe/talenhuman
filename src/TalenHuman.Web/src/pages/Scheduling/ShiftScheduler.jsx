@@ -37,7 +37,8 @@ import {
     ArrowDown,
     XCircle,
     AlertTriangle,
-    Cpu
+    Cpu,
+    CalendarSearch
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import HelpIcon from '../../components/Shared/HelpIcon';

@@ -11,26 +11,32 @@ Este workflow automatiza la preparación y subida del código para que GitHub Ac
    ```
 
 // turbo
-1. Verificar compilación:
+1. Verificar compilación Back-end:
    ```powershell
    dotnet build src/TalenHuman.sln
    ```
 
-2. Preparar archivos para Git:
+// turbo
+2. Verificar compilación Front-end:
+   ```powershell
+   npm run build --prefix src/TalenHuman.Web
+   ```
+
+3. Preparar archivos para Git:
    ```powershell
    git add .
    ```
 
 // turbo
-3. Crear el commit:
+4. Crear el commit:
    ```powershell
    git commit -m "Build and Deploy: Actualización automática"
    ```
 
 // turbo
-4. Subir a GitHub:
+5. Subir a GitHub:
    ```powershell
    git push origin main
    ```
 
-5. Informar al usuario que el despliegue está en proceso en GitHub Actions.
+6. Informar al usuario que el despliegue está en proceso en GitHub Actions.
