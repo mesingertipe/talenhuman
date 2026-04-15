@@ -1570,7 +1570,12 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             <footer className="mt-8 mb-4 text-center">
                                 <div className="version-tag-subtle">SISTEMA V13.9.46-STABLE-ELITE</div>
                             </footer>
-                            <table className="w-full border-collapse">
+                            <table className="border-collapse" style={{ tableLayout: 'fixed', width: '1360px', borderSpacing: 0 }}>
+                                <colgroup>
+                                    <col style={{ width: '320px' }} />
+                                    {days.map((_, i) => <col key={i} style={{ width: '140px' }} />)}
+                                    <col style={{ width: '160px' }} />
+                                </colgroup>
                                 <thead>
                                     <tr className="bg-slate-50 dark:bg-slate-800 border-b-2 dark:border-indigo-500/20">
                                         <th className="p-8 text-left sticky left-0 z-20 border-r dark:border-slate-800" 
@@ -1634,53 +1639,91 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 });
 
                                                 return (
-                                                    <td key={di} className="p-2 border-r dark:border-slate-800 text-center" style={{ minWidth: '140px', maxWidth: '140px' }}>
+                                                    <td key={di} className="p-2 border-r dark:border-slate-800 text-center">
                                                         {totalDeficit > 0 ? (
                                                             <div className="flex flex-col items-center gap-0.5 group relative cursor-help">
                                                                 <div className="px-1.5 py-0.5 bg-rose-500 text-white rounded-lg text-[8px] font-black shadow-lg shadow-rose-200">
                                                                     -{totalDeficit} STAFF
                                                                 </div>
-                                                                <span className="text-[7.5px] font-[1000] text-rose-400 uppercase tracking-tighter leading-none">Faltante IA</span>
+                                                                <div className="flex items-center gap-1">
+                                                                    <Sparkles size={10} className="text-rose-400" />
+                                                                    <span className="text-[7.5px] font-[1000] text-rose-400 uppercase tracking-tighter leading-none">Gap Detectado</span>
+                                                                </div>
                                                                 
-                                                                {/* Hover Detail */}
-                                                                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 p-3 bg-slate-900/95 backdrop-blur-xl text-white rounded-2xl z-[2000] w-52 opacity-0 group-hover:opacity-100 transition-all pointer-events-none shadow-2xl border border-white/10">
-                                                                     <p className="text-[9px] font-black text-indigo-400 mb-3 uppercase tracking-widest text-center border-b border-white/5 pb-2">Dimensionamiento IA</p>
-                                                                     {(() => {
-                                                                         const groupedGaps = {};
-                                                                         Object.keys(needs).forEach(pId => {
-                                                                             const p = profiles.find(pr => pr.id === pId);
-                                                                             const pName = p?.name || '---';
-                                                                             const pDeficit = needs[pId].reduce((acc, n, h) => {
-                                                                                 const scheduled = shifts.filter(s => {
-                                                                                     const sD = new Date(s.startTime);
-                                                                                     if (sD.toDateString() !== dayStr || s.isDescanso) return false;
-                                                                                     const emp = employees.find(e => e.id === s.employeeId);
-                                                                                     const sS = sD.getHours();
-                                                                                     const sE = new Date(s.endTime).getHours();
-                                                                                     const isAtHour = sE < sS ? (h >= sS || h < sE) : (sS <= h && sE > h);
-                                                                                     return emp?.profileId === pId && isAtHour;
-                                                                                 }).length;
-                                                                                 return acc + Math.max(0, n - scheduled);
-                                                                             }, 0);
-                                                                             if (pDeficit > 0) {
-                                                                                 groupedGaps[pName] = (groupedGaps[pName] || 0) + pDeficit;
-                                                                             }
-                                                                         });
-                                                                         return Object.entries(groupedGaps).map(([name, deficit]) => (
-                                                                             <div key={name} className="flex justify-between items-center mb-1.5 px-1">
-                                                                                 <span className="text-[9px] font-bold text-slate-300 truncate mr-2">{name}:</span>
-                                                                                 <span className="text-[10px] font-black text-rose-400">-{deficit}</span>
-                                                                             </div>
-                                                                         ));
-                                                                     })()}
+                                                                {/* V13.5 PREMIUM HOVER: HOURLY COVERAGE HEATMAP */}
+                                                                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 p-4 bg-slate-900/98 backdrop-blur-2xl text-white rounded-[2rem] z-[500000] w-64 opacity-0 group-hover:opacity-100 transition-all pointer-events-none shadow-[0_30px_70px_rgba(0,0,0,0.4)] border border-white/10 translate-y-2 group-hover:translate-y-0">
+                                                                     <p className="text-[10px] font-black text-indigo-400 mb-4 uppercase tracking-[0.2em] text-center border-b border-white/10 pb-3">Análisis de Cobertura IA</p>
+                                                                     
+                                                                     {/* 24-Hour Visual Heatbar */}
+                                                                     <div className="flex gap-0.5 h-6 mb-4 items-end">
+                                                                         {Array.from({ length: 24 }).map((_, h) => {
+                                                                             const hourNeeds = Object.values(needs).reduce((acc, n) => acc + (n[h] || 0), 0);
+                                                                             const scheduled = shifts.filter(s => {
+                                                                                 const sD = new Date(s.startTime);
+                                                                                 if (sD.toDateString() !== dayStr || s.isDescanso) return false;
+                                                                                 const sS = sD.getHours();
+                                                                                 const sE = new Date(s.endTime).getHours();
+                                                                                 return sE < sS ? (h >= sS || h < sE) : (h >= sS && h < sE);
+                                                                             }).length;
+                                                                             
+                                                                             const isDeficit = hourNeeds > scheduled;
+                                                                             const isOptimal = hourNeeds > 0 && scheduled >= hourNeeds;
+                                                                             const isQuiet = hourNeeds === 0;
+
+                                                                             return (
+                                                                                 <div key={h} className="flex-1 flex flex-col gap-1 items-center">
+                                                                                     <div 
+                                                                                         className={`w-full rounded-t-[2px] transition-all ${isDeficit ? 'bg-rose-500 min-h-[4px]' : isOptimal ? 'bg-emerald-500 h-2' : 'bg-slate-700 h-1'}`}
+                                                                                         style={{ height: hourNeeds > 0 ? `${Math.min(100, (scheduled/hourNeeds)*100)}%` : '2px' }}
+                                                                                     ></div>
+                                                                                     {h % 6 === 0 && <span className="text-[6px] font-bold text-slate-500">{h}h</span>}
+                                                                                 </div>
+                                                                             );
+                                                                         })}
+                                                                     </div>
+
+                                                                     <div className="space-y-2 max-h-40 overflow-y-auto pr-1 thin-scrollbar">
+                                                                         {(() => {
+                                                                             const groupedGaps = {};
+                                                                             Object.keys(needs).forEach(pId => {
+                                                                                 const p = profiles.find(pr => pr.id === pId);
+                                                                                 const pName = p?.name || '---';
+                                                                                 const pDeficit = needs[pId].reduce((acc, n, h) => {
+                                                                                     const scheduled = shifts.filter(s => {
+                                                                                         const sD = new Date(s.startTime);
+                                                                                         if (sD.toDateString() !== dayStr || s.isDescanso) return false;
+                                                                                         const emp = employees.find(e => e.id === s.employeeId);
+                                                                                         const sS = sD.getHours();
+                                                                                         const sE = new Date(s.endTime).getHours();
+                                                                                         const isAtHour = sE < sS ? (h >= sS || h < sE) : (sS <= h && sE > h);
+                                                                                         return emp?.profileId === pId && isAtHour;
+                                                                                     }).length;
+                                                                                     return acc + Math.max(0, n - scheduled);
+                                                                                 }, 0);
+                                                                                 if (pDeficit > 0) {
+                                                                                     groupedGaps[pName] = (groupedGaps[pName] || 0) + pDeficit;
+                                                                                 }
+                                                                             });
+                                                                             return Object.entries(groupedGaps).map(([name, deficit]) => (
+                                                                                 <div key={name} className="flex justify-between items-center bg-white/5 p-2 rounded-xl">
+                                                                                     <span className="text-[9px] font-bold text-slate-400 truncate mr-2">{name}</span>
+                                                                                     <span className="text-[10px] font-black text-rose-400">-{deficit} HRS</span>
+                                                                                 </div>
+                                                                             ));
+                                                                         })()}
+                                                                     </div>
+                                                                     <div className="mt-3 pt-3 border-t border-white/10 flex justify-between items-center text-[8px] font-black uppercase tracking-widest text-slate-500">
+                                                                         <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div> Déficit</div>
+                                                                         <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> Cubierto</div>
+                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         ) : (
                                                             <div className="flex flex-col items-center gap-1">
-                                                                <div className="px-2 py-1 bg-emerald-500 text-white rounded-lg text-[9px] font-black shadow-lg shadow-emerald-200">
-                                                                    CUBIERTO
+                                                                <div className="px-1.5 py-0.5 bg-emerald-500 text-white rounded-lg text-[8px] font-black shadow-lg shadow-emerald-200">
+                                                                    ÓPTIMO
                                                                 </div>
-                                                                <span className="text-[7.5px] font-[1000] text-emerald-400 uppercase tracking-tighter leading-none">Meta Óptima</span>
+                                                                <span className="text-[7.5px] font-[1000] text-emerald-400 uppercase tracking-tighter leading-none">Cobertura 100%</span>
                                                             </div>
                                                         )}
                                                     </td>
@@ -2372,6 +2415,101 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         <div style={{ padding: '24px', background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc', borderRadius: '32px', border: '1px solid rgba(0,0,0,0.05)' }}>
                                             <p style={{ fontSize: '10px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '5px' }}>Data Histórica</p>
                                             <p style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>3 SEMANAS</p>
+                                        </div>
+                                    </div>
+
+                                    {/* V13.5 PREMIUM: BALANCE OPERATIVO OVERVIEW */}
+                                    <div style={{ marginBottom: '40px', padding: '30px', background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(147, 51, 234, 0.1))', borderRadius: '40px', border: '1px solid rgba(79, 70, 229, 0.2)' }}>
+                                        <div className="flex justify-between items-center mb-6">
+                                            <h4 style={{ fontSize: '11px', fontWeight: '950', color: '#6366f1', textTransform: 'uppercase', tracking: '0.15em', margin: 0 }}>Balance Operativo Semanal</h4>
+                                            <div className="px-3 py-1 bg-indigo-500/20 text-indigo-400 rounded-full text-[9px] font-black uppercase">Análisis en Vivo</div>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-3 gap-6">
+                                            <div className="text-center">
+                                                <p className="text-[9px] font-bold text-slate-500 mb-1 uppercase">Sugeridos</p>
+                                                <p className="text-xl font-black text-indigo-500">
+                                                    {(() => {
+                                                        let totalNewReq = 0;
+                                                        days.forEach(day => {
+                                                            const needs = calculateHourlyNeeds(day);
+                                                            const dayStr = day.toDateString();
+                                                            Object.keys(needs).forEach(pId => {
+                                                                needs[pId].forEach((need, h) => {
+                                                                    const scheduled = shifts.filter(s => {
+                                                                        const sD = new Date(s.startTime);
+                                                                        if (sD.toDateString() !== dayStr || s.isDescanso) return false;
+                                                                        const emp = employees.find(e => e.id === s.employeeId);
+                                                                        if (emp?.profileId !== pId) return false;
+                                                                        const sS = sD.getHours();
+                                                                        const sE = new Date(s.endTime).getHours();
+                                                                        return sE < sS ? (h >= sS || h < sE) : (h >= sS && h < sE);
+                                                                    }).length;
+                                                                    if (need > scheduled) totalNewReq += (need - scheduled);
+                                                                });
+                                                            });
+                                                        });
+                                                        return totalNewReq;
+                                                    })()}
+                                                </p>
+                                                <p className="text-[8px] font-black text-slate-400 mt-1 uppercase">Eventos</p>
+                                            </div>
+                                            <div className="text-center border-x border-indigo-500/10">
+                                                <p className="text-[9px] font-bold text-slate-500 mb-1 uppercase">Eficiencia</p>
+                                                <p className="text-xl font-black text-emerald-500">
+                                                    {(() => {
+                                                        let totalNeeds = 0;
+                                                        let totalScheduled = 0;
+                                                        days.forEach(day => {
+                                                            const needs = calculateHourlyNeeds(day);
+                                                            const dayStr = day.toDateString();
+                                                            Object.keys(needs).forEach(pId => {
+                                                                needs[pId].forEach((need, h) => {
+                                                                    totalNeeds += need;
+                                                                    totalScheduled += Math.min(need, shifts.filter(s => {
+                                                                        const sD = new Date(s.startTime);
+                                                                        if (sD.toDateString() !== dayStr || s.isDescanso) return false;
+                                                                        const emp = employees.find(e => e.id === s.employeeId);
+                                                                        if (emp?.profileId !== pId) return false;
+                                                                        const sS = sD.getHours();
+                                                                        const sE = new Date(s.endTime).getHours();
+                                                                        return sE < sS ? (h >= sS || h < sE) : (h >= sS && h < sE);
+                                                                    }).length);
+                                                                });
+                                                            });
+                                                        });
+                                                        return totalNeeds > 0 ? Math.round((totalScheduled / totalNeeds) * 100) : 100;
+                                                    })()}%
+                                                </p>
+                                                <p className="text-[8px] font-black text-slate-400 mt-1 uppercase">Cobertura</p>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="text-[9px] font-bold text-slate-500 mb-1 uppercase">Crítico</p>
+                                                <p className="text-xl font-black text-rose-500">
+                                                    {(() => {
+                                                        const hourDeltas = new Array(24).fill(0);
+                                                        days.forEach(day => {
+                                                            const needs = calculateHourlyNeeds(day);
+                                                            const dayStr = day.toDateString();
+                                                            Object.values(needs).forEach(hourlyNeed => {
+                                                                hourlyNeed.forEach((n, h) => {
+                                                                    const sched = shifts.filter(s => {
+                                                                        const sD = new Date(s.startTime);
+                                                                        if (sD.toDateString() !== dayStr || s.isDescanso) return false;
+                                                                        const sS = sD.getHours();
+                                                                        const sE = new Date(s.endTime).getHours();
+                                                                        return sE < sS ? (h >= sS || h < sE) : (h >= sS && h < sE);
+                                                                    }).length;
+                                                                    if (n > sched) hourDeltas[h] += (n - sched);
+                                                                });
+                                                            });
+                                                        });
+                                                        const worstHour = hourDeltas.indexOf(Math.max(...hourDeltas));
+                                                        return `${worstHour}:00`;
+                                                    })()}
+                                                </p>
+                                                <p className="text-[8px] font-black text-slate-400 mt-1 uppercase">Hora Pico</p>
+                                            </div>
                                         </div>
                                     </div>
 
