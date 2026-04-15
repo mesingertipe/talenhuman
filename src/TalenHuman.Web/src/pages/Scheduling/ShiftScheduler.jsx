@@ -659,6 +659,24 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         return d;
     }, [currentWeekStart]);
 
+    const handleJumpToDate = (targetDate) => {
+        if (!targetDate) return;
+        const selectedDate = new Date(targetDate);
+        // Normalize to local midnight to avoid timezone shifts
+        selectedDate.setHours(0,0,0,0);
+        
+        const todayMonday = getMonday(0);
+        // Find the Monday of the selected week
+        const day = selectedDate.getDay() || 7;
+        const selectedMonday = new Date(selectedDate);
+        selectedMonday.setDate(selectedDate.getDate() - day + 1);
+        selectedMonday.setHours(0,0,0,0);
+        
+        const diffTime = selectedMonday - todayMonday;
+        const diffWeeks = Math.round(diffTime / (1000 * 60 * 60 * 24 * 7));
+        setWeekOffset(diffWeeks);
+    };
+
     const filteredEmployees = useMemo(() => {
         if (!selectedProfiles || selectedProfiles.length === 0) return employees;
         return employees.filter(e => selectedProfiles.includes(e.profileId));
@@ -1411,11 +1429,28 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     className={`p-1.5 rounded-xl transition-all active:scale-90 ${readOnly ? 'text-slate-200 pointer-events-none opacity-20' : 'text-slate-400 hover:text-indigo-500 hover:bg-white dark:hover:bg-slate-700 shadow-sm'}`} 
                                     title="Anterior"><ChevronLeft size={18} strokeWidth={3} /></button>
                             
-                            <div className="flex flex-col items-center min-w-[160px]">
+                            <div className="flex flex-col items-center min-w-[160px] relative group/jumper">
                                 <span className="text-[9px] font-bold text-indigo-500/70 tracking-tight mb-0">Programación Semanal</span>
-                                <span className={`text-[12px] font-black text-center whitespace-nowrap ${readOnly ? 'text-slate-400' : 'text-slate-800 dark:text-white'}`}>
-                                    {currentWeekStart.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} — {new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    <span className={`text-[12px] font-black text-center whitespace-nowrap ${readOnly ? 'text-slate-400' : 'text-slate-800 dark:text-white'}`}>
+                                        {currentWeekStart.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} — {new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
+                                    </span>
+                                    {!readOnly && (
+                                        <div className="relative">
+                                            <CalendarSearch 
+                                                size={14} 
+                                                className="text-slate-300 hover:text-indigo-500 cursor-pointer transition-colors" 
+                                                onClick={() => document.getElementById('week-jumper').showPicker()}
+                                            />
+                                            <input 
+                                                type="date" 
+                                                id="week-jumper"
+                                                className="absolute inset-0 opacity-0 cursor-pointer w-4 h-4"
+                                                onChange={(e) => handleJumpToDate(e.target.value)}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             <button onClick={() => setWeekOffset(prev => prev + 1)} 
@@ -1442,35 +1477,35 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     <div className="flex flex-row items-stretch justify-center gap-6 w-full mt-4 no-print overflow-x-auto pb-6 px-2 relative z-[1]">
                         
                         {/* Módulo A: Inteligencia (Glass Pod) */}
-                        <div className="flex flex-col gap-2 p-4 px-8 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.8rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod min-w-[280px]">
-                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wider mb-1 px-1 group-hover/pod:text-indigo-500 transition-colors text-center w-full block">Inteligencia</span>
+                        <div className="flex flex-col gap-2 p-3 px-6 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod min-w-[220px]">
+                            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 tracking-wider mb-0.5 px-1 group-hover/pod:text-indigo-500 transition-colors text-center w-full block">Inteligencia</span>
                             <div className="flex items-center gap-3">
                                 <button onClick={() => setShowPredictiveOverlay(!showPredictiveOverlay)}
-                                    className={`w-11 h-11 transition-all rounded-[18px] flex items-center justify-center shadow-lg active:scale-95 btn-chiclet ${showPredictiveOverlay ? 'bg-indigo-600 text-white shadow-glow-indigo' : 'bg-white text-indigo-400 border border-indigo-100 hover:bg-slate-50'}`} title={showPredictiveOverlay ? 'Ocultar Guía IA' : 'Ver Guía IA'}>
-                                    <Sparkles size={20} strokeWidth={2.5} />
+                                    className={`w-9 h-9 transition-all rounded-[15px] flex items-center justify-center shadow-lg active:scale-95 btn-chiclet ${showPredictiveOverlay ? 'bg-indigo-600 text-white shadow-glow-indigo' : 'bg-white text-indigo-400 border border-indigo-100 hover:bg-slate-50'}`} title={showPredictiveOverlay ? 'Ocultar Guía IA' : 'Ver Guía IA'}>
+                                    <Sparkles size={18} strokeWidth={2.5} />
                                 </button>
                                 {!effectiveReadOnly && (
                                     <>
                                         <button onClick={() => setShowBulkModal(true)}
-                                            className="w-11 h-11 bg-amber-500 text-white rounded-[18px] flex items-center justify-center hover:bg-amber-600 transition-all shadow-glow-amber active:scale-95 btn-chiclet" title="Programación Masiva">
-                                            <Calendar size={20} strokeWidth={2.5} />
+                                            className="w-9 h-9 bg-amber-500 text-white rounded-[15px] flex items-center justify-center hover:bg-amber-600 transition-all shadow-glow-amber active:scale-95 btn-chiclet" title="Programación Masiva">
+                                            <Calendar size={18} strokeWidth={2.5} />
                                         </button>
                                         <button onClick={copyFromPreviousWeek} 
-                                            className="w-11 h-11 bg-indigo-500 text-white rounded-[18px] flex items-center justify-center hover:bg-indigo-600 transition-all shadow-glow-indigo active:scale-95 btn-chiclet" title="Clonar Semana">
-                                            <CopyIcon size={20} strokeWidth={2.5} />
+                                            className="w-9 h-9 bg-indigo-500 text-white rounded-[15px] flex items-center justify-center hover:bg-indigo-600 transition-all shadow-glow-indigo active:scale-95 btn-chiclet" title="Clonar Semana">
+                                            <CopyIcon size={18} strokeWidth={2.5} />
                                         </button>
                                     </>
                                 )}
                                 <button onClick={() => setShowPredictiveModal(true)}
-                                    className="w-11 h-11 bg-purple-600 text-white rounded-[18px] flex items-center justify-center hover:bg-purple-700 transition-all shadow-glow-purple active:scale-95 btn-chiclet" title="Hub de Inteligencia">
-                                    <Cpu size={20} strokeWidth={2.5} />
+                                    className="w-9 h-9 bg-purple-600 text-white rounded-[15px] flex items-center justify-center hover:bg-purple-700 transition-all shadow-glow-purple active:scale-95 btn-chiclet" title="Hub de Inteligencia">
+                                    <Cpu size={18} strokeWidth={2.5} />
                                 </button>
                             </div>
                         </div>
 
                         {/* Módulo B: Centro de Eventos (Glass Pod) */}
-                        <div className="flex flex-col gap-2 p-4 px-8 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.8rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod items-center border-b-indigo-500/20 min-w-[280px]">
-                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wider mb-1 group-hover/pod:text-indigo-500 transition-colors text-center w-full block">Centro de Eventos</span>
+                        <div className="flex flex-col gap-2 p-3 px-6 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod items-center border-b-indigo-500/20 min-w-[220px]">
+                            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 tracking-wider mb-0.5 group-hover/pod:text-indigo-500 transition-colors text-center w-full block">Centro de Eventos</span>
                             <div className="flex items-center gap-3">
                                 {!effectiveReadOnly ? (
                                     <>
@@ -1480,17 +1515,17 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             { type: 'Turno Fuera', shadow: 'shadow-glow-purple', color: 'bg-purple-600', icon: AlertCircle, title: 'Asignación Fuera' }
                                         ].map((tool, idx) => (
                                             <div key={idx} draggable onDragStart={(e) => handleDragStart(e, 'PANEL', { type: tool.type })} 
-                                                className={`w-11 h-11 ${tool.color} text-white rounded-[18px] flex items-center justify-center cursor-grab hover:scale-110 hover:shadow-2xl transition-all ${tool.shadow} active:scale-95 btn-chiclet`} title={tool.title}>
-                                                <tool.icon size={20} strokeWidth={2.5} />
+                                                className={`w-9 h-9 ${tool.color} text-white rounded-[15px] flex items-center justify-center cursor-grab hover:scale-110 hover:shadow-2xl transition-all ${tool.shadow} active:scale-95 btn-chiclet`} title={tool.title}>
+                                                <tool.icon size={18} strokeWidth={2.5} />
                                             </div>
                                         ))}
                                         <div onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnTrash} 
-                                            className="w-11 h-11 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-[18px] flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-700 hover:bg-rose-600 hover:text-white hover:border-solid hover:shadow-glow-rose transition-all cursor-pointer active:scale-95 btn-chiclet-trash" title="Borrar Turno">
-                                            <Trash2 size={20} strokeWidth={2.5} />
+                                            className="w-9 h-9 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-[15px] flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-700 hover:bg-rose-600 hover:text-white hover:border-solid hover:shadow-glow-rose transition-all cursor-pointer active:scale-95 btn-chiclet-trash" title="Borrar Turno">
+                                            <Trash2 size={18} strokeWidth={2.5} />
                                         </div>
                                     </>
                                 ) : (
-                                    <div className="h-11 flex items-center text-slate-400 font-bold text-[10px] tracking-[0.1em] px-6 bg-slate-100/50 dark:bg-slate-800/40 rounded-full border border-slate-200 dark:border-slate-700 italic">Semana cerrada</div>
+                                    <div className="h-9 flex items-center text-slate-400 font-bold text-[9px] tracking-[0.1em] px-6 bg-slate-100/50 dark:bg-slate-800/40 rounded-full border border-slate-200 dark:border-slate-700 italic">Semana cerrada</div>
                                 )}
                             </div>
                         </div>
@@ -1568,19 +1603,19 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 
                 <div className="card shadow-[0_40px_100px_rgba(0,0,0,0.12)] bg-white dark:bg-slate-900 border-2 dark:border-slate-800 relative" style={{ borderRadius: '48px', overflow: 'hidden', minHeight: '600px' }}>
                     <div className="overflow-x-auto">
-                            <footer className="mt-8 mb-4 text-center">
-                                <div className="version-tag-subtle">SISTEMA V13.9.46-STABLE-ELITE</div>
+                            <footer className="absolute bottom-4 right-8 z-[100] opacity-30 select-none pointer-events-none">
+                                <div className="text-[8px] font-black tracking-[0.2em] text-slate-400 uppercase">V13.9.46-ELITE</div>
                             </footer>
-                            <table className="border-collapse" style={{ tableLayout: 'fixed', width: '1565px', borderSpacing: 0 }}>
+                            <table className="border-collapse" style={{ tableLayout: 'fixed', width: '1335px', borderSpacing: 0, minWidth: '1335px' }}>
                                 <colgroup>
-                                    <col style={{ width: '320px' }} />
-                                    {days.map((_, i) => <col key={i} style={{ width: '155px' }} />)}
-                                    <col style={{ width: '160px' }} />
+                                    <col style={{ width: '260px' }} />
+                                    {days.map((_, i) => <col key={i} style={{ width: '135px' }} />)}
+                                    <col style={{ width: '130px' }} />
                                 </colgroup>
                                 <thead>
                                     <tr className="bg-slate-50 dark:bg-slate-800 border-b-2 dark:border-indigo-500/20">
                                         <th className="p-8 text-left sticky left-0 z-[30] border-r dark:border-slate-800" 
-                                            style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '320px', minWidth: '320px', maxWidth: '320px' }}>
+                                            style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '260px', minWidth: '260px', maxWidth: '260px' }}>
                                             <div className="flex items-center gap-4">
                                                 <button 
                                                     onClick={handleSelectAll}
@@ -1599,12 +1634,12 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             </div>
                                         </th>
                                         {days.map((day, i) => (
-                                            <th key={i} className="p-4 text-center border-r dark:border-slate-700 min-w-[155px]">
+                                            <th key={i} className="p-4 text-center border-r dark:border-slate-700 min-w-[135px]">
                                                 <p className="text-[9px] font-bold text-indigo-500 dark:text-indigo-400 tracking-wider mb-1 capitalize">{day.toLocaleDateString('es-CO', { weekday: 'short' })}</p>
                                                 <p className="text-xl font-[900] text-slate-800 dark:text-white leading-none tracking-tighter">{day.getDate()}</p>
                                             </th>
                                         ))}
-                                        <th className="p-4 text-center bg-slate-100/30 dark:bg-slate-800/40 w-[160px] min-w-[160px] font-[950] text-[11px] text-slate-400 dark:text-indigo-300 tracking-[0.2em] border-l dark:border-slate-700">Horas</th>
+                                        <th className="p-4 text-center bg-slate-100/30 dark:bg-slate-800/40 w-[130px] min-w-[130px] font-[950] text-[11px] text-slate-400 dark:text-indigo-300 tracking-[0.2em] border-l dark:border-slate-700">Horas</th>
                                     </tr>
                                     
                                     {/* V13.0 COORDINATED GAP ANALYSIS ROW */}
@@ -1683,8 +1718,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         const isSelected = selectedEmployees.includes(emp.id);
                                         return (
                                             <tr key={emp.id} className="border-b dark:border-slate-800 transition-colors group">
-                                                <td className="sticky left-0 z-10 p-6 pl-10 border-r dark:border-slate-800 shadow-[10px_0_20px_rgba(0,0,0,0.03)]"
-                                                    style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '320px', minWidth: '320px', maxWidth: '320px' }}>
+                                                <td className="sticky left-0 z-10 p-4 pl-6 border-r dark:border-slate-800 shadow-[10px_0_20px_rgba(0,0,0,0.03)]"
+                                                    style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '260px', minWidth: '260px', maxWidth: '260px' }}>
                                                     <div className="flex items-center gap-4">
                                                         <button 
                                                             onClick={() => handleSelectEmployee(emp.id)}
@@ -1700,14 +1735,14 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                             {emp.firstName[0]}{emp.lastName[0]}
                                                         </div>
                                                         <div className="flex flex-col">
-                                                            <span className="text-[13.5px] font-[900] text-slate-800 dark:text-white leading-tight mb-1">{emp.firstName} {emp.lastName}</span>
+                                                            <span className="text-[11.5px] font-[900] text-slate-800 dark:text-white leading-tight mb-1">{emp.firstName} {emp.lastName}</span>
                                                             <div className="flex flex-col gap-0.5">
-                                                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-tighter">{emp.documento}</span>
+                                                                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 tracking-tighter">{emp.documento}</span>
                                                                 <div className="flex items-center gap-2">
-                                                                     <span style={{ fontSize: '7.5px', fontWeight: '800', color: isDarkMode ? '#818cf8' : '#6366f1', textTransform: 'uppercase', opacity: 0.8 }}>
+                                                                     <span style={{ fontSize: '7px', fontWeight: '800', color: isDarkMode ? '#818cf8' : '#6366f1', textTransform: 'uppercase', opacity: 0.8 }}>
                                                                          {profiles.find(p => p.id === emp.profileId)?.name || 'Sin Cargo'}
                                                                      </span>
-                                                                     <span className="text-[10px] text-slate-200 dark:text-slate-800 font-black">|</span>
+                                                                     <span className="text-[9px] text-slate-200 dark:text-slate-800 font-black">|</span>
                                                                      <div className="flex items-center gap-1 text-emerald-600/80 dark:text-emerald-400/80 font-black text-[9px]">
                                                                          <Clock size={10} strokeWidth={3} />
                                                                          {jornadas.find(j => j.id === emp.jornadaId)?.horasSemanales || 48}h
@@ -1818,7 +1853,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                                  {shift.status === 5 && <Clock size={10} className="text-white opacity-70" />}
                                                                                  {isLocked && <Lock size={11} className="text-white opacity-70" />}
                                                                                  {att && <Activity size={12} className="text-white opacity-100 animate-pulse" />}
-                                                                                 <span className="text-[7px] font-black uppercase tracking-[0.1em] opacity-80 leading-none">
+                                                                                 <span className="text-[6.5px] font-black uppercase tracking-[0.1em] opacity-80 leading-none">
                                                                                    {viewMode === 'SHIFTS' ? (shift.isDescanso ? 'DESC' : shift.isFuera ? 'FUERA' : 'TURNO') : 'MARCACIÓN'}
                                                                                  </span>
                                                                              </div>
@@ -1827,7 +1862,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                                      <Sparkles size={10} className="text-yellow-300" />
                                                                                  </div>
                                                                              )}
-                                                                             <span className={`text-[8px] font-[1000] tracking-tighter whitespace-nowrap mt-0.5 ${viewMode === 'ATTENDANCE' && !att ? 'opacity-40 animate-pulse' : ''}`}>
+                                                                             <span className={`text-[7.5px] font-[1000] tracking-tighter whitespace-nowrap mt-0.5 ${viewMode === 'ATTENDANCE' && !att ? 'opacity-40 animate-pulse' : ''}`}>
                                                                                  {displayText}
                                                                              </span>
                                                                              
@@ -2505,37 +2540,40 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     onClick={() => setSelectedCoverageDay(null)}
                 >
                     <div 
-                        className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden border border-white/10 animate-in zoom-in-95 duration-500"
+                        className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl w-full max-w-2xl rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.3)] overflow-hidden border border-white/20 dark:border-white/5 animate-in zoom-in-95 duration-500"
                         onClick={e => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div className="p-8 bg-indigo-600 text-white flex justify-between items-center relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
+                        <div className="p-8 bg-gradient-to-br from-indigo-600 to-purple-700 text-white flex justify-between items-center relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl animate-pulse"></div>
                             <div className="relative z-10">
-                                <h3 className="text-2xl font-[950] tracking-tighter mb-1">Análisis de Cobertura IA</h3>
-                                <p className="text-indigo-100 text-[11px] font-black uppercase tracking-widest">
-                                    {selectedCoverageDay.day.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
-                                </p>
+                                <h3 className="text-2xl font-[950] tracking-tighter mb-1 drop-shadow-sm">Análisis de Cobertura IA</h3>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
+                                    <p className="text-indigo-100 text-[11px] font-black uppercase tracking-widest opacity-90">
+                                        {selectedCoverageDay.day.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                    </p>
+                                </div>
                             </div>
                             <button 
                                 onClick={() => setSelectedCoverageDay(null)}
-                                className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all relative z-10"
+                                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all relative z-10 active:scale-90"
                             >
                                 <XCircle size={20} strokeWidth={3} />
                             </button>
                         </div>
 
                         {/* Content */}
-                        <div className="p-10 space-y-8">
+                        <div className="p-10 space-y-8 bg-slate-50/10 dark:bg-slate-900/20">
                             {/* Summary Cards */}
                             <div className="grid grid-cols-2 gap-6">
-                                <div className="p-6 bg-rose-50 dark:bg-rose-500/10 rounded-3xl border border-rose-100 dark:border-rose-500/20">
-                                    <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-2">Déficit Detectado</p>
-                                    <p className="text-4xl font-[950] text-rose-600">-{selectedCoverageDay.totalDeficit} <span className="text-lg">Staff</span></p>
+                                <div className="p-6 bg-rose-500/5 dark:bg-rose-500/10 rounded-[2rem] border border-rose-500/20 shadow-inner">
+                                    <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest mb-2 opacity-80">Déficit Crítico</p>
+                                    <p className="text-4xl font-[950] text-rose-600 dark:text-rose-500 tracking-tighter">-{selectedCoverageDay.totalDeficit} <span className="text-lg opacity-60">Staff</span></p>
                                 </div>
-                                <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-100 dark:border-white/5">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Estado General</p>
-                                    <p className="text-lg font-black text-slate-700 dark:text-slate-200">Revisión Requerida</p>
+                                <div className="p-6 bg-slate-200/20 dark:bg-white/5 rounded-[2rem] border border-slate-200 dark:border-white/5 shadow-inner">
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 opacity-80">Recomendación IA</p>
+                                    <p className="text-lg font-black text-slate-700 dark:text-slate-200 tracking-tight leading-tight">Optimizar jornada vespertina</p>
                                 </div>
                             </div>
 
