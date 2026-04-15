@@ -1623,7 +1623,6 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 const needs = calculateHourlyNeeds(day);
                                                 const dayStr = day.toDateString();
                                                 
-                                                // Calculate overall gap for this day (sum of deficits)
                                                 let totalDeficit = 0;
                                                 Object.values(needs).forEach(hourlyNeed => {
                                                     hourlyNeed.forEach((need, hour) => {
@@ -1636,6 +1635,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                             return sStart <= hour && sEnd > hour;
                                                         }).length;
                                                         if (need > scheduledAtHour) totalDeficit += (need - scheduledAtHour);
+                                                    });
                                                 });
 
                                                 return (
