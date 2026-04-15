@@ -1607,10 +1607,10 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             <footer className="absolute bottom-4 right-8 z-[100] opacity-30 select-none pointer-events-none">
                                 <div className="text-[8px] font-black tracking-[0.2em] text-slate-400 uppercase">V13.9.46-ELITE</div>
                             </footer>
-                            <table className="border-collapse" style={{ tableLayout: 'fixed', width: '1230px', borderSpacing: 0, minWidth: '1230px' }}>
+                            <table className="border-collapse" style={{ tableLayout: 'fixed', width: '1300px', borderSpacing: 0, minWidth: '1300px' }}>
                                 <colgroup>
                                     <col style={{ width: '210px' }} />
-                                    {days.map((_, i) => <col key={i} style={{ width: '130px' }} />)}
+                                    {days.map((_, i) => <col key={i} style={{ width: '140px' }} />)}
                                     <col style={{ width: '110px' }} />
                                 </colgroup>
                                 <thead>
@@ -1635,7 +1635,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             </div>
                                         </th>
                                         {days.map((day, i) => (
-                                            <th key={i} className="p-2 text-center border-r dark:border-slate-700 min-w-[130px]">
+                                            <th key={i} className="p-2 text-center border-r dark:border-slate-700 min-w-[140px]">
                                                 <p className="text-[8px] font-bold text-indigo-500 dark:text-indigo-400 tracking-wider mb-0.5 capitalize">{day.toLocaleDateString('es-CO', { weekday: 'short' })}</p>
                                                 <p className="text-base font-[900] text-slate-800 dark:text-white leading-none tracking-tighter">{day.getDate()}</p>
                                             </th>
@@ -1678,28 +1678,25 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 });
 
                                                 return (
-                                                    <td key={di} className="p-2 border-r dark:border-slate-800 text-center align-middle" style={{ height: '70px' }}>
+                                                    <td key={di} className="p-1 border-r dark:border-slate-800 text-center align-middle cursor-pointer hover:bg-rose-500/5 group/gap transition-colors" 
+                                                        style={{ height: '60px' }}
+                                                        onClick={() => { if (totalDeficit > 0) setSelectedCoverageDay({ day, needs, totalDeficit }); }}
+                                                    >
                                                         {totalDeficit > 0 ? (
-                                                            <button 
-                                                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedCoverageDay({ day, needs, totalDeficit }); }}
-                                                                className="flex flex-col items-center gap-1 group transition-all hover:scale-105 active:scale-95 bg-transparent border-none p-0 outline-none shadow-none"
-                                                                type="button"
-                                                                style={{ background: 'transparent', border: 'none', padding: 0 }}
-                                                            >
-                                                                <div className="px-3 py-1 bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 rounded-full text-[9px] font-bold border border-rose-200 dark:border-rose-500/30 shadow-sm group-hover:shadow-glow-rose group-hover:bg-rose-500 group-hover:text-white transition-all">
+                                                            <div className="flex flex-col items-center gap-1">
+                                                                <div className="px-2 py-0.5 bg-rose-500 text-white rounded-full text-[8.5px] font-black shadow-sm group-hover/gap:scale-110 transition-transform">
                                                                     -{totalDeficit} Staff
                                                                 </div>
-                                                                <div className="flex items-center gap-1">
+                                                                <div className="flex items-center gap-1 opacity-60 group-hover/gap:opacity-100">
                                                                     <Sparkles size={10} className="text-rose-400" />
-                                                                    <span className="text-[7.5px] font-bold text-slate-400 dark:text-slate-500 tracking-wider transition-colors group-hover:text-indigo-500 capitalize leading-none">Ver Análisis</span>
+                                                                    <span className="text-[7.5px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-tighter">Analizar</span>
                                                                 </div>
-                                                            </button>
+                                                            </div>
                                                         ) : (
-                                                            <div className="flex flex-col items-center gap-1">
-                                                                <div className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-[9px] font-bold border border-slate-200 dark:border-slate-700">
-                                                                    0 Staff
+                                                            <div className="flex flex-col items-center gap-1 opacity-30">
+                                                                <div className="px-2 py-0.5 bg-slate-400 text-white rounded-full text-[8.5px] font-black">
+                                                                    OK
                                                                 </div>
-                                                                <span className="text-[7.5px] font-bold text-slate-400 italic">Cubierto</span>
                                                             </div>
                                                         )}
                                                     </td>
@@ -1898,9 +1895,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                         </td>
                                                     );
                                                 })}
-                                                <td className="p-2 bg-slate-50/50 dark:bg-slate-900/50 border-l dark:border-slate-800 sticky right-0 z-10 shadow-[-5px_0_15px_rgba(0,0,0,0.05)]" 
+                                                <td className="p-2 bg-slate-50/50 dark:bg-slate-900/50 border-l dark:border-slate-800 sticky right-0 z-10 shadow-[-10px_0_30px_rgba(0,0,0,0.05)]" 
                                                     style={{ width: '110px', minWidth: '110px', maxWidth: '110px', backgroundColor: isDarkMode ? '#0f172a' : '#ffffff' }}>
-                                                    <div className="flex flex-col items-center justify-center gap-1">
+                                                    <div className="flex flex-col items-center justify-center gap-1.5">
                                                         <div className="flex items-center gap-2 bg-indigo-50/50 dark:bg-indigo-900/20 px-3 py-1 rounded-full border border-indigo-100 dark:border-indigo-800/50">
                                                             <Calendar size={12} className="text-indigo-500" strokeWidth={3} />
                                                             <strong className="text-[11px] font-[950] text-indigo-700 dark:text-indigo-300">
