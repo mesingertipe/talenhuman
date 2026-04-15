@@ -21,4 +21,5 @@ jobs:
           cd /var/www/talenhuman
           git fetch --all
           git reset --hard origin/main
+          docker system prune -af
           docker compose up -d --build

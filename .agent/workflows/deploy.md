@@ -5,6 +5,12 @@ description: Build, commit, and push TalenHuman to trigger production deployment
 Este workflow automatiza la preparación y subida del código para que GitHub Actions lo despliegue en DigitalOcean.
 
 // turbo
+0. Limpieza opcional de Docker (si hay poco espacio):
+   ```powershell
+   docker system prune -af
+   ```
+
+// turbo
 1. Verificar compilación:
    ```powershell
    dotnet build src/TalenHuman.sln
