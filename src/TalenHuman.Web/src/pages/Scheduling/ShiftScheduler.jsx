@@ -1609,14 +1609,14 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             </footer>
                             <table className="border-collapse" style={{ tableLayout: 'fixed', width: '1350px', borderSpacing: 0, minWidth: '1350px' }}>
                                 <colgroup>
-                                    <col style={{ width: '180px' }} />
-                                    {days.map((_, i) => <col key={i} style={{ width: '145px' }} />)}
-                                    <col style={{ width: '150px' }} />
+                                    <col style={{ width: '160px' }} />
+                                    {days.map((_, i) => <col key={i} style={{ width: '150px' }} />)}
+                                    <col style={{ width: '140px' }} />
                                 </colgroup>
                                 <thead>
                                     <tr className="bg-slate-50 dark:bg-slate-800 border-b-2 dark:border-indigo-500/20">
-                                        <th className="p-4 py-6 text-left sticky left-0 z-[110] border-r dark:border-slate-800" 
-                                            style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '180px', minWidth: '180px', maxWidth: '180px' }}>
+                                        <th className="p-4 py-6 text-left sticky left-0 z-[150] border-r dark:border-slate-800" 
+                                            style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '160px', minWidth: '160px', maxWidth: '160px' }}>
                                             <div className="flex items-center gap-2">
                                                 <button 
                                                     onClick={handleSelectAll}
@@ -1640,7 +1640,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 <p className="text-base font-[900] text-slate-800 dark:text-white leading-none tracking-tighter">{day.getDate()}</p>
                                             </th>
                                         ))}
-                                        <th className="p-4 text-center w-[150px] min-w-[150px] font-[950] text-[10px] text-slate-500 dark:text-indigo-300 tracking-[0.2em] border-l dark:border-slate-700 sticky right-0 z-[110]"
+                                        <th className="p-4 text-center w-[140px] min-w-[140px] font-[950] text-[9px] text-slate-500 dark:text-indigo-300 tracking-[0.2em] border-l dark:border-slate-700 sticky right-0 z-[150]"
                                             style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f8fafc' }}>
                                             Horas
                                         </th>
@@ -1649,13 +1649,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     {/* V13.0 COORDINATED GAP ANALYSIS ROW */}
                                     {showPredictiveOverlay && (
                                         <tr className="border-b dark:border-slate-800 bg-indigo-50/10 dark:bg-indigo-900/10 animate-in slide-in-from-top duration-500">
-                                            <th className="p-3 sticky left-0 z-[110] border-r dark:border-slate-800" 
-                                                style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f1f5f9', width: '180px', minWidth: '180px' }}>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg">
-                                                        <Sparkles size={12} className="text-white" />
-                                                    </div>
-                                                    <span className="text-[8.5px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest leading-none">Guía IA</span>
+                                            <th className="p-2 sticky left-0 z-[150] border-r dark:border-slate-800" 
+                                                style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f1f5f9', width: '160px', minWidth: '160px' }}>
+                                                <div className="flex items-center gap-1.5">
+                                                    <Sparkles size={11} className="text-indigo-500 animate-pulse" />
+                                                    <span className="text-[7.5px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest leading-none">Guía IA</span>
                                                 </div>
                                             </th>
                                             {days.map((day, di) => {
@@ -1702,8 +1700,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                     </td>
                                                 );
                                             })}
-                                            <td className="p-2 bg-indigo-50/20 dark:bg-indigo-900/20 border-l dark:border-slate-800 sticky right-0 z-20 shadow-[-5px_0_15px_rgba(0,0,0,0.05)]" 
-                                                style={{ width: '110px', minWidth: '110px', maxWidth: '110px', backgroundColor: isDarkMode ? '#1e293b' : '#f8fafc' }}></td>
+                                            <td className="p-2 border-l dark:border-slate-800 sticky right-0 z-[150]" 
+                                                style={{ width: '140px', minWidth: '140px', maxWidth: '140px', backgroundColor: isDarkMode ? '#1e293b' : '#f8fafc' }}></td>
                                         </tr>
                                     )}
                                 </thead>
@@ -1721,22 +1719,24 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         const isSelected = selectedEmployees.includes(emp.id);
                                         return (
                                             <tr key={emp.id} className="border-b dark:border-slate-800 hover:bg-slate-50/10 dark:hover:bg-slate-800/50 transition-colors">
-                                            <td className="p-2 py-3 border-r dark:border-slate-800 sticky left-0 z-[90] shadow-[10px_0_30px_rgba(0,0,0,0.03)]" 
-                                                style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '180px', minWidth: '180px' }}>
+                                            <td className="p-1 px-2 border-r dark:border-slate-800 sticky left-0 z-[150] shadow-[10px_0_30px_rgba(0,0,0,0.03)]" 
+                                                style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '160px', minWidth: '160px' }}>
                                                 <div className="flex flex-col gap-0.5">
-                                                    <div className="flex items-start gap-1.5 overflow-hidden">
+                                                    <div className="flex items-start gap-1 overflow-hidden">
                                                         <input type="checkbox" checked={isSelected} onChange={() => handleSelectEmployee(emp.id)} className="mt-1 w-3 h-3 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
                                                         <div className="flex flex-col min-w-0">
-                                                            <span className="text-[8.5px] font-extrabold text-slate-800 dark:text-indigo-50 leading-tight truncate">
-                                                                {`${emp.firstName} ${emp.lastName}`.toUpperCase()}
+                                                            <span className="text-[8px] font-[1000] text-slate-800 dark:text-indigo-50 leading-tight truncate uppercase">
+                                                                {emp.firstName} {emp.lastName}
                                                             </span>
-                                                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
-                                                                <span className="text-[7.5px] font-black text-indigo-600 dark:text-indigo-400 opacity-90">{emp.documento}</span>
-                                                                <span className="text-[7px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-tighter truncate max-w-[80px]">{profiles.find(p => p.id === emp.profileId)?.name || 'N/A'}</span>
+                                                            <div className="flex flex-col gap-0.5 mt-0.5">
+                                                                <span className="text-[7.5px] font-black text-indigo-600 dark:text-indigo-400 opacity-90 leading-none">{emp.documento}</span>
+                                                                <span style={{ fontSize: '7px', fontWeight: '900', color: isDarkMode ? '#94a3b8' : '#64748b', textTransform: 'uppercase', letterSpacing: '-0.02em', lineHeight: '1' }}>
+                                                                    {profiles.find(p => p.id === emp.profileId)?.name || 'N/A'}
+                                                                </span>
                                                             </div>
-                                                            <div className="flex items-center gap-1 mt-0.5">
-                                                                <Clock size={8} className="text-emerald-500" />
-                                                                <span className="text-[7.5px] font-black text-emerald-600 dark:text-emerald-400 tracking-tighter">@{empTotalHours}h</span>
+                                                            <div className="flex items-center gap-1 mt-1">
+                                                                <Clock size={7} className="text-emerald-500" />
+                                                                <span className="text-[7px] font-black text-emerald-600 dark:text-emerald-400 tracking-tighter">@{empTotalHours}h </span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1831,8 +1831,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                               className={`group rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-md transition-all relative ${isLocked ? (att ? 'cursor-help hover:ring-2 ring-white/50 scale-105' : 'cursor-default opacity-[0.9]') : 'cursor-grab active:cursor-grabbing hover:scale-[1.05] hover:z-50'}`}
                                                                                style={{ 
                                                                                   background: bgColor, 
-                                                                                  minWidth: '85px', 
-                                                                                  minHeight: '42px', 
+                                                                                  minWidth: '78px', 
+                                                                                  minHeight: '34px', 
                                                                                   filter: isLocked ? 'contrast(0.9) saturate(0.8)' : 'none',
                                                                                   borderLeft: shift.status === 1 ? '4px solid #10b981' : (shift.status === 2 ? '4px solid #ef4444' : 'none')
                                                                               }}
@@ -1875,17 +1875,17 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                                  setEndTime('17:00');
                                                                                  setShowTimeModal(true);
                                                                              }} 
-                                                                             className={`h-12 border-2 border-dashed rounded-2xl flex items-center justify-center transition-all ${isLockedDay ? 'border-slate-100 dark:border-slate-800 cursor-not-allowed opacity-[0.4]' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 cursor-pointer group'}`}
+                                                                             className={`h-10 border-2 border-dashed rounded-2xl flex items-center justify-center transition-all ${isLockedDay ? 'border-slate-100 dark:border-slate-800 cursor-not-allowed opacity-[0.4]' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 cursor-pointer group'}`}
                                                                     >
-                                                                        <Plus size={16} className={`${isLockedDay ? 'text-slate-300' : 'text-slate-400 group-hover:text-indigo-500 group-hover:scale-125'} transition-all`} />
+                                                                        <Plus size={14} className={`${isLockedDay ? 'text-slate-300' : 'text-slate-400 group-hover:text-indigo-500 group-hover:scale-125'} transition-all`} />
                                                                     </div>
                                                                 )}
                                                             </div>
                                                         </td>
                                                     );
                                                 })}
-                                                <td className="p-2 border-l dark:border-slate-800 sticky right-0 z-[90] shadow-[-15px_0_40px_rgba(0,0,0,0.15)]" 
-                                                    style={{ width: '150px', minWidth: '150px', maxWidth: '150px', backgroundColor: isDarkMode ? '#0f172a' : '#ffffff' }}>
+                                                <td className="p-2 border-l dark:border-slate-800 sticky right-0 z-[150] shadow-[-15px_0_40px_rgba(0,0,0,0.15)]" 
+                                                    style={{ width: '140px', minWidth: '140px', maxWidth: '140px', backgroundColor: isDarkMode ? '#0f172a' : '#ffffff' }}>
                                                     <div className="flex flex-col items-center justify-center gap-1.5">
                                                         <div className="flex items-center gap-2 bg-indigo-50/50 dark:bg-indigo-900/20 px-3 py-1 rounded-full border border-indigo-100 dark:border-indigo-800/50">
                                                             <Calendar size={12} className="text-indigo-500" strokeWidth={3} />
@@ -2585,44 +2585,39 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
                             {/* 24-HOUR HEATMAP */}
                             <div>
-                                <div className="flex justify-between items-center mb-4">
-                                    <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Distribución de Demanda x Hora</h4>
-                                    <div className="flex items-center gap-4 text-[9px] font-bold">
-                                        <div className="flex items-center gap-1.5 text-rose-500"><div className="w-2 h-2 rounded-full bg-rose-500"></div> Déficit</div>
-                                        <div className="flex items-center gap-1.5 text-emerald-500"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Cubierto</div>
-                                    </div>
+                            <div className="flex justify-between items-center mb-4">
+                                <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Mapa de Calor (Demanda x Hora)</h4>
+                                <div className="flex items-center gap-4 text-[9px] font-black">
+                                    <div className="flex items-center gap-1.5 text-rose-500"><div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div> Déficit</div>
+                                    <div className="flex items-center gap-1.5 text-emerald-500"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div> Cubierto</div>
                                 </div>
-                                <div className="flex gap-1 h-32 items-end bg-slate-50 dark:bg-slate-800/30 p-4 rounded-3xl border border-slate-100 dark:border-white/5">
-                                    {Array.from({ length: 24 }).map((_, h) => {
-                                        const needs = selectedCoverageDay.needs;
-                                        const hourNeeds = Object.values(needs).reduce((acc, n) => acc + (n[h] || 0), 0);
-                                        const scheduled = shifts.filter(s => {
-                                            const sD = new Date(s.startTime);
-                                            if (sD.toDateString() !== selectedCoverageDay.day.toDateString() || s.isDescanso) return false;
-                                            const sS = sD.getHours();
-                                            const sE = new Date(s.endTime).getHours();
-                                            return sE < sS ? (h >= sS || h < sE) : (h >= sS && h < sE);
-                                        }).length;
-                                        
-                                        const isDeficit = hourNeeds > scheduled;
-                                        const isOptimal = hourNeeds > 0 && scheduled >= hourNeeds;
+                            </div>
+                            <div className="flex gap-1 h-32 items-end bg-slate-50 dark:bg-slate-800/80 p-6 rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-inner">
+                                {Array.from({ length: 24 }).map((_, h) => {
+                                    const needs = selectedCoverageDay.needs;
+                                    const hourNeeds = Object.values(needs).reduce((acc, n) => acc + (n[h] || 0), 0);
+                                    const scheduled = shifts.filter(s => {
+                                        const sD = new Date(s.startTime);
+                                        if (sD.toDateString() !== selectedCoverageDay.day.toDateString() || s.isDescanso) return false;
+                                        const sS = sD.getHours();
+                                        const sE = new Date(s.endTime).getHours();
+                                        return sE < sS ? (h >= sS || h < sE) : (h >= sS && h < sE);
+                                    }).length;
+                                    
+                                    const isDeficit = hourNeeds > scheduled;
+                                    const isOptimal = hourNeeds > 0 && scheduled >= hourNeeds;
 
-                                        return (
-                                            <div key={h} className="flex-1 flex flex-col gap-2 items-center group/h relative">
-                                                <div 
-                                                    className={`w-full rounded-t-lg transition-all shadow-sm ${isDeficit ? 'bg-rose-500 shadow-rose-200' : isOptimal ? 'bg-emerald-500 shadow-emerald-200' : 'bg-slate-300 dark:bg-slate-700'}`}
-                                                    style={{ height: hourNeeds > 0 ? `${Math.max(10, (scheduled/Math.max(1, hourNeeds))*100)}%` : '6px', minHeight: hourNeeds > 0 ? '8px' : '4px' }}
-                                                ></div>
-                                                {h % 4 === 0 && <span className="text-[7px] font-black text-slate-400">{h}h</span>}
-                                                
-                                                {/* Mini Tooltip on Bar */}
-                                                <div className="absolute bottom-full mb-1 opacity-0 group-hover/h:opacity-100 transition-opacity whitespace-nowrap bg-slate-800 text-white text-[8px] font-black px-1.5 py-0.5 rounded pointer-events-none">
-                                                    {h}:00 | {scheduled}/{hourNeeds}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
+                                    return (
+                                        <div key={h} className="flex-1 flex flex-col gap-2 items-center group/h relative">
+                                            <div 
+                                                className={`w-full rounded-full transition-all ${isDeficit ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.4)]' : isOptimal ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]' : 'bg-slate-300 dark:bg-slate-700'}`}
+                                                style={{ height: hourNeeds > 0 ? `${Math.min(100, (scheduled/Math.max(1, hourNeeds))*100)}%` : '6px', minHeight: hourNeeds > 0 ? '8px' : '4px' }}
+                                            ></div>
+                                            {h % 6 === 0 && <span className="text-[7px] font-black text-slate-400 absolute -bottom-6">{h}:00</span>}
+                                        </div>
+                                    );
+                                })}
+                            </div>
                             </div>
 
                             {/* ROLE BREAKDOWN */}
@@ -2652,10 +2647,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             });
                                             if (Object.keys(groupedGaps).length === 0) return <p className="text-[11px] text-slate-400 italic">No hay faltantes registrados.</p>;
                                             return Object.entries(groupedGaps).map(([name, deficit]) => (
-                                                <div key={name} className="flex justify-between items-center bg-rose-500/5 p-3 rounded-2xl border border-rose-500/10">
-                                                    <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-tighter">Colaborador</span>
-                                                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">{name}</span>
-                                                    <span className="text-xs font-black text-rose-500">-{deficit} HRS</span>
+                                                <div key={name} className="flex justify-between items-center bg-rose-500/5 p-4 rounded-3xl border border-rose-500/10 shadow-sm">
+                                                    <span className="text-[10px] font-[950] text-slate-800 dark:text-indigo-100 leading-tight uppercase max-w-[140px] truncate">{name}</span>
+                                                    <span className="px-3 py-1 bg-rose-500 text-white text-[9px] font-black rounded-full shadow-sm">-{deficit} HRS</span>
                                                 </div>
                                             ));
                                         })()}
