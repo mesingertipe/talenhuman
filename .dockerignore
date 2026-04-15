@@ -1,0 +1,20 @@
+# Build context exclusions
+node_modules/
+dist/
+build/
+bin/
+obj/
+.git/
+.vs/
+.vscode/
+.idea/
+*.log
+*.swp
+*.bak
+.DS_Store
+Thumbs.db
+out/
+publish/
+**/bin
+**/obj
+**/node_modules

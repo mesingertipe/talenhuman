@@ -8,6 +8,7 @@ RUN npm install --legacy-peer-deps
 
 # Build the app
 COPY src/TalenHuman.Web/ .
+RUN mkdir -p dist && chown -R node:node /app
 RUN npm run build
 
 # Serve with Nginx
