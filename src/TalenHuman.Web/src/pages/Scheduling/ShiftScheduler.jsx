@@ -37,6 +37,7 @@ import {
     ArrowDown,
     XCircle,
     AlertTriangle,
+    Check,
     Cpu,
     CalendarSearch
 } from 'lucide-react';
@@ -2584,40 +2585,77 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             </div>
 
                             {/* 24-HOUR HEATMAP */}
+                            {/* HOUR-BY-HOUR TRAFFIC LIGHT (SEMÁFORO) */}
                             <div>
-                            <div className="flex justify-between items-center mb-4">
-                                <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Mapa de Calor (Demanda x Hora)</h4>
-                                <div className="flex items-center gap-4 text-[9px] font-black">
-                                    <div className="flex items-center gap-1.5 text-rose-500"><div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div> Déficit</div>
-                                    <div className="flex items-center gap-1.5 text-emerald-500"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div> Cubierto</div>
+                                <div className="flex justify-between items-center mb-6">
+                                    <div className="flex flex-col gap-1">
+                                        <h4 className="text-[11px] font-[1000] text-indigo-500 uppercase tracking-widest leading-none">Semáforo de Demanda x Hora</h4>
+                                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Análisis Operativo (06:00 - 23:00)</p>
+                                    </div>
+                                    <div className="flex items-center gap-4 text-[9px] font-black bg-slate-50 dark:bg-slate-800/50 px-4 py-2 rounded-full border border-slate-100 dark:border-white/5">
+                                        <div className="flex items-center gap-1.5 text-rose-500"><div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></div> Déficit</div>
+                                        <div className="flex items-center gap-1.5 text-emerald-500"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div> Cubierto</div>
+                                        <div className="flex items-center gap-1.5 text-slate-400"><div className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700"></div> S/Demanda</div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="flex gap-1 h-32 items-end bg-slate-50 dark:bg-slate-800/80 p-6 rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-inner">
-                                {Array.from({ length: 24 }).map((_, h) => {
-                                    const needs = selectedCoverageDay.needs;
-                                    const hourNeeds = Object.values(needs).reduce((acc, n) => acc + (n[h] || 0), 0);
-                                    const scheduled = shifts.filter(s => {
-                                        const sD = new Date(s.startTime);
-                                        if (sD.toDateString() !== selectedCoverageDay.day.toDateString() || s.isDescanso) return false;
-                                        const sS = sD.getHours();
-                                        const sE = new Date(s.endTime).getHours();
-                                        return sE < sS ? (h >= sS || h < sE) : (h >= sS && h < sE);
-                                    }).length;
-                                    
-                                    const isDeficit = hourNeeds > scheduled;
-                                    const isOptimal = hourNeeds > 0 && scheduled >= hourNeeds;
+                                <div className="bg-slate-50/50 dark:bg-slate-800/40 p-8 rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-inner">
+                                    <div className="flex justify-between items-center gap-2 overflow-x-auto thin-scrollbar pb-6 px-2">
+                                        {Array.from({ length: 18 }).map((_, i) => {
+                                            const h = i + 6; // Rango 6:00 a 23:00
+                                            const needs = selectedCoverageDay.needs;
+                                            const hourNeeds = Object.values(needs).reduce((acc, n) => acc + (n[h] || 0), 0);
+                                            const scheduled = shifts.filter(s => {
+                                                const sD = new Date(s.startTime);
+                                                if (sD.toDateString() !== selectedCoverageDay.day.toDateString() || s.isDescanso) return false;
+                                                const sS = sD.getHours();
+                                                const sE = new Date(s.endTime).getHours();
+                                                return sE < sS ? (h >= sS || h < sE) : (h >= sS && h < sE);
+                                            }).length;
+                                            
+                                            const isDeficit = hourNeeds > scheduled;
+                                            const isOptimal = hourNeeds > 0 && scheduled >= hourNeeds;
 
-                                    return (
-                                        <div key={h} className="flex-1 flex flex-col gap-2 items-center group/h relative">
-                                            <div 
-                                                className={`w-full rounded-full transition-all ${isDeficit ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.4)]' : isOptimal ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]' : 'bg-slate-300 dark:bg-slate-700'}`}
-                                                style={{ height: hourNeeds > 0 ? `${Math.min(100, (scheduled/Math.max(1, hourNeeds))*100)}%` : '6px', minHeight: hourNeeds > 0 ? '8px' : '4px' }}
-                                            ></div>
-                                            {h % 6 === 0 && <span className="text-[7px] font-black text-slate-400 absolute -bottom-6">{h}:00</span>}
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                                            return (
+                                                <div key={h} className="flex flex-col items-center gap-4 group/h relative">
+                                                    <div className="relative">
+                                                        <div 
+                                                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 border-4 ${
+                                                                isDeficit 
+                                                                    ? 'bg-rose-500 border-rose-200 dark:border-rose-900/50 shadow-[0_0_20px_rgba(244,63,94,0.4)] scale-110' 
+                                                                    : isOptimal 
+                                                                        ? 'bg-emerald-500 border-emerald-200 dark:border-emerald-900/50 shadow-[0_0_20px_rgba(16,185,129,0.3)]' 
+                                                                        : 'bg-slate-300 dark:bg-slate-700 border-slate-100 dark:border-slate-800'
+                                                            }`}
+                                                        >
+                                                            {isDeficit && <AlertTriangle size={14} className="text-white animate-bounce" />}
+                                                            {isOptimal && <Check size={14} className="text-white" />}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex flex-col items-center leading-none">
+                                                        <span className={`text-[10px] font-black ${isDeficit ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                                                            {h}:00
+                                                        </span>
+                                                        <span className="text-[7.5px] font-black text-slate-400 mt-1.5 bg-slate-200/50 dark:bg-slate-700/50 px-2 py-0.5 rounded-full">
+                                                            {scheduled}/{hourNeeds}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    {/* Tooltip Detallado */}
+                                                    <div className="absolute bottom-full mb-3 opacity-0 group-hover/h:opacity-100 transition-all transform translate-y-2 group-hover/h:translate-y-0 pointer-events-none z-[200]">
+                                                        <div className="bg-slate-900 text-white text-[9px] p-2 rounded-xl shadow-2xl border border-white/10 whitespace-nowrap flex flex-col items-center gap-1">
+                                                            <p className="font-bold border-b border-white/10 pb-1 mb-1">Hora: {h}:00</p>
+                                                            <div className="flex gap-3">
+                                                                <span className="text-emerald-400 font-black">Plan: {scheduled}</span>
+                                                                <span className="text-rose-400 font-black">Req: {hourNeeds}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="w-2 h-2 bg-slate-900 rotate-45 mx-auto -mt-1 border-r border-b border-white/10"></div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
                             </div>
 
                             {/* ROLE BREAKDOWN */}
