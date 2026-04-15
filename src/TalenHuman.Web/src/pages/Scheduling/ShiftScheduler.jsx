@@ -1607,11 +1607,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             <footer className="absolute bottom-4 right-8 z-[100] opacity-30 select-none pointer-events-none">
                                 <div className="text-[8px] font-black tracking-[0.2em] text-slate-400 uppercase">V13.9.46-ELITE</div>
                             </footer>
-                            <table className="border-collapse" style={{ tableLayout: 'fixed', width: '1300px', borderSpacing: 0, minWidth: '1300px' }}>
+                            <table className="border-collapse" style={{ tableLayout: 'fixed', width: '1400px', borderSpacing: 0, minWidth: '1400px' }}>
                                 <colgroup>
                                     <col style={{ width: '210px' }} />
-                                    {days.map((_, i) => <col key={i} style={{ width: '140px' }} />)}
-                                    <col style={{ width: '110px' }} />
+                                    {days.map((_, i) => <col key={i} style={{ width: '150px' }} />)}
+                                    <col style={{ width: '140px' }} />
                                 </colgroup>
                                 <thead>
                                     <tr className="bg-slate-50 dark:bg-slate-800 border-b-2 dark:border-indigo-500/20">
@@ -1635,12 +1635,12 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             </div>
                                         </th>
                                         {days.map((day, i) => (
-                                            <th key={i} className="p-2 text-center border-r dark:border-slate-700 min-w-[140px]">
+                                            <th key={i} className="p-2 text-center border-r dark:border-slate-700 min-w-[150px]">
                                                 <p className="text-[8px] font-bold text-indigo-500 dark:text-indigo-400 tracking-wider mb-0.5 capitalize">{day.toLocaleDateString('es-CO', { weekday: 'short' })}</p>
                                                 <p className="text-base font-[900] text-slate-800 dark:text-white leading-none tracking-tighter">{day.getDate()}</p>
                                             </th>
                                         ))}
-                                        <th className="p-4 text-center bg-slate-100/40 dark:bg-slate-800/60 w-[110px] min-w-[110px] font-[950] text-[10px] text-slate-500 dark:text-indigo-300 tracking-[0.2em] border-l dark:border-slate-700 sticky right-0 z-[30]"
+                                        <th className="p-4 text-center bg-slate-100/40 dark:bg-slate-800/60 w-[140px] min-w-[140px] font-[950] text-[10px] text-slate-500 dark:text-indigo-300 tracking-[0.2em] border-l dark:border-slate-700 sticky right-0 z-[100]"
                                             style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f8fafc' }}>
                                             Horas
                                         </th>
@@ -1895,8 +1895,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                         </td>
                                                     );
                                                 })}
-                                                <td className="p-2 bg-slate-50/50 dark:bg-slate-900/50 border-l dark:border-slate-800 sticky right-0 z-10 shadow-[-10px_0_30px_rgba(0,0,0,0.05)]" 
-                                                    style={{ width: '110px', minWidth: '110px', maxWidth: '110px', backgroundColor: isDarkMode ? '#0f172a' : '#ffffff' }}>
+                                                <td className="p-2 bg-slate-50/50 dark:bg-slate-900/50 border-l dark:border-slate-800 sticky right-0 z-[50] shadow-[-15px_0_40px_rgba(0,0,0,0.15)]" 
+                                                    style={{ width: '140px', minWidth: '140px', maxWidth: '140px', backgroundColor: isDarkMode ? '#0f172a' : '#ffffff' }}>
                                                     <div className="flex flex-col items-center justify-center gap-1.5">
                                                         <div className="flex items-center gap-2 bg-indigo-50/50 dark:bg-indigo-900/20 px-3 py-1 rounded-full border border-indigo-100 dark:border-indigo-800/50">
                                                             <Calendar size={12} className="text-indigo-500" strokeWidth={3} />
@@ -2538,7 +2538,21 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             {/* V13.5 ANALYTIC COVERAGE MODAL (PORTAL) */}
             {selectedCoverageDay && createPortal(
                 <div 
-                    className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-300"
+                    style={{ 
+                        position: 'fixed', 
+                        top: 0, 
+                        left: 0, 
+                        right: 0, 
+                        bottom: 0, 
+                        zIndex: 9999999, 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        padding: '1rem', 
+                        backgroundColor: 'rgba(15, 23, 42, 0.85)', // bg-slate-900/85
+                        backdropFilter: 'blur(16px)',
+                        WebkitBackdropFilter: 'blur(16px)'
+                    }}
                     onClick={() => setSelectedCoverageDay(null)}
                 >
                     <div 
