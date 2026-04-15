@@ -1442,8 +1442,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     <div className="flex flex-row items-stretch justify-center gap-6 w-full mt-4 no-print overflow-x-auto pb-6 px-2 relative z-[1]">
                         
                         {/* Módulo A: Inteligencia (Glass Pod) */}
-                        <div className="flex flex-col gap-2 p-4 px-8 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.8rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod">
-                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-[0.3em] uppercase mb-1 px-1 group-hover/pod:text-indigo-500 transition-colors text-center">Inteligencia</span>
+                        <div className="flex flex-col gap-2 p-4 px-8 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.8rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod min-w-[280px]">
+                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wider mb-1 px-1 group-hover/pod:text-indigo-500 transition-colors text-center w-full block">Inteligencia</span>
                             <div className="flex items-center gap-3">
                                 <button onClick={() => setShowPredictiveOverlay(!showPredictiveOverlay)}
                                     className={`w-11 h-11 transition-all rounded-[18px] flex items-center justify-center shadow-lg active:scale-95 btn-chiclet ${showPredictiveOverlay ? 'bg-indigo-600 text-white shadow-glow-indigo' : 'bg-white text-indigo-400 border border-indigo-100 hover:bg-slate-50'}`} title={showPredictiveOverlay ? 'Ocultar Guía IA' : 'Ver Guía IA'}>
@@ -1469,8 +1469,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         </div>
 
                         {/* Módulo B: Centro de Eventos (Glass Pod) */}
-                        <div className="flex flex-col gap-2 p-4 px-9 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.8rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod items-center border-b-indigo-500/20">
-                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-[0.3em] uppercase mb-1 group-hover/pod:text-indigo-500 transition-colors">Centro de Eventos</span>
+                        <div className="flex flex-col gap-2 p-4 px-8 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.8rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod items-center border-b-indigo-500/20 min-w-[280px]">
+                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wider mb-1 group-hover/pod:text-indigo-500 transition-colors text-center w-full block">Centro de Eventos</span>
                             <div className="flex items-center gap-3">
                                 {!effectiveReadOnly ? (
                                     <>
@@ -1496,8 +1496,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         </div>
 
                         {/* Módulo C: Utilidades (Glass Pod) */}
-                        <div className="flex flex-col gap-2 p-4 px-8 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.8rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod items-end">
-                            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-[0.3em] uppercase mb-1 px-1 group-hover/pod:text-indigo-500 transition-colors text-center">Utilidades</span>
+                        <div className="flex flex-col gap-2 p-4 px-8 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.8rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod min-w-[280px]">
+                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wider mb-1 px-1 group-hover/pod:text-indigo-500 transition-colors text-center w-full block">Utilidades</span>
                             <div className="flex items-center gap-3">
                                 <button onClick={handleExcelExport} disabled={isExporting} 
                                     className="w-11 h-11 bg-emerald-600 text-white rounded-[18px] flex items-center justify-center hover:bg-emerald-700 transition-all shadow-glow-emerald active:scale-95 btn-chiclet" title="Exportar Excel">
@@ -1592,7 +1592,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                         <Square size={18} className="text-slate-400" />
                                                     )}
                                                 </button>
-                                                <span className="text-[11px] font-[1000] tracking-[0.2em]"
+                                                <span className="text-[9.5px] font-bold tracking-wider"
                                                       style={{ color: isDarkMode ? '#cbd5e1' : '#64748b' }}>
                                                     Colaborador / Jornada
                                                 </span>
@@ -1600,8 +1600,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         </th>
                                         {days.map((day, i) => (
                                             <th key={i} className="p-4 text-center border-r dark:border-slate-700 min-w-[140px]">
-                                                <p className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 tracking-[0.2em] mb-1">{day.toLocaleDateString('es-CO', { weekday: 'short' })}</p>
-                                                <p className="text-2xl font-[950] text-slate-800 dark:text-white leading-none tracking-tighter">{day.getDate()}</p>
+                                                <p className="text-[9px] font-bold text-indigo-500 dark:text-indigo-400 tracking-wider mb-1 capitalize">{day.toLocaleDateString('es-CO', { weekday: 'short' })}</p>
+                                                <p className="text-xl font-[900] text-slate-800 dark:text-white leading-none tracking-tighter">{day.getDate()}</p>
                                             </th>
                                         ))}
                                         <th className="p-4 text-center bg-slate-100/30 dark:bg-slate-800/40 w-[160px] min-w-[160px] font-[950] text-[11px] text-slate-400 dark:text-indigo-300 tracking-[0.2em] border-l dark:border-slate-700">Horas</th>
@@ -1616,7 +1616,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                     <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200">
                                                         <Cpu size={16} strokeWidth={3} className="animate-pulse" />
                                                     </div>
-                                                    <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Guía IA</span>
+                                                    <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 capitalize tracking-wider">Guía IA</span>
                                                 </div>
                                             </td>
                                             {days.map((day, di) => {
@@ -1642,23 +1642,23 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                     <td key={di} className="p-2 border-r dark:border-slate-800 text-center align-middle" style={{ height: '70px' }}>
                                                         {totalDeficit > 0 ? (
                                                             <button 
-                                                                onClick={() => setSelectedCoverageDay({ day, needs, totalDeficit })}
+                                                                onClick={(e) => { e.preventDefault(); setSelectedCoverageDay({ day, needs, totalDeficit }); }}
                                                                 className="flex flex-col items-center gap-0.5 group transition-transform active:scale-95"
                                                             >
-                                                                <div className="px-1.5 py-0.5 bg-rose-500 text-white rounded-lg text-[8px] font-black shadow-lg shadow-rose-200">
-                                                                    -{totalDeficit} STAFF
+                                                                <div className="px-3 py-1 bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 rounded-full text-[9px] font-bold border border-rose-200 dark:border-rose-500/30 shadow-sm group-hover:shadow-glow-rose group-hover:bg-rose-500 group-hover:text-white transition-all">
+                                                                    -{totalDeficit} Staff
                                                                 </div>
                                                                 <div className="flex items-center gap-1">
                                                                     <Sparkles size={10} className="text-rose-400" />
-                                                                    <span className="text-[7.5px] font-[1000] text-rose-400 uppercase tracking-tighter leading-none hover:underline">Ver Análisis</span>
+                                                                    <span className="text-[7.5px] font-bold text-slate-400 dark:text-slate-500 tracking-wider transition-colors group-hover:text-indigo-500 capitalize leading-none">Ver Análisis</span>
                                                                 </div>
                                                             </button>
                                                         ) : (
                                                             <div className="flex flex-col items-center gap-1">
-                                                                <div className="px-1.5 py-0.5 bg-emerald-500 text-white rounded-lg text-[8px] font-black shadow-lg shadow-emerald-200">
-                                                                    ÓPTIMO
+                                                                <div className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-[9px] font-bold border border-slate-200 dark:border-slate-700">
+                                                                    0 Staff
                                                                 </div>
-                                                                <span className="text-[7.5px] font-[1000] text-emerald-400 uppercase tracking-tighter leading-none">Cobertura 100%</span>
+                                                                <span className="text-[7.5px] font-bold text-slate-400 italic">Cubierto</span>
                                                             </div>
                                                         )}
                                                     </td>
@@ -1698,7 +1698,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                             {emp.firstName[0]}{emp.lastName[0]}
                                                         </div>
                                                         <div className="flex flex-col">
-                                                            <span className="text-[15px] font-[950] text-slate-800 dark:text-white leading-tight mb-1">{emp.firstName} {emp.lastName}</span>
+                                                            <span className="text-[13.5px] font-[900] text-slate-800 dark:text-white leading-tight mb-1">{emp.firstName} {emp.lastName}</span>
                                                             <div className="flex flex-col gap-0.5">
                                                                 <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-tighter">{emp.documento}</span>
                                                                 <div className="flex items-center gap-2">
