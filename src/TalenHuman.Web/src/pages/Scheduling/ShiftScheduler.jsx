@@ -1478,35 +1478,35 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     <div className="flex flex-row items-stretch justify-center gap-6 w-full mt-4 no-print overflow-x-auto pb-6 px-2 relative z-[1]">
                         
                         {/* Módulo A: Inteligencia (Glass Pod) */}
-                        <div className="flex flex-col gap-2 p-3 px-6 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod min-w-[220px]">
-                            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 tracking-wider mb-0.5 px-1 group-hover/pod:text-indigo-500 transition-colors text-center w-full block">Inteligencia</span>
+                        <div className="flex flex-col gap-2 p-4 px-8 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.8rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod min-w-[300px]">
+                            <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-1 group-hover/pod:text-indigo-500 transition-colors text-center w-full block">Inteligencia</span>
                             <div className="flex items-center gap-3">
                                 <button onClick={() => setShowPredictiveOverlay(!showPredictiveOverlay)}
-                                    className={`w-9 h-9 transition-all rounded-[15px] flex items-center justify-center shadow-lg active:scale-95 btn-chiclet ${showPredictiveOverlay ? 'bg-indigo-600 text-white shadow-glow-indigo' : 'bg-white text-indigo-400 border border-indigo-100 hover:bg-slate-50'}`} title={showPredictiveOverlay ? 'Ocultar Guía IA' : 'Ver Guía IA'}>
-                                    <Sparkles size={18} strokeWidth={2.5} />
+                                    className={`w-11 h-11 transition-all rounded-[18px] flex items-center justify-center shadow-lg active:scale-95 btn-chiclet ${showPredictiveOverlay ? 'bg-indigo-600 text-white shadow-glow-indigo' : 'bg-white text-indigo-400 border border-indigo-100 hover:bg-slate-50'}`} title={showPredictiveOverlay ? 'Ocultar Guía IA' : 'Ver Guía IA'}>
+                                    <Sparkles size={20} strokeWidth={2.5} />
                                 </button>
                                 {!effectiveReadOnly && (
                                     <>
                                         <button onClick={() => setShowBulkModal(true)}
-                                            className="w-9 h-9 bg-amber-500 text-white rounded-[15px] flex items-center justify-center hover:bg-amber-600 transition-all shadow-glow-amber active:scale-95 btn-chiclet" title="Programación Masiva">
-                                            <Calendar size={18} strokeWidth={2.5} />
+                                            className="w-11 h-11 bg-amber-500 text-white rounded-[18px] flex items-center justify-center hover:bg-amber-600 transition-all shadow-glow-amber active:scale-95 btn-chiclet" title="Programación Masiva">
+                                            <Calendar size={20} strokeWidth={2.5} />
                                         </button>
                                         <button onClick={copyFromPreviousWeek} 
-                                            className="w-9 h-9 bg-indigo-500 text-white rounded-[15px] flex items-center justify-center hover:bg-indigo-600 transition-all shadow-glow-indigo active:scale-95 btn-chiclet" title="Clonar Semana">
-                                            <CopyIcon size={18} strokeWidth={2.5} />
+                                            className="w-11 h-11 bg-indigo-500 text-white rounded-[18px] flex items-center justify-center hover:bg-indigo-600 transition-all shadow-glow-indigo active:scale-95 btn-chiclet" title="Clonar Semana">
+                                            <CopyIcon size={20} strokeWidth={2.5} />
                                         </button>
                                     </>
                                 )}
                                 <button onClick={() => setShowPredictiveModal(true)}
-                                    className="w-9 h-9 bg-purple-600 text-white rounded-[15px] flex items-center justify-center hover:bg-purple-700 transition-all shadow-glow-purple active:scale-95 btn-chiclet" title="Hub de Inteligencia">
-                                    <Cpu size={18} strokeWidth={2.5} />
+                                    className="w-11 h-11 bg-purple-600 text-white rounded-[18px] flex items-center justify-center hover:bg-purple-700 transition-all shadow-glow-purple active:scale-95 btn-chiclet" title="Hub de Inteligencia">
+                                    <Cpu size={20} strokeWidth={2.5} />
                                 </button>
                             </div>
                         </div>
 
                         {/* Módulo B: Centro de Eventos (Glass Pod) */}
-                        <div className="flex flex-col gap-2 p-3 px-6 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod items-center border-b-indigo-500/20 min-w-[220px]">
-                            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 tracking-wider mb-0.5 group-hover/pod:text-indigo-500 transition-colors text-center w-full block">Centro de Eventos</span>
+                        <div className="flex flex-col gap-2 p-4 px-8 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.8rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod items-center min-w-[300px]">
+                            <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-1 group-hover/pod:text-indigo-500 transition-colors text-center w-full block">Centro de Eventos</span>
                             <div className="flex items-center gap-3">
                                 {!effectiveReadOnly ? (
                                     <>
@@ -1516,17 +1516,17 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             { type: 'Turno Fuera', shadow: 'shadow-glow-purple', color: 'bg-purple-600', icon: AlertCircle, title: 'Asignación Fuera' }
                                         ].map((tool, idx) => (
                                             <div key={idx} draggable onDragStart={(e) => handleDragStart(e, 'PANEL', { type: tool.type })} 
-                                                className={`w-9 h-9 ${tool.color} text-white rounded-[15px] flex items-center justify-center cursor-grab hover:scale-110 hover:shadow-2xl transition-all ${tool.shadow} active:scale-95 btn-chiclet`} title={tool.title}>
-                                                <tool.icon size={18} strokeWidth={2.5} />
+                                                className={`w-11 h-11 ${tool.color} text-white rounded-[18px] flex items-center justify-center cursor-grab hover:scale-110 hover:shadow-2xl transition-all ${tool.shadow} active:scale-95 btn-chiclet`} title={tool.title}>
+                                                <tool.icon size={20} strokeWidth={2.5} />
                                             </div>
                                         ))}
                                         <div onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnTrash} 
-                                            className="w-9 h-9 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-[15px] flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-700 hover:bg-rose-600 hover:text-white hover:border-solid hover:shadow-glow-rose transition-all cursor-pointer active:scale-95 btn-chiclet-trash" title="Borrar Turno">
-                                            <Trash2 size={18} strokeWidth={2.5} />
+                                            className="w-11 h-11 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-[18px] flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-700 hover:bg-rose-600 hover:text-white hover:border-solid hover:shadow-glow-rose transition-all cursor-pointer active:scale-95 btn-chiclet-trash" title="Borrar Turno">
+                                            <Trash2 size={20} strokeWidth={2.5} />
                                         </div>
                                     </>
                                 ) : (
-                                    <div className="h-9 flex items-center text-slate-400 font-bold text-[9px] tracking-[0.1em] px-6 bg-slate-100/50 dark:bg-slate-800/40 rounded-full border border-slate-200 dark:border-slate-700 italic">Semana cerrada</div>
+                                    <div className="h-11 flex items-center text-slate-400 font-bold text-[10px] tracking-[0.1em] px-6 bg-slate-100/50 dark:bg-slate-800/40 rounded-full border border-slate-200 dark:border-slate-700 italic">Semana cerrada</div>
                                 )}
                             </div>
                         </div>
@@ -1647,7 +1647,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     {showPredictiveOverlay && (
                                         <tr className="border-b dark:border-slate-800 bg-indigo-50/10 dark:bg-indigo-900/10 animate-in slide-in-from-top duration-500">
                                             <td className="sticky left-0 z-20 p-4 border-r dark:border-slate-800 bg-white dark:bg-slate-900" 
-                                                style={{ width: '320px', minWidth: '320px', maxWidth: '320px' }}>
+                                                style={{ width: '260px', minWidth: '260px', maxWidth: '260px' }}>
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200">
                                                         <Cpu size={16} strokeWidth={3} className="animate-pulse" />
@@ -1702,7 +1702,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                     </td>
                                                 );
                                             })}
-                                            <td className="p-4 bg-indigo-50/20 dark:bg-indigo-900/20 border-l dark:border-slate-800"></td>
+                                            <td className="p-4 bg-indigo-50/20 dark:bg-indigo-900/20 border-l dark:border-slate-800" style={{ width: '130px', minWidth: '130px', maxWidth: '130px' }}></td>
                                         </tr>
                                     )}
                                 </thead>
@@ -1895,7 +1895,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                         </td>
                                                     );
                                                 })}
-                                                <td className="p-4 bg-slate-50/50 dark:bg-slate-900/50 border-l dark:border-slate-800">
+                                                <td className="p-4 bg-slate-50/50 dark:bg-slate-900/50 border-l dark:border-slate-800" style={{ width: '130px', minWidth: '130px', maxWidth: '130px' }}>
                                                     <div className="flex flex-col items-center justify-center gap-1">
                                                         <div className="flex items-center gap-2 bg-indigo-50/50 dark:bg-indigo-900/20 px-3 py-1 rounded-full border border-indigo-100 dark:border-indigo-800/50">
                                                             <Calendar size={12} className="text-indigo-500" strokeWidth={3} />
