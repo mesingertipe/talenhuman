@@ -1607,16 +1607,16 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             <footer className="absolute bottom-4 right-8 z-[100] opacity-30 select-none pointer-events-none">
                                 <div className="text-[8px] font-black tracking-[0.2em] text-slate-400 uppercase">V13.9.46-ELITE</div>
                             </footer>
-                            <table className="border-collapse" style={{ tableLayout: 'fixed', width: '1400px', borderSpacing: 0, minWidth: '1400px' }}>
+                            <table className="border-collapse" style={{ tableLayout: 'fixed', width: '1350px', borderSpacing: 0, minWidth: '1350px' }}>
                                 <colgroup>
-                                    <col style={{ width: '210px' }} />
-                                    {days.map((_, i) => <col key={i} style={{ width: '150px' }} />)}
-                                    <col style={{ width: '140px' }} />
+                                    <col style={{ width: '180px' }} />
+                                    {days.map((_, i) => <col key={i} style={{ width: '145px' }} />)}
+                                    <col style={{ width: '150px' }} />
                                 </colgroup>
                                 <thead>
                                     <tr className="bg-slate-50 dark:bg-slate-800 border-b-2 dark:border-indigo-500/20">
-                                        <th className="p-4 py-6 text-left sticky left-0 z-[30] border-r dark:border-slate-800" 
-                                            style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '210px', minWidth: '210px', maxWidth: '210px' }}>
+                                        <th className="p-4 py-6 text-left sticky left-0 z-[110] border-r dark:border-slate-800" 
+                                            style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '180px', minWidth: '180px', maxWidth: '180px' }}>
                                             <div className="flex items-center gap-2">
                                                 <button 
                                                     onClick={handleSelectAll}
@@ -1635,12 +1635,12 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             </div>
                                         </th>
                                         {days.map((day, i) => (
-                                            <th key={i} className="p-2 text-center border-r dark:border-slate-700 min-w-[150px]">
+                                            <th key={i} className="p-2 text-center border-r dark:border-slate-700 min-w-[145px]">
                                                 <p className="text-[8px] font-bold text-indigo-500 dark:text-indigo-400 tracking-wider mb-0.5 capitalize">{day.toLocaleDateString('es-CO', { weekday: 'short' })}</p>
                                                 <p className="text-base font-[900] text-slate-800 dark:text-white leading-none tracking-tighter">{day.getDate()}</p>
                                             </th>
                                         ))}
-                                        <th className="p-4 text-center bg-slate-100/40 dark:bg-slate-800/60 w-[140px] min-w-[140px] font-[950] text-[10px] text-slate-500 dark:text-indigo-300 tracking-[0.2em] border-l dark:border-slate-700 sticky right-0 z-[100]"
+                                        <th className="p-4 text-center w-[150px] min-w-[150px] font-[950] text-[10px] text-slate-500 dark:text-indigo-300 tracking-[0.2em] border-l dark:border-slate-700 sticky right-0 z-[110]"
                                             style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f8fafc' }}>
                                             Horas
                                         </th>
@@ -1649,15 +1649,15 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     {/* V13.0 COORDINATED GAP ANALYSIS ROW */}
                                     {showPredictiveOverlay && (
                                         <tr className="border-b dark:border-slate-800 bg-indigo-50/10 dark:bg-indigo-900/10 animate-in slide-in-from-top duration-500">
-                                            <td className="sticky left-0 z-20 p-2 pl-4 border-r dark:border-slate-800 bg-white dark:bg-slate-900" 
-                                                style={{ width: '210px', minWidth: '210px', maxWidth: '210px' }}>
+                                            <th className="p-3 sticky left-0 z-[110] border-r dark:border-slate-800" 
+                                                style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f1f5f9', width: '180px', minWidth: '180px' }}>
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200">
-                                                        <Cpu size={12} strokeWidth={3} className="animate-pulse" />
+                                                    <div className="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg">
+                                                        <Sparkles size={12} className="text-white" />
                                                     </div>
-                                                    <span className="text-[8px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-tighter">Guía IA</span>
+                                                    <span className="text-[8.5px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest leading-none">Guía IA</span>
                                                 </div>
-                                            </td>
+                                            </th>
                                             {days.map((day, di) => {
                                                 const needs = calculateHourlyNeeds(day);
                                                 const dayStr = day.toDateString();
@@ -1717,42 +1717,31 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             if (diff < 0) diff += 24; // Corrección cruce medianoche
                                             return acc + diff;
                                         }, 0);
+                                        const empTotalHours = Math.round(total);
                                         const isSelected = selectedEmployees.includes(emp.id);
                                         return (
-                                            <tr key={emp.id} className="border-b dark:border-slate-800 transition-colors group">
-                                                <td className="sticky left-0 z-10 p-2 pl-4 border-r dark:border-slate-800 shadow-[10px_0_20px_rgba(0,0,0,0.03)]"
-                                                    style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '210px', minWidth: '210px', maxWidth: '210px' }}>
-                                                    <div className="flex items-center gap-2">
-                                                        <button 
-                                                            onClick={() => handleSelectEmployee(emp.id)}
-                                                            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors"
-                                                        >
-                                                            {isSelected ? (
-                                                                <CheckSquare size={14} className="text-indigo-500" />
-                                                            ) : (
-                                                                <Square size={14} className="text-slate-400" />
-                                                            )}
-                                                        </button>
-                                                        <div className={`w-9 h-9 ${isSelected ? 'bg-indigo-600' : 'bg-slate-400'} rounded-xl flex items-center justify-center font-black text-white text-[10px] shadow-sm transition-colors`}>
-                                                            {emp.firstName[0]}{emp.lastName[0]}
-                                                        </div>
-                                                        <div className="flex flex-col gap-0.5 min-w-0">
-                                                            <span className="text-[10px] font-black text-slate-800 dark:text-white leading-none truncate w-[140px] block" title={`${emp.firstName} ${emp.lastName}`}>{emp.firstName} {emp.lastName}</span>
-                                                            <div className="flex flex-col gap-0.5">
-                                                                <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 tracking-tighter leading-none">{emp.documento}</span>
-                                                                <div className="flex items-center gap-1.5 flex-wrap">
-                                                                     <span style={{ fontSize: '7.5px', fontWeight: '900', color: isDarkMode ? '#818cf8' : '#6366f1', textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
-                                                                         {profiles.find(p => p.id === emp.profileId)?.name || 'Sin Cargo'}
-                                                                     </span>
-                                                                     <div className="flex items-center gap-0.5 text-emerald-600 font-[900] text-[8px] scale-95 origin-left">
-                                                                         <Clock size={9} strokeWidth={4} />
-                                                                         {jornadas.find(j => j.id === emp.jornadaId)?.horasSemanales || 48}h
-                                                                     </div>
-                                                                 </div>
+                                            <tr key={emp.id} className="border-b dark:border-slate-800 hover:bg-slate-50/10 dark:hover:bg-slate-800/50 transition-colors">
+                                            <td className="p-2 py-3 border-r dark:border-slate-800 sticky left-0 z-[90] shadow-[10px_0_30px_rgba(0,0,0,0.03)]" 
+                                                style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '180px', minWidth: '180px' }}>
+                                                <div className="flex flex-col gap-0.5">
+                                                    <div className="flex items-start gap-1.5 overflow-hidden">
+                                                        <input type="checkbox" checked={isSelected} onChange={() => handleSelectEmployee(emp.id)} className="mt-1 w-3 h-3 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                                                        <div className="flex flex-col min-w-0">
+                                                            <span className="text-[8.5px] font-extrabold text-slate-800 dark:text-indigo-50 leading-tight truncate">
+                                                                {`${emp.firstName} ${emp.lastName}`.toUpperCase()}
+                                                            </span>
+                                                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                                                                <span className="text-[7.5px] font-black text-indigo-600 dark:text-indigo-400 opacity-90">{emp.documento}</span>
+                                                                <span className="text-[7px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-tighter truncate max-w-[80px]">{profiles.find(p => p.id === emp.profileId)?.name || 'N/A'}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1 mt-0.5">
+                                                                <Clock size={8} className="text-emerald-500" />
+                                                                <span className="text-[7.5px] font-black text-emerald-600 dark:text-emerald-400 tracking-tighter">@{empTotalHours}h</span>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </td>
+                                                </div>
+                                            </td>
                                                 {days.map((day, di) => {
                                                     const dayShifts = shifts.filter(s => s.employeeId === emp.id && new Date(s.startTime).toDateString() === day.toDateString());
                                                     const nov = getNovedad(emp.id, day);
@@ -1895,8 +1884,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                         </td>
                                                     );
                                                 })}
-                                                <td className="p-2 bg-slate-50/50 dark:bg-slate-900/50 border-l dark:border-slate-800 sticky right-0 z-[50] shadow-[-15px_0_40px_rgba(0,0,0,0.15)]" 
-                                                    style={{ width: '140px', minWidth: '140px', maxWidth: '140px', backgroundColor: isDarkMode ? '#0f172a' : '#ffffff' }}>
+                                                <td className="p-2 border-l dark:border-slate-800 sticky right-0 z-[90] shadow-[-15px_0_40px_rgba(0,0,0,0.15)]" 
+                                                    style={{ width: '150px', minWidth: '150px', maxWidth: '150px', backgroundColor: isDarkMode ? '#0f172a' : '#ffffff' }}>
                                                     <div className="flex flex-col items-center justify-center gap-1.5">
                                                         <div className="flex items-center gap-2 bg-indigo-50/50 dark:bg-indigo-900/20 px-3 py-1 rounded-full border border-indigo-100 dark:border-indigo-800/50">
                                                             <Calendar size={12} className="text-indigo-500" strokeWidth={3} />
@@ -2556,31 +2545,32 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     onClick={() => setSelectedCoverageDay(null)}
                 >
                     <div 
-                        className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl w-full max-w-2xl rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.3)] overflow-hidden border border-white/20 dark:border-white/5 animate-in zoom-in-95 duration-500"
+                        className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.5)] overflow-hidden border border-white/20 dark:border-white/5 animate-in zoom-in-95 duration-500"
                         onClick={e => e.stopPropagation()}
+                        style={{ border: '1px solid rgba(255,255,255,0.1)' }}
                     >
                         {/* Header */}
-                        <div className="p-8 bg-gradient-to-br from-indigo-600 to-purple-700 text-white flex justify-between items-center relative overflow-hidden">
+                        <div className="p-8 bg-gradient-to-br from-indigo-700 to-purple-800 text-white flex justify-between items-center relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl animate-pulse"></div>
                             <div className="relative z-10">
-                                <h3 className="text-2xl font-[950] tracking-tighter mb-1 drop-shadow-sm">Análisis de Cobertura IA</h3>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-                                    <p className="text-indigo-100 text-[11px] font-black uppercase tracking-widest opacity-90">
+                                <h3 className="text-2xl font-[1000] tracking-tighter mb-1 drop-shadow-lg text-white">Análisis de Cobertura IA</h3>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-glow-emerald animate-pulse"></div>
+                                    <p className="text-indigo-100 text-[11px] font-black uppercase tracking-widest opacity-95">
                                         {selectedCoverageDay.day.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
                                     </p>
                                 </div>
                             </div>
                             <button 
                                 onClick={() => setSelectedCoverageDay(null)}
-                                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all relative z-10 active:scale-90"
+                                className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 border-2 border-white/20 flex items-center justify-center transition-all relative z-10 active:scale-90"
                             >
-                                <XCircle size={20} strokeWidth={3} />
+                                <XCircle size={24} strokeWidth={3} />
                             </button>
                         </div>
 
                         {/* Content */}
-                        <div className="p-10 space-y-8 bg-slate-50/10 dark:bg-slate-900/20">
+                        <div className="p-10 space-y-8 bg-white dark:bg-slate-900">
                             {/* Summary Cards */}
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="p-6 bg-rose-500/5 dark:bg-rose-500/10 rounded-[2rem] border border-rose-500/20 shadow-inner">
@@ -2663,6 +2653,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             if (Object.keys(groupedGaps).length === 0) return <p className="text-[11px] text-slate-400 italic">No hay faltantes registrados.</p>;
                                             return Object.entries(groupedGaps).map(([name, deficit]) => (
                                                 <div key={name} className="flex justify-between items-center bg-rose-500/5 p-3 rounded-2xl border border-rose-500/10">
+                                                    <span className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-tighter">Colaborador</span>
                                                     <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">{name}</span>
                                                     <span className="text-xs font-black text-rose-500">-{deficit} HRS</span>
                                                 </div>
