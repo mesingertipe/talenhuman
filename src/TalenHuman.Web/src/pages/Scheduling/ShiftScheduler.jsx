@@ -1607,16 +1607,16 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             <footer className="absolute bottom-4 right-8 z-[100] opacity-30 select-none pointer-events-none">
                                 <div className="text-[8px] font-black tracking-[0.2em] text-slate-400 uppercase">V13.9.46-ELITE</div>
                             </footer>
-                            <table className="border-collapse" style={{ tableLayout: 'fixed', width: '1350px', borderSpacing: 0, minWidth: '1350px' }}>
+                            <table className="border-collapse" style={{ tableLayout: 'fixed', width: '1120px', borderSpacing: 0, minWidth: '1120px' }}>
                                 <colgroup>
-                                    <col style={{ width: '160px' }} />
-                                    {days.map((_, i) => <col key={i} style={{ width: '150px' }} />)}
-                                    <col style={{ width: '140px' }} />
+                                    <col style={{ width: '230px' }} />
+                                    {days.map((_, i) => <col key={i} style={{ width: '110px' }} />)}
+                                    <col style={{ width: '120px' }} />
                                 </colgroup>
                                 <thead>
                                     <tr className="bg-slate-50 dark:bg-slate-800 border-b-2 dark:border-indigo-500/20">
-                                        <th className="p-4 py-6 text-left sticky left-0 z-[150] border-r dark:border-slate-800" 
-                                            style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '160px', minWidth: '160px', maxWidth: '160px' }}>
+                                        <th className="p-4 py-8 text-left sticky left-0 z-[160] border-r dark:border-slate-800" 
+                                            style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '230px', minWidth: '230px', maxWidth: '230px' }}>
                                             <div className="flex items-center gap-2">
                                                 <button 
                                                     onClick={handleSelectAll}
@@ -1635,25 +1635,25 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             </div>
                                         </th>
                                         {days.map((day, i) => (
-                                            <th key={i} className="p-2 text-center border-r dark:border-slate-700 min-w-[145px]">
-                                                <p className="text-[8px] font-bold text-indigo-500 dark:text-indigo-400 tracking-wider mb-0.5 capitalize">{day.toLocaleDateString('es-CO', { weekday: 'short' })}</p>
-                                                <p className="text-base font-[900] text-slate-800 dark:text-white leading-none tracking-tighter">{day.getDate()}</p>
+                                            <th key={i} className="p-2 text-center border-r dark:border-slate-700 w-[110px] min-w-[110px]" style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f8fafc' }}>
+                                                <p className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 tracking-[0.2em] mb-0.5 uppercase drop-shadow-sm">{day.toLocaleDateString('es-CO', { weekday: 'short' })}</p>
+                                                <p className="text-xl font-[1000] text-slate-800 dark:text-white leading-none tracking-tighter">{day.getDate()}</p>
                                             </th>
                                         ))}
-                                        <th className="p-4 text-center w-[140px] min-w-[140px] font-[950] text-[9px] text-slate-500 dark:text-indigo-300 tracking-[0.2em] border-l dark:border-slate-700 sticky right-0 z-[150]"
+                                        <th className="p-4 text-center w-[120px] min-w-[120px] font-[950] text-[10px] text-slate-500 dark:text-indigo-300 tracking-[0.2em] border-l dark:border-slate-700 sticky right-0 z-[160]"
                                             style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f8fafc' }}>
-                                            Horas
+                                            Total
                                         </th>
                                     </tr>
                                     
                                     {/* V13.0 COORDINATED GAP ANALYSIS ROW */}
                                     {showPredictiveOverlay && (
                                         <tr className="border-b dark:border-slate-800 bg-indigo-50/10 dark:bg-indigo-900/10 animate-in slide-in-from-top duration-500">
-                                            <th className="p-2 sticky left-0 z-[150] border-r dark:border-slate-800" 
-                                                style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f1f5f9', width: '160px', minWidth: '160px' }}>
-                                                <div className="flex items-center gap-1.5">
-                                                    <Sparkles size={11} className="text-indigo-500 animate-pulse" />
-                                                    <span className="text-[7.5px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest leading-none">Guía IA</span>
+                                            <th className="p-3 sticky left-0 z-[160] border-r dark:border-slate-800" 
+                                                style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f1f5f9', width: '230px', minWidth: '230px' }}>
+                                                <div className="flex items-center gap-2">
+                                                    <Sparkles size={12} className="text-indigo-500 animate-pulse" />
+                                                    <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest leading-none">Previsión IA</span>
                                                 </div>
                                             </th>
                                             {days.map((day, di) => {
@@ -1700,8 +1700,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                     </td>
                                                 );
                                             })}
-                                            <td className="p-2 border-l dark:border-slate-800 sticky right-0 z-[150]" 
-                                                style={{ width: '140px', minWidth: '140px', maxWidth: '140px', backgroundColor: isDarkMode ? '#1e293b' : '#f8fafc' }}></td>
+                                            <td className="p-2 border-l dark:border-slate-800 sticky right-0 z-[160]" 
+                                                style={{ width: '120px', minWidth: '120px', maxWidth: '120px', backgroundColor: isDarkMode ? '#1e293b' : '#f8fafc' }}></td>
                                         </tr>
                                     )}
                                 </thead>
@@ -1719,24 +1719,24 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         const isSelected = selectedEmployees.includes(emp.id);
                                         return (
                                             <tr key={emp.id} className="border-b dark:border-slate-800 hover:bg-slate-50/10 dark:hover:bg-slate-800/50 transition-colors">
-                                            <td className="p-1 px-2 border-r dark:border-slate-800 sticky left-0 z-[150] shadow-[10px_0_30px_rgba(0,0,0,0.03)]" 
-                                                style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '160px', minWidth: '160px' }}>
-                                                <div className="flex flex-col gap-0.5">
-                                                    <div className="flex items-start gap-1 overflow-hidden">
-                                                        <input type="checkbox" checked={isSelected} onChange={() => handleSelectEmployee(emp.id)} className="mt-1 w-3 h-3 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                                            <td className="p-4 border-r dark:border-slate-800 sticky left-0 z-[160] shadow-[10px_0_30px_rgba(0,0,0,0.03)]" 
+                                                style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '230px', minWidth: '230px' }}>
+                                                <div className="flex flex-col gap-1.5">
+                                                    <div className="flex items-start gap-3 overflow-hidden">
+                                                        <input type="checkbox" checked={isSelected} onChange={() => handleSelectEmployee(emp.id)} className="mt-1 w-4 h-4 rounded-md border-slate-300 text-indigo-600 focus:ring-indigo-500 transition-all cursor-pointer" />
                                                         <div className="flex flex-col min-w-0">
-                                                            <span className="text-[8px] font-[1000] text-slate-800 dark:text-indigo-50 leading-tight truncate uppercase">
+                                                            <span className="text-[9.5px] font-black text-slate-800 dark:text-indigo-50 tracking-tight leading-none truncate uppercase">
                                                                 {emp.firstName} {emp.lastName}
                                                             </span>
-                                                            <div className="flex flex-col gap-0.5 mt-0.5">
-                                                                <span className="text-[7.5px] font-black text-indigo-600 dark:text-indigo-400 opacity-90 leading-none">{emp.documento}</span>
-                                                                <span style={{ fontSize: '7px', fontWeight: '900', color: isDarkMode ? '#94a3b8' : '#64748b', textTransform: 'uppercase', letterSpacing: '-0.02em', lineHeight: '1' }}>
+                                                            <div className="flex flex-col gap-1 mt-1.5">
+                                                                <span className="text-[8px] font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">#{emp.documento}</span>
+                                                                <span className="text-[7.5px] font-[900] text-slate-500 dark:text-slate-400 uppercase leading-none truncate">
                                                                     {profiles.find(p => p.id === emp.profileId)?.name || 'N/A'}
                                                                 </span>
                                                             </div>
-                                                            <div className="flex items-center gap-1 mt-1">
-                                                                <Clock size={7} className="text-emerald-500" />
-                                                                <span className="text-[7px] font-black text-emerald-600 dark:text-emerald-400 tracking-tighter">@{empTotalHours}h </span>
+                                                            <div className="flex items-center gap-1.5 mt-2 bg-emerald-500/10 dark:bg-emerald-500/20 px-2 py-0.5 rounded-full w-fit">
+                                                                <Clock size={8} className="text-emerald-500" />
+                                                                <span className="text-[8px] font-black text-emerald-600 dark:text-emerald-400 tracking-tighter">TOTAL: {empTotalHours}H</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1831,8 +1831,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                               className={`group rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-md transition-all relative ${isLocked ? (att ? 'cursor-help hover:ring-2 ring-white/50 scale-105' : 'cursor-default opacity-[0.9]') : 'cursor-grab active:cursor-grabbing hover:scale-[1.05] hover:z-50'}`}
                                                                                style={{ 
                                                                                   background: bgColor, 
-                                                                                  minWidth: '78px', 
-                                                                                  minHeight: '34px', 
+                                                                                  minWidth: '72px', 
+                                                                                  minHeight: '28px', 
                                                                                   filter: isLocked ? 'contrast(0.9) saturate(0.8)' : 'none',
                                                                                   borderLeft: shift.status === 1 ? '4px solid #10b981' : (shift.status === 2 ? '4px solid #ef4444' : 'none')
                                                                               }}
@@ -1884,8 +1884,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                         </td>
                                                     );
                                                 })}
-                                                <td className="p-2 border-l dark:border-slate-800 sticky right-0 z-[150] shadow-[-15px_0_40px_rgba(0,0,0,0.15)]" 
-                                                    style={{ width: '140px', minWidth: '140px', maxWidth: '140px', backgroundColor: isDarkMode ? '#0f172a' : '#ffffff' }}>
+                                                <td className="p-2 border-l dark:border-slate-800 sticky right-0 z-[160] shadow-[-15px_0_40px_rgba(0,0,0,0.15)]" 
+                                                    style={{ width: '120px', minWidth: '120px', maxWidth: '120px', backgroundColor: isDarkMode ? '#0f172a' : '#ffffff' }}>
                                                     <div className="flex flex-col items-center justify-center gap-1.5">
                                                         <div className="flex items-center gap-2 bg-indigo-50/50 dark:bg-indigo-900/20 px-3 py-1 rounded-full border border-indigo-100 dark:border-indigo-800/50">
                                                             <Calendar size={12} className="text-indigo-500" strokeWidth={3} />
