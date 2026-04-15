@@ -1571,7 +1571,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             <footer className="mt-8 mb-4 text-center">
                                 <div className="version-tag-subtle">SISTEMA V13.9.46-STABLE-ELITE</div>
                             </footer>
-                            <table className="border-collapse" style={{ tableLayout: 'fixed', width: '1360px', borderSpacing: 0 }}>
+                            <table className="border-collapse" style={{ tableLayout: 'fixed', width: '1460px', borderSpacing: 0 }}>
                                 <colgroup>
                                     <col style={{ width: '320px' }} />
                                     {days.map((_, i) => <col key={i} style={{ width: '140px' }} />)}
