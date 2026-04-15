@@ -600,14 +600,45 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             });
 
             const createdCount = newShifts.length - shifts.length;
+            
+            // Calculate total deficits AGAIN to see if we left anything uncovered
+            let totalRemainingDeficit = 0;
+            daysInWeek.forEach(day => {
+                const needs = calculateHourlyNeeds(day);
+                const dayStr = day.toDateString();
+                Object.keys(needs).forEach(pId => {
+                    needs[pId].forEach((need, h) => {
+                        const scheduled = newShifts.filter(s => {
+                            const sDate = new Date(s.startTime);
+                            if (sDate.toDateString() !== dayStr || s.isDescanso) return false;
+                            const emp = employees.find(e => e.id === s.employeeId);
+                            if (emp?.profileId !== pId) return false;
+                            const sStart = sDate.getHours();
+                            const sEnd = new Date(s.endTime).getHours();
+                            return sEnd < sStart ? (h >= sStart || h < sEnd) : (h >= sStart && h < sEnd);
+                        }).length;
+                        if (need > scheduled) totalRemainingDeficit += (need - scheduled);
+                    });
+                });
+            });
+
             if (createdCount > 0) {
                 setShifts(newShifts);
-                showToast(`¡Sorpresa! IA sugirió ${createdCount} turnos para cubrir tu demanda operativa.`, "success");
+                if (totalRemainingDeficit > 0) {
+                    showToast(`IA: Sugeridos ${createdCount} turnos, pero aún faltan ${totalRemainingDeficit} posiciones por cubrir (sin personal disponible).`, "warning");
+                } else {
+                    showToast(`¡Optimización completa! IA sugirió ${createdCount} turnos para cubrir toda la demanda.`, "success");
+                }
             } else {
-                showToast("IA: Tu malla ya está optimizada según la demanda histórica.", "info");
+                if (totalRemainingDeficit > 0) {
+                    showToast(`IA: No se pueden cubrir los ${totalRemainingDeficit} huecos detectados porque todo el personal ya tiene turnos asignados.`, "warning");
+                } else {
+                    showToast("IA: Tu malla ya está optimizada según la demanda histórica.", "info");
+                }
             }
+
             setShowPredictiveModal(false);
-            setShowPredictiveOverlay(true);
+            setShowPredictiveOverlay(true); // Forzar que se vea la Guía IA para validar resultados
         } catch (err) {
             console.error("Optimization failed", err);
             showToast("Error en la optimización IA", "error");
@@ -1542,8 +1573,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             <table className="w-full border-collapse">
                                 <thead>
                                     <tr className="bg-slate-50 dark:bg-slate-800 border-b-2 dark:border-indigo-500/20">
-                                        <th className="p-8 text-left sticky left-0 z-10 border-r dark:border-slate-800" 
-                                            style={{ backgroundColor: isDarkMode ? '#060914' : '#f8fafc', width: '320px' }}>
+                                        <th className="p-8 text-left sticky left-0 z-20 border-r dark:border-slate-800" 
+                                            style={{ backgroundColor: isDarkMode ? '#060914' : '#f8fafc', width: '320px', minWidth: '320px', maxWidth: '320px' }}>
                                             <div className="flex items-center gap-4">
                                                 <button 
                                                     onClick={handleSelectAll}
@@ -1574,12 +1605,12 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     {showPredictiveOverlay && (
                                         <tr className="border-b dark:border-slate-800 bg-indigo-50/10 dark:bg-indigo-900/10 animate-in slide-in-from-top duration-500">
                                             <td className="sticky left-0 z-20 p-4 border-r dark:border-slate-800 bg-indigo-50/30 dark:bg-indigo-900/30 backdrop-blur-md" 
-                                                style={{ width: '320px', minWidth: '320px' }}>
+                                                style={{ width: '320px', minWidth: '320px', maxWidth: '320px' }}>
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200">
                                                         <Cpu size={16} strokeWidth={3} className="animate-pulse" />
                                                     </div>
-                                                    <span className="text-[10px] font-[1000] text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Guía IA</span>
+                                                    <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Guía IA</span>
                                                 </div>
                                             </td>
                                             {days.map((day, di) => {
@@ -1603,13 +1634,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 });
 
                                                 return (
-                                                    <td key={di} className="p-2 border-r dark:border-slate-800 text-center" style={{ minWidth: '140px' }}>
+                                                    <td key={di} className="p-2 border-r dark:border-slate-800 text-center" style={{ minWidth: '140px', maxWidth: '140px' }}>
                                                         {totalDeficit > 0 ? (
-                                                            <div className="flex flex-col items-center gap-1 group relative cursor-help">
-                                                                <div className="px-2 py-1 bg-rose-500 text-white rounded-lg text-[9px] font-black animate-bounce shadow-lg shadow-rose-200">
+                                                            <div className="flex flex-col items-center gap-0.5 group relative cursor-help">
+                                                                <div className="px-1.5 py-0.5 bg-rose-500 text-white rounded-lg text-[8px] font-black shadow-lg shadow-rose-200">
                                                                     -{totalDeficit} STAFF
                                                                 </div>
-                                                                <span className="text-[8px] font-black text-rose-400 uppercase tracking-tighter">Faltante IA</span>
+                                                                <span className="text-[7.5px] font-[1000] text-rose-400 uppercase tracking-tighter leading-none">Faltante IA</span>
                                                                 
                                                                 {/* Hover Detail */}
                                                                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 p-3 bg-slate-900/95 backdrop-blur-xl text-white rounded-2xl z-[2000] w-52 opacity-0 group-hover:opacity-100 transition-all pointer-events-none shadow-2xl border border-white/10">
@@ -1649,7 +1680,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                 <div className="px-2 py-1 bg-emerald-500 text-white rounded-lg text-[9px] font-black shadow-lg shadow-emerald-200">
                                                                     CUBIERTO
                                                                 </div>
-                                                                <span className="text-[8px] font-black text-emerald-400 uppercase tracking-tighter">Meta Óptima</span>
+                                                                <span className="text-[7.5px] font-[1000] text-emerald-400 uppercase tracking-tighter leading-none">Meta Óptima</span>
                                                             </div>
                                                         )}
                                                     </td>
@@ -1673,7 +1704,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         return (
                                             <tr key={emp.id} className="border-b dark:border-slate-800 transition-colors group">
                                                 <td className="sticky left-0 z-10 p-6 pl-10 border-r dark:border-slate-800 shadow-[10px_0_20px_rgba(0,0,0,0.03)]"
-                                                    style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff' }}>
+                                                    style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '320px', minWidth: '320px', maxWidth: '320px' }}>
                                                     <div className="flex items-center gap-4">
                                                         <button 
                                                             onClick={() => handleSelectEmployee(emp.id)}
