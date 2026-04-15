@@ -1537,7 +1537,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 <div className="card shadow-[0_40px_100px_rgba(0,0,0,0.12)] bg-white dark:bg-slate-900 border-2 dark:border-slate-800 relative" style={{ borderRadius: '48px', overflow: 'hidden', minHeight: '600px' }}>
                     <div className="overflow-x-auto">
                             <footer className="mt-8 mb-4 text-center">
-                                <div className="version-tag-subtle">SISTEMA V13.9.45-STABLE-ELITE</div>
+                                <div className="version-tag-subtle">SISTEMA V13.9.46-STABLE-ELITE</div>
                             </footer>
                             <table className="w-full border-collapse">
                                 <thead>
@@ -1573,7 +1573,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     {/* V13.0 COORDINATED GAP ANALYSIS ROW */}
                                     {showPredictiveOverlay && (
                                         <tr className="border-b dark:border-slate-800 bg-indigo-50/10 dark:bg-indigo-900/10 animate-in slide-in-from-top duration-500">
-                                            <td className="sticky left-0 z-20 p-4 border-r dark:border-slate-800 bg-indigo-50/30 dark:bg-indigo-900/30 backdrop-blur-md">
+                                            <td className="sticky left-0 z-20 p-4 border-r dark:border-slate-800 bg-indigo-50/30 dark:bg-indigo-900/30 backdrop-blur-md" 
+                                                style={{ width: '320px', minWidth: '320px' }}>
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200">
                                                         <Cpu size={16} strokeWidth={3} className="animate-pulse" />
@@ -1602,7 +1603,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 });
 
                                                 return (
-                                                    <td key={di} className="p-2 border-r dark:border-slate-800 text-center">
+                                                    <td key={di} className="p-2 border-r dark:border-slate-800 text-center" style={{ minWidth: '140px' }}>
                                                         {totalDeficit > 0 ? (
                                                             <div className="flex flex-col items-center gap-1 group relative cursor-help">
                                                                 <div className="px-2 py-1 bg-rose-500 text-white rounded-lg text-[9px] font-black animate-bounce shadow-lg shadow-rose-200">
@@ -2305,106 +2306,92 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         borderLeft: hoverPos.y < 350 ? '' : 'none',
                                         borderBottom: hoverPos.y < 350 ? 'none' : '',
                                         borderRight: hoverPos.y < 350 ? 'none' : '',
-                                        zInd                           </div>,
-                           document.body
-                        )}
-
-                        {/* ========================================================================= */}
-                        {/* 🧠 ELITE LAYER: OVERLAYS, MODALS & GLOBAL MONITORS                      */}
-                        {/* ========================================================================= */}
-
-                        {/* 1. PREDICTIVE IQ HUB (PURPLE BUTTON MODAL) */}
-                        {showPredictiveModal && createPortal(
-                            <div style={{ position: 'fixed', inset: 0, zIndex: 100000000, background: 'rgba(6, 9, 20, 0.85)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-                                <div style={{ background: isDarkMode ? '#1e293b' : '#ffffff', width: '100%', maxWidth: '650px', borderRadius: '4rem', overflow: 'hidden', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.05)', boxShadow: '0 50px 100px rgba(0,0,0,0.6)', position: 'relative' }} className="animate-in zoom-in-95 duration-500">
-                                    <div style={{ padding: '50px', textAlign: 'center' }}>
-                                        <div style={{ width: '80px', height: '80px', background: 'linear-gradient(135deg, #4f46e5, #9333ea)', color: 'white', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 25px', boxShadow: '0 20px 40px rgba(79, 70, 229, 0.3)', transform: 'rotate(-5deg)' }}>
-                                            <Cpu size={40} className={isOptimizing ? "animate-spin" : "animate-pulse"} />
-                                        </div>
-                                        <h2 style={{ fontSize: '2.2rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', letterSpacing: '-0.04em', margin: 0 }}>Hub de Inteligencia</h2>
-                                        <p style={{ color: '#6366f1', fontSize: '11px', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '0.2em', marginTop: '10px' }}>Optimización Basada en Demanda</p>
-                                    </div>
-
-                                    <div style={{ padding: '0 50px 50px' }}>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '40px' }}>
-                                            <div style={{ padding: '24px', background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc', borderRadius: '32px', border: '1px solid rgba(0,0,0,0.05)' }}>
-                                                <p style={{ fontSize: '10px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '5px' }}>Reglas Operativas</p>
-                                                <p style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>{predictiveRules.length}</p>
-                                            </div>
-                                            <div style={{ padding: '24px', background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc', borderRadius: '32px', border: '1px solid rgba(0,0,0,0.05)' }}>
-                                                <p style={{ fontSize: '10px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '5px' }}>Data Histórica</p>
-                                                <p style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>3 SEMANAS</p>
-                                            </div>
-                                        </div>
-
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                                            <button 
-                                                onClick={performOptimization}
-                                                disabled={isOptimizing || !selectedStore || predictiveRules.length === 0}
-                                                className="group relative overflow-hidden active:scale-95 transition-all text-white font-[950] text-[14px] uppercase tracking-wider"
-                                                style={{ width: '100%', padding: '24px', borderRadius: '24px', border: 'none', background: 'linear-gradient(90deg, #4f46e5, #9333ea)', cursor: 'pointer', boxShadow: '0 20px 40px rgba(79, 70, 229, 0.4)' }}
-                                            >
-                                                {isOptimizing ? <><div className="loader !border-white mr-3 inline-block"></div> CALCULANDO...</> : <><Sparkles size={20} className="inline mr-2" /> OPTIMIZAR AHORA</>}
-                                            </button>
-
-                                            {shifts.some(s => s.isAutoGenerated) && (
-                                                <button 
-                                                    onClick={() => { setShifts(prev => prev.filter(s => !s.isAutoGenerated)); setShowPredictiveOverlay(false); }}
-                                                    style={{ width: '100%', padding: '18px', borderRadius: '18px', border: '1px solid #ef4444', background: 'rgba(239, 68, 68, 0.05)', color: '#ef4444', fontWeight: '900', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}
-                                                >
-                                                    <Trash2 size={16} className="inline mr-2" /> Eliminar Sugerencias
-                                                </button>
-                                            )}
-
-                                            <button onClick={() => setShowPredictiveModal(false)} style={{ width: '100%', padding: '15px', borderRadius: '15px', border: 'none', background: 'transparent', color: '#94a3b8', fontWeight: '900', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}>Cerrar Sistema</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>,
-                            document.body
-                        )}
-
-                        {/* 2. SLEDGEHAMMER LOADING MONITOR (BULLETPROOF) */}
-                        {(loading || isProcessingStatus || isSaving || isExporting) && createPortal(
-                            <div style={{ position: 'fixed', inset: 0, zIndex: 99999999, background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(15px)', WebkitBackdropFilter: 'blur(15px)', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'all' }}>
-                                <div className="animate-in zoom-in-95 duration-300 mx-auto" style={{ background: isDarkMode ? '#0f172a' : '#ffffff', padding: '3.5rem', borderRadius: '4.5rem', boxShadow: '0 60px 120px -20px rgba(0,0,0,0.7)', border: '1px solid rgba(255,255,255,0.1)', width: '100%', maxWidth: '440px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    <div style={{ position: 'relative', width: '90px', height: '90px', marginBottom: '2.5rem' }}>
-                                        <svg style={{ transform: 'rotate(-90deg)', width: '90px', height: '90px' }}>
-                                            <circle cx="45" cy="45" r="40" stroke={isDarkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9'} strokeWidth="6" fill="transparent" />
-                                            <circle cx="45" cy="45" r="40" stroke="#4f46e5" strokeWidth="6" fill="transparent" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * (syncPhase || (loading ? 45 : (isExporting ? 25 : 65)))) / 100} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.8s ease' }} />
-                                        </svg>
-                                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
-                                            <Cpu size={36} className="animate-pulse" />
-                                        </div>
-                                    </div>
-                                    <h3 style={{ fontSize: '1.7rem', fontWeight: '1000', color: isDarkMode ? '#f8fafc' : '#0f172a', margin: '0 0 0.5rem 0', letterSpacing: '-0.03em' }}>
-                                        {isSaving ? "Publicando Cambios" : (isExporting ? "Preparando Reporte" : "Sincronizando Core")}
-                                    </h3>
-                                    <p style={{ fontSize: '0.9rem', fontWeight: '800', color: '#64748b', margin: 0, lineHeight: '1.4' }}>Optimizando datos HD en la nube segura...</p>
-                                </div>
-                            </div>,
-                            document.body
-                        )}
-                    </div>
-                </div>
-            </div>
-        </>
-    );
-
-                document.getElementById('modal-root') || document.body
-            )}
-            {isExporting && (
-                <div className="fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-900 p-8 md:p-12 rounded-[3.5rem] shadow-2xl border border-white/10 flex flex-col items-center max-w-md w-full text-center animate-in zoom-in-95 duration-300">
-                        <div className="relative mb-8">
-                            <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 animate-pulse"></div>
-                            <div className="w-20 h-20 border-4 border-slate-100 dark:border-slate-800 border-t-indigo-600 rounded-full animate-spin relative z-10"></div>
+                                        zIndex: -1
+                                    }}
+                                ></div>
+                            </div>
                         </div>
-                        <h3 className="text-xl font-[950] text-slate-800 dark:text-white mb-2 uppercase tracking-tight">Generando Reporte TalenHuman</h3>
-                        <p className="text-sm font-bold text-slate-400 leading-relaxed px-4">Optimizando calidad HD y preparando datos seguros. Esto puede tardar unos segundos...</p>
-                    </div>
-                </div>
+                    )}
+                </>,
+                document.body
             )}
+
+                    {/* ========================================================================= */}
+                    {/* 🧠 ELITE LAYER: OVERLAYS, MODALS & GLOBAL MONITORS                      */}
+                    {/* ========================================================================= */}
+
+                    {/* 1. PREDICTIVE IQ HUB (PURPLE BUTTON MODAL) */}
+                    {showPredictiveModal && createPortal(
+                        <div style={{ position: 'fixed', inset: 0, zIndex: 100000000, background: 'rgba(6, 9, 20, 0.85)', backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                            <div style={{ background: isDarkMode ? '#1e293b' : '#ffffff', width: '100%', maxWidth: '650px', borderRadius: '4rem', overflow: 'hidden', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.05)', boxShadow: '0 50px 100px rgba(0,0,0,0.6)', position: 'relative' }} className="animate-in zoom-in-95 duration-500">
+                                <div style={{ padding: '50px', textAlign: 'center' }}>
+                                    <div style={{ width: '80px', height: '80px', background: 'linear-gradient(135deg, #4f46e5, #9333ea)', color: 'white', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 25px', boxShadow: '0 20px 40px rgba(79, 70, 229, 0.3)', transform: 'rotate(-5deg)' }}>
+                                        <Cpu size={40} className={isOptimizing ? "animate-spin" : "animate-pulse"} />
+                                    </div>
+                                    <h2 style={{ fontSize: '2.2rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', letterSpacing: '-0.04em', margin: 0 }}>Hub de Inteligencia</h2>
+                                    <p style={{ color: '#6366f1', fontSize: '11px', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '0.2em', marginTop: '10px' }}>Optimización Basada en Demanda</p>
+                                </div>
+
+                                <div style={{ padding: '0 50px 50px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '40px' }}>
+                                        <div style={{ padding: '24px', background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc', borderRadius: '32px', border: '1px solid rgba(0,0,0,0.05)' }}>
+                                            <p style={{ fontSize: '10px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '5px' }}>Reglas Operativas</p>
+                                            <p style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>{predictiveRules.length}</p>
+                                        </div>
+                                        <div style={{ padding: '24px', background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc', borderRadius: '32px', border: '1px solid rgba(0,0,0,0.05)' }}>
+                                            <p style={{ fontSize: '10px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '5px' }}>Data Histórica</p>
+                                            <p style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>3 SEMANAS</p>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                        <button 
+                                            onClick={performOptimization}
+                                            disabled={isOptimizing || !selectedStore || predictiveRules.length === 0}
+                                            className="group relative overflow-hidden active:scale-95 transition-all text-white font-[950] text-[14px] uppercase tracking-wider"
+                                            style={{ width: '100%', padding: '24px', borderRadius: '24px', border: 'none', background: 'linear-gradient(90deg, #4f46e5, #9333ea)', cursor: 'pointer', boxShadow: '0 20px 40px rgba(79, 70, 229, 0.4)' }}
+                                        >
+                                            {isOptimizing ? <><div className="loader !border-white mr-3 inline-block"></div> CALCULANDO...</> : <><Sparkles size={20} className="inline mr-2" /> OPTIMIZAR AHORA</>}
+                                        </button>
+
+                                        {shifts.some(s => s.isAutoGenerated) && (
+                                            <button 
+                                                onClick={() => { setShifts(prev => prev.filter(s => !s.isAutoGenerated)); setShowPredictiveOverlay(false); }}
+                                                style={{ width: '100%', padding: '18px', borderRadius: '18px', border: '1px solid #ef4444', background: 'rgba(239, 68, 68, 0.05)', color: '#ef4444', fontWeight: '900', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}
+                                            >
+                                                <Trash2 size={16} className="inline mr-2" /> Eliminar Sugerencias
+                                            </button>
+                                        )}
+
+                                        <button onClick={() => setShowPredictiveModal(false)} style={{ width: '100%', padding: '15px', borderRadius: '15px', border: 'none', background: 'transparent', color: '#94a3b8', fontWeight: '900', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}>Cerrar Sistema</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>,
+                        document.body
+                    )}
+
+                    {/* 2. SLEDGEHAMMER LOADING MONITOR (BULLETPROOF) */}
+                    {(loading || isProcessingStatus || isSaving || isExporting) && createPortal(
+                        <div style={{ position: 'fixed', inset: 0, zIndex: 99999999, background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(15px)', WebkitBackdropFilter: 'blur(15px)', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'all' }}>
+                            <div className="animate-in zoom-in-95 duration-300 mx-auto" style={{ background: isDarkMode ? '#0f172a' : '#ffffff', padding: '3.5rem', borderRadius: '4.5rem', boxShadow: '0 60px 120px -20px rgba(0,0,0,0.7)', border: '1px solid rgba(255,255,255,0.1)', width: '100%', maxWidth: '440px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                <div style={{ position: 'relative', width: '90px', height: '90px', marginBottom: '2.5rem' }}>
+                                    <svg style={{ transform: 'rotate(-90deg)', width: '90px', height: '90px' }}>
+                                        <circle cx="45" cy="45" r="40" stroke={isDarkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9'} strokeWidth="6" fill="transparent" />
+                                        <circle cx="45" cy="45" r="40" stroke="#4f46e5" strokeWidth="6" fill="transparent" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * (syncPhase || (loading ? 45 : (isExporting ? 25 : 65)))) / 100} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.8s ease' }} />
+                                    </svg>
+                                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
+                                        <Cpu size={36} className="animate-pulse" />
+                                    </div>
+                                </div>
+                                <h3 style={{ fontSize: '1.7rem', fontWeight: '1000', color: isDarkMode ? '#f8fafc' : '#0f172a', margin: '0 0 0.5rem 0', letterSpacing: '-0.03em' }}>
+                                    {isSaving ? "Publicando Cambios" : (isExporting ? "Preparando Reporte" : "Sincronizando Core")}
+                                </h3>
+                                <p style={{ fontSize: '0.9rem', fontWeight: '800', color: '#64748b', margin: 0, lineHeight: '1.4' }}>Optimizando datos HD en la nube segura...</p>
+                            </div>
+                        </div>,
+                        document.body
+                    )}
         </>
     );
 };
