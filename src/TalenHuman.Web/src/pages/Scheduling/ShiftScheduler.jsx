@@ -138,6 +138,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const [historicalAverages, setHistoricalAverages] = useState({}); // { 'ISO_DATE': [ { time, value } ] }
     const [isOptimizing, setIsOptimizing] = useState(false);
     const [showPredictiveOverlay, setShowPredictiveOverlay] = useState(false);
+    const [selectedCoverageDay, setSelectedCoverageDay] = useState(null); // V13.5
 
     // V19.2: BLINDAJE DE SEGURIDAD PREMIUM - Modo Inspección Auditoría
     const effectiveReadOnly = useMemo(() => {
@@ -1578,8 +1579,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 </colgroup>
                                 <thead>
                                     <tr className="bg-slate-50 dark:bg-slate-800 border-b-2 dark:border-indigo-500/20">
-                                        <th className="p-8 text-left sticky left-0 z-20 border-r dark:border-slate-800" 
-                                            style={{ backgroundColor: isDarkMode ? '#060914' : '#f8fafc', width: '320px', minWidth: '320px', maxWidth: '320px' }}>
+                                        <th className="p-8 text-left sticky left-0 z-[30] border-r dark:border-slate-800" 
+                                            style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '320px', minWidth: '320px', maxWidth: '320px' }}>
                                             <div className="flex items-center gap-4">
                                                 <button 
                                                     onClick={handleSelectAll}
@@ -1609,7 +1610,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     {/* V13.0 COORDINATED GAP ANALYSIS ROW */}
                                     {showPredictiveOverlay && (
                                         <tr className="border-b dark:border-slate-800 bg-indigo-50/10 dark:bg-indigo-900/10 animate-in slide-in-from-top duration-500">
-                                            <td className="sticky left-0 z-20 p-4 border-r dark:border-slate-800 bg-indigo-50/30 dark:bg-indigo-900/30 backdrop-blur-md" 
+                                            <td className="sticky left-0 z-20 p-4 border-r dark:border-slate-800 bg-white dark:bg-slate-900" 
                                                 style={{ width: '320px', minWidth: '320px', maxWidth: '320px' }}>
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200">
@@ -1635,89 +1636,23 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                             return sStart <= hour && sEnd > hour;
                                                         }).length;
                                                         if (need > scheduledAtHour) totalDeficit += (need - scheduledAtHour);
-                                                    });
                                                 });
 
                                                 return (
-                                                    <td key={di} className="p-2 border-r dark:border-slate-800 text-center">
+                                                    <td key={di} className="p-2 border-r dark:border-slate-800 text-center align-middle" style={{ height: '70px' }}>
                                                         {totalDeficit > 0 ? (
-                                                            <div className="flex flex-col items-center gap-0.5 group relative cursor-help">
+                                                            <button 
+                                                                onClick={() => setSelectedCoverageDay({ day, needs, totalDeficit })}
+                                                                className="flex flex-col items-center gap-0.5 group transition-transform active:scale-95"
+                                                            >
                                                                 <div className="px-1.5 py-0.5 bg-rose-500 text-white rounded-lg text-[8px] font-black shadow-lg shadow-rose-200">
                                                                     -{totalDeficit} STAFF
                                                                 </div>
                                                                 <div className="flex items-center gap-1">
                                                                     <Sparkles size={10} className="text-rose-400" />
-                                                                    <span className="text-[7.5px] font-[1000] text-rose-400 uppercase tracking-tighter leading-none">Gap Detectado</span>
+                                                                    <span className="text-[7.5px] font-[1000] text-rose-400 uppercase tracking-tighter leading-none hover:underline">Ver Análisis</span>
                                                                 </div>
-                                                                
-                                                                {/* V13.5 PREMIUM HOVER: HOURLY COVERAGE HEATMAP */}
-                                                                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 p-4 bg-slate-900/98 backdrop-blur-2xl text-white rounded-[2rem] z-[500000] w-64 opacity-0 group-hover:opacity-100 transition-all pointer-events-none shadow-[0_30px_70px_rgba(0,0,0,0.4)] border border-white/10 translate-y-2 group-hover:translate-y-0">
-                                                                     <p className="text-[10px] font-black text-indigo-400 mb-4 uppercase tracking-[0.2em] text-center border-b border-white/10 pb-3">Análisis de Cobertura IA</p>
-                                                                     
-                                                                     {/* 24-Hour Visual Heatbar */}
-                                                                     <div className="flex gap-0.5 h-6 mb-4 items-end">
-                                                                         {Array.from({ length: 24 }).map((_, h) => {
-                                                                             const hourNeeds = Object.values(needs).reduce((acc, n) => acc + (n[h] || 0), 0);
-                                                                             const scheduled = shifts.filter(s => {
-                                                                                 const sD = new Date(s.startTime);
-                                                                                 if (sD.toDateString() !== dayStr || s.isDescanso) return false;
-                                                                                 const sS = sD.getHours();
-                                                                                 const sE = new Date(s.endTime).getHours();
-                                                                                 return sE < sS ? (h >= sS || h < sE) : (h >= sS && h < sE);
-                                                                             }).length;
-                                                                             
-                                                                             const isDeficit = hourNeeds > scheduled;
-                                                                             const isOptimal = hourNeeds > 0 && scheduled >= hourNeeds;
-                                                                             const isQuiet = hourNeeds === 0;
-
-                                                                             return (
-                                                                                 <div key={h} className="flex-1 flex flex-col gap-1 items-center">
-                                                                                     <div 
-                                                                                         className={`w-full rounded-t-[2px] transition-all ${isDeficit ? 'bg-rose-500 min-h-[4px]' : isOptimal ? 'bg-emerald-500 h-2' : 'bg-slate-700 h-1'}`}
-                                                                                         style={{ height: hourNeeds > 0 ? `${Math.min(100, (scheduled/hourNeeds)*100)}%` : '2px' }}
-                                                                                     ></div>
-                                                                                     {h % 6 === 0 && <span className="text-[6px] font-bold text-slate-500">{h}h</span>}
-                                                                                 </div>
-                                                                             );
-                                                                         })}
-                                                                     </div>
-
-                                                                     <div className="space-y-2 max-h-40 overflow-y-auto pr-1 thin-scrollbar">
-                                                                         {(() => {
-                                                                             const groupedGaps = {};
-                                                                             Object.keys(needs).forEach(pId => {
-                                                                                 const p = profiles.find(pr => pr.id === pId);
-                                                                                 const pName = p?.name || '---';
-                                                                                 const pDeficit = needs[pId].reduce((acc, n, h) => {
-                                                                                     const scheduled = shifts.filter(s => {
-                                                                                         const sD = new Date(s.startTime);
-                                                                                         if (sD.toDateString() !== dayStr || s.isDescanso) return false;
-                                                                                         const emp = employees.find(e => e.id === s.employeeId);
-                                                                                         const sS = sD.getHours();
-                                                                                         const sE = new Date(s.endTime).getHours();
-                                                                                         const isAtHour = sE < sS ? (h >= sS || h < sE) : (sS <= h && sE > h);
-                                                                                         return emp?.profileId === pId && isAtHour;
-                                                                                     }).length;
-                                                                                     return acc + Math.max(0, n - scheduled);
-                                                                                 }, 0);
-                                                                                 if (pDeficit > 0) {
-                                                                                     groupedGaps[pName] = (groupedGaps[pName] || 0) + pDeficit;
-                                                                                 }
-                                                                             });
-                                                                             return Object.entries(groupedGaps).map(([name, deficit]) => (
-                                                                                 <div key={name} className="flex justify-between items-center bg-white/5 p-2 rounded-xl">
-                                                                                     <span className="text-[9px] font-bold text-slate-400 truncate mr-2">{name}</span>
-                                                                                     <span className="text-[10px] font-black text-rose-400">-{deficit} HRS</span>
-                                                                                 </div>
-                                                                             ));
-                                                                         })()}
-                                                                     </div>
-                                                                     <div className="mt-3 pt-3 border-t border-white/10 flex justify-between items-center text-[8px] font-black uppercase tracking-widest text-slate-500">
-                                                                         <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div> Déficit</div>
-                                                                         <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> Cubierto</div>
-                                                                     </div>
-                                                                </div>
-                                                            </div>
+                                                            </button>
                                                         ) : (
                                                             <div className="flex flex-col items-center gap-1">
                                                                 <div className="px-1.5 py-0.5 bg-emerald-500 text-white rounded-lg text-[8px] font-black shadow-lg shadow-emerald-200">
@@ -2561,6 +2496,145 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         </div>,
                         document.body
                     )}
+            {/* V13.5 ANALYTIC COVERAGE MODAL (PORTAL) */}
+            {selectedCoverageDay && createPortal(
+                <div 
+                    className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-300"
+                    onClick={() => setSelectedCoverageDay(null)}
+                >
+                    <div 
+                        className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden border border-white/10 animate-in zoom-in-95 duration-500"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="p-8 bg-indigo-600 text-white flex justify-between items-center relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
+                            <div className="relative z-10">
+                                <h3 className="text-2xl font-[950] tracking-tighter mb-1">Análisis de Cobertura IA</h3>
+                                <p className="text-indigo-100 text-[11px] font-black uppercase tracking-widest">
+                                    {selectedCoverageDay.day.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                </p>
+                            </div>
+                            <button 
+                                onClick={() => setSelectedCoverageDay(null)}
+                                className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all relative z-10"
+                            >
+                                <XCircle size={20} strokeWidth={3} />
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-10 space-y-8">
+                            {/* Summary Cards */}
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="p-6 bg-rose-50 dark:bg-rose-500/10 rounded-3xl border border-rose-100 dark:border-rose-500/20">
+                                    <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-2">Déficit Detectado</p>
+                                    <p className="text-4xl font-[950] text-rose-600">-{selectedCoverageDay.totalDeficit} <span className="text-lg">STAFF</span></p>
+                                </div>
+                                <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-100 dark:border-white/5">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Estado General</p>
+                                    <p className="text-lg font-black text-slate-700 dark:text-slate-200">Revisión Requerida</p>
+                                </div>
+                            </div>
+
+                            {/* 24-HOUR HEATMAP */}
+                            <div>
+                                <div className="flex justify-between items-center mb-4">
+                                    <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Distribución de Demanda x Hora</h4>
+                                    <div className="flex items-center gap-4 text-[9px] font-bold">
+                                        <div className="flex items-center gap-1.5 text-rose-500"><div className="w-2 h-2 rounded-full bg-rose-500"></div> Déficit</div>
+                                        <div className="flex items-center gap-1.5 text-emerald-500"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Cubierto</div>
+                                    </div>
+                                </div>
+                                <div className="flex gap-1 h-32 items-end bg-slate-50 dark:bg-slate-800/30 p-4 rounded-3xl border border-slate-100 dark:border-white/5">
+                                    {Array.from({ length: 24 }).map((_, h) => {
+                                        const needs = selectedCoverageDay.needs;
+                                        const hourNeeds = Object.values(needs).reduce((acc, n) => acc + (n[h] || 0), 0);
+                                        const scheduled = shifts.filter(s => {
+                                            const sD = new Date(s.startTime);
+                                            if (sD.toDateString() !== selectedCoverageDay.day.toDateString() || s.isDescanso) return false;
+                                            const sS = sD.getHours();
+                                            const sE = new Date(s.endTime).getHours();
+                                            return sE < sS ? (h >= sS || h < sE) : (h >= sS && h < sE);
+                                        }).length;
+                                        
+                                        const isDeficit = hourNeeds > scheduled;
+                                        const isOptimal = hourNeeds > 0 && scheduled >= hourNeeds;
+
+                                        return (
+                                            <div key={h} className="flex-1 flex flex-col gap-2 items-center group/h relative">
+                                                <div 
+                                                    className={`w-full rounded-t-lg transition-all ${isDeficit ? 'bg-rose-500' : isOptimal ? 'bg-emerald-500 opacity-60' : 'bg-slate-300 dark:bg-slate-700'}`}
+                                                    style={{ height: hourNeeds > 0 ? `${Math.min(100, (scheduled/hourNeeds)*100 + 10)}%` : '4px' }}
+                                                ></div>
+                                                {h % 4 === 0 && <span className="text-[7px] font-black text-slate-400">{h}h</span>}
+                                                
+                                                {/* Mini Tooltip on Bar */}
+                                                <div className="absolute bottom-full mb-1 opacity-0 group-hover/h:opacity-100 transition-opacity whitespace-nowrap bg-slate-800 text-white text-[8px] font-black px-1.5 py-0.5 rounded pointer-events-none">
+                                                    {h}:00 | {scheduled}/{hourNeeds}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* ROLE BREAKDOWN */}
+                            <div className="grid grid-cols-2 gap-8">
+                                <div className="space-y-3">
+                                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest pl-1">Personal Faltante</h4>
+                                    <div className="space-y-2 max-h-48 overflow-y-auto pr-2 thin-scrollbar">
+                                        {(() => {
+                                            const needs = selectedCoverageDay.needs;
+                                            const groupedGaps = {};
+                                            Object.keys(needs).forEach(pId => {
+                                                const p = profiles.find(pr => pr.id === pId);
+                                                const pName = p?.name || '---';
+                                                const pDeficit = needs[pId].reduce((acc, n, h) => {
+                                                    const scheduled = shifts.filter(s => {
+                                                        const sD = new Date(s.startTime);
+                                                        if (sD.toDateString() !== selectedCoverageDay.day.toDateString() || s.isDescanso) return false;
+                                                        const emp = employees.find(e => e.id === s.employeeId);
+                                                        const sS = sD.getHours();
+                                                        const sE = new Date(s.endTime).getHours();
+                                                        const isAtHour = sE < sS ? (h >= sS || h < sE) : (sS <= h && sE > h);
+                                                        return emp?.profileId === pId && isAtHour;
+                                                    }).length;
+                                                    return acc + Math.max(0, n - scheduled);
+                                                }, 0);
+                                                if (pDeficit > 0) groupedGaps[pName] = (groupedGaps[pName] || 0) + pDeficit;
+                                            });
+                                            if (Object.keys(groupedGaps).length === 0) return <p className="text-[11px] text-slate-400 italic">No hay faltantes registrados.</p>;
+                                            return Object.entries(groupedGaps).map(([name, deficit]) => (
+                                                <div key={name} className="flex justify-between items-center bg-rose-500/5 p-3 rounded-2xl border border-rose-500/10">
+                                                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">{name}</span>
+                                                    <span className="text-xs font-black text-rose-500">-{deficit} HRS</span>
+                                                </div>
+                                            ));
+                                        })()}
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                     <h4 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest pl-1">Recomendación IA</h4>
+                                     <div className="p-6 bg-slate-900 rounded-[2.5rem] text-white relative overflow-hidden">
+                                         <Sparkles className="absolute -right-4 -bottom-4 w-24 h-24 text-white/5" />
+                                         <p className="text-[11px] leading-relaxed font-medium text-slate-300 relative z-10">
+                                             "Se detecta una brecha crítica durante la hora pico. Se recomienda asignar al menos **1 colaborador adicional** para cubrir el déficit de horas."
+                                         </p>
+                                         <button 
+                                            onClick={() => { performOptimization(); setSelectedCoverageDay(null); }}
+                                            className="mt-4 w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-2xl text-[10px] font-black uppercase transition-all active:scale-95"
+                                         >
+                                             Ejecutar Optimización Ahora
+                                         </button>
+                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
         </>
     );
 };
