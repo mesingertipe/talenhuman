@@ -1345,6 +1345,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         }
     }, [isExporting, stores, selectedStore, currentWeekStart, days, employees, shifts]);
 
+    const lookupJornadaId = (id) => {
+        const emp = employees.find(e => e.id === id);
+        return emp?.jornadaId || '---';
+    };
+
     const exportToExcel = handleExcelExport;
     const exportToPDF = handlePdfExport;
 
@@ -2701,8 +2706,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         })}
                                 </div>
                             </div>
+                        </div>
 
-                            {/* ROLE BREAKDOWN */}
+                        {/* ROLE BREAKDOWN */}
                             <div className="grid grid-cols-2 gap-8">
                                 <div className="space-y-3">
                                     <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest pl-1">Personal Faltante</h4>
@@ -2754,12 +2760,10 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 </div>
                             </div>
                         </div>
-                        </div>
                     </div>
                 </div>,
                 document.body
             )}
-            </div>
         </>
     );
 };
