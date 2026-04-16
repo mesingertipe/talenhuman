@@ -2754,10 +2754,12 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 </div>
                             </div>
                         </div>
+                        </div>
                     </div>
                 </div>,
                 document.body
             )}
+            </div>
         </>
     );
 };
