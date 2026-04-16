@@ -1734,10 +1734,12 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                 <span className="text-[7.5px] font-[900] text-slate-500 dark:text-slate-400 uppercase leading-none truncate">
                                                                     {profiles.find(p => p.id === emp.profileId)?.name || 'N/A'}
                                                                 </span>
-                                                            </div>
-                                                            <div className="flex items-center gap-1.5 mt-2 bg-emerald-500/10 dark:bg-emerald-500/20 px-2 py-0.5 rounded-full w-fit">
-                                                                <Clock size={8} className="text-emerald-500" />
-                                                                <span className="text-[8px] font-black text-emerald-600 dark:text-emerald-400 tracking-tighter">TOTAL: {empTotalHours}H</span>
+                                                                <div className="flex items-center gap-1.5 mt-2 bg-indigo-500/10 dark:bg-indigo-500/20 px-2 py-0.5 rounded-full w-fit">
+                                                                    <Briefcase size={8} className="text-indigo-500" />
+                                                                    <span className="text-[8px] font-black text-indigo-600 dark:text-indigo-400 tracking-tighter uppercase truncate max-w-[120px]">
+                                                                        JORNADA: {jornadas.find(j => j.id === emp.jornadaId)?.nombre || 'S/DEFINIR'}
+                                                                    </span>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -2648,8 +2650,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         <div className="flex items-center gap-1.5 text-slate-400"><div className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700"></div> S/Demanda</div>
                                     </div>
                                 </div>
-                                <div className="bg-slate-50/50 dark:bg-slate-800/40 p-10 rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-inner overflow-hidden">
-                                    <div className="flex justify-between items-center gap-4 min-w-max px-4">
+                                <div className="bg-slate-50/50 dark:bg-slate-800/40 p-10 rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-inner">
+                                    <div className="grid grid-cols-9 gap-x-2 gap-y-10">
                                         {Array.from({ length: 18 }).map((_, i) => {
                                             const h = i + 6; // Rango 6:00 a 23:00
                                             const needs = selectedCoverageDay.needs;
@@ -2666,20 +2668,27 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             const isOptimal = hourNeeds > 0 && scheduled >= hourNeeds;
 
                                             return (
-                                                <div key={h} className="flex flex-col items-center gap-5 group/h flex-1">
-                                                    <div 
-                                                        className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 border-4 shadow-lg ${
-                                                            isDeficit 
-                                                                ? 'bg-rose-500 border-rose-200 dark:border-rose-900/50 scale-110' 
-                                                                : isOptimal 
-                                                                    ? 'bg-emerald-500 border-emerald-200 dark:border-emerald-900/50 shadow-emerald-500/20' 
-                                                                    : 'bg-slate-300 dark:bg-slate-700 border-slate-100 dark:border-slate-800'
-                                                        }`}
-                                                    >
-                                                        {isDeficit && <AlertTriangle size={16} className="text-white animate-bounce" />}
-                                                        {isOptimal && <Check size={16} className="text-white" />}
+                                                <div key={h} className="flex flex-col items-center gap-5 group/h">
+                                                    <div className="relative">
+                                                        <div 
+                                                            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 border-4 shadow-lg ${
+                                                                isDeficit 
+                                                                    ? 'bg-rose-500 border-rose-200 dark:border-rose-900/50 scale-110 shadow-rose-500/20' 
+                                                                    : isOptimal 
+                                                                        ? 'bg-emerald-500 border-emerald-200 dark:border-emerald-900/50 shadow-emerald-500/20' 
+                                                                        : 'bg-slate-300 dark:bg-slate-700 border-slate-100 dark:border-slate-800 shadow-none'
+                                                            }`}
+                                                        >
+                                                            {isDeficit && <AlertTriangle size={18} className="text-white animate-bounce" />}
+                                                            {isOptimal && <Check size={18} className="text-white" />}
+                                                        </div>
+                                                        {isDeficit && (
+                                                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-rose-600 text-white rounded-full flex items-center justify-center text-[10px] font-black border-2 border-white dark:border-slate-900">
+                                                                !
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                    <div className="flex flex-col items-center gap-2">
+                                                    <div className="flex flex-col items-center gap-1.5 leading-none">
                                                         <span className={`text-[11px] font-[1000] tracking-tighter ${isDeficit ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}`}>
                                                             {h}:00
                                                         </span>
@@ -2690,7 +2699,6 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </div>
                                             );
                                         })}
-                                    </div>
                                 </div>
                             </div>
 
