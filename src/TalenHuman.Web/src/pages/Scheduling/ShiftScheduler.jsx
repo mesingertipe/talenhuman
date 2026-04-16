@@ -2657,7 +2657,15 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     </div>
                                 </div>
                                 <div className="bg-slate-50/50 dark:bg-slate-800/40 p-10 rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-inner">
-                                    <div className="grid grid-cols-9 gap-x-2 gap-y-10">
+                                    <div 
+                                        style={{ 
+                                            display: 'grid', 
+                                            gridTemplateColumns: 'repeat(9, minmax(0, 1fr))', 
+                                            columnGap: '0.5rem', 
+                                            rowGap: '2.5rem',
+                                            width: '100%'
+                                        }}
+                                    >
                                         {Array.from({ length: 18 }).map((_, i) => {
                                             const h = i + 6; // Rango 6:00 a 23:00
                                             const needs = selectedCoverageDay.needs;
