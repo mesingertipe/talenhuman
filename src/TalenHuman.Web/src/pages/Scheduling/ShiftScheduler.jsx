@@ -466,8 +466,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         const dayStr = toLocalISO(dayDate);
         const dayHistory = historicalAverages[dayStr] || [];
         const needsPerProfile = {};
+        const hourlyVolumes = new Array(24).fill(0);
 
-        if (dayHistory.length === 0 || predictiveRules.length === 0) return {};
+        if (dayHistory.length === 0 || predictiveRules.length === 0) return { needs: {}, volumes: hourlyVolumes };
 
         const store = stores.find(s => s.id === selectedStore);
         const opStart = store?.defaultStartTime ? parseInt(store.defaultStartTime.split(':')[0]) : 8;
@@ -481,10 +482,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
             dayHistory.forEach(h => {
                 const hour = parseInt(h.time.split(':')[0]);
-                // Only count demand within store hours
                 if (hour < opStart || hour > opEndHour) return;
 
                 const forecastValue = h[metricKey] || 0;
+                
+                // Track volume for transparency
+                hourlyVolumes[hour] = Math.max(hourlyVolumes[hour], forecastValue);
+                
                 const calculatedStaff = rule.ratio > 0 ? Math.ceil(forecastValue / rule.ratio) : 0;
                 ruleNeeds[hour] = Math.max(ruleNeeds[hour], calculatedStaff);
             });
@@ -508,7 +512,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             });
         });
 
-        return needsPerProfile;
+        return { needs: needsPerProfile, volumes: hourlyVolumes };
     }, [historicalAverages, predictiveRules, stores, selectedStore]);
 
     const performOptimization = async () => {
@@ -529,7 +533,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             const opEndHour = store?.defaultEndTime ? parseInt(store.defaultEndTime.split(':')[0]) : 22;
 
             daysInWeek.forEach(day => {
-                const needs = calculateHourlyNeeds(day);
+                const result = calculateHourlyNeeds(day);
+                const needs = result.needs || {};
                 const dayStr = day.toDateString();
 
                 Object.keys(needs).forEach(pId => {
@@ -1685,7 +1690,12 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 return (
                                                     <td key={di} className="p-1 border-r dark:border-slate-800 text-center align-middle cursor-pointer hover:bg-rose-500/5 group/gap transition-colors" 
                                                         style={{ height: '60px' }}
-                                                        onClick={() => { if (totalDeficit > 0) setSelectedCoverageDay({ day, needs, totalDeficit }); }}
+                                                        onClick={() => { 
+                                                            const result = calculateHourlyNeeds(day);
+                                                            const needs = result.needs || {};
+                                                            const volumes = result.volumes || [];
+                                                            if (totalDeficit > 0) setSelectedCoverageDay({ day, needs, totalDeficit, volumes }); 
+                                                        }}
                                                     >
                                                         {totalDeficit > 0 ? (
                                                             <div className="flex flex-col items-center gap-1">
@@ -2569,7 +2579,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             const currentIndex = days.findIndex(d => d.toDateString() === selectedCoverageDay.day.toDateString());
                                             const prevIndex = (currentIndex - 1 + days.length) % days.length;
                                             const newDay = days[prevIndex];
-                                            const needs = calculateHourlyNeeds(newDay);
+                                            
+                                            const result = calculateHourlyNeeds(newDay);
+                                            const needs = result.needs || {};
+                                            const volumes = result.volumes || [];
+                                            
                                             let totalDeficit = 0;
                                             Object.values(needs).forEach(hN => hN.forEach((n, h) => {
                                                 const sched = shifts.filter(s => {
@@ -2581,7 +2595,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 }).length;
                                                 if (n > sched) totalDeficit += (n - sched);
                                             }));
-                                            setSelectedCoverageDay({ day: newDay, needs, totalDeficit });
+                                            
+                                            setSelectedCoverageDay({ day: newDay, needs, totalDeficit, volumes });
                                         }}
                                         className="w-10 h-10 rounded-2xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all active:scale-90"
                                     ><ChevronLeft size={20} strokeWidth={3} /></button>
@@ -2602,7 +2617,10 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             const currentIndex = days.findIndex(d => d.toDateString() === selectedCoverageDay.day.toDateString());
                                             const nextIndex = (currentIndex + 1) % days.length;
                                             const newDay = days[nextIndex];
-                                            const needs = calculateHourlyNeeds(newDay);
+                                            const result = calculateHourlyNeeds(newDay);
+                                            const needs = result.needs || {};
+                                            const volumes = result.volumes || [];
+                                            
                                             let totalDeficit = 0;
                                             Object.values(needs).forEach(hN => hN.forEach((n, h) => {
                                                 const sched = shifts.filter(s => {
@@ -2614,7 +2632,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 }).length;
                                                 if (n > sched) totalDeficit += (n - sched);
                                             }));
-                                            setSelectedCoverageDay({ day: newDay, needs, totalDeficit });
+                                            
+                                            setSelectedCoverageDay({ day: newDay, needs, totalDeficit, volumes });
                                         }}
                                         className="w-10 h-10 rounded-2xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all active:scale-90"
                                     ><ChevronRight size={20} strokeWidth={3} /></button>
@@ -2702,13 +2721,16 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <div className="flex flex-col items-center gap-1.5 leading-none">
-                                                        <span className={`text-[11px] font-[1000] tracking-tighter ${isDeficit ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                                                    <div className="flex flex-col items-center gap-1 leading-none">
+                                                        <span className={`text-[10px] font-[1000] tracking-tighter ${isDeficit ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}`}>
                                                             {h}:00
                                                         </span>
-                                                        <div className={`px-2 py-0.5 rounded-full text-[8.5px] font-black ${isDeficit ? 'bg-rose-100 text-rose-600' : isOptimal ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-500'} transition-all`}>
+                                                        <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-tighter opacity-80">
+                                                            Vol: {selectedCoverageDay.volumes?.[h]?.toFixed(1) || '0'}
+                                                        </span>
+                                                        <span className={`text-[9.5px] font-[1000] mt-0.5 ${isDeficit ? 'text-rose-600' : isOptimal ? 'text-emerald-600' : 'text-slate-400'}`}>
                                                             {scheduled}/{hourNeeds}
-                                                        </div>
+                                                        </span>
                                                     </div>
                                                 </div>
                                             );
