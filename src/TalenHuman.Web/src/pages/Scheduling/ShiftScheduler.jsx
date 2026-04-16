@@ -2546,20 +2546,70 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     onClick={() => setSelectedCoverageDay(null)}
                 >
                     <div 
-                        className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.5)] overflow-hidden border border-white/20 dark:border-white/5 animate-in zoom-in-95 duration-500"
+                        className="bg-white dark:bg-slate-900 w-full max-w-5xl rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.5)] overflow-hidden border border-white/20 dark:border-white/5 animate-in zoom-in-95 duration-500"
                         onClick={e => e.stopPropagation()}
                         style={{ border: '1px solid rgba(255,255,255,0.1)' }}
                     >
                         {/* Header */}
                         <div className="p-8 bg-gradient-to-br from-indigo-700 to-purple-800 text-white flex justify-between items-center relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl animate-pulse"></div>
-                            <div className="relative z-10">
-                                <h3 className="text-2xl font-[1000] tracking-tighter mb-1 drop-shadow-lg text-white">Análisis de Cobertura IA</h3>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-glow-emerald animate-pulse"></div>
-                                    <p className="text-indigo-100 text-[11px] font-black uppercase tracking-widest opacity-95">
-                                        {selectedCoverageDay.day.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
-                                    </p>
+                            <div className="relative z-10 flex-1">
+                                <p className="text-indigo-200 text-[9px] font-black uppercase tracking-[0.3em] mb-1 opacity-80">Predictive Intelligence Hub</p>
+                                <div className="flex items-center gap-6">
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            const currentIndex = days.findIndex(d => d.toDateString() === selectedCoverageDay.day.toDateString());
+                                            const prevIndex = (currentIndex - 1 + days.length) % days.length;
+                                            const newDay = days[prevIndex];
+                                            const needs = calculateHourlyNeeds(newDay);
+                                            let totalDeficit = 0;
+                                            Object.values(needs).forEach(hN => hN.forEach((n, h) => {
+                                                const sched = shifts.filter(s => {
+                                                    const sD = new Date(s.startTime);
+                                                    if (sD.toDateString() !== newDay.toDateString() || s.isDescanso) return false;
+                                                    const sS = sD.getHours();
+                                                    const sE = new Date(s.endTime).getHours();
+                                                    return sE < sS ? (h >= sS || h < sE) : (h >= sS && h < sE);
+                                                }).length;
+                                                if (n > sched) totalDeficit += (n - sched);
+                                            }));
+                                            setSelectedCoverageDay({ day: newDay, needs, totalDeficit });
+                                        }}
+                                        className="w-10 h-10 rounded-2xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all active:scale-90"
+                                    ><ChevronLeft size={20} strokeWidth={3} /></button>
+                                    
+                                    <div className="text-center min-w-[280px]">
+                                        <h3 className="text-3xl font-[1000] tracking-tighter drop-shadow-lg text-white mb-0.5">Análisis de Cobertura</h3>
+                                        <div className="flex items-center justify-center gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
+                                            <p className="text-indigo-50 font-black uppercase tracking-widest text-[12px]">
+                                                {selectedCoverageDay.day.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            const currentIndex = days.findIndex(d => d.toDateString() === selectedCoverageDay.day.toDateString());
+                                            const nextIndex = (currentIndex + 1) % days.length;
+                                            const newDay = days[nextIndex];
+                                            const needs = calculateHourlyNeeds(newDay);
+                                            let totalDeficit = 0;
+                                            Object.values(needs).forEach(hN => hN.forEach((n, h) => {
+                                                const sched = shifts.filter(s => {
+                                                    const sD = new Date(s.startTime);
+                                                    if (sD.toDateString() !== newDay.toDateString() || s.isDescanso) return false;
+                                                    const sS = sD.getHours();
+                                                    const sE = new Date(s.endTime).getHours();
+                                                    return sE < sS ? (h >= sS || h < sE) : (h >= sS && h < sE);
+                                                }).length;
+                                                if (n > sched) totalDeficit += (n - sched);
+                                            }));
+                                            setSelectedCoverageDay({ day: newDay, needs, totalDeficit });
+                                        }}
+                                        className="w-10 h-10 rounded-2xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all active:scale-90"
+                                    ><ChevronRight size={20} strokeWidth={3} /></button>
                                 </div>
                             </div>
                             <button 
@@ -2598,8 +2648,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         <div className="flex items-center gap-1.5 text-slate-400"><div className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700"></div> S/Demanda</div>
                                     </div>
                                 </div>
-                                <div className="bg-slate-50/50 dark:bg-slate-800/40 p-8 rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-inner">
-                                    <div className="flex justify-between items-center gap-2 overflow-x-auto thin-scrollbar pb-6 px-2">
+                                <div className="bg-slate-50/50 dark:bg-slate-800/40 p-10 rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-inner overflow-hidden">
+                                    <div className="flex justify-between items-center gap-4 min-w-max px-4">
                                         {Array.from({ length: 18 }).map((_, i) => {
                                             const h = i + 6; // Rango 6:00 a 23:00
                                             const needs = selectedCoverageDay.needs;
@@ -2616,40 +2666,26 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             const isOptimal = hourNeeds > 0 && scheduled >= hourNeeds;
 
                                             return (
-                                                <div key={h} className="flex flex-col items-center gap-4 group/h relative">
-                                                    <div className="relative">
-                                                        <div 
-                                                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 border-4 ${
-                                                                isDeficit 
-                                                                    ? 'bg-rose-500 border-rose-200 dark:border-rose-900/50 shadow-[0_0_20px_rgba(244,63,94,0.4)] scale-110' 
-                                                                    : isOptimal 
-                                                                        ? 'bg-emerald-500 border-emerald-200 dark:border-emerald-900/50 shadow-[0_0_20px_rgba(16,185,129,0.3)]' 
-                                                                        : 'bg-slate-300 dark:bg-slate-700 border-slate-100 dark:border-slate-800'
-                                                            }`}
-                                                        >
-                                                            {isDeficit && <AlertTriangle size={14} className="text-white animate-bounce" />}
-                                                            {isOptimal && <Check size={14} className="text-white" />}
-                                                        </div>
+                                                <div key={h} className="flex flex-col items-center gap-5 group/h flex-1">
+                                                    <div 
+                                                        className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 border-4 shadow-lg ${
+                                                            isDeficit 
+                                                                ? 'bg-rose-500 border-rose-200 dark:border-rose-900/50 scale-110' 
+                                                                : isOptimal 
+                                                                    ? 'bg-emerald-500 border-emerald-200 dark:border-emerald-900/50 shadow-emerald-500/20' 
+                                                                    : 'bg-slate-300 dark:bg-slate-700 border-slate-100 dark:border-slate-800'
+                                                        }`}
+                                                    >
+                                                        {isDeficit && <AlertTriangle size={16} className="text-white animate-bounce" />}
+                                                        {isOptimal && <Check size={16} className="text-white" />}
                                                     </div>
-                                                    <div className="flex flex-col items-center leading-none">
-                                                        <span className={`text-[10px] font-black ${isDeficit ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                                                    <div className="flex flex-col items-center gap-2">
+                                                        <span className={`text-[11px] font-[1000] tracking-tighter ${isDeficit ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}`}>
                                                             {h}:00
                                                         </span>
-                                                        <span className="text-[7.5px] font-black text-slate-400 mt-1.5 bg-slate-200/50 dark:bg-slate-700/50 px-2 py-0.5 rounded-full">
+                                                        <div className={`px-2 py-0.5 rounded-full text-[8.5px] font-black ${isDeficit ? 'bg-rose-100 text-rose-600' : isOptimal ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-500'} transition-all`}>
                                                             {scheduled}/{hourNeeds}
-                                                        </span>
-                                                    </div>
-                                                    
-                                                    {/* Tooltip Detallado */}
-                                                    <div className="absolute bottom-full mb-3 opacity-0 group-hover/h:opacity-100 transition-all transform translate-y-2 group-hover/h:translate-y-0 pointer-events-none z-[200]">
-                                                        <div className="bg-slate-900 text-white text-[9px] p-2 rounded-xl shadow-2xl border border-white/10 whitespace-nowrap flex flex-col items-center gap-1">
-                                                            <p className="font-bold border-b border-white/10 pb-1 mb-1">Hora: {h}:00</p>
-                                                            <div className="flex gap-3">
-                                                                <span className="text-emerald-400 font-black">Plan: {scheduled}</span>
-                                                                <span className="text-rose-400 font-black">Req: {hourNeeds}</span>
-                                                            </div>
                                                         </div>
-                                                        <div className="w-2 h-2 bg-slate-900 rotate-45 mx-auto -mt-1 border-r border-b border-white/10"></div>
                                                     </div>
                                                 </div>
                                             );
