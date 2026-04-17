@@ -557,7 +557,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     
                     // Find the rule for this profile to get weeklyRestDays
                     const rule = predictiveRules.find(r => r.profiles?.some(p => p.profileId === pId));
-                    const maxWorkDays = 7 - (rule?.weeklyRestDays || 1);
+                    const restDays = (rule && rule.weeklyRestDays !== undefined) ? rule.weeklyRestDays : 1;
+                    const maxWorkDays = 7 - restDays;
 
                     for (let h = opStart; h <= opEndHour; h++) {
                         const needAtHour = hourlyNeed[h] || 0;

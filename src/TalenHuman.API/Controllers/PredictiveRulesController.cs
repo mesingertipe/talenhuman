@@ -136,6 +136,33 @@ public class PredictiveRulesController : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("ByStore/{storeId}")]
+    public async Task<ActionResult<IEnumerable<object>>> GetRulesByStore(Guid storeId)
+    {
+        var store = await _context.Stores.FindAsync(storeId);
+        if (store == null || store.StoreTypeId == null) return Enumerable.Empty<object>().ToList();
+
+        return await _context.PredictiveShiftRules
+            .Where(r => r.StoreTypeId == store.StoreTypeId && r.IsActive)
+            .Include(r => r.RuleProfiles)
+                .ThenInclude(rp => rp.Profile)
+            .OrderBy(r => r.Name)
+            .Select(r => new {
+                r.Id,
+                r.Name,
+                r.Description,
+                r.StoreTypeId,
+                r.MetricType,
+                r.Ratio,
+                r.MinStaffOpening,
+                r.MinStaffClosing,
+                r.IsActive,
+                r.WeeklyRestDays,
+                Profiles = r.RuleProfiles.Select(rp => new { rp.ProfileId, rp.Profile.Name })
+            })
+            .ToListAsync();
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteRule(Guid id)
     {
