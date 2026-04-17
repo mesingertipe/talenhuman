@@ -613,7 +613,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             // Calculate total deficits AGAIN to see if we left anything uncovered
             let totalRemainingDeficit = 0;
             daysInWeek.forEach(day => {
-                const needs = calculateHourlyNeeds(day);
+                                                            const result = calculateHourlyNeeds(day);
+                                                            const needs = result.needs || {};
+                                                            const volumes = result.volumes || [];
                 const dayStr = day.toDateString();
                 Object.keys(needs).forEach(pId => {
                     needs[pId].forEach((need, h) => {
@@ -1669,7 +1671,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </div>
                                             </th>
                                             {days.map((day, di) => {
-                                                const needs = calculateHourlyNeeds(day);
+                                                const result = calculateHourlyNeeds(day);
+                                                const needs = result.needs || {};
                                                 const dayStr = day.toDateString();
                                                 
                                                 let totalDeficit = 0;
@@ -2414,7 +2417,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                     {(() => {
                                                         let totalNewReq = 0;
                                                         days.forEach(day => {
-                                                            const needs = calculateHourlyNeeds(day);
+                                                            const result = calculateHourlyNeeds(day);
+                                                            const needs = result.needs || {};
+                                                            const volumes = result.volumes || [];
                                                             const dayStr = day.toDateString();
                                                             Object.keys(needs).forEach(pId => {
                                                                 needs[pId].forEach((need, h) => {
@@ -2443,7 +2448,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                         let totalNeeds = 0;
                                                         let totalScheduled = 0;
                                                         days.forEach(day => {
-                                                            const needs = calculateHourlyNeeds(day);
+                                                            const result = calculateHourlyNeeds(day);
+                                                            const needs = result.needs || {};
+                                                            const volumes = result.volumes || [];
                                                             const dayStr = day.toDateString();
                                                             Object.keys(needs).forEach(pId => {
                                                                 needs[pId].forEach((need, h) => {
@@ -2471,7 +2478,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                     {(() => {
                                                         const hourDeltas = new Array(24).fill(0);
                                                         days.forEach(day => {
-                                                            const needs = calculateHourlyNeeds(day);
+                                                            const result = calculateHourlyNeeds(day);
+                                                            const needs = result.needs || {};
+                                                            const volumes = result.volumes || [];
                                                             const dayStr = day.toDateString();
                                                             Object.values(needs).forEach(hourlyNeed => {
                                                                 hourlyNeed.forEach((n, h) => {
