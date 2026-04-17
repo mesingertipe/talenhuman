@@ -617,10 +617,10 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 
                                 return true;
                             }).sort((a, b) => {
-                                // V13.0.2: COMPACT LOAD - Prioritize filling full-time contracts
+                                // V13.0.6: FAIR BALANCE - Prioritize those with FEWER hours to spread the work
                                 const countA = workDaysCount[a.id] || 0;
                                 const countB = workDaysCount[b.id] || 0;
-                                return countB - countA; // Higher hours first
+                                return countA - countB; // Lower hours first (Balanced Load)
                             });
 
                             if (candidates.length === 0) {
