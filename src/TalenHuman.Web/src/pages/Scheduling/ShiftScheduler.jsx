@@ -468,7 +468,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         const needsPerProfile = {};
         const hourlyVolumes = new Array(24).fill(0);
 
-        if (dayHistory.length === 0 || predictiveRules.length === 0) return { needs: {}, volumes: hourlyVolumes };
+        if (predictiveRules.length === 0) return { needs: {}, volumes: hourlyVolumes };
 
         const store = stores.find(s => s.id === selectedStore);
         const opStart = store?.defaultStartTime ? parseInt(store.defaultStartTime.split(':')[0]) : 8;
