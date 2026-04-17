@@ -503,11 +503,14 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 }
             }
 
-            rule.profiles.forEach(p => {
-                const pId = p.profileId;
-                if (!needsPerProfile[pId]) needsPerProfile[pId] = new Array(24).fill(0);
+            const profilesList = rule.profiles || rule.Profiles || [];
+            profilesList.forEach(p => {
+                const pId = p.profileId || p.ProfileId;
+                if (!pId) return;
+                const targetPId = String(pId).toLowerCase();
+                if (!needsPerProfile[targetPId]) needsPerProfile[targetPId] = new Array(24).fill(0);
                 for (let h = 0; h < 24; h++) {
-                    needsPerProfile[pId][h] = Math.max(needsPerProfile[pId][h], ruleNeeds[h]);
+                    needsPerProfile[targetPId][h] = Math.max(needsPerProfile[targetPId][h], ruleNeeds[h]);
                 }
             });
         });
@@ -553,10 +556,14 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
                 Object.keys(needs).forEach(pId => {
                     const hourlyNeed = needs[pId];
-                    const profilesEmployees = employees.filter(e => e.profileId === pId && e.isActive);
+                    // Robust matching: Profiles IDs are GUID strings, normalize to lowercase
+                    const targetPId = String(pId).toLowerCase();
+                    const profilesEmployees = employees.filter(e => 
+                        e.profileId && String(e.profileId).toLowerCase() === targetPId && e.isActive
+                    );
                     
                     // Find the rule for this profile to get weeklyRestDays
-                    const rule = predictiveRules.find(r => r.profiles?.some(p => p.profileId === pId));
+                    const rule = predictiveRules.find(r => (r.profiles || r.Profiles)?.some(p => String(p.profileId || p.ProfileId).toLowerCase() === targetPId));
                     const restDays = (rule && rule.weeklyRestDays !== undefined) ? rule.weeklyRestDays : 1;
                     const maxWorkDays = 7 - restDays;
 
