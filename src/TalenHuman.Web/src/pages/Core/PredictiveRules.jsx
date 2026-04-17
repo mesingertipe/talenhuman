@@ -45,6 +45,7 @@ const PredictiveRules = ({ user }) => {
     minStaffOpening: 1,
     minStaffClosing: 1,
     isActive: true,
+    weeklyRestDays: 1,
     profileIds: []
   });
 
@@ -163,7 +164,7 @@ const PredictiveRules = ({ user }) => {
                   setCurrentRule(null); 
                   setFormData({ 
                     name: '', description: '', storeTypeId: '', metricType: 0, ratio: 1000000, 
-                    minStaffOpening: 1, minStaffClosing: 1, isActive: true, profileIds: [] 
+                    minStaffOpening: 1, minStaffClosing: 1, isActive: true, weeklyRestDays: 1, profileIds: [] 
                   }); 
                   setWizardStep(1);
                   setShowWizard(true); 
@@ -194,6 +195,7 @@ const PredictiveRules = ({ user }) => {
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Regla / Propósito</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Formato</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Métrica / Ratio</th>
+                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Descansos</th>
                 <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Gestión</th>
               </tr>
             </thead>
@@ -213,15 +215,21 @@ const PredictiveRules = ({ user }) => {
                         </div>
                       </div>
                     </td>
-                    <td style={{ padding: '1.25rem 1.5rem' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#6366f1', padding: '4px 10px', background: '#eef2ff', borderRadius: '8px', textTransform: 'uppercase' }}>
-                        {rule.storeTypeName || 'General'}
-                      </span>
-                    </td>
-                    <td style={{ padding: '1.25rem 1.5rem' }}>
+                     <td style={{ padding: '1.25rem 1.5rem' }}>
+                       <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#6366f1', padding: '4px 10px', background: '#eef2ff', borderRadius: '8px', textTransform: 'uppercase' }}>
+                         {rule.storeTypeName || 'General'}
+                       </span>
+                     </td>
+                     <td style={{ padding: '1.25rem 1.5rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '1.1rem', fontWeight: '900', color: activeColors.textMain }}>{metric?.suffix}{new Intl.NumberFormat('es-CO').format(rule.ratio)}</span>
                             <span style={{ fontSize: '0.7rem', fontWeight: '700', color: activeColors.textMuted, textTransform: 'uppercase' }}>per {metric?.label}</span>
+                        </div>
+                    </td>
+                    <td style={{ padding: '1.25rem 1.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '1.1rem', fontWeight: '900', color: activeColors.textMain }}>{rule.weeklyRestDays}</span>
+                            <span style={{ fontSize: '0.7rem', fontWeight: '700', color: activeColors.textMuted, textTransform: 'uppercase' }}>semanal</span>
                         </div>
                     </td>
                     <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
@@ -239,6 +247,7 @@ const PredictiveRules = ({ user }) => {
                                         minStaffOpening: rule.minStaffOpening,
                                         minStaffClosing: rule.minStaffClosing,
                                         isActive: rule.isActive,
+                                        weeklyRestDays: rule.weeklyRestDays || 1,
                                         profileIds: rule.profiles.map(p => p.profileId)
                                     });
                                     setWizardStep(1);
@@ -457,25 +466,34 @@ const PredictiveRules = ({ user }) => {
                                      </div>
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
-                                     <div style={{ padding: '25px', background: isDarkMode ? 'rgba(0,0,0,0.2)' : '#f8faff', borderRadius: '24px', border: `1px solid ${activeColors.border}` }}>
-                                        <label style={{ display: 'block', fontSize: '9px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '15px' }}>Mínimo Base Apertura</label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                                            <button onClick={() => setFormData({...formData, minStaffOpening: Math.max(0, formData.minStaffOpening-1)})} style={{ width: '44px', height: '44px', borderRadius: '14px', border: 'none', background: activeColors.card, color: activeColors.textMain, cursor: 'pointer', fontWeight: 'bold' }}>-</button>
-                                            <span style={{ flex: 1, textAlign: 'center', fontSize: '2rem', fontWeight: '950', color: activeColors.textMain }}>{formData.minStaffOpening}</span>
-                                            <button onClick={() => setFormData({...formData, minStaffOpening: formData.minStaffOpening+1})} style={{ width: '44px', height: '44px', borderRadius: '14px', border: 'none', background: activeColors.accent, color: 'white', cursor: 'pointer', fontWeight: 'bold' }}>+</button>
+
+                                <div style={{ marginTop: '40px', padding: '25px', background: isDarkMode ? 'rgba(79, 70, 229, 0.1)' : '#fdf2f8', borderRadius: '24px', border: `2px dashed ${activeColors.accent}` }}>
+                                    <label style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '15px' }}>Descansos Semanales Obligatorios</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
+                                        <div style={{ flex: 1 }}>
+                                            <input 
+                                                type="range" 
+                                                min="1" 
+                                                max="6" 
+                                                step="1"
+                                                value={formData.weeklyRestDays}
+                                                onChange={(e) => setFormData({...formData, weeklyRestDays: parseInt(e.target.value)})}
+                                                style={{ width: '100%', accentColor: activeColors.accent }}
+                                            />
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>
+                                                <span style={{ fontSize: '10px', fontWeight: '800', color: activeColors.textMuted }}>1 DÍA</span>
+                                                <span style={{ fontSize: '10px', fontWeight: '800', color: activeColors.textMuted }}>6 DÍAS</span>
+                                            </div>
                                         </div>
-                                     </div>
-                                     <div style={{ padding: '25px', background: isDarkMode ? 'rgba(0,0,0,0.2)' : '#f8faff', borderRadius: '24px', border: `1px solid ${activeColors.border}` }}>
-                                        <label style={{ display: 'block', fontSize: '9px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '15px' }}>Mínimo Base Cierre</label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                                            <button onClick={() => setFormData({...formData, minStaffClosing: Math.max(0, formData.minStaffClosing-1)})} style={{ width: '44px', height: '44px', borderRadius: '14px', border: 'none', background: activeColors.card, color: activeColors.textMain, cursor: 'pointer', fontWeight: 'bold' }}>-</button>
-                                            <span style={{ flex: 1, textAlign: 'center', fontSize: '2rem', fontWeight: '950', color: activeColors.textMain }}>{formData.minStaffClosing}</span>
-                                            <button onClick={() => setFormData({...formData, minStaffClosing: formData.minStaffClosing+1})} style={{ width: '44px', height: '44px', borderRadius: '14px', border: 'none', background: activeColors.accent, color: 'white', cursor: 'pointer', fontWeight: 'bold' }}>+</button>
+                                        <div style={{ width: '80px', height: '80px', background: activeColors.accent, borderRadius: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                                            <span style={{ fontSize: '1.8rem', fontWeight: '950' }}>{formData.weeklyRestDays}</span>
+                                            <span style={{ fontSize: '8px', fontWeight: '800' }}>DÍAS</span>
                                         </div>
-                                     </div>
+                                    </div>
+                                    <p style={{ marginTop: '15px', fontSize: '11px', color: activeColors.textMuted, fontWeight: '600' }}>
+                                        El motor garantizará que cada colaborador tenga al menos {formData.weeklyRestDays} día(s) de descanso propuestos en la malla.
+                                    </p>
                                 </div>
-                            </div>
 
                             <div style={{ marginTop: 'auto', display: 'flex', gap: '20px' }}>
                                 <button onClick={() => setWizardStep(2)} style={{ padding: '24px 40px', borderRadius: '24px', background: 'transparent', border: `2px solid ${activeColors.border}`, color: activeColors.textMuted, fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}>Atrás</button>
@@ -483,6 +501,7 @@ const PredictiveRules = ({ user }) => {
                                     {isSubmitting ? 'Sincronizando...' : <><Sparkles size={20} /> Activar Algoritmo Predictivo</>}
                                 </button>
                             </div>
+                        </div>
                         </div>
                     )}
                 </div>

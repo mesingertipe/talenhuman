@@ -37,6 +37,7 @@ public class PredictiveRulesController : ControllerBase
                 r.MinStaffOpening,
                 r.MinStaffClosing,
                 r.IsActive,
+                r.WeeklyRestDays,
                 Profiles = r.RuleProfiles.Select(rp => new { rp.ProfileId, rp.Profile.Name })
             })
             .ToListAsync();
@@ -61,6 +62,7 @@ public class PredictiveRulesController : ControllerBase
             r.MinStaffOpening,
             r.MinStaffClosing,
             r.IsActive,
+            r.WeeklyRestDays,
             ProfileIds = r.RuleProfiles.Select(rp => rp.ProfileId).ToList()
         };
     }
@@ -80,6 +82,7 @@ public class PredictiveRulesController : ControllerBase
             MinStaffOpening = dto.MinStaffOpening,
             MinStaffClosing = dto.MinStaffClosing,
             IsActive = dto.IsActive,
+            WeeklyRestDays = dto.WeeklyRestDays,
             CompanyId = companyId
         };
 
@@ -115,6 +118,7 @@ public class PredictiveRulesController : ControllerBase
         rule.MinStaffOpening = dto.MinStaffOpening;
         rule.MinStaffClosing = dto.MinStaffClosing;
         rule.IsActive = dto.IsActive;
+        rule.WeeklyRestDays = dto.WeeklyRestDays;
 
         // Sync Profiles
         _context.PredictiveShiftRuleProfiles.RemoveRange(rule.RuleProfiles);
@@ -155,5 +159,6 @@ public class PredictiveRuleDto
     public int MinStaffOpening { get; set; }
     public int MinStaffClosing { get; set; }
     public bool IsActive { get; set; }
+    public int WeeklyRestDays { get; set; }
     public List<Guid> ProfileIds { get; set; } = new List<Guid>();
 }

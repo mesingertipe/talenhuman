@@ -414,6 +414,7 @@ public class PredictiveShiftRule : BaseEntity, IMultitenant
     public int MinStaffClosing { get; set; } = 1;
     
     public bool IsActive { get; set; } = true;
+    public int WeeklyRestDays { get; set; } = 1;
 
     public Guid CompanyId { get; set; }
     [JsonIgnore]
