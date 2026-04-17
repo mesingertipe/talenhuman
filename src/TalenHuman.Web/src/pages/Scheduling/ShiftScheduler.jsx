@@ -566,11 +566,6 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     const dayNeeds = calculateHourlyNeeds(day);
                     const targetNeed = dayNeeds.needs[ruleProfiles[0]] || new Array(24).fill(0);
 
-                    // Identify all employees that can cover this rule
-                    const ruleQualifiedEmployees = employees.filter(e => 
-                        e.profileId && ruleProfiles.includes(String(e.profileId).toLowerCase()) && e.isActive
-                    );
-
                     for (let h = opStart; h <= opEndHour; h++) {
                         const needAtHour = targetNeed[h] || 0;
                         if (needAtHour <= 0) continue;
@@ -582,9 +577,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             const sEmp = employees.find(e => e.id === s.employeeId);
                             if (!sEmp) return false;
                             
-                            const empProfile = String(sEmp.profileId).toLowerCase();
-                            const isQualified = ruleProfiles.includes(empProfile);
-                            // console.log(`Step 1: Checking coverage at ${h}:00 - Emp: ${sEmp.name}, Profile: ${empProfile}, Qualified: ${isQualified}`);
+                            // V13.0.4: Robust Rule Matching (Casing + Name fallback)
+                            const empProfileId = String(sEmp.profileId || '').toLowerCase().trim();
+                            const empProfileName = String(sEmp.profileName || sEmp.ProfileName || '').toLowerCase().trim();
+
+                            const isQualified = ruleProfiles.includes(empProfileId) || 
+                                              (rule.profiles || rule.Profiles || []).some(p => String(p.profileName || p.ProfileName || '').toLowerCase().trim() === empProfileName);
+                            
                             if (!isQualified) return false;
 
                             const sStart = sDate.getHours();
@@ -592,7 +591,15 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             return sEnd < sStart ? (h >= sStart || h < sEnd) : (h >= sStart && h < sEnd);
                         }).length;
 
-                        console.log(`[IA] Day: ${dayStr}, Rule: ${rule.name}, Hour: ${h}, Need: ${needAtHour}, Scheduled: ${scheduledAtHour}`);
+                        // Identify all employees that can cover this rule for candidates
+                        const ruleQualifiedEmployees = employees.filter(e => {
+                            const empProfileId = String(e.profileId || '').toLowerCase().trim();
+                            const empProfileName = String(e.profileName || e.ProfileName || '').toLowerCase().trim();
+                            return e.isActive && (ruleProfiles.includes(empProfileId) || 
+                                   (rule.profiles || rule.Profiles || []).some(p => String(p.profileName || p.ProfileName || '').toLowerCase().trim() === empProfileName));
+                        });
+
+                        console.log(`[IA] Day: ${dayStr}, Rule: ${rule.name}, Hour: ${h}, Need: ${needAtHour}, Scheduled: ${scheduledAtHour}, QualifiedPool: ${ruleQualifiedEmployees.length}`);
                         let deficit = needAtHour - scheduledAtHour;
 
                         while (deficit > 0) {
