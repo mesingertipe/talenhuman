@@ -28,7 +28,39 @@ public class StoresController : ControllerBase
     {
         try 
         {
-            var stores = await _context.Stores.Include(s => s.Brand).ToListAsync();
+            var companyId = _tenantProvider.GetTenantId();
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out Guid userId))
+                return Unauthorized();
+
+            var query = _context.Stores.Include(s => s.Brand).Where(s => s.CompanyId == companyId).AsQueryable();
+
+            if (!User.IsInRole("SuperAdmin") && !User.IsInRole("Admin"))
+            {
+                if (User.IsInRole("Distrital"))
+                {
+                    var user = await _context.Users.FindAsync(userId);
+                    if (user?.DistrictId != null)
+                    {
+                        query = query.Where(s => s.DistrictId == user.DistrictId);
+                    }
+                    else
+                    {
+                        return Ok(new List<Store>());
+                    }
+                }
+                else // Typical for Gerente or other roles
+                {
+                    var allowedStoreIds = await _context.Set<SupervisorStore>()
+                        .Where(ss => ss.UserId == userId && ss.CompanyId == companyId)
+                        .Select(ss => ss.StoreId)
+                        .ToListAsync();
+                    
+                    query = query.Where(s => allowedStoreIds.Contains(s.Id));
+                }
+            }
+
+            var stores = await query.ToListAsync();
             return Ok(stores);
         }
         catch (Exception ex)

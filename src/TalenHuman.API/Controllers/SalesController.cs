@@ -20,6 +20,42 @@ public class SalesController : ControllerBase
         _tenantProvider = tenantProvider;
     }
 
+    private async Task<List<Guid>> GetAuthorizedStoreIdsAsync()
+    {
+        var companyId = _tenantProvider.GetTenantId();
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out Guid userId))
+            return new List<Guid>();
+
+        // If SuperAdmin or Admin, they see everything in the company
+        if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+        {
+            return await _context.Stores
+                .Where(s => s.CompanyId == companyId)
+                .Select(s => s.Id)
+                .ToListAsync();
+        }
+
+        // If Distrital, they see stores in their district
+        if (User.IsInRole("Distrital"))
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user?.DistrictId != null)
+            {
+                return await _context.Stores
+                    .Where(s => s.DistrictId == user.DistrictId && s.CompanyId == companyId)
+                    .Select(s => s.Id)
+                    .ToListAsync();
+            }
+        }
+
+        // If Gerente or anyone else, they see stores they are specifically assigned as supervisor
+        return await _context.Set<SupervisorStore>()
+            .Where(ss => ss.UserId == userId && ss.CompanyId == companyId)
+            .Select(ss => ss.StoreId)
+            .ToListAsync();
+    }
+
     [HttpPost("batch")]
     public async Task<ActionResult<SalesImportResultDto>> PostBatch([FromBody] List<SalesDataDto> data)
     {
@@ -33,14 +69,15 @@ public class SalesController : ControllerBase
         {
             try
             {
+                var allowedStores = await GetAuthorizedStoreIdsAsync();
                 var cleanExternalId = item.StoreExternalId?.Trim();
                 var store = await _context.Stores
                     .FirstOrDefaultAsync(s => (s.ExternalId.Trim() == cleanExternalId || s.Code.Trim() == cleanExternalId) && s.CompanyId == companyId);
 
-                if (store == null)
+                if (store == null || !allowedStores.Contains(store.Id))
                 {
                     result.ErrorCount++;
-                    result.Messages.Add($"Tienda '{item.StoreExternalId}' no encontrada.");
+                    result.Messages.Add($"Tienda '{item.StoreExternalId}' no encontrada o sin permiso de acceso.");
                     continue;
                 }
 
@@ -118,15 +155,17 @@ public class SalesController : ControllerBase
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20)
     {
-        var companyId = _tenantProvider.GetTenantId();
+        var allowedStores = await GetAuthorizedStoreIdsAsync();
         var query = _context.SalesData
             .Include(s => s.Store)
             .Include(s => s.SalesChannel)
-            .Where(s => s.CompanyId == companyId)
+            .Where(s => s.CompanyId == companyId && allowedStores.Contains(s.StoreId))
             .AsQueryable();
 
-        if (storeId.HasValue)
+        if (storeId.HasValue && allowedStores.Contains(storeId.Value))
             query = query.Where(s => s.StoreId == storeId.Value);
+        else if (storeId.HasValue)
+             query = query.Where(s => false); // Filtered out
             
         if (channelId.HasValue)
             query = query.Where(s => s.SalesChannelId == channelId.Value);
@@ -173,8 +212,10 @@ public class SalesController : ControllerBase
             .OrderBy(b => b.StartTime)
             .ToListAsync();
 
+        var allowedStores = await GetAuthorizedStoreIdsAsync();
         var sales = await _context.SalesData
             .Where(s => s.CompanyId == companyId && s.RecordDate >= start && s.RecordDate < end)
+            .Where(s => allowedStores.Contains(s.StoreId))
             .Where(s => !storeId.HasValue || s.StoreId == storeId.Value)
             .Where(s => !channelId.HasValue || s.SalesChannelId == channelId.Value)
             .ToListAsync();
@@ -200,8 +241,10 @@ public class SalesController : ControllerBase
         var targetDate = startDate.Date;
         
         // Cargar data del día actual
+        var allowedStores = await GetAuthorizedStoreIdsAsync();
         var currentDayData = await _context.SalesData
             .Where(s => s.CompanyId == companyId && s.RecordDate >= targetDate && s.RecordDate < targetDate.AddDays(1))
+            .Where(s => allowedStores.Contains(s.StoreId))
             .Where(s => !storeId.HasValue || s.StoreId == storeId.Value)
             .Where(s => !channelId.HasValue || s.SalesChannelId == channelId.Value)
             .OrderBy(s => s.RecordDate)
@@ -213,6 +256,7 @@ public class SalesController : ControllerBase
         
         var historicalData = await _context.SalesData
             .Where(s => s.CompanyId == companyId)
+            .Where(s => allowedStores.Contains(s.StoreId))
             .Where(s => historicalDates.Contains(s.RecordDate.Date))
             .Where(s => !storeId.HasValue || s.StoreId == storeId.Value)
             .Where(s => !channelId.HasValue || s.SalesChannelId == channelId.Value)
@@ -242,9 +286,11 @@ public class SalesController : ControllerBase
         var start = startDate?.Date ?? ColombiaTime.Now.Date;
         var end = endDate?.Date.AddDays(1) ?? start.AddDays(1);
 
+        var allowedStores = await GetAuthorizedStoreIdsAsync();
         var sales = await _context.SalesData
             .Include(s => s.SalesChannel)
             .Where(s => s.CompanyId == companyId && s.RecordDate >= start && s.RecordDate < end)
+            .Where(s => allowedStores.Contains(s.StoreId))
             .Where(s => !storeId.HasValue || s.StoreId == storeId.Value)
             .ToListAsync();
 
@@ -270,8 +316,10 @@ public class SalesController : ControllerBase
         var start = startDate?.Date ?? ColombiaTime.Now.Date.AddDays(-6);
         var end = endDate?.Date.AddDays(1) ?? start.AddDays(7);
 
+        var allowedStores = await GetAuthorizedStoreIdsAsync();
         var sales = await _context.SalesData
             .Where(s => s.CompanyId == companyId && s.RecordDate >= start && s.RecordDate < end)
+            .Where(s => allowedStores.Contains(s.StoreId))
             .Where(s => !storeId.HasValue || s.StoreId == storeId.Value)
             .Where(s => !channelId.HasValue || s.SalesChannelId == channelId.Value)
             .ToListAsync();

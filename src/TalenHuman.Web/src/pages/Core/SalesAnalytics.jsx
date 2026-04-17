@@ -64,10 +64,17 @@ const SalesAnalytics = ({ user }) => {
         api.get('/stores'),
         api.get('/sales/channels')
       ]);
+      
+      const stores = storesRes.data;
       setMetadata({
-        stores: storesRes.data,
+        stores: stores,
         channels: channelsRes.data
       });
+
+      // Role-based auto-selection: If only one store is available, select it automatically
+      if (stores.length === 1 && !filters.storeId) {
+        setFilters(prev => ({ ...prev, storeId: stores[0].id }));
+      }
     } catch (err) {
       console.error("Error fetching metadata:", err);
     }
@@ -210,7 +217,8 @@ const SalesAnalytics = ({ user }) => {
               value={filters.storeId}
               onChange={(val) => setFilters({...filters, storeId: val})}
               icon={Store}
-              placeholder="Todas las sedes"
+              placeholder={metadata.stores.length === 1 ? metadata.stores[0].name : "Todas las sedes"}
+              disabled={metadata.stores.length === 1}
             />
           </div>
           <div>

@@ -24,9 +24,38 @@ public class DistrictsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<object>>> GetDistricts()
     {
-        var districts = await _context.Districts
+        var companyId = _tenantProvider.GetTenantId();
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out Guid userId))
+            return Unauthorized();
+
+        var query = _context.Districts
             .Include(d => d.Supervisor)
             .Include(d => d.Stores)
+            .Where(d => d.CompanyId == companyId)
+            .AsQueryable();
+
+        // If Distrital, only show their district
+        if (User.IsInRole("Distrital"))
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user?.DistrictId != null)
+            {
+                query = query.Where(d => d.Id == user.DistrictId);
+            }
+            else
+            {
+                return Ok(new List<object>());
+            }
+        }
+        else if (!User.IsInRole("SuperAdmin") && !User.IsInRole("Admin"))
+        {
+             // For Gerentes, they usually don't see districts, or see districts of their stores.
+             // For now, let's keep it simple: only Admin/Distrital see districts list.
+             return Ok(new List<object>());
+        }
+
+        var districts = await query
             .Select(d => new {
                 d.Id,
                 d.Name,

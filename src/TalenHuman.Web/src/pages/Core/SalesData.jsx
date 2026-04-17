@@ -62,7 +62,13 @@ const SalesData = ({ user }) => {
         api.get('/stores')
       ]);
       setChannels(channelsRes.data);
-      setStores(storesRes.data.map(s => ({ id: s.id, name: `${s.externalId} - ${s.name}` })));
+      const fetchedStores = storesRes.data.map(s => ({ id: s.id, name: `${s.externalId} - ${s.name}` }));
+      setStores(fetchedStores);
+
+      // Auto-select if only one store is available
+      if (fetchedStores.length === 1 && !filters.storeId) {
+        setFilters(prev => ({ ...prev, storeId: fetchedStores[0].id }));
+      }
     } catch (err) {
       console.error("Error fetching metadata:", err);
     }
@@ -182,11 +188,12 @@ const SalesData = ({ user }) => {
           <div style={{ flex: 1 }}>
             <label className="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-3 px-1">Tienda / Sede</label>
             <SearchableSelect 
-              options={[{id: '', name: 'TODAS LAS TIENDAS'}, ...stores]}
+              options={stores.length === 1 ? stores : [{id: '', name: 'TODAS LAS TIENDAS'}, ...stores]}
               value={filters.storeId}
               onChange={(val) => setFilters({...filters, storeId: val})}
               icon={StoreIcon}
-              placeholder="Seleccionar sede..."
+              placeholder={stores.length === 1 ? stores[0].name : "Seleccionar sede..."}
+              disabled={stores.length === 1}
             />
           </div>
 
