@@ -12,7 +12,7 @@ using TalenHuman.Infrastructure.Persistence;
 namespace TalenHuman.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260417150436_AddWeeklyRestDaysToRules")]
+    [Migration("20260417155607_AddWeeklyRestDaysToRules")]
     partial class AddWeeklyRestDaysToRules
     {
         /// <inheritdoc />
@@ -1134,6 +1134,9 @@ namespace TalenHuman.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("WeeklyRestDays")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
