@@ -580,13 +580,19 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             if (sDate.toDateString() !== dayStr || s.isDescanso) return false;
 
                             const sEmp = employees.find(e => e.id === s.employeeId);
-                            if (!sEmp || !ruleProfiles.includes(String(sEmp.profileId).toLowerCase())) return false;
+                            if (!sEmp) return false;
+                            
+                            const empProfile = String(sEmp.profileId).toLowerCase();
+                            const isQualified = ruleProfiles.includes(empProfile);
+                            // console.log(`Step 1: Checking coverage at ${h}:00 - Emp: ${sEmp.name}, Profile: ${empProfile}, Qualified: ${isQualified}`);
+                            if (!isQualified) return false;
 
                             const sStart = sDate.getHours();
                             const sEnd = new Date(s.endTime).getHours();
                             return sEnd < sStart ? (h >= sStart || h < sEnd) : (h >= sStart && h < sEnd);
                         }).length;
 
+                        console.log(`[IA] Day: ${dayStr}, Rule: ${rule.name}, Hour: ${h}, Need: ${needAtHour}, Scheduled: ${scheduledAtHour}`);
                         let deficit = needAtHour - scheduledAtHour;
 
                         while (deficit > 0) {
@@ -610,7 +616,10 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 return countB - countA; // Higher hours first
                             });
 
-                            if (candidates.length === 0) break;
+                            if (candidates.length === 0) {
+                                if (deficit > 0) console.warn(`[IA] Deficit of ${deficit} at ${h}:00 but NO CANDIDATES left for rule ${rule.name}`);
+                                break;
+                            }
 
                             const luckyOne = candidates[0];
                             const jornada = jornadas.find(j => j.id === luckyOne.jornadaId);
