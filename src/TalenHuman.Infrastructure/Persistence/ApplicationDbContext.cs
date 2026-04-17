@@ -59,6 +59,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<StoreType> StoreTypes => Set<StoreType>();
     public DbSet<PredictiveShiftRule> PredictiveShiftRules => Set<PredictiveShiftRule>();
     public DbSet<PredictiveShiftRuleProfile> PredictiveShiftRuleProfiles => Set<PredictiveShiftRuleProfile>();
+    public DbSet<PredictiveShiftRuleChannel> PredictiveShiftRuleChannels => Set<PredictiveShiftRuleChannel>();
     public Guid TenantId => _tenantProvider.GetTenantId();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -98,6 +99,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<StoreType>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<PredictiveShiftRule>().HasQueryFilter(p => p.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<PredictiveShiftRuleProfile>().HasQueryFilter(p => p.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<PredictiveShiftRuleChannel>().HasQueryFilter(p => p.CompanyId == TenantId || TenantId == Guid.Empty);
 
         // Many-to-Many: Supervisor -> Stores
         builder.Entity<SupervisorStore>()
@@ -218,6 +220,20 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
             .HasOne(rp => rp.Rule)
             .WithMany(r => r.RuleProfiles)
             .HasForeignKey(rp => rp.RuleId);
+
+        // Predictive Rules Channels Many-to-Many
+        builder.Entity<PredictiveShiftRuleChannel>()
+            .HasKey(rc => new { rc.RuleId, rc.SalesChannelId });
+
+        builder.Entity<PredictiveShiftRuleChannel>()
+            .HasOne(rc => rc.Rule)
+            .WithMany(r => r.RuleChannels)
+            .HasForeignKey(rc => rc.RuleId);
+
+        builder.Entity<PredictiveShiftRuleChannel>()
+            .HasOne(rc => rc.SalesChannel)
+            .WithMany()
+            .HasForeignKey(rc => rc.SalesChannelId);
 
         builder.Entity<Store>()
             .HasOne(s => s.StoreType)

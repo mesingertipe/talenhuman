@@ -155,6 +155,7 @@ public class SalesController : ControllerBase
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20)
     {
+        var companyId = _tenantProvider.GetTenantId();
         var allowedStores = await GetAuthorizedStoreIdsAsync();
         var query = _context.SalesData
             .Include(s => s.Store)
@@ -262,16 +263,41 @@ public class SalesController : ControllerBase
             .Where(s => !channelId.HasValue || s.SalesChannelId == channelId.Value)
             .ToListAsync();
 
-        // Agrupar histórico por hora/minuto para promediar
-        var averagedHistory = historicalData
-            .GroupBy(s => s.RecordDate.TimeOfDay)
+        // Agrupar histórico por hora y canal para un promedio preciso
+        var numWeeks = historicalDates.Count > 0 ? historicalDates.Count : 1;
+
+        // 1. Agrupar por (Día, Hora, Canal) para sumar registros intradía (si los hay)
+        var dailyHourlyChannelData = historicalData
+            .GroupBy(s => new { Date = s.RecordDate.Date, Hour = s.RecordDate.Hour, ChannelId = s.SalesChannelId })
             .Select(g => new
             {
-                Time = g.Key,
-                VentaNetaAvg = g.Average(x => x.VentaNeta),
-                TicketsAvg = g.Average(x => x.CantidadTickets),
-                ComensalesAvg = g.Average(x => (decimal)x.Comensales),
-                TicketPromedioAvg = g.Average(x => x.TicketPromedio)
+                g.Key.Date,
+                g.Key.Hour,
+                g.Key.ChannelId,
+                VentaNeta = g.Sum(x => x.VentaNeta),
+                Tickets = g.Sum(x => x.CantidadTickets),
+                Comensales = g.Sum(x => x.Comensales),
+                TicketPromedio = g.Average(x => x.TicketPromedio)
+            })
+            .ToList();
+
+        // 2. Agrupar por Hora para el resultado final
+        var averagedHistory = dailyHourlyChannelData
+            .GroupBy(d => d.Hour)
+            .Select(g => new
+            {
+                Time = new TimeSpan(g.Key, 0, 0).ToString(@"hh\:mm"),
+                VentaNetaAvg = g.Sum(x => x.VentaNeta) / numWeeks,
+                TicketsAvg = (decimal)g.Sum(x => x.Tickets) / numWeeks,
+                ComensalesAvg = (decimal)g.Sum(x => x.Comensales) / numWeeks,
+                TicketPromedioAvg = g.Average(x => x.TicketPromedio),
+                Channels = g.GroupBy(c => c.ChannelId)
+                    .Select(cg => new {
+                        ChannelId = cg.Key,
+                        VentaNetaAvg = cg.Sum(x => x.VentaNeta) / numWeeks,
+                        TicketsAvg = (decimal)cg.Sum(x => x.Tickets) / numWeeks,
+                        ComensalesAvg = (decimal)cg.Sum(x => x.Comensales) / numWeeks
+                    }).ToList()
             })
             .OrderBy(x => x.Time)
             .ToList();

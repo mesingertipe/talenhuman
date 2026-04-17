@@ -465,10 +465,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const calculateHourlyNeeds = useCallback((dayDate) => {
         const dayStr = toLocalISO(dayDate);
         const dayHistory = historicalAverages[dayStr] || [];
+        const needsPerRule = {};
         const needsPerProfile = {};
         const hourlyVolumes = new Array(24).fill(0);
 
-        if (predictiveRules.length === 0) return { needs: {}, volumes: hourlyVolumes };
+        if (predictiveRules.length === 0) return { needs: {}, volumes: hourlyVolumes, needsByRule: {} };
 
         const store = stores.find(s => s.id === selectedStore);
         const opStart = store?.defaultStartTime ? parseInt(store.defaultStartTime.split(':')[0]) : 8;
@@ -484,7 +485,15 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 const hour = parseInt(h.time.split(':')[0]);
                 if (hour < opStart || hour > opEndHour) return;
 
-                const forecastValue = h[metricKey] || 0;
+                // V20.0: Channel Filtering logic
+                let forecastValue = 0;
+                if (rule.channelIds?.length > 0) {
+                    forecastValue = (h.channels || [])
+                        .filter(hc => rule.channelIds.includes(hc.channelId))
+                        .reduce((acc, hc) => acc + (hc[metricKey] || 0), 0);
+                } else {
+                    forecastValue = h[metricKey] || 0;
+                }
                 
                 // Track volume for transparency
                 hourlyVolumes[hour] = Math.max(hourlyVolumes[hour], forecastValue);
@@ -496,12 +505,15 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             // Apply MinStaffOpening / MinStaffClosing based on STORE DOORS
             for (let h = 0; h < 24; h++) {
                 if (h >= opStart && h < opStart + 3) {
-                    ruleNeeds[h] = Math.max(ruleNeeds[h], rule.minStaffOpening);
+                    ruleNeeds[h] = Math.max(ruleNeeds[h], rule.minStaffOpening || 1);
                 }
                 if (h > opEndHour - 3 && h <= opEndHour) {
-                    ruleNeeds[h] = Math.max(ruleNeeds[h], rule.minStaffClosing);
+                    ruleNeeds[h] = Math.max(ruleNeeds[h], rule.minStaffClosing || 1);
                 }
             }
+
+            // Store by Rule ID for clean UI aggregation (Fixes 1/3 duplication error)
+            needsPerRule[rule.id] = ruleNeeds;
 
             const profilesList = rule.profiles || rule.Profiles || [];
             profilesList.forEach(p => {
@@ -515,7 +527,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             });
         });
 
-        return { needs: needsPerProfile, volumes: hourlyVolumes };
+        return { needs: needsPerProfile, volumes: hourlyVolumes, needsByRule: needsPerRule };
     }, [historicalAverages, predictiveRules, stores, selectedStore]);
 
     const performOptimization = async () => {
@@ -564,7 +576,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     
                     // Needs are shared across profiles of the same rule
                     const dayNeeds = calculateHourlyNeeds(day);
-                    const targetNeed = dayNeeds.needs[ruleProfiles[0]] || new Array(24).fill(0);
+                    const targetNeed = dayNeeds.needsByRule[rule.id] || new Array(24).fill(0);
 
                     for (let h = opStart; h <= opEndHour; h++) {
                         const needAtHour = targetNeed[h] || 0;
@@ -2792,7 +2804,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     >
                                         {Array.from({ length: 18 }).map((_, i) => {
                                             const h = i + 6; // Rango 6:00 a 23:00
-                                            const needs = selectedCoverageDay.needs;
+                                            const needs = selectedCoverageDay.needsByRule || {};
                                             const hourNeeds = Object.values(needs).reduce((acc, n) => acc + (n[h] || 0), 0);
                                             const scheduled = shifts.filter(s => {
                                                 const sD = new Date(s.startTime);

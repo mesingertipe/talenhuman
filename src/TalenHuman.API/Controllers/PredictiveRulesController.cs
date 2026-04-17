@@ -25,6 +25,7 @@ public class PredictiveRulesController : ControllerBase
             .Include(r => r.StoreType)
             .Include(r => r.RuleProfiles)
                 .ThenInclude(rp => rp.Profile)
+            .Include(r => r.RuleChannels)
             .OrderBy(r => r.Name)
             .Select(r => new {
                 r.Id,
@@ -39,7 +40,8 @@ public class PredictiveRulesController : ControllerBase
                 r.MinStaffClosing,
                 r.IsActive,
                 r.WeeklyRestDays,
-                Profiles = r.RuleProfiles.Select(rp => new { rp.ProfileId, rp.Profile.Name })
+                Profiles = r.RuleProfiles.Select(rp => new { rp.ProfileId, rp.Profile.Name }),
+                ChannelIds = r.RuleChannels.Select(rc => rc.SalesChannelId).ToList()
             })
             .ToListAsync();
     }
@@ -49,6 +51,7 @@ public class PredictiveRulesController : ControllerBase
     {
         var r = await _context.PredictiveShiftRules
             .Include(rule => rule.RuleProfiles)
+            .Include(rule => rule.RuleChannels)
             .FirstOrDefaultAsync(rule => rule.Id == id);
 
         if (r == null) return NotFound();
@@ -65,7 +68,8 @@ public class PredictiveRulesController : ControllerBase
             r.MinStaffClosing,
             r.IsActive,
             r.WeeklyRestDays,
-            ProfileIds = r.RuleProfiles.Select(rp => rp.ProfileId).ToList()
+            ProfileIds = r.RuleProfiles.Select(rp => rp.ProfileId).ToList(),
+            ChannelIds = r.RuleChannels.Select(rc => rc.SalesChannelId).ToList()
         };
     }
 
@@ -95,6 +99,15 @@ public class PredictiveRulesController : ControllerBase
             { 
                 ProfileId = profileId, 
                 CompanyId = companyId 
+            });
+        }
+
+        foreach (var channelId in dto.ChannelIds)
+        {
+            rule.RuleChannels.Add(new PredictiveShiftRuleChannel
+            {
+                SalesChannelId = channelId,
+                CompanyId = companyId
             });
         }
 
@@ -136,6 +149,17 @@ public class PredictiveRulesController : ControllerBase
             });
         }
 
+        // Sync Channels
+        _context.PredictiveShiftRuleChannels.RemoveRange(rule.RuleChannels);
+        foreach (var channelId in dto.ChannelIds)
+        {
+            rule.RuleChannels.Add(new PredictiveShiftRuleChannel
+            {
+                SalesChannelId = channelId,
+                CompanyId = rule.CompanyId
+            });
+        }
+
         await _context.SaveChangesAsync(CancellationToken.None);
         return NoContent();
     }
@@ -163,7 +187,8 @@ public class PredictiveRulesController : ControllerBase
                 r.MinStaffClosing,
                 r.IsActive,
                 r.WeeklyRestDays,
-                Profiles = r.RuleProfiles.Select(rp => new { rp.ProfileId, rp.Profile.Name })
+                Profiles = r.RuleProfiles.Select(rp => new { rp.ProfileId, rp.Profile.Name }),
+                ChannelIds = r.RuleChannels.Select(rc => rc.SalesChannelId).ToList()
             })
             .ToListAsync();
     }
@@ -194,4 +219,5 @@ public class PredictiveRuleDto
     public bool IsActive { get; set; }
     public int WeeklyRestDays { get; set; }
     public List<Guid> ProfileIds { get; set; } = new List<Guid>();
+    public List<Guid> ChannelIds { get; set; } = new List<Guid>();
 }

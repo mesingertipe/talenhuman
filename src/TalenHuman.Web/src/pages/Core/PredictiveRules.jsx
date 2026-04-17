@@ -31,6 +31,7 @@ const PredictiveRules = ({ user }) => {
   const [rules, setRules] = useState([]);
   const [storeTypes, setStoreTypes] = useState([]);
   const [profiles, setProfiles] = useState([]);
+  const [channels, setChannels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showWizard, setShowWizard] = useState(false);
   const [wizardStep, setWizardStep] = useState(1);
@@ -46,7 +47,8 @@ const PredictiveRules = ({ user }) => {
     minStaffClosing: 1,
     isActive: true,
     weeklyRestDays: 1,
-    profileIds: []
+    profileIds: [],
+    channelIds: []
   });
 
   const { 
@@ -72,14 +74,16 @@ const PredictiveRules = ({ user }) => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [rulesRes, typesRes, profilesRes] = await Promise.all([
+      const [rulesRes, typesRes, profilesRes, channelsRes] = await Promise.all([
         api.get('/predictiverules'),
         api.get('/storetypes'),
-        api.get('/profiles')
+        api.get('/profiles'),
+        api.get('/sales/channels')
       ]);
       setRules(rulesRes.data);
       setStoreTypes(typesRes.data);
       setProfiles(profilesRes.data);
+      setChannels(channelsRes.data);
     } catch (err) {
       console.error(err);
       showToast("Error de conexión con el motor", "error");
@@ -163,8 +167,7 @@ const PredictiveRules = ({ user }) => {
                 onClick={() => { 
                   setCurrentRule(null); 
                   setFormData({ 
-                    name: '', description: '', storeTypeId: '', metricType: 0, ratio: 1000000, 
-                    minStaff: 1, minStaffOpening: 1, minStaffClosing: 1, isActive: true, weeklyRestDays: 1, profileIds: [] 
+                    minStaff: 1, minStaffOpening: 1, minStaffClosing: 1, isActive: true, weeklyRestDays: 1, profileIds: [], channelIds: [] 
                   }); 
                   setWizardStep(1);
                   setShowWizard(true); 
@@ -249,7 +252,8 @@ const PredictiveRules = ({ user }) => {
                                         minStaffClosing: rule.minStaffClosing || 1,
                                         isActive: rule.isActive,
                                         weeklyRestDays: rule.weeklyRestDays || 1,
-                                        profileIds: rule.profiles.map(p => p.profileId)
+                                        profileIds: rule.profiles.map(p => p.profileId),
+                                        channelIds: rule.channelIds || []
                                     });
                                     setWizardStep(1);
                                     setShowWizard(true);
@@ -373,13 +377,52 @@ const PredictiveRules = ({ user }) => {
                                         value={formData.description}
                                         onChange={(e) => setFormData({...formData, description: e.target.value})}
                                         placeholder="Detalle la lógica de negocio aplicada..."
-                                        style={{ width: '100%', height: '120px', padding: '25px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '600', fontSize: '0.95rem', outline: 'none', resize: 'none' }}
+                                        style={{ width: '100%', height: '100px', padding: '25px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '600', fontSize: '0.95rem', outline: 'none', resize: 'none' }}
                                     />
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '12px' }}>Canales de Venta a Considerar *</label>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                        {channels.map(channel => {
+                                            const isSelected = formData.channelIds.includes(channel.id);
+                                            return (
+                                                <button
+                                                    key={channel.id}
+                                                    onClick={() => {
+                                                        const newIds = isSelected 
+                                                            ? formData.channelIds.filter(id => id !== channel.id) 
+                                                            : [...formData.channelIds, channel.id];
+                                                        setFormData({...formData, channelIds: newIds});
+                                                    }}
+                                                    style={{ 
+                                                        padding: '10px 18px', 
+                                                        borderRadius: '14px', 
+                                                        background: isSelected ? activeColors.accent : activeColors.card, 
+                                                        color: isSelected ? 'white' : activeColors.textMain,
+                                                        border: `1.5px solid ${isSelected ? activeColors.accent : activeColors.border}`,
+                                                        fontSize: '11px',
+                                                        fontWeight: '800',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                >
+                                                    {channel.name}
+                                                </button>
+                                            );
+                                        })}
+                                        {channels.length === 0 && (
+                                            <p style={{ fontSize: '12px', color: activeColors.textMuted, fontStyle: 'italic' }}>No hay canales configurados</p>
+                                        )}
+                                    </div>
+                                    <p style={{ fontSize: '10px', color: activeColors.textMuted, marginTop: '8px', fontWeight: '600' }}>
+                                        Solo se sumará el volumen de los canales seleccionados para el cálculo.
+                                    </p>
                                 </div>
                             </div>
 
                             <div style={{ marginTop: 'auto', display: 'flex', gap: '20px' }}>
-                                <button onClick={() => setWizardStep(2)} disabled={!formData.name || !formData.storeTypeId} style={{ flex: 1, padding: '24px', borderRadius: '24px', background: activeColors.accent, color: 'white', border: 'none', fontWeight: '950', fontSize: '13px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 30px rgba(79, 70, 229, 0.3)' }}>Continuar a configuración de cargos</button>
+                                <button onClick={() => setWizardStep(2)} disabled={!formData.name || !formData.storeTypeId || formData.channelIds.length === 0} style={{ flex: 1, padding: '24px', borderRadius: '24px', background: activeColors.accent, color: 'white', border: 'none', fontWeight: '950', fontSize: '13px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 30px rgba(79, 70, 229, 0.3)' }}>Continuar a configuración de cargos</button>
                             </div>
                         </div>
                     )}

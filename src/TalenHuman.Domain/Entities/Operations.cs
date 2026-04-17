@@ -424,6 +424,9 @@ public class PredictiveShiftRule : BaseEntity, IMultitenant
     // Relationships
     [JsonIgnore]
     public ICollection<PredictiveShiftRuleProfile> RuleProfiles { get; set; } = new List<PredictiveShiftRuleProfile>();
+
+    [JsonIgnore]
+    public ICollection<PredictiveShiftRuleChannel> RuleChannels { get; set; } = new List<PredictiveShiftRuleChannel>();
 }
 
 public class PredictiveShiftRuleProfile : IMultitenant
@@ -435,6 +438,21 @@ public class PredictiveShiftRuleProfile : IMultitenant
     public Guid ProfileId { get; set; }
     [JsonIgnore]
     public Profile Profile { get; set; } = null!;
+
+    public Guid CompanyId { get; set; }
+    [JsonIgnore]
+    public Company Company { get; set; } = null!;
+}
+
+public class PredictiveShiftRuleChannel : IMultitenant
+{
+    public Guid RuleId { get; set; }
+    [JsonIgnore]
+    public PredictiveShiftRule Rule { get; set; } = null!;
+
+    public Guid SalesChannelId { get; set; }
+    [JsonIgnore]
+    public SalesChannel SalesChannel { get; set; } = null!;
 
     public Guid CompanyId { get; set; }
     [JsonIgnore]
