@@ -574,10 +574,10 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             const sDate = new Date(s.startTime);
                             if (sDate.toDateString() !== dayStr || s.isDescanso) return false;
 
-                            const sEmp = employees.find(e => e.id === s.employeeId);
+                            const sEmp = employees.find(e => String(e.id).toLowerCase() === String(s.employeeId).toLowerCase());
                             if (!sEmp) return false;
                             
-                            // V13.0.4: Robust Rule Matching (Casing + Name fallback)
+                            // V13.0.5: Universal Case-Insensitive Matching
                             const empProfileId = String(sEmp.profileId || '').toLowerCase().trim();
                             const empProfileName = String(sEmp.profileName || sEmp.ProfileName || '').toLowerCase().trim();
 
@@ -605,14 +605,14 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         while (deficit > 0) {
                             const candidates = ruleQualifiedEmployees.filter(emp => {
                                 // Must not have a shift this day
-                                const hasDayShift = newShifts.some(s => s.employeeId === emp.id && new Date(s.startTime).toDateString() === dayStr);
+                                const hasDayShift = newShifts.some(s => String(s.employeeId).toLowerCase() === String(emp.id).toLowerCase() && new Date(s.startTime).toDateString() === dayStr);
                                 if (hasDayShift) return false;
                                 
                                 // Must not hit weekly limit
                                 if ((workDaysCount[emp.id] || 0) >= maxWorkDays) return false;
 
                                 // Must not have novelty
-                                const hasNov = news.some(n => n.empleadoId === emp.id && new Date(n.fechaInicio) <= day && new Date(n.fechaFin) >= day);
+                                const hasNov = news.some(n => String(n.empleadoId).toLowerCase() === String(emp.id).toLowerCase() && new Date(n.fechaInicio) <= day && new Date(n.fechaFin) >= day);
                                 if (hasNov) return false;
                                 
                                 return true;
@@ -667,11 +667,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             // 2. SMART REST ASSIGNMENT (Only the amount defined in rule)
             employees.forEach(emp => {
                 // Find rule for this employee
-                const empRule = predictiveRules.find(r => (r.profiles || r.Profiles)?.some(p => String(p.profileId || p.ProfileId).toLowerCase() === String(emp.profileId).toLowerCase()));
+                const empRule = predictiveRules.find(r => (r.profiles || r.Profiles || []).some(p => String(p.profileId || p.ProfileId).toLowerCase() === String(emp.profileId).toLowerCase()));
                 if (!empRule) return;
 
                 const mandatoryRests = empRule.weeklyRestDays || 1;
-                let restsAssigned = newShifts.filter(s => s.employeeId === emp.id && s.isDescanso).length;
+                let restsAssigned = newShifts.filter(s => String(s.employeeId).toLowerCase() === String(emp.id).toLowerCase() && s.isDescanso).length;
                 
                 // If they have all their work days and need rests, or just need their mandatory rest
                 if (restsAssigned < mandatoryRests) {
@@ -679,7 +679,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         if (restsAssigned >= mandatoryRests) return;
                         
                         const dayStr = day.toDateString();
-                        const hasAnyShift = newShifts.some(s => s.employeeId === emp.id && new Date(s.startTime).toDateString() === dayStr);
+                        const hasAnyShift = newShifts.some(s => String(s.employeeId).toLowerCase() === String(emp.id).toLowerCase() && new Date(s.startTime).toDateString() === dayStr);
                         
                         if (!hasAnyShift) {
                             const startRest = new Date(day);
