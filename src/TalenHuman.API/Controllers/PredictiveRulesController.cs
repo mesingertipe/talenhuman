@@ -34,6 +34,7 @@ public class PredictiveRulesController : ControllerBase
                 StoreTypeName = r.StoreType.Name,
                 r.MetricType,
                 r.Ratio,
+                r.MinStaff,
                 r.MinStaffOpening,
                 r.MinStaffClosing,
                 r.IsActive,
@@ -59,6 +60,7 @@ public class PredictiveRulesController : ControllerBase
             r.StoreTypeId,
             r.MetricType,
             r.Ratio,
+            r.MinStaff,
             r.MinStaffOpening,
             r.MinStaffClosing,
             r.IsActive,
@@ -79,6 +81,7 @@ public class PredictiveRulesController : ControllerBase
             StoreTypeId = dto.StoreTypeId,
             MetricType = dto.MetricType,
             Ratio = dto.Ratio,
+            MinStaff = dto.MinStaff,
             MinStaffOpening = dto.MinStaffOpening,
             MinStaffClosing = dto.MinStaffClosing,
             IsActive = dto.IsActive,
@@ -115,6 +118,7 @@ public class PredictiveRulesController : ControllerBase
         rule.StoreTypeId = dto.StoreTypeId;
         rule.MetricType = dto.MetricType;
         rule.Ratio = dto.Ratio;
+        rule.MinStaff = dto.MinStaff;
         rule.MinStaffOpening = dto.MinStaffOpening;
         rule.MinStaffClosing = dto.MinStaffClosing;
         rule.IsActive = dto.IsActive;
@@ -154,6 +158,7 @@ public class PredictiveRulesController : ControllerBase
                 r.StoreTypeId,
                 r.MetricType,
                 r.Ratio,
+                r.MinStaff,
                 r.MinStaffOpening,
                 r.MinStaffClosing,
                 r.IsActive,
@@ -183,6 +188,7 @@ public class PredictiveRuleDto
     public Guid StoreTypeId { get; set; }
     public PredictiveMetricType MetricType { get; set; }
     public decimal Ratio { get; set; }
+    public int MinStaff { get; set; }
     public int MinStaffOpening { get; set; }
     public int MinStaffClosing { get; set; }
     public bool IsActive { get; set; }

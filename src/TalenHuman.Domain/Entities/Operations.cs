@@ -410,6 +410,7 @@ public class PredictiveShiftRule : BaseEntity, IMultitenant
     public decimal Ratio { get; set; } 
     
     // Min staffing required regardless of sales
+    public int MinStaff { get; set; } = 1;
     public int MinStaffOpening { get; set; } = 1;
     public int MinStaffClosing { get; set; } = 1;
     

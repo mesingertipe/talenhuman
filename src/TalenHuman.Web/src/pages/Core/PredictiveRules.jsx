@@ -164,7 +164,7 @@ const PredictiveRules = ({ user }) => {
                   setCurrentRule(null); 
                   setFormData({ 
                     name: '', description: '', storeTypeId: '', metricType: 0, ratio: 1000000, 
-                    minStaffOpening: 1, minStaffClosing: 1, isActive: true, weeklyRestDays: 1, profileIds: [] 
+                    minStaff: 1, minStaffOpening: 1, minStaffClosing: 1, isActive: true, weeklyRestDays: 1, profileIds: [] 
                   }); 
                   setWizardStep(1);
                   setShowWizard(true); 
@@ -244,8 +244,9 @@ const PredictiveRules = ({ user }) => {
                                         storeTypeId: rule.storeTypeId,
                                         metricType: rule.metricType,
                                         ratio: rule.ratio,
-                                        minStaffOpening: rule.minStaffOpening,
-                                        minStaffClosing: rule.minStaffClosing,
+                                        minStaff: rule.minStaff || 1,
+                                        minStaffOpening: rule.minStaffOpening || 1,
+                                        minStaffClosing: rule.minStaffClosing || 1,
                                         isActive: rule.isActive,
                                         weeklyRestDays: rule.weeklyRestDays || 1,
                                         profileIds: rule.profiles.map(p => p.profileId)

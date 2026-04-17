@@ -490,7 +490,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 hourlyVolumes[hour] = Math.max(hourlyVolumes[hour], forecastValue);
                 
                 const calculatedStaff = rule.ratio > 0 ? Math.ceil(forecastValue / rule.ratio) : 0;
-                ruleNeeds[hour] = Math.max(ruleNeeds[hour], calculatedStaff);
+                ruleNeeds[hour] = Math.max(ruleNeeds[hour], calculatedStaff, rule.minStaff || 1);
             });
 
             // Apply MinStaffOpening / MinStaffClosing based on STORE DOORS
