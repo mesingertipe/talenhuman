@@ -467,6 +467,39 @@ const PredictiveRules = ({ user }) => {
                                      </div>
                                 </div>
 
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '30px' }}>
+                                    <div style={{ background: isDarkMode ? 'rgba(79, 70, 229, 0.05)' : '#f8fafc', padding: '20px', borderRadius: '24px', border: `1px solid ${activeColors.border}` }}>
+                                        <label style={{ display: 'block', fontSize: '9px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '12px', textAlign: 'center' }}>Pers. Mínimo Base</label>
+                                        <input 
+                                            type="number" 
+                                            value={formData.minStaff}
+                                            onChange={(e) => setFormData({...formData, minStaff: parseInt(e.target.value) || 0})}
+                                            style={{ width: '100%', padding: '12px', borderRadius: '15px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '900', fontSize: '1.2rem', textAlign: 'center', outline: 'none' }}
+                                        />
+                                        <p style={{ fontSize: '9px', fontWeight: '700', color: activeColors.textMuted, marginTop: '8px', textAlign: 'center' }}>Piso global</p>
+                                    </div>
+                                    <div style={{ background: isDarkMode ? 'rgba(79, 70, 229, 0.05)' : '#f8fafc', padding: '20px', borderRadius: '24px', border: `1px solid ${activeColors.border}` }}>
+                                        <label style={{ display: 'block', fontSize: '9px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '12px', textAlign: 'center' }}>Mín. Apertura (3h)</label>
+                                        <input 
+                                            type="number" 
+                                            value={formData.minStaffOpening}
+                                            onChange={(e) => setFormData({...formData, minStaffOpening: parseInt(e.target.value) || 0})}
+                                            style={{ width: '100%', padding: '12px', borderRadius: '15px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '900', fontSize: '1.2rem', textAlign: 'center', outline: 'none' }}
+                                        />
+                                        <p style={{ fontSize: '9px', fontWeight: '700', color: activeColors.textMuted, marginTop: '8px', textAlign: 'center' }}>Fase inicial</p>
+                                    </div>
+                                    <div style={{ background: isDarkMode ? 'rgba(79, 70, 229, 0.05)' : '#f8fafc', padding: '20px', borderRadius: '24px', border: `1px solid ${activeColors.border}` }}>
+                                        <label style={{ display: 'block', fontSize: '9px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '12px', textAlign: 'center' }}>Mín. Cierre (3h)</label>
+                                        <input 
+                                            type="number" 
+                                            value={formData.minStaffClosing}
+                                            onChange={(e) => setFormData({...formData, minStaffClosing: parseInt(e.target.value) || 0})}
+                                            style={{ width: '100%', padding: '12px', borderRadius: '15px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '900', fontSize: '1.2rem', textAlign: 'center', outline: 'none' }}
+                                        />
+                                        <p style={{ fontSize: '9px', fontWeight: '700', color: activeColors.textMuted, marginTop: '8px', textAlign: 'center' }}>Fase final</p>
+                                    </div>
+                                </div>
+
 
                                 <div style={{ marginTop: '40px', padding: '25px', background: isDarkMode ? 'rgba(79, 70, 229, 0.1)' : '#fdf2f8', borderRadius: '24px', border: `2px dashed ${activeColors.accent}` }}>
                                     <label style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '15px' }}>Descansos Semanales Obligatorios</label>
