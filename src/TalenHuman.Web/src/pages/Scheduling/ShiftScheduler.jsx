@@ -554,38 +554,43 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 const result = calculateHourlyNeeds(day);
                 const needs = result.needs || {};
 
-                Object.keys(needs).forEach(pId => {
-                    const hourlyNeed = needs[pId];
-                    // Robust matching: Profiles IDs are GUID strings, normalize to lowercase
-                    const targetPId = String(pId).toLowerCase();
-                    const profilesEmployees = employees.filter(e => 
-                        e.profileId && String(e.profileId).toLowerCase() === targetPId && e.isActive
-                    );
-                    
-                    // Find the rule for this profile to get weeklyRestDays
-                    const rule = predictiveRules.find(r => (r.profiles || r.Profiles)?.some(p => String(p.profileId || p.ProfileId).toLowerCase() === targetPId));
-                    const restDays = (rule && rule.weeklyRestDays !== undefined) ? rule.weeklyRestDays : 1;
+                // V13.0.3: RULE-CENTRIC OPTIMIZATION
+                predictiveRules.forEach(rule => {
+                    const ruleProfiles = (rule.profiles || rule.Profiles || []).map(p => String(p.profileId || p.ProfileId).toLowerCase());
+                    if (ruleProfiles.length === 0) return;
+
+                    const restDays = rule.weeklyRestDays !== undefined ? rule.weeklyRestDays : 1;
                     const maxWorkDays = 7 - restDays;
+                    
+                    // Needs are shared across profiles of the same rule
+                    const dayNeeds = calculateHourlyNeeds(day);
+                    const targetNeed = dayNeeds.needs[ruleProfiles[0]] || new Array(24).fill(0);
+
+                    // Identify all employees that can cover this rule
+                    const ruleQualifiedEmployees = employees.filter(e => 
+                        e.profileId && ruleProfiles.includes(String(e.profileId).toLowerCase()) && e.isActive
+                    );
 
                     for (let h = opStart; h <= opEndHour; h++) {
-                        const needAtHour = hourlyNeed[h] || 0;
+                        const needAtHour = targetNeed[h] || 0;
                         if (needAtHour <= 0) continue;
 
                         const scheduledAtHour = newShifts.filter(s => {
                             const sDate = new Date(s.startTime);
                             if (sDate.toDateString() !== dayStr || s.isDescanso) return false;
+
+                            const sEmp = employees.find(e => e.id === s.employeeId);
+                            if (!sEmp || !ruleProfiles.includes(String(sEmp.profileId).toLowerCase())) return false;
+
                             const sStart = sDate.getHours();
                             const sEnd = new Date(s.endTime).getHours();
                             return sEnd < sStart ? (h >= sStart || h < sEnd) : (h >= sStart && h < sEnd);
-                        }).filter(s => {
-                            const emp = employees.find(e => e.id === s.employeeId);
-                            return emp?.profileId === pId;
                         }).length;
 
                         let deficit = needAtHour - scheduledAtHour;
 
                         while (deficit > 0) {
-                            const candidates = profilesEmployees.filter(emp => {
+                            const candidates = ruleQualifiedEmployees.filter(emp => {
                                 // Must not have a shift this day
                                 const hasDayShift = newShifts.some(s => s.employeeId === emp.id && new Date(s.startTime).toDateString() === dayStr);
                                 if (hasDayShift) return false;
