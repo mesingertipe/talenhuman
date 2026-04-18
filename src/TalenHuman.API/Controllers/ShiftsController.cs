@@ -199,8 +199,8 @@ public class ShiftsController : ControllerBase
                     .Include(u => u.Employee)
                         .ThenInclude(e => e.Profile)
                     .Where(u => u.CompanyId == companyId && u.IsActive && 
-                                u.Employee != null && u.Employee.Profile != null && 
-                                u.Employee.Profile.Name.ToUpper().Contains("RH"))
+                                ((u.Employee != null && u.Employee.Profile != null && u.Employee.Profile.Name.ToUpper().Contains("RH")) ||
+                                 (u.FullName != null && u.FullName.ToUpper().Contains("RH"))))
                     .ToListAsync();
             }
 
