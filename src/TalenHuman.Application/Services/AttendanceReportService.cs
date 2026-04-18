@@ -159,7 +159,8 @@ public class AttendanceReportService
                 Correcto = storeShifts.Count(sh => storeAttendances.Any(a => a.ShiftId == sh.Id && a.Status == AttendanceStatus.Correcto)),
                 Errada = storeShifts.Count(sh => storeAttendances.Any(a => a.ShiftId == sh.Id && a.Status == AttendanceStatus.MarcacionErrada)),
                 Desfase = storeShifts.Count(sh => storeAttendances.Any(a => a.ShiftId == sh.Id && a.Status == AttendanceStatus.Desfasado)),
-                Ausente = storeShifts.Count(sh => !storeAttendances.Any(a => a.ShiftId == sh.Id) || storeAttendances.Any(a => a.ShiftId == sh.Id && a.Status == AttendanceStatus.SinMarcacion))
+                Ausente = storeShifts.Count(sh => !storeAttendances.Any(a => a.ShiftId == sh.Id) || storeAttendances.Any(a => a.ShiftId == sh.Id && a.Status == AttendanceStatus.SinMarcacion)),
+                Marcaciones = storeAttendances.Count(a => a.Status != AttendanceStatus.SinMarcacion)
             };
         }).OrderBy(s => s.Store).ToList();
 
@@ -196,7 +197,7 @@ public class AttendanceReportService
                     {
                         table.ColumnsDefinition(columns =>
                         {
-                            columns.RelativeColumn(3);
+                            columns.RelativeColumn();
                             columns.RelativeColumn();
                             columns.RelativeColumn();
                             columns.RelativeColumn();
@@ -209,6 +210,7 @@ public class AttendanceReportService
                         {
                             header.Cell().Element(CellStyle).Text("Sede");
                             header.Cell().Element(CellStyle).AlignCenter().Text("Plantilla");
+                            header.Cell().Element(CellStyle).AlignCenter().Text("Marcaciones");
                             header.Cell().Element(CellStyle).AlignCenter().Text("Turnos");
                             header.Cell().Element(CellStyle).AlignCenter().Text("Correcto");
                             header.Cell().Element(CellStyle).AlignCenter().Text("Errada");
@@ -222,6 +224,7 @@ public class AttendanceReportService
                         {
                             table.Cell().Element(Padding).Text(item.Store);
                             table.Cell().Element(Padding).AlignCenter().Text(item.Plantilla.ToString());
+                            table.Cell().Element(Padding).AlignCenter().Text($"{item.Marcaciones}").SemiBold();
                             table.Cell().Element(Padding).AlignCenter().Text(item.TotalTurnos.ToString());
                             table.Cell().Element(Padding).AlignCenter().Text($"{item.Correcto}").FontColor(Colors.Green.Darken2);
                             table.Cell().Element(Padding).AlignCenter().Text($"{item.Errada}").FontColor(Colors.Amber.Darken2);

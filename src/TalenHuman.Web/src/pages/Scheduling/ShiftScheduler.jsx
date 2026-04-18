@@ -373,8 +373,21 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, '0');
         const day = String(d.getDate()).padStart(2, '0');
-        // V19.5: Retornar solo la llave de fecha (YYYY-MM-DD) para alineación con backend
+        // V19.5: Retornar solo la llave de fecha (YYYY-MM-DD) para alineación con backend en filtros
         return `${y}-${m}-${day}`;
+    };
+
+    const toFullLocalISO = (date) => {
+        if (!date) return null;
+        const d = new Date(date);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const h = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        const s = String(d.getSeconds()).padStart(2, '0');
+        // V20.5: ISO Completo para persistencia de turnos con duración
+        return `${y}-${m}-${day}T${h}:${min}:${s}`;
     };
 
     const formatHours = (hours) => {
@@ -1158,8 +1171,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             const endDate = new Date(currentWeekStart); 
             endDate.setDate(endDate.getDate() + 7);
             const localizedShifts = shifts.map(s => {
-                const shiftData = { ...s, startTime: toLocalISO(s.startTime), endTime: toLocalISO(s.endTime) };
-                if (!shiftData.id || shiftData.id === "") {
+                const shiftData = { ...s, startTime: toFullLocalISO(s.startTime), endTime: toFullLocalISO(s.endTime) };
+                // V20.5: Limpieza de IDs vacíos para evitar error de mapeo Guid en .NET
+                if (!shiftData.id || shiftData.id === "" || shiftData.id === "undefined") {
                     delete shiftData.id;
                 }
                 return shiftData;
