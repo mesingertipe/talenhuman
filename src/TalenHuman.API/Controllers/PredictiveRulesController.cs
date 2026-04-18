@@ -78,47 +78,55 @@ public class PredictiveRulesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult> PostRule([FromBody] PredictiveRuleDto dto)
     {
-        var companyId = _tenantProvider.GetTenantId();
-        
-        var rule = new PredictiveShiftRule
+        try 
         {
-            Name = dto.Name,
-            Description = dto.Description,
-            StoreTypeId = dto.StoreTypeId,
-            MetricType = dto.MetricType,
-            Ratio = dto.Ratio,
-            MinStaff = dto.MinStaff,
-            MinStaffOpening = dto.MinStaffOpening,
-            MinStaffClosing = dto.MinStaffClosing,
-            IsActive = dto.IsActive,
-            WeeklyRestDays = dto.WeeklyRestDays,
-            LookbackWeeks = dto.LookbackWeeks,
-            ComparisonStrategy = dto.ComparisonStrategy,
-            CompanyId = companyId
-        };
-
-        foreach (var profileId in dto.ProfileIds)
-        {
-            rule.RuleProfiles.Add(new PredictiveShiftRuleProfile 
-            { 
-                ProfileId = profileId, 
-                CompanyId = companyId 
-            });
-        }
-
-        foreach (var channelId in dto.ChannelIds)
-        {
-            rule.RuleChannels.Add(new PredictiveShiftRuleChannel
+            var companyId = _tenantProvider.GetTenantId();
+            
+            var rule = new PredictiveShiftRule
             {
-                SalesChannelId = channelId,
+                Name = dto.Name,
+                Description = dto.Description,
+                StoreTypeId = dto.StoreTypeId,
+                MetricType = dto.MetricType,
+                Ratio = dto.Ratio,
+                MinStaff = dto.MinStaff,
+                MinStaffOpening = dto.MinStaffOpening,
+                MinStaffClosing = dto.MinStaffClosing,
+                IsActive = dto.IsActive,
+                WeeklyRestDays = dto.WeeklyRestDays,
+                LookbackWeeks = dto.LookbackWeeks,
+                ComparisonStrategy = dto.ComparisonStrategy,
                 CompanyId = companyId
-            });
+            };
+
+            foreach (var profileId in dto.ProfileIds)
+            {
+                rule.RuleProfiles.Add(new PredictiveShiftRuleProfile 
+                { 
+                    ProfileId = profileId, 
+                    CompanyId = companyId 
+                });
+            }
+
+            foreach (var channelId in dto.ChannelIds)
+            {
+                rule.RuleChannels.Add(new PredictiveShiftRuleChannel
+                {
+                    SalesChannelId = channelId,
+                    CompanyId = companyId
+                });
+            }
+
+            _context.PredictiveShiftRules.Add(rule);
+            await _context.SaveChangesAsync(CancellationToken.None);
+
+            return Ok(new { id = rule.Id, name = rule.Name });
         }
-
-        _context.PredictiveShiftRules.Add(rule);
-        await _context.SaveChangesAsync(CancellationToken.None);
-
-        return Ok(rule);
+        catch (Exception ex)
+        {
+            var innerMessage = ex.InnerException?.Message ?? ex.Message;
+            return StatusCode(500, new { error = "Internal server error during rule creation", detail = innerMessage });
+        }
     }
 
     [HttpPut("{id}")]
