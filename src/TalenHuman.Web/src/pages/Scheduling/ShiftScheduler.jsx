@@ -447,9 +447,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
             const normalizedAttendances = (attRes.data || []).map(a => ({
                 ...a,
-                id: a.id || a.Id,
-                employeeId: a.employeeId || a.EmployeeId || a.EmployeeInternalId, // 🔴 V13.0 FIX: Map EmployeeInternalId from API
-                shiftId: a.shiftId || a.ShiftId,
+                id: (a.id || a.Id || '').toString().toLowerCase(),
+                employeeId: (a.employeeId || a.EmployeeId || a.EmployeeInternalId || '').toString().toLowerCase(), // 🔴 V13.0 FIX: Map EmployeeInternalId from API & Normalize casing
+                shiftId: (a.shiftId || a.ShiftId || '').toString().toLowerCase(),
                 clockIn: a.clockIn || a.ClockIn || a.clock_in,
                 clockOut: a.clockOut || a.ClockOut || a.clock_out,
                 status: a.status !== undefined ? a.status : (a.Status !== undefined ? a.Status : 0)
@@ -2013,7 +2013,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 </thead>
                                 <tbody>
                                     {filteredEmployees.map((emp) => {
-                                        const total = shifts.filter(s => s.employeeId === emp.id).reduce((acc, s) => {
+                                        const totalScheduled = shifts.filter(s => String(s.employeeId).toLowerCase() === String(emp.id).toLowerCase()).reduce((acc, s) => {
                                             if (s.isDescanso) return acc;
                                             const start = new Date(s.startTime);
                                             const end = new Date(s.endTime);
@@ -2021,7 +2021,21 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             if (diff < 0) diff += 24; // Corrección cruce medianoche
                                             return acc + diff;
                                         }, 0);
-                                        const empTotalHours = Math.round(total);
+
+                                        // V13.0 FIX: Include Orphaned Attendances in Weekly Total
+                                        const weekOrphanHours = (attendances || []).filter(a => 
+                                            String(a.employeeId).toLowerCase() === String(emp.id).toLowerCase() && 
+                                            (!a.shiftId || a.shiftId === "0" || a.shiftId === "00000000-0000-0000-0000-000000000000" || a.shiftId.startsWith('00000'))
+                                        ).reduce((acc, a) => {
+                                            if (!a.clockIn || !a.clockOut) return acc;
+                                            const start = new Date(a.clockIn);
+                                            const end = new Date(a.clockOut);
+                                            let diff = (end - start) / (1000 * 60 * 60);
+                                            if (diff < 0) diff += 24;
+                                            return acc + diff;
+                                        }, 0);
+
+                                        const empTotalHours = Math.round(totalScheduled + weekOrphanHours);
                                         const isSelected = selectedEmployees.includes(emp.id);
                                         return (
                                             <tr key={emp.id} className="border-b dark:border-slate-800 hover:bg-slate-50/10 dark:hover:bg-slate-800/50 transition-colors">
@@ -2051,11 +2065,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </div>
                                             </td>
                                                 {days.map((day, di) => {
-                                                    const dayShifts = shifts.filter(s => s.employeeId === emp.id && new Date(s.startTime).toDateString() === day.toDateString());
+                                                    const dayShifts = shifts.filter(s => String(s.employeeId).toLowerCase() === String(emp.id).toLowerCase() && new Date(s.startTime).toDateString() === day.toDateString());
                                                     const dayOrphanAttendances = (attendances || []).filter(a => 
-                                                        String(a.employeeId) === String(emp.id) && 
+                                                        String(a.employeeId).toLowerCase() === String(emp.id).toLowerCase() && 
                                                         new Date(a.clockIn).toDateString() === day.toDateString() &&
-                                                        !a.shiftId
+                                                        (!a.shiftId || a.shiftId === "0" || a.shiftId === "00000000-0000-0000-0000-000000000000" || a.shiftId.startsWith('00000'))
                                                     );
                                                     const nov = getNovedad(emp.id, day);
                                                     const today = new Date();
