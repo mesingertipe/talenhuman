@@ -66,20 +66,25 @@ const AttendanceMonitoring = ({ user: sessionUser }) => {
             setLoading(true);
             const res = await api.get('/systemsettings');
             
-            const normalizedData = res.data.map(s => ({
-                key: s.key || s.Key || '',
-                value: s.value || s.Value || '',
-                group: s.group || s.Group || '',
-                description: s.description || s.Description || ''
-            }));
+            const normalizedData = res.data.map(s => {
+                // Defensive mapping for any casing (PascalCase or camelCase)
+                const item = {
+                    key: s.key || s.Key || '',
+                    value: s.value || s.Value || '',
+                    group: (s.group || s.Group || '').toLowerCase(), // Normalize group to lowercase
+                    description: s.description || s.Description || ''
+                };
+                return item;
+            });
 
+            // Filter by group (now case-insensitive)
             const attendanceSettings = normalizedData
-                .filter(s => s.group === 'Attendance');
+                .filter(s => s.group === 'attendance' || s.key === 'AttendanceConsolidationTime' || s.key === 'BiometricRetentionDays');
             
             // Ensure defaults exist in state for UI
             const defaults = [
-                { key: 'AttendanceConsolidationTime', value: '06:00', group: 'Attendance' },
-                { key: 'BiometricRetentionDays', value: '7', group: 'Attendance' }
+                { key: 'AttendanceConsolidationTime', value: '06:00', group: 'attendance' },
+                { key: 'BiometricRetentionDays', value: '7', group: 'attendance' }
             ];
             
             const finalSettings = [...attendanceSettings];
