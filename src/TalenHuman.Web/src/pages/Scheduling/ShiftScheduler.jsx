@@ -1171,24 +1171,40 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             const endDate = new Date(currentWeekStart); 
             endDate.setDate(endDate.getDate() + 7);
             const localizedShifts = shifts.map(s => {
-                const shiftData = { ...s, startTime: toFullLocalISO(s.startTime), endTime: toFullLocalISO(s.endTime) };
-                // V20.5: Limpieza de IDs vacíos para evitar error de mapeo Guid en .NET
+                // V20.6: STRICT MAPPING - Send ONLY what ShiftDto expects to avoid 400 'Dirty Payload' errors
+                const shiftData = {
+                    id: s.id || s.Id,
+                    employeeId: s.employeeId || s.EmployeeId,
+                    startTime: toFullLocalISO(s.startTime || s.StartTime),
+                    endTime: toFullLocalISO(s.endTime || s.EndTime),
+                    status: s.status !== undefined ? s.status : (s.Status || 0),
+                    isDescanso: !!(s.isDescanso || s.IsDescanso),
+                    isFuera: !!(s.isFuera || s.IsFuera),
+                    observation: s.observation || s.Observation
+                };
+
+                // Cleanup ID if empty or invalid for Guid mapping
                 if (!shiftData.id || shiftData.id === "" || shiftData.id === "undefined") {
                     delete shiftData.id;
                 }
                 return shiftData;
             });
 
-            // Simular ritual de seguridad para fluidez visual
-            setTimeout(() => setSyncPhase(2), 600); // Fase: Sincronizando core
-
-            const response = await api.post('/shifts/bulk', {
+            const payload = {
                 storeId: selectedStore,
                 startDate: toLocalISO(currentWeekStart),
                 endDate: toLocalISO(endDate),
                 shifts: localizedShifts,
                 comment: saveComment
-            });
+            };
+
+            // V20.6 DEBUG: Expose payload in console as requested
+            console.log("精英调度器 (V13.0) - PAYLOAD DEBUG:", payload);
+
+            // Simular ritual de seguridad para fluidez visual
+            setTimeout(() => setSyncPhase(2), 600); // Fase: Sincronizando core
+
+            const response = await api.post('/shifts/bulk', payload);
 
             setSyncPhase(3); // Fase: Notificando Gerencia
             setTimeout(() => {
@@ -1200,14 +1216,20 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             }, 800);
             
         } catch (err) { 
-            showToast(err.response?.data?.message || "Error al guardar", "error"); 
+            // V20.6 DEBUG: Expose exact server error in console
+            console.error("精英调度器 (V13.0) - SAVE ERROR DETAIL:", err.response?.data || err);
+            
+            const errorMsg = err.response?.data?.message || "Error al guardar (Ver consola F12)";
+            showToast(errorMsg, "error"); 
             setIsSaving(false);
         } finally { 
             // El setSaving(false) se maneja tras la animación 'Done'
-            setTimeout(() => {
-                setIsSaving(false);
-                setSyncPhase(0);
-            }, 2500);
+            if (syncPhase !== 3) {
+                setTimeout(() => {
+                    setIsSaving(false);
+                    setSyncPhase(0);
+                }, 2500);
+            }
         }
     };
 
