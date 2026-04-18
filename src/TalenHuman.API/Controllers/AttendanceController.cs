@@ -375,15 +375,16 @@ public class AttendanceController : ControllerBase
         var groupedRaw = rawRecords.GroupBy(r => new { r.DeviceUser, Date = r.RecordDate.Date });
         foreach (var group in groupedRaw)
         {
+            var deviceUser = group.Key.DeviceUser?.TrimStart('0');
             var hasConsolidated = consolidated.Any(a => 
-                (a.Employee?.IdentificationNumber == group.Key.DeviceUser || a.EmployeeId.ToString() == group.Key.DeviceUser) && 
+                (a.Employee?.IdentificationNumber?.TrimStart('0') == deviceUser || a.EmployeeId.ToString().ToLower() == deviceUser?.ToLower()) && 
                 a.ClockIn.Date == group.Key.Date);
                 
             if (!hasConsolidated)
             {
                 var employee = employees.FirstOrDefault(e => 
-                    e.IdentificationNumber == group.Key.DeviceUser || 
-                    e.IdentificationNumber.TrimStart('0') == group.Key.DeviceUser.TrimStart('0'));
+                    e.IdentificationNumber?.TrimStart('0') == deviceUser || 
+                    e.Id.ToString().ToLower() == deviceUser?.ToLower());
                     
                 if (employee == null && !roles.Contains("Admin") && !roles.Contains("SuperAdmin") && !roles.Contains("RH"))
                     continue;
