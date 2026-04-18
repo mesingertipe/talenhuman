@@ -2214,7 +2214,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                         <div className="flex items-center gap-2 bg-indigo-50/50 dark:bg-indigo-900/20 px-3 py-1 rounded-full border border-indigo-100 dark:border-indigo-800/50">
                                                             <Calendar size={12} className="text-indigo-500" strokeWidth={3} />
                                                             <strong className="text-[11px] font-[950] text-indigo-700 dark:text-indigo-300">
-                                                                {formatHours(total)}
+                                                                {formatHours(empTotalHours)}
                                                             </strong>
                                                         </div>
                                                                            {(() => {

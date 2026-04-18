@@ -26,6 +26,7 @@ const AttendanceMonitoring = ({ user: sessionUser }) => {
     const [syncLogs, setSyncLogs] = useState([]);
     const [originalSettings, setOriginalSettings] = useState('');
     const [isDirty, setIsDirty] = useState(false);
+    const [loadError, setLoadError] = useState(false);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
     // Premium Color System (V12 Elite)
@@ -66,6 +67,7 @@ const AttendanceMonitoring = ({ user: sessionUser }) => {
     const fetchSettings = async () => {
         try {
             setLoading(true);
+            setLoadError(false);
             const res = await api.get('/systemsettings');
             
             // Normalize ALL to lowercase for internal stability
@@ -83,7 +85,7 @@ const AttendanceMonitoring = ({ user: sessionUser }) => {
                 targetKeys.includes(s.key) || s.group === 'attendance'
             );
             
-            // Build the final state with defaults if missing
+            // Build the final state with defaults ONLY if the response was successful and strictly missing
             const defaults = [
                 { key: 'attendanceconsolidationtime', value: '06:00', group: 'attendance' },
                 { key: 'biometricretentiondays', value: '7', group: 'attendance' }
@@ -100,7 +102,9 @@ const AttendanceMonitoring = ({ user: sessionUser }) => {
             setOriginalSettings(JSON.stringify(processedSettings)); // Snapshot for dirty check
         } catch (err) {
             console.error("Error fetching settings:", err);
-            showToast("Error al cargar configuración", "error");
+            setLoadError(true);
+            showToast("Error de permisos o conexión al cargar configuración", "error");
+            // DO NOT set defaults here, leave settings empty to avoid accidental overwrites
         } finally {
             setLoading(false);
             setIsDirty(false);

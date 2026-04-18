@@ -6,7 +6,7 @@ using TalenHuman.Domain.Entities;
 
 namespace TalenHuman.API.Controllers;
 
-[Authorize(Roles = "SuperAdmin")]
+[Authorize(Roles = "SuperAdmin,Admin,RH")]
 [ApiController]
 [Route("api/[controller]")]
 public class SystemSettingsController : ControllerBase
