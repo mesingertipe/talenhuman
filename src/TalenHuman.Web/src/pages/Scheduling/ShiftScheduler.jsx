@@ -1157,7 +1157,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             
             const endDate = new Date(currentWeekStart); 
             endDate.setDate(endDate.getDate() + 7);
-            const localizedShifts = shifts.map(s => ({ ...s, startTime: toLocalISO(s.startTime), endTime: toLocalISO(s.endTime) }));
+            const localizedShifts = shifts.map(s => {
+                const shiftData = { ...s, startTime: toLocalISO(s.startTime), endTime: toLocalISO(s.endTime) };
+                if (!shiftData.id || shiftData.id === "") {
+                    delete shiftData.id;
+                }
+                return shiftData;
+            });
 
             // Simular ritual de seguridad para fluidez visual
             setTimeout(() => setSyncPhase(2), 600); // Fase: Sincronizando core
