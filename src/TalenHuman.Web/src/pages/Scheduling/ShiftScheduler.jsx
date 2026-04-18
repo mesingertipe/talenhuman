@@ -1284,28 +1284,93 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const copyFromPreviousWeek = async () => {
         try {
             setLoading(true);
+            
+            // 1. Identificar empleados que YA TIENEN turnos en esta semana (IA o Manual)
+            const employeesWithShifts = new Set(shifts.map(s => String(s.employeeId || s.EmployeeId).toLowerCase()));
+            
             const ps = getMonday(weekOffset - 1);
             const pe = new Date(ps); pe.setDate(pe.getDate() + 7);
+            
             const res = await api.get(`/shifts?storeId=${selectedStore}&startDate=${toLocalISO(ps)}&endDate=${toLocalISO(pe)}`);
-            if (res.data.length === 0) { showToast("No se encontraron turnos previos", "error"); return; }
+            
+            if (res.data.length === 0) { 
+                showToast("No se encontraron turnos previos para clonar", "warning"); 
+                return; 
+            }
+
             const clonedShifts = [...shifts];
             let copiedCount = 0;
+            let skippedCount = 0;
+
+            // 2. Filtrar y clonar solo los que están "vacíos"
             res.data.forEach(psh => {
-                const s = { ...psh, employeeId: psh.employeeId || psh.EmployeeId, startTime: psh.startTime || psh.StartTime, endTime: psh.endTime || psh.EndTime, isDescanso: psh.isDescanso ?? psh.IsDescanso, isFuera: psh.isFuera ?? psh.IsFuera };
-                const shiftDate = new Date(s.startTime); const dayIndex = (shiftDate.getDay() || 7) - 1;
-                const targetDate = new Date(currentWeekStart); targetDate.setDate(targetDate.getDate() + dayIndex);
-                if (!getNovedad(s.employeeId, targetDate)) {
-                    const ns = new Date(targetDate); const os = new Date(s.startTime); ns.setHours(os.getHours(), os.getMinutes(), 0);
-                    const ne = new Date(targetDate); const oe = new Date(s.endTime); ne.setHours(oe.getHours(), oe.getMinutes(), 0);
-                    const newShift = { employeeId: s.employeeId, startTime: ns.toISOString(), endTime: ne.toISOString(), status: 0, isDescanso: !!s.isDescanso, isFuera: !!s.isFuera };
-                    const existingIdx = clonedShifts.findIndex(cs => cs.employeeId === s.employeeId && new Date(cs.startTime).toDateString() === targetDate.toDateString());
-                    if (existingIdx >= 0) clonedShifts[existingIdx] = newShift;
-                    else clonedShifts.push(newShift);
+                const empId = String(psh.employeeId || psh.EmployeeId).toLowerCase();
+                
+                // Si el empleado ya tiene al menos un turno esta semana, LO OMITIMOS COMPLETAMENTE
+                if (employeesWithShifts.has(empId)) {
+                    skippedCount++;
+                    return;
+                }
+
+                const s = { 
+                    ...psh, 
+                    employeeId: psh.employeeId || psh.EmployeeId, 
+                    startTime: psh.startTime || psh.StartTime, 
+                    endTime: psh.endTime || psh.EndTime, 
+                    isDescanso: psh.isDescanso ?? psh.IsDescanso, 
+                    isFuera: psh.isFuera ?? psh.IsFuera 
+                };
+
+                const shiftDate = new Date(s.startTime); 
+                const dayIndex = (shiftDate.getDay() || 7) - 1;
+                const targetDate = new Date(currentWeekStart); 
+                targetDate.setDate(targetDate.getDate() + dayIndex);
+
+                // Validar novedades en el destino
+                const novedad = news.find(n => 
+                    String(n.empleadoId).toLowerCase() === empId && 
+                    new Date(n.fechaInicio) <= targetDate && 
+                    new Date(n.fechaFin) >= targetDate
+                );
+
+                if (!novedad) {
+                    const ns = new Date(targetDate); 
+                    const os = new Date(s.startTime); 
+                    ns.setHours(os.getHours(), os.getMinutes(), 0);
+                    
+                    const ne = new Date(targetDate); 
+                    const oe = new Date(s.endTime); 
+                    ne.setHours(oe.getHours(), oe.getMinutes(), 0);
+
+                    const newShift = { 
+                        employeeId: s.employeeId, 
+                        storeId: selectedStore,
+                        companyId: user.companyId,
+                        startTime: ns.toISOString(), 
+                        endTime: ne.toISOString(), 
+                        status: 0, 
+                        isDescanso: !!s.isDescanso, 
+                        isFuera: !!s.isFuera,
+                        observation: 'Clonado semana anterior'
+                    };
+
+                    clonedShifts.push(newShift);
                     copiedCount++;
                 }
             });
-            setShifts(clonedShifts); showToast(`Se precargaron ${copiedCount} turnos`);
-        } catch (err) { showToast("Error al clonar semana", "error"); } finally { setLoading(false); }
+
+            if (copiedCount > 0) {
+                setShifts(clonedShifts); 
+                showToast(`Se clonaron ${copiedCount} turnos. (Se omitieron empleados con predicción previa)`);
+            } else {
+                showToast("No había turnos nuevos para clonar (todos tienen programacion o el personal tiene novedades)", "info");
+            }
+        } catch (err) { 
+            console.error("Clone Error", err);
+            showToast("Error al clonar semana", "error"); 
+        } finally { 
+            setLoading(false); 
+        }
     };
 
     const handlePdfExport = useCallback(() => {
