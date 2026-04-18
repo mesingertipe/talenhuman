@@ -1216,10 +1216,15 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             }, 800);
             
         } catch (err) { 
-            // V20.6 DEBUG: Expose exact server error in console
-            console.error("精英调度器 (V13.0) - SAVE ERROR DETAIL:", err.response?.data || err);
+            // V20.7: EXTREME DEBUG - Expose exact validation errors from ASP.NET
+            const serverErrors = err.response?.data?.errors;
+            if (serverErrors) {
+                console.error("精英调度器 (V13.0) - VALIDATION ERRORS:", JSON.stringify(serverErrors, null, 2));
+            } else {
+                console.error("精英调度器 (V13.0) - SAVE ERROR DETAIL:", err.response?.data || err);
+            }
             
-            const errorMsg = err.response?.data?.message || "Error al guardar (Ver consola F12)";
+            const errorMsg = err.response?.data?.message || "Error al guardar (Ver consola F12 para detalles)";
             showToast(errorMsg, "error"); 
             setIsSaving(false);
         } finally { 
