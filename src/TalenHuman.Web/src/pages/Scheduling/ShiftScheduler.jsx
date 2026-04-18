@@ -1170,25 +1170,31 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             
             const endDate = new Date(currentWeekStart); 
             endDate.setDate(endDate.getDate() + 7);
-            const localizedShifts = shifts.map(s => {
-                // V20.6: STRICT MAPPING - Send ONLY what ShiftDto expects to avoid 400 'Dirty Payload' errors
-                const shiftData = {
-                    id: s.id || s.Id,
-                    employeeId: s.employeeId || s.EmployeeId,
-                    startTime: toFullLocalISO(s.startTime || s.StartTime),
-                    endTime: toFullLocalISO(s.endTime || s.EndTime),
-                    status: s.status !== undefined ? s.status : (s.Status || 0),
-                    isDescanso: !!(s.isDescanso || s.IsDescanso),
-                    isFuera: !!(s.isFuera || s.IsFuera),
-                    observation: s.observation || s.Observation
-                };
+            const localizedShifts = shifts
+                .filter(s => {
+                    const empId = s.employeeId || s.EmployeeId;
+                    // V20.8: Filtrar turnos basura que no tengan empleado o tengan IDs corruptos
+                    return empId && empId !== "undefined" && s.startTime && s.endTime;
+                })
+                .map(s => {
+                    // V20.6: STRICT MAPPING - Send ONLY what ShiftDto expects to avoid 400 'Dirty Payload' errors
+                    const shiftData = {
+                        id: s.id || s.Id,
+                        employeeId: s.employeeId || s.EmployeeId,
+                        startTime: toFullLocalISO(s.startTime || s.StartTime),
+                        endTime: toFullLocalISO(s.endTime || s.EndTime),
+                        status: s.status !== undefined ? s.status : (s.Status || 0),
+                        isDescanso: !!(s.isDescanso || s.IsDescanso),
+                        isFuera: !!(s.isFuera || s.IsFuera),
+                        observation: s.observation || s.Observation
+                    };
 
-                // Cleanup ID if empty or invalid for Guid mapping
-                if (!shiftData.id || shiftData.id === "" || shiftData.id === "undefined") {
-                    delete shiftData.id;
-                }
-                return shiftData;
-            });
+                    // Cleanup ID if empty or invalid for Guid mapping
+                    if (!shiftData.id || shiftData.id === "" || shiftData.id === "undefined") {
+                        delete shiftData.id;
+                    }
+                    return shiftData;
+                });
 
             const payload = {
                 storeId: selectedStore,
