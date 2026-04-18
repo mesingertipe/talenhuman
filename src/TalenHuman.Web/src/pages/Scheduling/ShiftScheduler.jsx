@@ -1354,15 +1354,17 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 return; 
             }
 
-            // Operación Atómica para evitar solapamientos y desfases de estado
+            // Operación Atómica con "Blindaje de Identidad v3"
             setShifts(prevShifts => {
-                // 1. Identificar con precisión extrema los empleados que ya tienen algo en la malla (IA o Manual)
-                const currentEmployeeIds = new Set(
-                    prevShifts.map(s => {
-                        const rawId = s.employeeId || s.EmployeeId || '';
-                        return String(rawId).toLowerCase().trim();
-                    }).filter(id => id !== '')
-                );
+                // Función de Normalización Extrema: Solo deja letras y números (elimina guiones, llaves, espacios)
+                const normalizeId = (id) => String(id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+                // 1. Identificar empleados con turnos actuales (IA, Manual, Real)
+                const employeesWithAnyShift = new Set();
+                prevShifts.forEach(s => {
+                    const nid = normalizeId(s.employeeId || s.EmployeeId);
+                    if (nid) employeesWithAnyShift.add(nid);
+                });
 
                 const clonedList = [...prevShifts];
                 let localCopiedCount = 0;
@@ -1371,29 +1373,40 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
                 // 2. Procesar turnos de la semana pasada
                 res.data.forEach(psh => {
-                    const rawId = psh.employeeId || psh.EmployeeId || '';
-                    const empId = String(rawId).toLowerCase().trim();
-                    if (!empId) return;
+                    const empIdRaw = psh.employeeId || psh.EmployeeId || '';
+                    const nid = normalizeId(empIdRaw);
+                    if (!nid) return;
 
-                    // REGLA DE ORO: Si ya tiene IA o Manual esta semana, se ignora todo lo viejo para él
-                    if (currentEmployeeIds.has(empId)) {
-                        if (!localSkippedEmployees.has(empId)) {
+                    // REGLA ELITE: Si ya tiene IA o Manual en la semana, se ignora todo para este empleado
+                    if (employeesWithAnyShift.has(nid)) {
+                        if (!localSkippedEmployees.has(nid)) {
                             localSkippedCount++;
-                            localSkippedEmployees.add(empId);
+                            localSkippedEmployees.add(nid);
                         }
                         return;
                     }
 
-                    // Calcular fecha destino exacta
+                    // Calcular fecha destino
                     const sStartOrig = psh.startTime || psh.StartTime;
                     const shiftDate = new Date(sStartOrig); 
                     const dayIndex = (shiftDate.getDay() || 7) - 1;
                     const targetDate = new Date(currentWeekStart); 
                     targetDate.setDate(targetDate.getDate() + dayIndex);
+                    const targetDateStr = targetDate.toDateString();
+
+                    // SEGURIDAD NIVEL 3: Verificar específicamente este DÍA por si acaso
+                    const yaTieneTurnoEseDia = prevShifts.some(s => 
+                        normalizeId(s.employeeId || s.EmployeeId) === nid && 
+                        new Date(s.startTime).toDateString() === targetDateStr
+                    );
+
+                    if (yaTieneTurnoEseDia) {
+                        return; // Evita solapamiento físico en la celda
+                    }
 
                     // Validar novedades
                     const tieneNovedad = news.some(n => 
-                        String(n.empleadoId || '').toLowerCase().trim() === empId && 
+                        normalizeId(n.empleadoId) === nid && 
                         new Date(n.fechaInicio) <= targetDate && 
                         new Date(n.fechaFin) >= targetDate
                     );
@@ -1408,7 +1421,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         ne.setHours(oe.getHours(), oe.getMinutes(), 0);
 
                         clonedList.push({ 
-                            employeeId: empId, 
+                            employeeId: empIdRaw, // Mantenemos el ID original para persistencia
                             storeId: selectedStore,
                             companyId: user.companyId,
                             startTime: ns.toISOString(), 
@@ -1426,11 +1439,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 setTimeout(() => {
                     if (localCopiedCount > 0) {
                         const msg = localSkippedCount > 0 
-                            ? `Se clonaron ${localCopiedCount} turnos. (${localSkippedCount} empleados con IA/Manual se respetaron)`
+                            ? `Se clonaron ${localCopiedCount} turnos. (Se respetaron ${localSkippedCount} empleados con IA/Manual)`
                             : `Se clonaron ${localCopiedCount} turnos exitosamente.`;
                         showToast(msg, "success");
                     } else {
-                        showToast("No se añadieron turnos (IA detectada o novedades para todos)", "info");
+                        showToast("No se agregaron turnos (IA detectada en toda la semana o novedades)", "info");
                     }
                 }, 100);
 
