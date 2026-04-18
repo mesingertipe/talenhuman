@@ -256,7 +256,7 @@ public class AttendanceController : ControllerBase
 
     [HttpGet]
     [AuthorizePermission("OPERATIONS", PermissionAction.Read)]
-    public async Task<IActionResult> GetAttendances(DateTime? start, DateTime? end, string? searchTerm)
+    public async Task<IActionResult> GetAttendances(DateTime? start, DateTime? end, string? searchTerm, Guid? storeId)
     {
         var companyId = _tenantProvider.GetTenantId();
         var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
@@ -268,7 +268,7 @@ public class AttendanceController : ControllerBase
             .Include(a => a.Store)
             .Where(a => a.CompanyId == companyId);
 
-        // RBAC Filtering
+        // RBAC Filtering (Master)
         if (!roles.Contains("SuperAdmin") && !roles.Contains("Admin") && !roles.Contains("RH"))
         {
             var managedStoreIds = new List<Guid>();
@@ -288,6 +288,12 @@ public class AttendanceController : ControllerBase
             query = query.Where(a => managedStoreIds.Contains(a.StoreId));
         }
 
+        // Specific Entity Filter
+        if (storeId.HasValue)
+        {
+            query = query.Where(a => a.StoreId == storeId.Value);
+        }
+
         if (start.HasValue)
             query = query.Where(a => a.ClockIn >= start.Value.Date);
         
@@ -296,7 +302,7 @@ public class AttendanceController : ControllerBase
 
         var consolidated = await query.ToListAsync();
         
-            // Real-Time & Unconsolidated Logic (Extended to requested range)
+        // Real-Time & Unconsolidated Logic (Extended to requested range)
         var tenantDateNow = _tenantTimeProvider.Now.Date;
         var startFilter = start?.Date ?? tenantDateNow;
         var endFilter = end?.Date ?? tenantDateNow;

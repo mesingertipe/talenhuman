@@ -423,11 +423,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 api.get(`/shifts?storeId=${targetStore}&startDate=${startDateStr}&endDate=${endDateStr}`),
                 api.get(`/novedades?storeId=${targetStore}&startDate=${startDateStr}&endDate=${endDateStr}&status=1`),
                 api.get('/jornadas'),
-                api.get(`/attendance?start=${startDateStr}&end=${endDateStr}`)
+                api.get(`/attendance?start=${startDateStr}&end=${endDateStr}&storeId=${targetStore}`)
             ]);
 
             setJornadas(jornadaRes.data);
-            setEmployees(empRes.data.filter(e => e.storeId === selectedStore).map(e => ({
+            setEmployees(empRes.data.filter(e => e.storeId === targetStore || e.storeId === selectedStore).map(e => ({
                 ...e,
                 id: e.id || e.Id,
                 documento: e.identificationNumber || e.IdentificationNumber
@@ -448,7 +448,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             const normalizedAttendances = (attRes.data || []).map(a => ({
                 ...a,
                 id: a.id || a.Id,
-                employeeId: a.employeeId || a.EmployeeId,
+                employeeId: a.employeeId || a.EmployeeId || a.EmployeeInternalId, // 🔴 V13.0 FIX: Map EmployeeInternalId from API
                 shiftId: a.shiftId || a.ShiftId,
                 clockIn: a.clockIn || a.ClockIn || a.clock_in,
                 clockOut: a.clockOut || a.ClockOut || a.clock_out,
