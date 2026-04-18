@@ -100,7 +100,19 @@ const PredictiveRules = ({ user }) => {
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.storeTypeId || formData.profileIds.length === 0) {
+    const isInvalid = !formData.name || 
+                     formData.storeTypeId === '' || 
+                     formData.storeTypeId === null || 
+                     formData.profileIds.length === 0 ||
+                     formData.channelIds.length === 0;
+
+    if (isInvalid) {
+        console.warn("Validation failed on handleSave:", {
+            name: !!formData.name,
+            storeType: formData.storeTypeId !== '' && formData.storeTypeId !== null,
+            profiles: formData.profileIds.length > 0,
+            channels: formData.channelIds.length > 0
+        });
         showToast("Complete los campos obligatorios", "error");
         return;
     }
