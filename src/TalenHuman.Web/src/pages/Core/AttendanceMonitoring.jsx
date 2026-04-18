@@ -66,8 +66,14 @@ const AttendanceMonitoring = ({ user: sessionUser }) => {
             setLoading(true);
             const res = await api.get('/systemsettings');
             
-            // Filter by group (API already prioritized tenant over global and cleaned keys)
-            const attendanceSettings = res.data
+            const normalizedData = res.data.map(s => ({
+                key: s.key || s.Key || '',
+                value: s.value || s.Value || '',
+                group: s.group || s.Group || '',
+                description: s.description || s.Description || ''
+            }));
+
+            const attendanceSettings = normalizedData
                 .filter(s => s.group === 'Attendance');
             
             // Ensure defaults exist in state for UI
