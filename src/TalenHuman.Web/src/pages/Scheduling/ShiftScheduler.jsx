@@ -1340,108 +1340,91 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         }
     };
 
-    const copyFromPreviousWeek = async () => {
-        try {
-            setLoading(true);
-            
-            // 1. Identificar empleados que YA TIENEN turnos en esta semana (IA o Manual)
-            // Usamos un Set con IDs normalizados para búsqueda instantánea
-            const currentEmployeeIds = shifts.map(s => {
-                const id = s.employeeId || s.EmployeeId || '';
-                return String(id).toLowerCase().trim();
-            }).filter(id => id !== '');
-            
-            const employeesWithShifts = new Set(currentEmployeeIds);
-            
-            const ps = getMonday(weekOffset - 1);
-            const pe = new Date(ps); pe.setDate(pe.getDate() + 7);
-            
-            const res = await api.get(`/shifts?storeId=${selectedStore}&startDate=${toLocalISO(ps)}&endDate=${toLocalISO(pe)}`);
-            
-            if (res.data.length === 0) { 
-                showToast("No se encontraron turnos previos para clonar", "warning"); 
-                return; 
-            }
-
-            const clonedShifts = [...shifts];
-            let copiedCount = 0;
-            let skippedEmployees = new Set();
-
-            // 2. Filtrar y clonar solo los que están completamente "vacíos" para esta semana
-            res.data.forEach(psh => {
-                const rawId = psh.employeeId || psh.EmployeeId || '';
-                const empId = String(rawId).toLowerCase().trim();
-                
-                if (!empId) return;
-
-                // REGLA ELITE V13.0: Si el empleado ya tiene CUALQUIER turno (IA o Manual), 
-                // se ignora toda la semana previa para él.
-                if (employeesWithShifts.has(empId)) {
-                    skippedEmployees.add(empId);
-                    return;
-                }
-
-                const s = { 
-                    ...psh, 
-                    employeeId: empId, 
-                    startTime: psh.startTime || psh.StartTime, 
-                    endTime: psh.endTime || psh.EndTime, 
-                    isDescanso: psh.isDescanso ?? psh.IsDescanso, 
-                    isFuera: psh.isFuera ?? psh.IsFuera 
-                };
-
-                const shiftDate = new Date(s.startTime); 
-                const dayIndex = (shiftDate.getDay() || 7) - 1;
-                const targetDate = new Date(currentWeekStart); 
-                targetDate.setDate(targetDate.getDate() + dayIndex);
-
-                // Validar novedades en el destino
-                const novedad = news.find(n => 
-                    String(n.empleadoId).toLowerCase().trim() === empId && 
-                    new Date(n.fechaInicio) <= targetDate && 
-                    new Date(n.fechaFin) >= targetDate
+    const copyFromPreviousWeek = async () =            // Operación Atómica para evitar solapamientos y desfases de estado
+            setShifts(prevShifts => {
+                // 1. Identificar con precisión extrema los empleados que ya tienen algo en la malla (IA o Manual)
+                const currentEmployeeIds = new Set(
+                    prevShifts.map(s => {
+                        const rawId = s.employeeId || s.EmployeeId || '';
+                        return String(rawId).toLowerCase().trim();
+                    }).filter(id => id !== '')
                 );
 
-                if (!novedad) {
-                    const ns = new Date(targetDate); 
-                    const os = new Date(s.startTime); 
-                    ns.setHours(os.getHours(), os.getMinutes(), 0);
-                    
-                    const ne = new Date(targetDate); 
-                    const oe = new Date(s.endTime); 
-                    ne.setHours(oe.getHours(), oe.getMinutes(), 0);
+                const clonedList = [...prevShifts];
+                let localCopiedCount = 0;
+                let localSkippedCount = 0;
+                const localSkippedEmployees = new Set();
 
-                    const newShift = { 
-                        employeeId: empId, 
-                        storeId: selectedStore,
-                        companyId: user.companyId,
-                        startTime: ns.toISOString(), 
-                        endTime: ne.toISOString(), 
-                        status: 0, 
-                        isDescanso: !!s.isDescanso, 
-                        isFuera: !!s.isFuera,
-                        observation: 'Clonado semana anterior'
-                    };
+                // 2. Procesar turnos de la semana pasada
+                res.data.forEach(psh => {
+                    const rawId = psh.employeeId || psh.EmployeeId || '';
+                    const empId = String(rawId).toLowerCase().trim();
+                    if (!empId) return;
 
-                    clonedShifts.push(newShift);
-                    copiedCount++;
-                }
+                    // REGLA DE ORO: Si ya tiene IA o Manual esta semana, se ignora todo lo viejo para él
+                    if (currentEmployeeIds.has(empId)) {
+                        if (!localSkippedEmployees.has(empId)) {
+                            localSkippedCount++;
+                            localSkippedEmployees.add(empId);
+                        }
+                        return;
+                    }
+
+                    // Calcular fecha destino exacta
+                    const sStartOrig = psh.startTime || psh.StartTime;
+                    const shiftDate = new Date(sStartOrig); 
+                    const dayIndex = (shiftDate.getDay() || 7) - 1;
+                    const targetDate = new Date(currentWeekStart); 
+                    targetDate.setDate(targetDate.getDate() + dayIndex);
+
+                    // Validar novedades
+                    const tieneNovedad = news.some(n => 
+                        String(n.empleadoId || '').toLowerCase().trim() === empId && 
+                        new Date(n.fechaInicio) <= targetDate && 
+                        new Date(n.fechaFin) >= targetDate
+                    );
+
+                    if (!tieneNovedad) {
+                        const ns = new Date(targetDate); 
+                        const os = new Date(sStartOrig); 
+                        ns.setHours(os.getHours(), os.getMinutes(), 0);
+                        
+                        const ne = new Date(targetDate); 
+                        const oe = new Date(psh.endTime || psh.EndTime); 
+                        ne.setHours(oe.getHours(), oe.getMinutes(), 0);
+
+                        clonedList.push({ 
+                            employeeId: empId, 
+                            storeId: selectedStore,
+                            companyId: user.companyId,
+                            startTime: ns.toISOString(), 
+                            endTime: ne.toISOString(), 
+                            status: 0, 
+                            isDescanso: !!(psh.isDescanso || psh.IsDescanso), 
+                            isFuera: !!(psh.isFuera || psh.IsFuera),
+                            observation: 'Clonado semana anterior'
+                        });
+                        localCopiedCount++;
+                    }
+                });
+
+                // Feedback visual post-procesado
+                setTimeout(() => {
+                    if (localCopiedCount > 0) {
+                        const msg = localSkippedCount > 0 
+                            ? `Se clonaron ${localCopiedCount} turnos. (${localSkippedCount} empleados con IA/Manual se respetaron)`
+                            : `Se clonaron ${localCopiedCount} turnos exitosamente.`;
+                        showToast(msg, "success");
+                    }
+                }, 100);
+
+                return clonedList;
             });
-
-            if (copiedCount > 0) {
-                setShifts(clonedShifts); 
-                const msg = skippedEmployees.size > 0 
-                    ? `Se clonaron ${copiedCount} turnos. (${skippedEmployees.size} empleados se omitieron por tener IA/Manual)`
-                    : `Se clonaron ${copiedCount} turnos exitosamente.`;
-                showToast(msg, "success");
-            } else {
-                showToast("No hubo turnos para copiar (todos tienen IA o novedades)", "info");
-            }
         } catch (err) { 
             console.error("Clone Error", err);
             showToast("Error al clonar semana", "error"); 
         } finally { 
-            setLoading(false); 
+            setLoading(false);
         }
     };
 
