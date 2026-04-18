@@ -390,13 +390,13 @@ const PredictiveRules = ({ user }) => {
                                     <label style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '12px' }}>Canales de Venta a Considerar *</label>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                         {channels.map(channel => {
-                                            const isSelected = formData.channelIds.includes(channel.id);
+                                            const isSelected = formData.channelIds.some(id => String(id) === String(channel.id));
                                             return (
                                                 <button
                                                     key={channel.id}
                                                     onClick={() => {
                                                         const newIds = isSelected 
-                                                            ? formData.channelIds.filter(id => id !== channel.id) 
+                                                            ? formData.channelIds.filter(id => String(id) !== String(channel.id)) 
                                                             : [...formData.channelIds, channel.id];
                                                         setFormData({...formData, channelIds: newIds});
                                                     }}
@@ -426,8 +426,30 @@ const PredictiveRules = ({ user }) => {
                                 </div>
                             </div>
 
-                            <div style={{ marginTop: 'auto', display: 'flex', gap: '20px' }}>
-                                <button onClick={() => setWizardStep(2)} disabled={!formData.name || !formData.storeTypeId || formData.channelIds.length === 0} style={{ flex: 1, padding: '24px', borderRadius: '24px', background: activeColors.accent, color: 'white', border: 'none', fontWeight: '950', fontSize: '13px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 30px rgba(79, 70, 229, 0.3)' }}>Continuar a configuración de cargos</button>
+                            <div style={{ marginTop: 'auto', display: 'flex', gap: '20px', paddingTop: '40px' }}>
+                                <button 
+                                    onClick={() => {
+                                        console.log("Navigating to step 2", formData);
+                                        setWizardStep(2);
+                                    }} 
+                                    disabled={!formData.name || formData.storeTypeId === '' || formData.storeTypeId === null || formData.channelIds.length === 0} 
+                                    style={{ 
+                                        flex: 1, 
+                                        padding: '24px', 
+                                        borderRadius: '24px', 
+                                        background: (!formData.name || formData.storeTypeId === '' || formData.storeTypeId === null || formData.channelIds.length === 0) ? activeColors.textMuted : activeColors.accent, 
+                                        color: 'white', 
+                                        border: 'none', 
+                                        fontWeight: '950', 
+                                        fontSize: '13px', 
+                                        textTransform: 'uppercase', 
+                                        cursor: 'pointer', 
+                                        boxShadow: '0 15px 30px rgba(79, 70, 229, 0.3)',
+                                        opacity: (!formData.name || formData.storeTypeId === '' || formData.storeTypeId === null || formData.channelIds.length === 0) ? 0.5 : 1
+                                    }}
+                                >
+                                    Continuar a configuración de cargos
+                                </button>
                             </div>
                         </div>
                     )}

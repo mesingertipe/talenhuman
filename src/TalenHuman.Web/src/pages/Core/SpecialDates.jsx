@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Calendar, Plus, Trash2, Search, Info, CheckCircle, AlertTriangle, 
-  MapPin, Globe, Filter, X, ChevronRight, Sparkles, Database
+  MapPin, Globe, Filter, X, ChevronRight, Sparkles, Database, RotateCcw
 } from 'lucide-react';
 import api from '../../services/api';
+import { useTheme } from '../../context/ThemeContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const SpecialDates = ({ user }) => {
   const [dates, setDates] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('ALL'); // ALL, SYSTEM, MANUAL
@@ -17,21 +20,52 @@ const SpecialDates = ({ user }) => {
     type: 1 // ManualEvent
   });
 
-  useEffect(() => {
-    fetchDates();
-  }, []);
+  const { isDarkMode } = useTheme();
 
-  const fetchDates = async () => {
+  // Active Colors for Premium Design
+  const activeColors = {
+    bg: isDarkMode ? '#0f172a' : '#f8fafc',
+    card: isDarkMode ? '#1e293b' : '#ffffff',
+    border: isDarkMode ? '#334155' : '#f1f5f9',
+    textMain: isDarkMode ? '#f8fafc' : '#1e293b',
+    textMuted: isDarkMode ? '#94a3b8' : '#64748b',
+    accent: '#4f46e5',
+    accentSoft: isDarkMode ? 'rgba(79, 70, 229, 0.1)' : '#eef2ff'
+  };
+
+  const fetchDates = async (triggerSync = false) => {
     try {
       setLoading(true);
       const res = await api.get('/predictiveholidays');
       setDates(res.data);
+      
+      // V21.0: Auto-Sync Logic - If no system holidays exist, trigger sync
+      if (res.data.filter(d => d.isSystem).length === 0 && triggerSync) {
+        handleAutoSync();
+      }
     } catch (err) {
       console.error('Error fetching special dates', err);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleAutoSync = async () => {
+    try {
+      setIsSyncing(true);
+      await api.post('/predictiveholidays/sync-defaults');
+      const res = await api.get('/predictiveholidays');
+      setDates(res.data);
+    } catch (err) {
+      console.error('Error in auto-sync', err);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDates(true);
+  }, []);
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -64,232 +98,232 @@ const SpecialDates = ({ user }) => {
   });
 
   return (
-    <div className="p-6 max-w-7xl mx-auto animate-in fade-in duration-500">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div>
-          <h2 className="text-3xl font-[1000] tracking-tighter text-slate-900 dark:text-white flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-500 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
-              <Calendar className="text-white" size={24} />
-            </div>
-            Días Especiales y Festivos
-          </h2>
-          <p className="text-sm font-bold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-widest pl-1">
-            Gestión de estacionalidad para predicción inteligente
-          </p>
-        </div>
+    <div style={{ background: activeColors.bg, minHeight: '100vh', transition: 'all 0.4s ease' }}>
+      <div style={{ padding: '60px', maxWidth: '1400px', margin: '0 auto' }}>
         
-        <button 
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm transition-all active:scale-95 shadow-xl shadow-indigo-600/20"
-        >
-          <Plus size={18} strokeWidth={3} />
-          REGISTRAR EVENTO
-        </button>
-      </div>
-
-      {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-[32px] border border-slate-100 dark:border-slate-700 shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500">
-              <Globe size={24} />
-            </div>
-            <div>
-              <div className="text-2xl font-black text-slate-900 dark:text-white">
-                {dates.filter(d => d.isSystem).length}
+        {/* Header Section (Elite Style) */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'between', marginBottom: '60px', gap: '40px' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '15px' }}>
+              <div style={{ width: '56px', height: '56px', background: 'linear-gradient(135deg, #4f46e5 0%, #312e81 100%)', borderRadius: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 15px 30px rgba(79, 70, 229, 0.3)' }}>
+                <Calendar className="text-white" size={28} />
               </div>
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Festivos de Ley</div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-[32px] border border-slate-100 dark:border-slate-700 shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-500">
-              <Sparkles size={24} />
-            </div>
-            <div>
-              <div className="text-2xl font-black text-slate-900 dark:text-white">
-                {dates.filter(d => !d.isSystem).length}
+              <div>
+                <h2 style={{ fontSize: '2.5rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.04em' }}>
+                  Estacionalidad
+                </h2>
+                <p style={{ fontSize: '10px', fontWeight: '800', color: activeColors.textMuted, textTransform: 'uppercase', margin: '4px 0 0', letterSpacing: '0.2em' }}>
+                  Gestión Inteligente de Festivos & Eventos
+                </p>
               </div>
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Eventos de Negocio</div>
             </div>
           </div>
+          
+          <button 
+            onClick={() => setShowAddModal(true)}
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: '15px', padding: '20px 35px', 
+              background: activeColors.accent, color: 'white', borderRadius: '24px', 
+              border: 'none', fontWeight: '950', fontSize: '13px', textTransform: 'uppercase', 
+              cursor: 'pointer', boxShadow: '0 15px 35px rgba(79, 70, 229, 0.4)',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseOver={e => e.currentTarget.style.transform = 'translateY(-3px)'}
+            onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+          >
+            <Plus size={20} strokeWidth={3} />
+            Registrar Evento
+          </button>
         </div>
-        <div className="bg-indigo-600 p-6 rounded-[32px] shadow-xl shadow-indigo-600/20 text-white">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-              <Database size={24} />
-            </div>
-            <div>
-              <div className="text-2xl font-black">Activo</div>
-              <div className="text-[10px] font-black opacity-80 uppercase tracking-widest">Motor de Estacionalidad</div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Filters & Search */}
-      <div className="bg-white dark:bg-slate-800 p-4 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative flex-1 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={20} />
-          <input 
-            type="text"
-            placeholder="Buscar por nombre de evento..."
-            className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="flex bg-slate-50 dark:bg-slate-900 p-1 rounded-2xl">
-          <button 
-            onClick={() => setFilterType('ALL')}
-            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filterType === 'ALL' ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
-          >Todos</button>
-          <button 
-            onClick={() => setFilterType('SYSTEM')}
-            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filterType === 'SYSTEM' ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
-          >Festivos</button>
-          <button 
-            onClick={() => setFilterType('MANUAL')}
-            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filterType === 'MANUAL' ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}
-          >Personalizados</button>
-        </div>
-      </div>
+        {/* Syncing Overlay / Loader */}
+        <AnimatePresence>
+          {isSyncing && (
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.85)', backdropFilter: 'blur(20px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ width: '120px', height: '120px', position: 'relative', margin: '0 auto 30px' }}>
+                    <motion.div 
+                        animate={{ rotate: 360 }} transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+                        style={{ position: 'absolute', inset: 0, border: '4px solid rgba(79, 70, 229, 0.1)', borderRadius: '40px' }}
+                    />
+                    <motion.div 
+                        animate={{ rotate: -360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                        style={{ position: 'absolute', inset: '15px', border: '4px solid transparent', borderTopColor: '#4f46e5', borderRadius: '30px' }}
+                    />
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4f46e5' }}>
+                        <Sparkles size={40} />
+                    </div>
+                </div>
+                <h3 style={{ color: 'white', fontSize: '1.4rem', fontWeight: '950', letterSpacing: '-0.02em' }}>Sincronizando Festivos de Ley</h3>
+                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.15em', marginTop: '10px' }}>Preparando motor predictivo para {new Date().getFullYear() + ' - ' + (new Date().getFullYear()+1)}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* Grid List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {loading ? (
-          [...Array(6)].map((_, i) => (
-            <div key={i} className="h-40 bg-slate-100 dark:bg-slate-800 rounded-3xl animate-pulse" />
-          ))
-        ) : filteredDates.length === 0 ? (
-          <div className="col-span-full py-20 text-center">
-            <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-[40px] flex items-center justify-center mx-auto mb-4 text-slate-300">
-              <Filter size={40} />
+        {/* Stats Summary (Premium) */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px', marginBottom: '50px' }}>
+          <div style={{ background: activeColors.card, padding: '35px', borderRadius: '40px', border: `1px solid ${activeColors.border}`, boxShadow: '0 20px 40px rgba(0,0,0,0.02)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
+              <div style={{ width: '64px', height: '64px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Globe size={32} />
+              </div>
+              <div>
+                <h4 style={{ fontSize: '2.5rem', fontWeight: '950', color: activeColors.textMain, margin: 0 }}>{dates.filter(d => d.isSystem).length}</h4>
+                <p style={{ fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', margin: 0, letterSpacing: '0.1em' }}>Festivos de Ley</p>
+              </div>
             </div>
-            <h3 className="text-xl font-black text-slate-900 dark:text-white">Sin resultados</h3>
-            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">No hay fechas que coincidan con los filtros</p>
           </div>
-        ) : (
-          filteredDates.map((d) => (
-            <div key={d.id} className={`group bg-white dark:bg-slate-800 rounded-[32px] border transition-all hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 ${d.isSystem ? 'border-indigo-100 dark:border-indigo-500/20' : 'border-slate-100 dark:border-slate-700'}`}>
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${d.isSystem ? 'bg-indigo-500 text-white' : 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400'}`}>
-                    {d.isSystem ? 'Festivo de Ley' : 'Evento Manual'}
-                  </div>
-                  {!d.isSystem && (
+          <div style={{ background: activeColors.card, padding: '35px', borderRadius: '40px', border: `1px solid ${activeColors.border}`, boxShadow: '0 20px 40px rgba(0,0,0,0.02)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
+              <div style={{ width: '64px', height: '64px', background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Sparkles size={32} />
+              </div>
+              <div>
+                <h4 style={{ fontSize: '2.5rem', fontWeight: '950', color: activeColors.textMain, margin: 0 }}>{dates.filter(d => !d.isSystem).length}</h4>
+                <p style={{ fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', margin: 0, letterSpacing: '0.1em' }}>Eventos Manuales</p>
+              </div>
+            </div>
+          </div>
+          <div style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #312e81 100%)', padding: '35px', borderRadius: '40px', color: 'white', boxShadow: '0 30px 60px rgba(79, 70, 229, 0.3)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
+              <div style={{ width: '64px', height: '64px', background: 'rgba(255, 255, 255, 0.15)', color: 'white', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Database size={32} />
+              </div>
+              <div>
+                <h4 style={{ fontSize: '1.2rem', fontWeight: '950', margin: 0, letterSpacing: '-0.02em' }}>Motor Activo</h4>
+                <p style={{ fontSize: '9px', fontWeight: '800', opacity: 0.6, textTransform: 'uppercase', margin: '4px 0 0', letterSpacing: '0.15em' }}>Temporada Detectada</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters Area */}
+        <div style={{ background: activeColors.card, padding: '25px', borderRadius: '35px', border: `1px solid ${activeColors.border}`, marginBottom: '40px', display: 'flex', gap: '20px', alignItems: 'center' }}>
+            <div style={{ flex: 1, position: 'relative' }}>
+                <Search size={22} style={{ position: 'absolute', left: '25px', top: '50%', transform: 'translateY(-50%)', color: activeColors.textMuted }} />
+                <input 
+                    type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+                    placeholder="Filtrar por nombre de evento..."
+                    style={{ width: '100%', padding: '18px 25px 18px 65px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.bg, color: activeColors.textMain, fontWeight: '700', fontSize: '0.95rem', outline: 'none' }}
+                />
+            </div>
+            <div style={{ display: 'flex', background: activeColors.bg, padding: '6px', borderRadius: '22px' }}>
+                {['ALL', 'SYSTEM', 'MANUAL'].map(t => (
                     <button 
-                      onClick={() => handleDelete(d.id)}
-                      className="p-2 text-slate-300 hover:text-red-500 transition-colors bg-slate-50 dark:bg-slate-900 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10"
+                        key={t} onClick={() => setFilterType(t)}
+                        style={{ padding: '12px 25px', borderRadius: '18px', border: 'none', background: filterType === t ? activeColors.card : 'transparent', color: filterType === t ? activeColors.accent : activeColors.textMuted, fontWeight: '950', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.3s', boxShadow: filterType === t ? '0 5px 15px rgba(0,0,0,0.05)' : 'none' }}
                     >
-                      <Trash2 size={16} />
+                        {t === 'ALL' ? 'Todos' : t === 'SYSTEM' ? 'Festivos' : 'Manuales'}
                     </button>
-                  )}
+                ))}
+            </div>
+        </div>
+
+        {/* Malla de Eventos (Grid) */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '30px' }}>
+          {loading ? (
+            [...Array(6)].map((_, i) => (
+              <div key={i} style={{ height: '220px', background: activeColors.card, borderRadius: '40px', border: `1px solid ${activeColors.border}`, animation: 'pulse 2s infinite ease-in-out' }} />
+            ))
+          ) : filteredDates.length === 0 ? (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '120px 0' }}>
+              <div style={{ width: '110px', height: '110px', background: activeColors.accentSoft, color: activeColors.accent, borderRadius: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 30px' }}>
+                <Calendar size={50} />
+              </div>
+              <h3 style={{ fontSize: '1.8rem', fontWeight: '950', color: activeColors.textMain, margin: '0 0 10px', letterSpacing: '-0.02em' }}>Sin resultados</h3>
+              <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '700' }}>No se encontraron eventos con los filtros aplicados</p>
+            </div>
+          ) : (
+            filteredDates.map((d) => (
+              <motion.div 
+                key={d.id} layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                style={{ background: activeColors.card, borderRadius: '45px', padding: '40px', border: `1px solid ${d.isSystem ? 'rgba(79, 70, 229, 0.2)' : activeColors.border}`, position: 'relative', overflow: 'hidden', boxShadow: '0 15px 35px rgba(0,0,0,0.02)' }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '25px' }}>
+                    <div style={{ px: '14px', py: '6px', background: d.isSystem ? activeColors.accent : 'rgba(168, 85, 247, 0.1)', color: d.isSystem ? 'white' : '#a855f7', borderRadius: '12px', fontSize: '9px', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                        {d.isSystem ? 'Festivo Oficial' : 'Evento de Negocio'}
+                    </div>
+                    {!d.isSystem && (
+                        <button onClick={() => handleDelete(d.id)} style={{ padding: '10px', borderRadius: '14px', border: 'none', background: 'rgba(239, 68, 68, 0.05)', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18} /></button>
+                    )}
                 </div>
                 
-                <h4 className="text-lg font-black text-slate-900 dark:text-white leading-tight mb-2 group-hover:text-indigo-600 transition-colors">
-                  {d.name}
-                </h4>
+                <h5 style={{ fontSize: '1.4rem', fontWeight: '950', color: activeColors.textMain, margin: '0 0 15px', lineHeight: '1.2' }}>{d.name}</h5>
                 
-                <div className="flex items-center gap-3 text-slate-400 dark:text-slate-500">
-                  <Calendar size={14} className="text-indigo-500" />
-                  <span className="text-xs font-black uppercase tracking-widest">
-                    {new Date(d.date).toLocaleDateString('es-ES', { 
-                      day: 'numeric', 
-                      month: 'long', 
-                      year: 'numeric' 
-                    })}
-                  </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: activeColors.textMuted }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: activeColors.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.accent }}><Calendar size={16} /></div>
+                    <span style={{ fontSize: '13px', fontWeight: '800', textTransform: 'capitalize' }}>
+                        {new Date(d.date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                    </span>
                 </div>
-              </div>
-              
-              <div className={`px-6 py-4 bg-slate-50 dark:bg-slate-900/50 rounded-b-[32px] border-t flex items-center justify-between ${d.isSystem ? 'border-indigo-50 dark:border-indigo-500/10' : 'border-slate-100 dark:border-slate-700'}`}>
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${d.isSystem ? 'bg-indigo-500 animate-pulse' : 'bg-purple-500'}`} />
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                    {d.isSystem ? 'Sincronizado' : 'Personalizado'}
-                  </span>
+
+                {d.isSystem && (
+                    <div style={{ position: 'absolute', right: '-20px', bottom: '-20px', opacity: 0.05, transform: 'rotate(-15deg)' }}>
+                        <Globe size={120} />
+                    </div>
+                )}
+              </motion.div>
+            ))
+          )}
+        </div>
+
+        {/* Modal de Registro (Premium) */}
+        <AnimatePresence>
+            {showAddModal && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.85)', backdropFilter: 'blur(35px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }}
+                        style={{ background: activeColors.card, width: '100%', maxWidth: '500px', borderRadius: '52px', overflow: 'hidden', border: isDarkMode ? `1px solid ${activeColors.border}` : 'none', boxShadow: '0 60px 120px rgba(0,0,0,0.5)' }}
+                    >
+                        <div style={{ padding: '50px 50px 40px', textAlign: 'center' }}>
+                            <div style={{ width: '80px', height: '80px', background: activeColors.accentSoft, color: activeColors.accent, borderRadius: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 30px' }}>
+                                <Sparkles size={40} />
+                            </div>
+                            <h2 style={{ fontSize: '2.2rem', fontWeight: '950', color: activeColors.textMain, margin: '0 0 10px', letterSpacing: '-0.04em' }}>Nuevo Evento</h2>
+                            <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '700' }}>Añade una fecha especial para la IA</p>
+                        </div>
+
+                        <div style={{ padding: '0 50px 50px' }}>
+                            <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '9px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.1em' }}>Nombre del Evento *</label>
+                                    <input 
+                                        required autoFocus value={newDate.name} onChange={e => setNewDate({...newDate, name: e.target.value})}
+                                        placeholder="Ej. Black Friday, Concierto local..."
+                                        style={{ width: '100%', padding: '20px 25px', borderRadius: '22px', border: `2px solid ${activeColors.border}`, background: activeColors.bg, color: activeColors.textMain, fontWeight: '700', fontSize: '1rem', outline: 'none' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '9px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.1em' }}>Fecha del Evento *</label>
+                                    <input 
+                                        required type="date" value={newDate.date} onChange={e => setNewDate({...newDate, date: e.target.value})}
+                                        style={{ width: '100%', padding: '20px 25px', borderRadius: '22px', border: `2px solid ${activeColors.border}`, background: activeColors.bg, color: activeColors.textMain, fontWeight: '700', fontSize: '1rem', outline: 'none' }}
+                                    />
+                                </div>
+
+                                <div style={{ background: 'rgba(245, 158, 11, 0.08)', padding: '22px', borderRadius: '24px', border: '1px solid rgba(245, 158, 11, 0.2)', display: 'flex', gap: '15px' }}>
+                                    <AlertTriangle size={24} style={{ color: '#f59e0b', shrink: 0 }} />
+                                    <p style={{ fontSize: '11px', fontWeight: '700', color: '#f59e0b', margin: 0, lineHeight: '1.4' }}>
+                                        Este evento afectará los promedios de venta y proyecciones de toda la compañía.
+                                    </p>
+                                </div>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+                                    <button type="submit" style={{ width: '100%', padding: '22px', borderRadius: '22px', border: 'none', background: activeColors.accent, color: 'white', fontWeight: '950', fontSize: '12px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 30px rgba(79, 70, 229, 0.3)' }}>Guardar Evento</button>
+                                    <button onClick={() => setShowAddModal(false)} type="button" style={{ width: '100%', padding: '15px', borderRadius: '15px', border: 'none', background: 'transparent', color: activeColors.textMuted, fontWeight: '800', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer' }}>Cerrar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </motion.div>
                 </div>
-                <ChevronRight size={14} className="text-slate-300" />
-              </div>
-            </div>
-          ))
-        )}
+            )}
+        </AnimatePresence>
+
       </div>
-
-      {/* Info Banner */}
-      <div className="mt-12 bg-indigo-500/5 rounded-[40px] p-8 border border-indigo-500/10 flex flex-col md:flex-row items-center gap-6">
-        <div className="w-16 h-16 bg-white dark:bg-slate-900 rounded-[24px] flex items-center justify-center text-indigo-500 shadow-lg">
-          <Info size={32} />
-        </div>
-        <div>
-          <h5 className="text-lg font-black text-indigo-600 dark:text-indigo-400">¿Cómo afecta esto a la IA?</h5>
-          <p className="text-sm font-bold text-slate-600 dark:text-slate-400 leading-relaxed max-w-3xl">
-            El motor predictivo utiliza estas fechas para evitar comparaciones erróneas. Al marcar un día como festivo o especial, la IA buscará datos de otros festivos similares en lugar de usar promedios de días normales, garantizando que tus necesidades de personal sean precisas incluso en picos de demanda.
-          </p>
-        </div>
-      </div>
-
-      {/* Add Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowAddModal(false)} />
-          <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-[40px] shadow-2xl relative z-[1001] animate-in zoom-in-95 duration-200 overflow-hidden">
-            <div className="p-8">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-[1000] tracking-tighter text-slate-900 dark:text-white">Registrar Evento</h3>
-                <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-all">
-                  <X size={24} />
-                </button>
-              </div>
-
-              <form onSubmit={handleAdd} className="space-y-6">
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 pl-1">Nombre del Evento</label>
-                  <input 
-                    required
-                    type="text"
-                    placeholder="Ej. Black Friday, Concierto Local, Apertura..."
-                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-900 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-indigo-500/10 focus:bg-white dark:focus:bg-slate-800 transition-all border border-transparent focus:border-indigo-500"
-                    value={newDate.name}
-                    onChange={(e) => setNewDate({...newDate, name: e.target.value})}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 pl-1">Fecha del Evento</label>
-                  <input 
-                    required
-                    type="date"
-                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-900 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-indigo-500/10 focus:bg-white dark:focus:bg-slate-800 transition-all border border-transparent focus:border-indigo-500"
-                    value={newDate.date}
-                    onChange={(e) => setNewDate({...newDate, date: e.target.value})}
-                  />
-                </div>
-
-                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-3">
-                  <AlertTriangle className="text-amber-500 shrink-0" size={18} />
-                  <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 leading-tight">
-                    Este evento será visible para toda la compañía y afectará los promedios predictivos de toda la operación.
-                  </p>
-                </div>
-
-                <div className="pt-2">
-                  <button 
-                    type="submit"
-                    className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm transition-all active:scale-95 shadow-xl shadow-indigo-600/20 flex items-center justify-center gap-2"
-                  >
-                    <CheckCircle size={20} />
-                    GUARDAR EVENTO
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

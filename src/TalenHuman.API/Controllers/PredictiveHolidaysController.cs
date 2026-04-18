@@ -12,11 +12,16 @@ public class PredictiveHolidaysController : ControllerBase
 {
     private readonly IApplicationDbContext _context;
     private readonly ITenantProvider _tenantProvider;
+    private readonly IPredictiveHolidaysService _holidaysService;
 
-    public PredictiveHolidaysController(IApplicationDbContext context, ITenantProvider tenantProvider)
+    public PredictiveHolidaysController(
+        IApplicationDbContext context, 
+        ITenantProvider tenantProvider,
+        IPredictiveHolidaysService holidaysService)
     {
         _context = context;
         _tenantProvider = tenantProvider;
+        _holidaysService = holidaysService;
     }
 
     [HttpGet]
@@ -38,6 +43,43 @@ public class PredictiveHolidaysController : ControllerBase
                 IsSystem = d.IsSystem
             })
             .ToListAsync();
+    }
+
+    [HttpPost("sync-defaults")]
+    public async Task<ActionResult> SyncDefaults()
+    {
+        var companyId = _tenantProvider.GetTenantId();
+        var company = await _context.Companies.FindAsync(companyId);
+        var countryCode = company?.CountryCode ?? "CO";
+
+        var currentYear = DateTime.Now.Year;
+        var nextYear = currentYear + 1;
+
+        var holidays = new List<PredictiveSpecialDate>();
+        holidays.AddRange(_holidaysService.GenerateHolidays(currentYear, countryCode));
+        holidays.AddRange(_holidaysService.GenerateHolidays(nextYear, countryCode));
+
+        int createdCount = 0;
+        foreach (var h in holidays)
+        {
+            // Check if already exists for this tenant/country
+            var exists = await _context.PredictiveSpecialDates
+                .AnyAsync(d => d.Country == countryCode && d.Date == h.Date && d.IsSystem);
+            
+            if (!exists)
+            {
+                h.CompanyId = companyId; // Assign to this tenant
+                _context.PredictiveSpecialDates.Add(h);
+                createdCount++;
+            }
+        }
+
+        if (createdCount > 0)
+        {
+            await _context.SaveChangesAsync(CancellationToken.None);
+        }
+
+        return Ok(new { message = $"Sincronización completada. {createdCount} festivos nuevos agregados.", count = createdCount });
     }
 
     [HttpPost]
