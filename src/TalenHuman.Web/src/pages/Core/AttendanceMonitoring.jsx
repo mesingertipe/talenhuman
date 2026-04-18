@@ -24,6 +24,8 @@ const AttendanceMonitoring = ({ user: sessionUser }) => {
     });
     const [cleaning, setCleaning] = useState(false);
     const [syncLogs, setSyncLogs] = useState([]);
+    const [originalSettings, setOriginalSettings] = useState('');
+    const [isDirty, setIsDirty] = useState(false);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
     // Premium Color System (V12 Elite)
@@ -66,42 +68,51 @@ const AttendanceMonitoring = ({ user: sessionUser }) => {
             setLoading(true);
             const res = await api.get('/systemsettings');
             
-            const normalizedData = res.data.map(s => {
-                // Defensive mapping for any casing (PascalCase or camelCase)
-                const item = {
-                    key: s.key || s.Key || '',
-                    value: s.value || s.Value || '',
-                    group: (s.group || s.Group || '').toLowerCase(), // Normalize group to lowercase
-                    description: s.description || s.Description || ''
-                };
-                return item;
-            });
+            // Normalize ALL to lowercase for internal stability
+            const normalizedData = (res.data || []).map(s => ({
+                key: (s.key || s.Key || '').toLowerCase(),
+                value: s.value || s.Value || '',
+                group: (s.group || s.Group || '').toLowerCase(),
+                description: s.description || s.Description || ''
+            }));
 
-            // Filter by group (now case-insensitive)
-            const attendanceSettings = normalizedData
-                .filter(s => s.group === 'attendance' || s.key === 'AttendanceConsolidationTime' || s.key === 'BiometricRetentionDays');
+            // We only care about these specifically in this view
+            const targetKeys = ['attendanceconsolidationtime', 'biometricretentiondays'];
+
+            const attendanceSettings = normalizedData.filter(s => 
+                targetKeys.includes(s.key) || s.group === 'attendance'
+            );
             
-            // Ensure defaults exist in state for UI
+            // Build the final state with defaults if missing
             const defaults = [
-                { key: 'AttendanceConsolidationTime', value: '06:00', group: 'attendance' },
-                { key: 'BiometricRetentionDays', value: '7', group: 'attendance' }
+                { key: 'attendanceconsolidationtime', value: '06:00', group: 'attendance' },
+                { key: 'biometricretentiondays', value: '7', group: 'attendance' }
             ];
             
-            const finalSettings = [...attendanceSettings];
+            const processedSettings = [...attendanceSettings];
             defaults.forEach(def => {
                 if (!attendanceSettings.some(s => s.key === def.key)) {
-                    finalSettings.push(def);
+                    processedSettings.push(def);
                 }
             });
 
-            setSettings(finalSettings);
+            setSettings(processedSettings);
+            setOriginalSettings(JSON.stringify(processedSettings)); // Snapshot for dirty check
         } catch (err) {
             console.error("Error fetching settings:", err);
             showToast("Error al cargar configuración", "error");
         } finally {
             setLoading(false);
+            setIsDirty(false);
         }
     };
+
+    useEffect(() => {
+        if (originalSettings && settings.length > 0) {
+            const currentStr = JSON.stringify(settings);
+            setIsDirty(currentStr !== originalSettings);
+        }
+    }, [settings, originalSettings]);
 
     const fetchSyncHistory = async () => {
         try {
@@ -116,8 +127,18 @@ const AttendanceMonitoring = ({ user: sessionUser }) => {
     const handleSave = async () => {
         try {
             setSaving(true);
-            await api.post('/systemsettings/batch', settings);
+            // Map keys back to PascalCase for the C# API
+            const payload = settings.map(s => ({
+                key: s.key === 'attendanceconsolidationtime' ? 'AttendanceConsolidationTime' : 
+                     s.key === 'biometricretentiondays' ? 'BiometricRetentionDays' : s.key,
+                value: s.value,
+                group: 'Attendance'
+            }));
+
+            await api.post('/systemsettings/batch', payload);
             showToast("Configuración guardada correctamente");
+            setOriginalSettings(JSON.stringify(settings));
+            setIsDirty(false);
         } catch (err) {
             showToast("Error al guardar configuración", "error");
         } finally {
@@ -179,11 +200,13 @@ const AttendanceMonitoring = ({ user: sessionUser }) => {
     };
 
     const updateSetting = (key, value) => {
-        setSettings(prev => prev.map(s => s.key === key ? { ...s, value } : s));
+        const lowerKey = key.toLowerCase();
+        setSettings(prev => prev.map(s => s.key === lowerKey ? { ...s, value } : s));
     };
 
     const getSettingValue = (key, defaultValue = '') => {
-        const s = settings.find(s => s.key === key);
+        const lowerKey = key.toLowerCase();
+        const s = settings.find(s => s.key === lowerKey);
         return s ? s.value : defaultValue;
     };
 
@@ -286,21 +309,23 @@ const AttendanceMonitoring = ({ user: sessionUser }) => {
                             <button 
                                 onClick={() => setShowCleanupModal(true)}
                                 disabled={cleaning}
-                                style={{ width: '100%', padding: '14px', borderRadius: '16px', fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', border: `1px solid ${activeColors.danger}`, background: 'transparent', color: activeColors.danger, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
+                                style={{ width: '100%', padding: '14px', borderRadius: '16px', fontWeight: '800', fontSize: '0.75rem', textTransform: 'uppercase', border: `1px solid ${activeColors.border}`, background: 'transparent', color: activeColors.danger, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
                                 className="hover:bg-rose-50 dark:hover:bg-rose-950/20 active:scale-95 disabled:opacity-50"
                             >
                                 <Trash2 size={18} className={cleaning ? 'animate-pulse' : ''} /> {cleaning ? 'Limpiando...' : 'Limpiar Registros Antiguos'}
                             </button>
                         </div>
 
-                        <button 
-                            onClick={handleSave}
-                            disabled={saving}
-                            style={{ padding: '16px', borderRadius: '18px', fontWeight: '800', fontSize: '0.8rem', textTransform: 'uppercase', border: 'none', background: activeColors.accent, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 10px 20px rgba(79, 70, 229, 0.3)' }}
-                            className="hover:scale-[1.02] active:scale-95 disabled:opacity-50"
-                        >
-                            <Save size={20} /> {saving ? 'Guardando...' : 'Guardar Cambios'}
-                        </button>
+                        {isDirty && (
+                            <button 
+                                onClick={handleSave}
+                                disabled={saving}
+                                style={{ padding: '16px', borderRadius: '18px', fontWeight: '800', fontSize: '0.8rem', textTransform: 'uppercase', border: 'none', background: activeColors.accent, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 10px 20px rgba(79, 70, 229, 0.3)' }}
+                                className="hover:scale-[1.02] active:scale-95 disabled:opacity-50 transform transition-all animate-in slide-in-from-bottom-5"
+                            >
+                                <Save size={20} /> {saving ? 'Guardando...' : 'Guardar Cambios'}
+                            </button>
+                        )}
                     </div>
                 </div>
 
