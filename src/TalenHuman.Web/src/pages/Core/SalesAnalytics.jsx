@@ -152,6 +152,66 @@ const SalesAnalytics = ({ user }) => {
     ticketPromedio: { label: 'Ticket Promedio', icon: BarChart3, color: '#f59e0b', format: formatCurrency }
   };
 
+  const exportToExcel = () => {
+    try {
+      const wb = XLSX.utils.book_new();
+      
+      // 1. Summary Sheet
+      const summaryStats = [
+        ["Métrica", "Valor"],
+        ["Venta Neta", globalTotals.ventaNeta],
+        ["Tickets", globalTotals.cantidadTickets],
+        ["Comensales", globalTotals.comensales],
+        ["Ticket Promedio", globalTotals.ticketPromedio]
+      ];
+      const wsSummary = XLSX.utils.aoa_to_sheet(summaryStats);
+      XLSX.utils.book_append_sheet(wb, wsSummary, "Resumen General");
+
+      // 2. Weekly Trend Sheet
+      if (weeklyTrendData.length > 0) {
+        const wsWeekly = XLSX.utils.json_to_sheet(weeklyTrendData.map(d => ({
+          Fecha: d.date,
+          "Venta Neta": d.ventaNeta,
+          Tickets: d.cantidadTickets,
+          Comensales: d.comensales,
+          "Ticket Promedio": d.ticketPromedio
+        })));
+        XLSX.utils.book_append_sheet(wb, wsWeekly, "Tendencia Diaria");
+      }
+
+      // 3. Channels Sheet
+      if (channelData.length > 0) {
+        const wsChannels = XLSX.utils.json_to_sheet(channelData.map(d => ({
+          Canal: d.name,
+          "Venta Neta": d.ventaNeta,
+          Tickets: d.cantidadTickets,
+          Comensales: d.comensales
+        })));
+        XLSX.utils.book_append_sheet(wb, wsChannels, "Mix de Canales");
+      }
+
+      // 4. Time Bands Sheet
+      if (summaryData.length > 0) {
+        const wsBands = XLSX.utils.json_to_sheet(summaryData.map(d => ({
+          Franja: d.name,
+          "Venta Neta": d.ventaNeta,
+          Tickets: d.cantidadTickets,
+          Comensales: d.comensales
+        })));
+        XLSX.utils.book_append_sheet(wb, wsBands, "Franjas Horarias");
+      }
+
+      XLSX.writeFile(wb, `Reporte_BI_${filters.startDate}_al_${filters.endDate}.xlsx`);
+    } catch (err) {
+      console.error("Error exporting to Excel:", err);
+      if (typeof showToast === 'function') {
+        showToast("Error al exportar a Excel", "error");
+      } else {
+        alert("Error al exportar a Excel");
+      }
+    }
+  };
+
   return (
     <div style={{ background: activeColors.bg, padding: '2rem 1.5rem', maxWidth: '1600px', margin: '0 auto', minHeight: '100vh', display: 'flex', flexDirection: 'column', gap: '30px' }}>
       
