@@ -78,7 +78,7 @@ const AttendanceMonitoring = ({ user: sessionUser }) => {
             
             const finalSettings = [...attendanceSettings];
             defaults.forEach(def => {
-                if (!finalSettings.some(s => s.key === def.key)) {
+                if (!attendanceSettings.some(s => s.key === def.key)) {
                     finalSettings.push(def);
                 }
             });
