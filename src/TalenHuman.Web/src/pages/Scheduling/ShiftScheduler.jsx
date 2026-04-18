@@ -1170,16 +1170,21 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             
             const endDate = new Date(currentWeekStart); 
             endDate.setDate(endDate.getDate() + 7);
+            const isGuid = (str) => {
+                if (!str || typeof str !== 'string') return false;
+                return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+            };
+
             const localizedShifts = shifts
                 .filter(s => {
                     const empId = s.employeeId || s.EmployeeId;
-                    // V20.8: Filtrar turnos basura que no tengan empleado o tengan IDs corruptos
-                    return empId && empId !== "undefined" && s.startTime && s.endTime;
+                    return empId && isGuid(empId) && s.startTime && s.endTime;
                 })
                 .map(s => {
-                    // V20.6: STRICT MAPPING - Send ONLY what ShiftDto expects to avoid 400 'Dirty Payload' errors
+                    const sid = s.id || s.Id;
+                    const finalId = isGuid(sid) ? sid : null;
+                    
                     const shiftData = {
-                        id: s.id || s.Id,
                         employeeId: s.employeeId || s.EmployeeId,
                         startTime: toFullLocalISO(s.startTime || s.StartTime),
                         endTime: toFullLocalISO(s.endTime || s.EndTime),
@@ -1189,10 +1194,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         observation: s.observation || s.Observation
                     };
 
-                    // Cleanup ID if empty or invalid for Guid mapping
-                    if (!shiftData.id || shiftData.id === "" || shiftData.id === "undefined") {
-                        delete shiftData.id;
-                    }
+                    if (finalId) shiftData.id = finalId;
+                    
                     return shiftData;
                 });
 
