@@ -429,14 +429,14 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             setJornadas(jornadaRes.data);
             setEmployees(empRes.data.filter(e => e.storeId === targetStore || e.storeId === selectedStore).map(e => ({
                 ...e,
-                id: e.id || e.Id,
+                id: (e.id || e.Id || '').toString().toLowerCase(),
                 documento: e.identificationNumber || e.IdentificationNumber
             })));
 
             const normalizedShifts = shiftRes.data.map(s => ({
                 ...s,
-                id: s.id || s.Id,
-                employeeId: s.employeeId || s.EmployeeId,
+                id: (s.id || s.Id || '').toString().toLowerCase(),
+                employeeId: (s.employeeId || s.EmployeeId || '').toString().toLowerCase(),
                 startTime: s.startTime || s.StartTime,
                 endTime: s.endTime || s.EndTime,
                 isDescanso: s.isDescanso !== undefined ? s.isDescanso : s.IsDescanso,
