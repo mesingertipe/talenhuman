@@ -1345,7 +1345,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             setLoading(true);
             
             // 1. Identificar empleados que YA TIENEN turnos en esta semana (IA o Manual)
-            const employeesWithShifts = new Set(shifts.map(s => String(s.employeeId || s.EmployeeId).toLowerCase()));
+            // Usamos un Set con IDs normalizados para búsqueda instantánea
+            const currentEmployeeIds = shifts.map(s => {
+                const id = s.employeeId || s.EmployeeId || '';
+                return String(id).toLowerCase().trim();
+            }).filter(id => id !== '');
+            
+            const employeesWithShifts = new Set(currentEmployeeIds);
             
             const ps = getMonday(weekOffset - 1);
             const pe = new Date(ps); pe.setDate(pe.getDate() + 7);
@@ -1359,21 +1365,25 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
             const clonedShifts = [...shifts];
             let copiedCount = 0;
-            let skippedCount = 0;
+            let skippedEmployees = new Set();
 
-            // 2. Filtrar y clonar solo los que están "vacíos"
+            // 2. Filtrar y clonar solo los que están completamente "vacíos" para esta semana
             res.data.forEach(psh => {
-                const empId = String(psh.employeeId || psh.EmployeeId).toLowerCase();
+                const rawId = psh.employeeId || psh.EmployeeId || '';
+                const empId = String(rawId).toLowerCase().trim();
                 
-                // Si el empleado ya tiene al menos un turno esta semana, LO OMITIMOS COMPLETAMENTE
+                if (!empId) return;
+
+                // REGLA ELITE V13.0: Si el empleado ya tiene CUALQUIER turno (IA o Manual), 
+                // se ignora toda la semana previa para él.
                 if (employeesWithShifts.has(empId)) {
-                    skippedCount++;
+                    skippedEmployees.add(empId);
                     return;
                 }
 
                 const s = { 
                     ...psh, 
-                    employeeId: psh.employeeId || psh.EmployeeId, 
+                    employeeId: empId, 
                     startTime: psh.startTime || psh.StartTime, 
                     endTime: psh.endTime || psh.EndTime, 
                     isDescanso: psh.isDescanso ?? psh.IsDescanso, 
@@ -1387,7 +1397,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
                 // Validar novedades en el destino
                 const novedad = news.find(n => 
-                    String(n.empleadoId).toLowerCase() === empId && 
+                    String(n.empleadoId).toLowerCase().trim() === empId && 
                     new Date(n.fechaInicio) <= targetDate && 
                     new Date(n.fechaFin) >= targetDate
                 );
@@ -1402,7 +1412,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     ne.setHours(oe.getHours(), oe.getMinutes(), 0);
 
                     const newShift = { 
-                        employeeId: s.employeeId, 
+                        employeeId: empId, 
                         storeId: selectedStore,
                         companyId: user.companyId,
                         startTime: ns.toISOString(), 
@@ -1420,9 +1430,12 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
             if (copiedCount > 0) {
                 setShifts(clonedShifts); 
-                showToast(`Se clonaron ${copiedCount} turnos. (Se omitieron empleados con predicción previa)`);
+                const msg = skippedEmployees.size > 0 
+                    ? `Se clonaron ${copiedCount} turnos. (${skippedEmployees.size} empleados se omitieron por tener IA/Manual)`
+                    : `Se clonaron ${copiedCount} turnos exitosamente.`;
+                showToast(msg, "success");
             } else {
-                showToast("No había turnos nuevos para clonar (todos tienen programacion o el personal tiene novedades)", "info");
+                showToast("No hubo turnos para copiar (todos tienen IA o novedades)", "info");
             }
         } catch (err) { 
             console.error("Clone Error", err);
