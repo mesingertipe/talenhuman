@@ -217,9 +217,28 @@ const AttendanceMonitoring = ({ user: sessionUser }) => {
     return (
         <div className="page-container animate-in fade-in duration-500" style={{ padding: '2rem 1.5rem', maxWidth: '1400px', margin: '0 auto' }}>
             {/* Header */}
-            <div style={{ marginBottom: '3rem' }}>
-                <h1 style={{ fontSize: '2.2rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.03em' }}>Monitoreo de asistencia</h1>
-                <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginTop: '6px' }}>Control de procesos automáticos y consolidación de datos</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
+                <div>
+                    <h1 style={{ fontSize: '2.2rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.03em' }}>Monitoreo de asistencia</h1>
+                    <p style={{ color: activeColors.textMuted, fontSize: '0.9rem', fontWeight: '600', marginTop: '6px' }}>Control de procesos automáticos y consolidación de datos</p>
+                </div>
+                {isDirty && (
+                    <button 
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="animate-in slide-in-from-right-4 fade-in duration-300 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        style={{ 
+                            display: 'flex', alignItems: 'center', gap: '10px', 
+                            padding: '14px 28px', borderRadius: '16px', 
+                            background: activeColors.success, color: 'white', 
+                            fontWeight: '900', fontSize: '0.9rem', textTransform: 'uppercase',
+                            letterSpacing: '0.05em', border: 'none', cursor: saving ? 'wait' : 'pointer',
+                            boxShadow: `0 10px 25px ${activeColors.success}40`
+                        }}>
+                        <Save size={20} className={saving ? "animate-pulse" : ""} />
+                        {saving ? 'Aplicando...' : 'Guardar Cambios'}
+                    </button>
+                )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
