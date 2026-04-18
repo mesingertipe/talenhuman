@@ -34,6 +34,7 @@ import SalesAnalytics from './pages/Core/SalesAnalytics';
 import SalesTimeBands from './pages/Core/SalesTimeBands';
 import StoreTypes from './pages/Core/StoreTypes';
 import PredictiveRules from './pages/Core/PredictiveRules';
+import SpecialDates from './pages/Core/SpecialDates';
 import SecurityService from './services/securityService';
 import { initializeFirebase, requestForToken, onMessageListener } from './firebase';
 
@@ -397,6 +398,7 @@ function App() {
         case 'Permisos': return <ModulePermissions user={user} />;
         case 'Tipos de Tienda': return <StoreTypes user={user} />;
         case 'Reglas Predictivas': return <PredictiveRules user={user} />;
+        case 'Días Especiales': return <SpecialDates user={user} />;
         case 'Configuración Sistema': return <SystemSettings user={user} />;
         case 'Auditoría': return <AuditLogs user={user} />;
         case 'Dashboard':

@@ -96,6 +96,7 @@ public static class DbInitializer
             }
         }
         await context.SaveChangesAsync();
+        await SeedHolidaysAsync(context);
 
         // 5. Seed Initial Super Admin User if not exists
         var company1Id = Guid.Parse("11111111-1111-1111-1111-111111111111");
@@ -149,6 +150,7 @@ public static class DbInitializer
             new { Module = "SALES", Sub = "SALES_ANALYTICS" },
             new { Module = "SALES", Sub = "SALES_TIME_BANDS" },
             new { Module = "SALES", Sub = "PREDICTIVE_RULES" },
+            new { Module = "SALES", Sub = "SPECIAL_DATES" },
             new { Module = "ADVANCED", Sub = "MONITORING" },
             new { Module = "SYSTEM", Sub = "USERS" },
             new { Module = "SYSTEM", Sub = "PERMISSIONS" },
@@ -233,5 +235,14 @@ public static class DbInitializer
         {
             await context.SaveChangesAsync();
         }
+    }
+
+    private static async Task SeedHolidaysAsync(ApplicationDbContext context)
+    {
+        // Initial manual trigger for the first deployment
+        if (await context.PredictiveSpecialDates.IgnoreQueryFilters().AnyAsync(d => d.IsSystem)) return;
+
+        // Note: The PredictiveHolidaysWorker will handle the continuous seeding.
+        // We could manually trigger a one-time generation here if we want immediate data.
     }
 }

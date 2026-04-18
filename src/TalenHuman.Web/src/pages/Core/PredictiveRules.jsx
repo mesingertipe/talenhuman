@@ -47,6 +47,8 @@ const PredictiveRules = ({ user }) => {
     minStaffClosing: 1,
     isActive: true,
     weeklyRestDays: 1,
+    lookbackWeeks: 3,
+    comparisonStrategy: 1, // 1 = IntelligentComparison
     profileIds: [],
     channelIds: []
   });
@@ -252,8 +254,10 @@ const PredictiveRules = ({ user }) => {
                                         minStaffClosing: rule.minStaffClosing || 1,
                                         isActive: rule.isActive,
                                         weeklyRestDays: rule.weeklyRestDays || 1,
-                                        profileIds: rule.profiles.map(p => p.profileId),
-                                        channelIds: rule.channelIds || []
+                                        lookbackWeeks: rule.lookbackWeeks || 3,
+                                        comparisonStrategy: rule.comparisonStrategy || 1,
+                                        profileIds: (rule.profiles || rule.Profiles || []).map(p => p.profileId || p.ProfileId),
+                                        channelIds: rule.channelIds || rule.ChannelIds || []
                                     });
                                     setWizardStep(1);
                                     setShowWizard(true);
@@ -315,7 +319,8 @@ const PredictiveRules = ({ user }) => {
                         {[
                             { s: 1, t: 'Identidad', d: 'Nombre y Sede' },
                             { s: 2, t: 'Alcance', d: 'Cargos Impactados' },
-                            { s: 3, t: 'Motor', d: 'Métricas y Ratios' }
+                            { s: 3, t: 'Motor', d: 'Métricas y Ratios' },
+                            { s: 4, t: 'Estacionalidad', d: 'Lookback y Estrategia' }
                         ].map(step => (
                             <div key={step.s} style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                                 <div style={{ width: '44px', height: '44px', borderRadius: '15px', background: wizardStep === step.s ? 'white' : wizardStep > step.s ? '#10b981' : 'rgba(255,255,255,0.1)', color: wizardStep === step.s ? '#4f46e5' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '950', fontSize: '15px', transition: 'all 0.3s' }}>
@@ -571,15 +576,72 @@ const PredictiveRules = ({ user }) => {
                                         El motor garantizará que cada colaborador tenga al menos {formData.weeklyRestDays} día(s) de descanso propuestos en la malla.
                                     </p>
                                 </div>
+                            </div>
 
                             <div style={{ marginTop: 'auto', display: 'flex', gap: '20px' }}>
                                 <button onClick={() => setWizardStep(2)} style={{ padding: '24px 40px', borderRadius: '24px', background: 'transparent', border: `2px solid ${activeColors.border}`, color: activeColors.textMuted, fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}>Atrás</button>
-                                <button onClick={handleSave} disabled={isSubmitting} style={{ flex: 1, padding: '24px', borderRadius: '24px', background: '#10b981', color: 'white', border: 'none', fontWeight: '950', fontSize: '14px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 30px rgba(16, 185, 129, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
-                                    {isSubmitting ? 'Sincronizando...' : <><Sparkles size={20} /> Activar Algoritmo Predictivo</>}
-                                </button>
+                                <button onClick={() => setWizardStep(4)} style={{ flex: 1, padding: '24px', borderRadius: '24px', background: activeColors.accent, color: 'white', border: 'none', fontWeight: '950', fontSize: '13px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 30px rgba(79, 70, 229, 0.3)' }}>Continuar a estacionalidad</button>
                             </div>
                         </div>
+                    )}
+
+                    {/* STEP 4: ESTACIONALIDAD & LOOKBACK */}
+                    {wizardStep === 4 && (
+                      <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+                          <div style={{ width: '64px', height: '64px', background: activeColors.accentSoft, color: activeColors.accent, borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+                            <TrendingUp size={32} />
+                          </div>
+                          <h3 style={{ fontSize: '1.5rem', fontWeight: '900', color: activeColors.textMain, marginBottom: '0.5rem' }}>Estacionalidad & Lookback</h3>
+                          <p style={{ color: activeColors.textMuted, fontSize: '0.9rem' }}>Configura cuánta historia debe consultar la IA para promediar.</p>
                         </div>
+
+                        <div style={{ display: 'grid', gap: '2rem' }}>
+                          <div style={{ background: activeColors.card, padding: '2rem', borderRadius: '30px', border: `1px solid ${activeColors.border}` }}>
+                            <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '1.5rem' }}>
+                              Periodo de consulta <span>{formData.lookbackWeeks} Semanas</span>
+                            </label>
+                            <input 
+                              type="range" min="1" max="8" step="1"
+                              value={formData.lookbackWeeks}
+                              onChange={(e) => setFormData({...formData, lookbackWeeks: parseInt(e.target.value)})}
+                              style={{ width: '100%', accentColor: activeColors.accent }}
+                            />
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', fontSize: '0.7rem', fontWeight: '700', color: activeColors.textMuted }}>
+                              <span>1 SEMANA</span>
+                              <span>8 SEMANAS</span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '1rem' }}>Estrategia de comparación</label>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                              <div 
+                                onClick={() => setFormData({...formData, comparisonStrategy: 1})}
+                                style={{ padding: '20px', borderRadius: '24px', border: `2px solid ${formData.comparisonStrategy === 1 ? activeColors.accent : activeColors.border}`, background: formData.comparisonStrategy === 1 ? activeColors.accentSoft : 'transparent', cursor: 'pointer' }}
+                              >
+                                <Sparkles size={20} color={formData.comparisonStrategy === 1 ? activeColors.accent : activeColors.textMuted} style={{ marginBottom: '10px' }} />
+                                <div style={{ fontWeight: '800', fontSize: '0.9rem', color: activeColors.textMain }}>Inteligente</div>
+                                <div style={{ fontSize: '0.7rem', color: activeColors.textMuted }}>Salta festivos automáticamente.</div>
+                              </div>
+                              <div 
+                                onClick={() => setFormData({...formData, comparisonStrategy: 0})}
+                                style={{ padding: '20px', borderRadius: '24px', border: `2px solid ${formData.comparisonStrategy === 0 ? activeColors.accent : activeColors.border}`, background: formData.comparisonStrategy === 0 ? activeColors.accentSoft : 'transparent', cursor: 'pointer' }}
+                              >
+                                <Clock size={20} color={formData.comparisonStrategy === 0 ? activeColors.accent : activeColors.textMuted} style={{ marginBottom: '10px' }} />
+                                <div style={{ fontWeight: '800', fontSize: '0.9rem', color: activeColors.textMain }}>Fijo</div>
+                                <div style={{ fontSize: '0.7rem', color: activeColors.textMuted }}>Semanas calendario exactas.</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ marginTop: 'auto', display: 'flex', gap: '20px', paddingTop: '40px' }}>
+                            <button onClick={() => setWizardStep(3)} style={{ padding: '24px 40px', borderRadius: '24px', background: 'transparent', border: `2px solid ${activeColors.border}`, color: activeColors.textMuted, fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}>Atrás</button>
+                            <button onClick={handleSave} disabled={isSubmitting} style={{ flex: 1, padding: '24px', borderRadius: '24px', background: '#10b981', color: 'white', border: 'none', fontWeight: '950', fontSize: '14px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 30px rgba(16, 185, 129, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                                {isSubmitting ? 'Sincronizando...' : <><Sparkles size={20} /> Activar Algoritmo Predictivo</>}
+                            </button>
+                        </div>
+                      </motion.div>
                     )}
                 </div>
             </motion.div>

@@ -39,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<IIdentityService, Identity.IdentityService>();
         services.AddScoped<IAuditService, AuditService>();
         services.AddHostedService<Services.AttendanceSchedulerService>();
+        services.AddHostedService<Services.PredictiveHolidaysWorker>();
         services.AddHttpClient();
         services.AddHttpContextAccessor();
 

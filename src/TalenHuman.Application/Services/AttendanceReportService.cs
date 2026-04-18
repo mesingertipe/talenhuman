@@ -24,30 +24,22 @@ public class AttendanceReportService
         var settings = await _context.OperationalSettings.FirstOrDefaultAsync(s => s.CompanyId == companyId);
         var approvalMode = settings?.ShiftApprovalMode ?? ShiftApprovalMode.HR;
 
-        // 2. Fetch ONLY authorized administrative recipients
-        IQueryable<User> recipientsQuery = _context.Users
+        // 2. Fetch all potential administrative recipients
+        // We look for users who are either Admins, Distritales (DistrictId), or Gerentes (SupervisorStores)
+        var users = await _context.Users
             .Include(u => u.Employee)
                 .ThenInclude(e => e.Profile)
-            .Where(u => u.CompanyId == companyId && u.IsActive);
-
-        if (approvalMode == ShiftApprovalMode.HR)
-        {
-            // CENTRAL MODE: Only users with "RH" profile or similar administrative context
-            recipientsQuery = recipientsQuery.Where(u => 
+            .Where(u => u.CompanyId == companyId && u.IsActive)
+            .Where(u => 
+                // Level 1: Admins / RH
                 (u.Employee != null && u.Employee.Profile != null && u.Employee.Profile.Name.ToUpper().Contains("RH")) ||
-                (u.Email != null && (u.Email.Contains("admin") || u.Email.Contains("gerencia")))
-            );
-        }
-        else
-        {
-            // DISTRICT/STORE MODE: Only users with actual management assignments (Distritales or Supervisors)
-            recipientsQuery = recipientsQuery.Where(u => 
-                u.DistrictId != null || 
+                (u.Email != null && (u.Email.ToLower().Contains("admin") || u.Email.ToLower().Contains("gerencia"))) ||
+                // Level 2: Distritales
+                u.DistrictId != null ||
+                // Level 3: Gerentes (Checked via navigation or subquery if needed, but here we fetch all and filter in loop or use Any)
                 _context.SupervisorStores.Any(ss => ss.UserId == u.Id)
-            );
-        }
-
-        var users = await recipientsQuery.ToListAsync();
+            )
+            .ToListAsync();
 
         foreach (var user in users)
         {

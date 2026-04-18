@@ -236,6 +236,68 @@ public class ShiftsController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("individual-justified")]
+    public async Task<IActionResult> AddIndividualJustified([FromBody] JustifiedShiftAddDto dto)
+    {
+        var userClaimIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userClaimIdString)) return Unauthorized();
+        var userClaimId = Guid.Parse(userClaimIdString);
+
+        // 1. Basic validation
+        if (dto.StartTime.Date < DateTime.Today)
+            return BadRequest(new { message = "No se puede agregar turnos en fechas pasadas." });
+
+        if (string.IsNullOrWhiteSpace(dto.Justification) || dto.Justification.Length < 10)
+            return BadRequest(new { message = "La justificación debe tener al menos 10 caracteres." });
+
+        // 2. Security Check: Status of the week
+        var normalizedStart = GetMondayOfDate(dto.StartTime);
+        var approval = await _context.WeeklyApprovals
+            .FirstOrDefaultAsync(a => a.StoreId == dto.StoreId && a.WeekStartDate == normalizedStart);
+
+        if (approval == null || approval.Status != WeeklyApprovalStatus.Approved)
+            return BadRequest(new { message = "Esta operación solo es válida para semanas ya aprobadas." });
+
+        // 3. Check for existing shift
+        var hasExisting = await _context.Shifts
+            .AnyAsync(s => s.EmployeeId == dto.EmployeeId && s.StartTime.Date == dto.StartTime.Date);
+        
+        if (hasExisting)
+            return BadRequest(new { message = "El empleado ya tiene un turno asignado para este día." });
+
+        // 4. Perform Addition
+        var newShift = new Shift
+        {
+            EmployeeId = dto.EmployeeId,
+            StoreId = dto.StoreId,
+            StartTime = DateTime.SpecifyKind(dto.StartTime, DateTimeKind.Unspecified),
+            EndTime = DateTime.SpecifyKind(dto.EndTime, DateTimeKind.Unspecified),
+            Status = ShiftStatus.Approved, // V13.0 Hot-fix: Added to approved week = Auto-approved
+            IsDescanso = dto.IsDescanso,
+            IsFuera = dto.IsFuera,
+            Observation = $"[JUSTIFICADO] {dto.Justification}",
+            CompanyId = Guid.Empty // Set by interceptor
+        };
+
+        _context.Shifts.Add(newShift);
+
+        // 5. Audit Trace - LOG THE EXCEPTION WITHOUT REOPENING
+        var log = new WeeklyApprovalLog
+        {
+            WeeklyApproval = approval,
+            UserId = userClaimId,
+            Action = "MANUAL_FIX",
+            Comment = $"ADICIÓN JUSTIFICADA: {dto.Justification}",
+            ActionAt = DateTime.UtcNow,
+            CompanyId = Guid.Empty // Set by interceptor
+        };
+        _context.WeeklyApprovalLogs.Add(log);
+
+        await _context.SaveChangesAsync(default);
+
+        return Ok(new { message = "Turno agregado y justificado exitosamente.", shiftId = newShift.Id });
+    }
+
     [HttpGet("my-shifts")]
     public async Task<ActionResult<IEnumerable<ShiftDto>>> GetMyShifts([FromQuery] DateTime? start, [FromQuery] DateTime? end)
     {
@@ -301,4 +363,15 @@ public class BulkShiftUpdateDto
     public DateTime EndDate { get; set; }
     public string? Comment { get; set; }
     public List<ShiftDto> Shifts { get; set; } = new();
+}
+
+public class JustifiedShiftAddDto
+{
+    public Guid StoreId { get; set; }
+    public Guid EmployeeId { get; set; }
+    public DateTime StartTime { get; set; }
+    public DateTime EndTime { get; set; }
+    public bool IsDescanso { get; set; }
+    public bool IsFuera { get; set; }
+    public string Justification { get; set; } = string.Empty;
 }

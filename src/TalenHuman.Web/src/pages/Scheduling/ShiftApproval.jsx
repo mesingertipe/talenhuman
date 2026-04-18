@@ -237,18 +237,22 @@ const ShiftApproval = ({ user }) => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
               {/* Acciones de Auditoría en Cabecera */}
               <div style={{ display: 'flex', gap: '8px', padding: '6px', background: activeColors.border, borderRadius: '20px' }}>
-                <button 
-                  onClick={() => setShowCommentModal(true)}
-                  style={{ padding: '10px 20px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', borderRadius: '14px', fontWeight: '950', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
-                  <XCircle size={16} /> RECHAZAR
-                </button>
-                <button 
-                  onClick={() => setShowApprovalModal(true)}
-                  style={{ padding: '10px 24px', background: activeColors.accent, color: 'white', border: 'none', borderRadius: '14px', fontWeight: '950', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 8px 15px rgba(79, 70, 229, 0.2)' }}
-                >
-                  <CheckCircle size={16} /> APROBAR SEMANA
-                </button>
+                {activeTab !== 'APROBADOS' && (
+                  <>
+                    <button 
+                      onClick={() => setShowCommentModal(true)}
+                      style={{ padding: '10px 20px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', borderRadius: '14px', fontWeight: '950', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    >
+                      <XCircle size={16} /> RECHAZAR
+                    </button>
+                    <button 
+                      onClick={() => setShowApprovalModal(true)}
+                      style={{ padding: '10px 24px', background: activeColors.accent, color: 'white', border: 'none', borderRadius: '14px', fontWeight: '950', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 8px 15px rgba(79, 70, 229, 0.2)' }}
+                    >
+                      <CheckCircle size={16} /> APROBAR SEMANA
+                    </button>
+                  </>
+                )}
               </div>
 
               <div style={{ width: '1px', h: '30px', background: activeColors.border }}></div>

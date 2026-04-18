@@ -40,7 +40,9 @@ import {
     Check,
     Cpu,
     CalendarSearch,
-    Briefcase
+    Briefcase,
+    ShieldAlert,
+    RotateCcw
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import HelpIcon from '../../components/Shared/HelpIcon';
@@ -142,13 +144,20 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const [isOptimizing, setIsOptimizing] = useState(false);
     const [showPredictiveOverlay, setShowPredictiveOverlay] = useState(false);
     const [selectedCoverageDay, setSelectedCoverageDay] = useState(null); // V13.5
+    
+    // V20.0: JUSTIFIED EXCEPTION STATES (Hot-fix for approved weeks)
+    const [showJustificationModal, setShowJustificationModal] = useState(false);
+    const [justificationComment, setJustificationComment] = useState('');
+    const [pendingJustifiedShift, setPendingJustifiedShift] = useState(null);
+    const [isSavingJustified, setIsSavingJustified] = useState(false);
 
     // V19.2: BLINDAJE DE SEGURIDAD PREMIUM - Modo Inspección Auditoría
     const effectiveReadOnly = useMemo(() => {
         if (readOnly) return true;
-        if (weeklyStatus.status === 'Approved') return true;
+        // V20.0: Individual Exception Rule - Approve week blocks everything EXCEPT if we are in the middle of a justified addition
+        if (weeklyStatus.status === 'Approved' && !showJustificationModal && !isSavingJustified) return true;
         return false;
-    }, [readOnly, weeklyStatus.status]);
+    }, [readOnly, weeklyStatus.status, showJustificationModal, isSavingJustified]);
     const [isDragging, setIsDragging] = useState(false);
     const [dragSource, setDragSource] = useState(null);
     const [draggedData, setDraggedData] = useState(null);
@@ -339,9 +348,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 await Promise.all(daysInWeek.map(async (dayStr) => {
                     try {
                         const res = await api.get(`/sales/analytics/evolution?startDate=${dayStr}&storeId=${selectedStore}`);
-                        historyMap[dayStr] = res.data.history;
+                        historyMap[dayStr] = res.data; // Store full object now
                     } catch (e) {
-                        historyMap[dayStr] = [];
+                        historyMap[dayStr] = { history: [], historicalDates: [] };
                     }
                 }));
                 setHistoricalAverages(historyMap);
@@ -464,7 +473,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     // V13.0.1: PREDICTIVE CALCULATION ENGINE (Strict store hours)
     const calculateHourlyNeeds = useCallback((dayDate) => {
         const dayStr = toLocalISO(dayDate);
-        const dayHistory = historicalAverages[dayStr] || [];
+        const dayData = historicalAverages[dayStr] || { history: [] };
+        const dayHistory = dayData.history || [];
         const needsPerRule = {};
         const needsPerProfile = {};
         const hourlyVolumes = new Array(24).fill(0);
@@ -527,8 +537,15 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             });
         });
 
-        return { needs: needsPerProfile, volumes: hourlyVolumes, needsByRule: needsPerRule };
-    }, [historicalAverages, predictiveRules, stores, selectedStore]);
+        return { 
+            needs: needsPerProfile, 
+            volumes: hourlyVolumes, 
+            needsByRule: needsPerRule,
+            historicalDates: dayData.historicalDates || [],
+            isHoliday: dayData.isHoliday,
+            holidayName: dayData.holidayName
+        };
+    }, [historicalAverages, predictiveRules, stores, selectedStore, toLocalISO]);
 
     const performOptimization = async () => {
         setIsOptimizing(true);
@@ -724,18 +741,22 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             let totalRemainingDeficit = 0;
             daysInWeek.forEach(day => {
                 const result = calculateHourlyNeeds(day);
-                const needs = result.needs || {};
+                const needsByRule = result.needsByRule || {};
                 const dayStr = day.toDateString();
-                Object.keys(needs).forEach(pId => {
-                    needs[pId].forEach((need, h) => {
+                
+                predictiveRules.forEach(rule => {
+                    const hrNeed = needsByRule[rule.id] || [];
+                    const ruleProfiles = (rule.profiles || rule.Profiles || []).map(p => String(p.profileId || p.ProfileId).toLowerCase());
+                    hrNeed.forEach((need, h) => {
+                        if (need <= 0) return;
                         const scheduled = newShifts.filter(s => {
-                            const sDate = new Date(s.startTime);
-                            if (sDate.toDateString() !== dayStr || s.isDescanso) return false;
-                            const emp = employees.find(e => e.id === s.employeeId);
-                            if (emp?.profileId !== pId) return false;
-                            const sStart = sDate.getHours();
-                            const sEnd = new Date(s.endTime).getHours();
-                            return sEnd < sStart ? (h >= sStart || h < sEnd) : (h >= sStart && h < sEnd);
+                            const sD = new Date(s.startTime);
+                            if (sD.toDateString() !== dayStr || s.isDescanso) return false;
+                            const emp = employees.find(e => String(e.id).toLowerCase() === String(s.employeeId).toLowerCase());
+                            if (!emp || !ruleProfiles.includes(String(emp.profileId).toLowerCase())) return false;
+                            const sS = sD.getHours();
+                            const sE = new Date(s.endTime).getHours();
+                            return sE < sS ? (h >= sS || h < sE) : (h >= sS && h < sE);
                         }).length;
                         if (need > scheduled) totalRemainingDeficit += (need - scheduled);
                     });
@@ -973,6 +994,18 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             return;
         }
 
+        // V20.0: Approved Week Exception Interceptor
+        const isApprovedWeek = weeklyStatus?.status === 'Approved';
+        const isEmptyCell = existingDayShifts.length === 0;
+
+        if (isApprovedWeek) {
+            if (!isEmptyCell) {
+                showToast("Semana aprobada: Solo se permite agregar personal nuevo.", "error");
+                return;
+            }
+            // If it's empty, we continue but with the JUSTIFICATION modal pending
+        }
+
         if (source === 'PANEL') {
             if (payload.type === 'Descanso' || payload.type === 'Turno Fuera') {
                 const start = new Date(targetDate); start.setHours(0, 0, 0, 0);
@@ -987,6 +1020,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     isFuera: payload.type === 'Turno Fuera'
                 };
                 
+                if (isApprovedWeek) {
+                    setPendingJustifiedShift({ ...newShift, storeId: selectedStore });
+                    setJustificationComment('');
+                    setShowJustificationModal(true);
+                    return;
+                }
+
                 setShifts(prev => {
                     const filtered = prev.filter(s => !(s.employeeId === targetEmployeeId && new Date(s.startTime).toDateString() === targetDate.toDateString() && (s.isDescanso || s.isFuera)));
                     return [...filtered, newShift];
@@ -1052,11 +1092,49 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             isFuera: type === 'Turno Fuera'
         };
 
+        if (weeklyStatus?.status === 'Approved') {
+            setShowTimeModal(false);
+            setPendingJustifiedShift({ ...newShift, storeId: selectedStore });
+            setJustificationComment('');
+            setShowJustificationModal(true);
+            return;
+        }
+
         const newShifts = [...shifts];
         const existingIdx = newShifts.findIndex(s => s.employeeId === employeeId && new Date(s.startTime).toDateString() === date.toDateString());
         if (existingIdx >= 0) newShifts[existingIdx] = newShift;
         else newShifts.push(newShift);
         setShifts(newShifts); setShowTimeModal(false); setPendingEvent(null);
+    };
+
+    const handleConfirmJustification = async () => {
+        if (!justificationComment || justificationComment.trim().length < 10) {
+            showToast("La justificación debe tener al menos 10 caracteres.", "error");
+            return;
+        }
+
+        try {
+            setIsSavingJustified(true);
+            const payload = {
+                ...pendingJustifiedShift,
+                justification: justificationComment
+            };
+
+            await api.post('/shifts/individual-justified', payload);
+            
+            // Actualizar estado local para visualización inmediata
+            setShifts(prev => [...prev, { ...pendingJustifiedShift, id: 'temp-' + Date.now() }]);
+            
+            showToast("Turno agregado y justificado correctamente", "success");
+            setShowJustificationModal(false);
+            setPendingJustifiedShift(null);
+            setJustificationComment('');
+        } catch (error) {
+            console.error("Error saving justified shift", error);
+            showToast(error.response?.data?.message || "Error al guardar el turno justificado", "error");
+        } finally {
+            setIsSavingJustified(false);
+        }
     };
 
     const handleSave = () => {
@@ -1782,22 +1860,27 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 const result = calculateHourlyNeeds(day);
                                                 const needs = result.needs || {};
                                                 const dayStr = day.toDateString();
-                                                
                                                 let totalDeficit = 0;
-                                                Object.values(needs).forEach(hourlyNeed => {
-                                                    hourlyNeed.forEach((need, hour) => {
+                                                const needsByRule = result.needsByRule || {};
+                                                
+                                                predictiveRules.forEach(rule => {
+                                                    const hrNeed = needsByRule[rule.id] || [];
+                                                    const ruleProfiles = (rule.profiles || rule.Profiles || []).map(p => String(p.profileId || p.ProfileId).toLowerCase());
+                                                    hrNeed.forEach((need, h) => {
+                                                        if (need <= 0) return;
                                                         const scheduledAtHour = shifts.filter(s => {
-                                                            const sDate = new Date(s.startTime);
-                                                            if (sDate.toDateString() !== dayStr || s.isDescanso) return false;
-                                                            const sStart = sDate.getHours();
-                                                            const sEnd = new Date(s.endTime).getHours();
-                                                            if (sEnd < sStart) return hour >= sStart || hour < sEnd;
-                                                            return sStart <= hour && sEnd > hour;
+                                                            const sD = new Date(s.startTime);
+                                                            if (sD.toDateString() !== dayStr || s.isDescanso) return false;
+                                                            const emp = employees.find(e => String(e.id).toLowerCase() === String(s.employeeId).toLowerCase());
+                                                            if (!emp || !ruleProfiles.includes(String(emp.profileId).toLowerCase())) return false;
+                                                            const sS = sD.getHours();
+                                                            const sE = new Date(s.endTime).getHours();
+                                                            return sE < sS ? (h >= sS || h < sE) : (h >= sS && h < sE);
                                                         }).length;
                                                         if (need > scheduledAtHour) totalDeficit += (need - scheduledAtHour);
                                                     });
                                                 });
-
+ 
                                                 return (
                                                     <td key={di} className="p-1 border-r dark:border-slate-800 text-center align-middle cursor-pointer hover:bg-rose-500/5 group/gap transition-colors" 
                                                         style={{ height: '60px' }}
@@ -1805,7 +1888,17 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                             const result = calculateHourlyNeeds(day);
                                                             const needs = result.needs || {};
                                                             const volumes = result.volumes || [];
-                                                            if (totalDeficit > 0) setSelectedCoverageDay({ day, needs, totalDeficit, volumes }); 
+                                                            const needsByRule = result.needsByRule || {};
+                                                            if (totalDeficit > 0) setSelectedCoverageDay({ 
+                                                                day, 
+                                                                needs, 
+                                                                totalDeficit, 
+                                                                volumes, 
+                                                                needsByRule,
+                                                                historicalDates: result.historicalDates,
+                                                                isHoliday: result.isHoliday,
+                                                                holidayName: result.holidayName
+                                                            }); 
                                                         }}
                                                     >
                                                         {totalDeficit > 0 ? (
@@ -2227,6 +2320,90 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             {isSaving ? <div className="loader !w-5 !h-5 !border-white"></div> : <><CheckCircle size={20} /> Finalizar y Enviar</>}
                                         </button>
                                         <button onClick={() => setShowSaveModal(false)} style={{ width: '100%', padding: '18px', borderRadius: '20px', border: 'none', background: 'transparent', color: '#94a3b8', fontWeight: '800', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', letterSpacing: '0.2em' }}>Cancelar Operación</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* V20.0: Justificación de Excepción Elite Modal */}
+                    {showJustificationModal && (
+                        <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 15, 0.92)', backdropFilter: 'blur(30px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                            <div style={{ background: isDarkMode ? '#1e293b' : '#ffffff', width: '100%', maxWidth: '450px', borderRadius: '48px', overflow: 'hidden', border: isDarkMode ? '1px solid #334155' : 'none', boxShadow: '0 50px 100px rgba(0,0,0,0.6)', animation: 'modalSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+                                <div style={{ padding: '40px', textAlign: 'center' }}>
+                                    <div style={{ width: '70px', height: '70px', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 25px', boxShadow: 'inset 0 0 20px rgba(245, 158, 11, 0.1)' }}>
+                                        <ShieldAlert size={36} />
+                                    </div>
+                                    <h2 style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', letterSpacing: '-0.03em', margin: '0 0 10px' }}>Excepción de Seguridad</h2>
+                                    <p style={{ color: '#94a3b8', fontSize: '13px', fontWeight: '600', lineHeight: '1.6', margin: 0 }}>Esta semana ya está <b>APROBADA</b>. Para añadir este turno individual, se requiere una justificación válida que quedará registrada en la auditoría.</p>
+                                </div>
+                                
+                                <div style={{ padding: '0 40px 40px' }}>
+                                    <div style={{ position: 'relative', marginBottom: '30px' }}>
+                                        <textarea 
+                                            value={justificationComment}
+                                            onChange={(e) => setJustificationComment(e.target.value)}
+                                            placeholder="Describa el motivo de la adición (ej. Refuerzo solicitado por operación)..."
+                                            disabled={isSavingJustified}
+                                            style={{ 
+                                                width: '100%', 
+                                                minHeight: '130px', 
+                                                background: isDarkMode ? '#0f172a' : '#f8fafc', 
+                                                padding: '24px', 
+                                                borderRadius: '28px', 
+                                                border: `2px solid ${isDarkMode ? '#334155' : '#f1f5f9'}`, 
+                                                color: isDarkMode ? 'white' : '#1e293b', 
+                                                fontSize: '13px', 
+                                                fontWeight: '700', 
+                                                outline: 'none', 
+                                                resize: 'none',
+                                                transition: 'all 0.3s ease'
+                                            }}
+                                        />
+                                        <div style={{ position: 'absolute', bottom: '15px', right: '20px', fontSize: '10px', fontWeight: '900', color: justificationComment.length < 10 ? '#ef4444' : '#10b981' }}>
+                                            {justificationComment.length}/10 mín.
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        <button 
+                                            onClick={handleConfirmJustification}
+                                            disabled={isSavingJustified || justificationComment.length < 10}
+                                            style={{ 
+                                                width: '100%', 
+                                                padding: '20px', 
+                                                borderRadius: '20px', 
+                                                border: 'none', 
+                                                background: (isSavingJustified || justificationComment.length < 10) ? '#475569' : '#f59e0b', 
+                                                color: 'white', 
+                                                fontWeight: '950', 
+                                                fontSize: '11px', 
+                                                textTransform: 'uppercase', 
+                                                cursor: (isSavingJustified || justificationComment.length < 10) ? 'not-allowed' : 'pointer', 
+                                                boxShadow: justificationComment.length >= 10 ? '0 12px 24px rgba(245, 158, 11, 0.3)' : 'none',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '10px',
+                                                transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+                                            }}
+                                        >
+                                            {isSavingJustified ? (
+                                                <RotateCcw className="animate-spin" size={16} />
+                                            ) : (
+                                                <Save size={16} />
+                                            )}
+                                            {isSavingJustified ? 'Procesando...' : 'Confirmar y Guardar'}
+                                        </button>
+                                        
+                                        {!isSavingJustified && (
+                                            <button 
+                                                onClick={() => { setShowJustificationModal(false); setPendingJustifiedShift(null); }}
+                                                style={{ width: '100%', padding: '15px', borderRadius: '15px', border: 'none', background: 'transparent', color: '#94a3b8', fontWeight: '800', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', letterSpacing: '0.1em' }}
+                                            >
+                                                Cancelar
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -2702,18 +2879,35 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             const volumes = result.volumes || [];
                                             
                                             let totalDeficit = 0;
-                                            Object.values(needs).forEach(hN => hN.forEach((n, h) => {
-                                                const sched = shifts.filter(s => {
-                                                    const sD = new Date(s.startTime);
-                                                    if (sD.toDateString() !== newDay.toDateString() || s.isDescanso) return false;
-                                                    const sS = sD.getHours();
-                                                    const sE = new Date(s.endTime).getHours();
-                                                    return sE < sS ? (h >= sS || h < sE) : (h >= sS && h < sE);
-                                                }).length;
-                                                if (n > sched) totalDeficit += (n - sched);
-                                            }));
+                                            const needsByRule = result.needsByRule || {};
+                                            predictiveRules.forEach(rule => {
+                                                const hrNeed = needsByRule[rule.id] || [];
+                                                const ruleProfiles = (rule.profiles || rule.Profiles || []).map(p => String(p.profileId || p.ProfileId).toLowerCase());
+                                                hrNeed.forEach((n, h) => {
+                                                    if (n <= 0) return;
+                                                    const sched = shifts.filter(s => {
+                                                        const sD = new Date(s.startTime);
+                                                        if (sD.toDateString() !== newDay.toDateString() || s.isDescanso) return false;
+                                                        const emp = employees.find(e => String(e.id).toLowerCase() === String(s.employeeId).toLowerCase());
+                                                        if (!emp || !ruleProfiles.includes(String(emp.profileId).toLowerCase())) return false;
+                                                        const sS = sD.getHours();
+                                                        const sE = new Date(s.endTime).getHours();
+                                                        return sE < sS ? (h >= sS || h < sE) : (h >= sS && h < sE);
+                                                    }).length;
+                                                    if (n > sched) totalDeficit += (n - sched);
+                                                });
+                                            });
                                             
-                                            setSelectedCoverageDay({ day: newDay, needs, totalDeficit, volumes });
+                                            setSelectedCoverageDay({ 
+                                                day: newDay, 
+                                                needs, 
+                                                totalDeficit, 
+                                                volumes, 
+                                                needsByRule,
+                                                historicalDates: result.historicalDates,
+                                                isHoliday: result.isHoliday,
+                                                holidayName: result.holidayName
+                                            });
                                         }}
                                         className="w-10 h-10 rounded-2xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all active:scale-90"
                                     ><ChevronLeft size={20} strokeWidth={3} /></button>
@@ -2725,6 +2919,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             <p className="text-indigo-50 font-black uppercase tracking-widest text-[12px]">
                                                 {selectedCoverageDay.day.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
                                             </p>
+                                            {selectedCoverageDay.isHoliday && (
+                                                <div className="ml-3 px-3 py-1 bg-rose-500/20 text-rose-200 border border-rose-500/30 rounded-full text-[10px] font-black uppercase tracking-tighter animate-in fade-in zoom-in duration-300">
+                                                    ✨ {selectedCoverageDay.holidayName || 'Festivo'}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
@@ -2739,18 +2938,35 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             const volumes = result.volumes || [];
                                             
                                             let totalDeficit = 0;
-                                            Object.values(needs).forEach(hN => hN.forEach((n, h) => {
-                                                const sched = shifts.filter(s => {
-                                                    const sD = new Date(s.startTime);
-                                                    if (sD.toDateString() !== newDay.toDateString() || s.isDescanso) return false;
-                                                    const sS = sD.getHours();
-                                                    const sE = new Date(s.endTime).getHours();
-                                                    return sE < sS ? (h >= sS || h < sE) : (h >= sS && h < sE);
-                                                }).length;
-                                                if (n > sched) totalDeficit += (n - sched);
-                                            }));
+                                            const needsByRule = result.needsByRule || {};
+                                            predictiveRules.forEach(rule => {
+                                                const hrNeed = needsByRule[rule.id] || [];
+                                                const ruleProfiles = (rule.profiles || rule.Profiles || []).map(p => String(p.profileId || p.ProfileId).toLowerCase());
+                                                hrNeed.forEach((n, h) => {
+                                                    if (n <= 0) return;
+                                                    const sched = shifts.filter(s => {
+                                                        const sD = new Date(s.startTime);
+                                                        if (sD.toDateString() !== newDay.toDateString() || s.isDescanso) return false;
+                                                        const emp = employees.find(e => String(e.id).toLowerCase() === String(s.employeeId).toLowerCase());
+                                                        if (!emp || !ruleProfiles.includes(String(emp.profileId).toLowerCase())) return false;
+                                                        const sS = sD.getHours();
+                                                        const sE = new Date(s.endTime).getHours();
+                                                        return sE < sS ? (h >= sS || h < sE) : (h >= sS && h < sE);
+                                                    }).length;
+                                                    if (n > sched) totalDeficit += (n - sched);
+                                                });
+                                            });
                                             
-                                            setSelectedCoverageDay({ day: newDay, needs, totalDeficit, volumes });
+                                            setSelectedCoverageDay({ 
+                                                day: newDay, 
+                                                needs, 
+                                                totalDeficit, 
+                                                volumes, 
+                                                needsByRule,
+                                                historicalDates: result.historicalDates,
+                                                isHoliday: result.isHoliday,
+                                                holidayName: result.holidayName
+                                            });
                                         }}
                                         className="w-10 h-10 rounded-2xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all active:scale-90"
                                     ><ChevronRight size={20} strokeWidth={3} /></button>
@@ -2772,9 +2988,16 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest mb-2 opacity-80">Déficit Crítico</p>
                                     <p className="text-4xl font-[950] text-rose-600 dark:text-rose-500 tracking-tighter">-{selectedCoverageDay.totalDeficit} <span className="text-lg opacity-60">Staff</span></p>
                                 </div>
-                                <div className="p-6 bg-slate-200/20 dark:bg-white/5 rounded-[2rem] border border-slate-200 dark:border-white/5 shadow-inner">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 opacity-80">Recomendación IA</p>
-                                    <p className="text-lg font-black text-slate-700 dark:text-slate-200 tracking-tight leading-tight">Optimizar jornada vespertina</p>
+                                <div className="p-6 bg-slate-200/20 dark:bg-white/5 rounded-[2rem] border border-slate-200 dark:border-white/5 shadow-inner flex flex-col justify-center">
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 opacity-80">Inteligencia de Estacionalidad</p>
+                                    <div className="flex gap-2">
+                                        {selectedCoverageDay.historicalDates?.map((d, idx) => (
+                                            <div key={idx} className="px-3 py-1.5 bg-indigo-500/10 dark:bg-indigo-500/20 border border-indigo-500/20 rounded-xl text-[10px] font-black text-indigo-600 dark:text-indigo-400">
+                                                {new Date(d).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <p className="mt-2 text-[9px] font-bold text-slate-500 italic">Mismo día comparable (apples-to-apples)</p>
                                 </div>
                             </div>
 

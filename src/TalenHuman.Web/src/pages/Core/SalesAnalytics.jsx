@@ -48,7 +48,7 @@ const SalesAnalytics = ({ user }) => {
     channelId: ''
   });
 
-  const [activeMetric, setActiveMetric] = useState('ventaNeta'); // ventaNeta, cantidadTickets, comensales, ticketPromedio
+  const [activeMetric, setActiveMetric] = useState('ventaNeta');
 
   useEffect(() => {
     fetchMetadata();
@@ -172,6 +172,16 @@ const SalesAnalytics = ({ user }) => {
            <div style={{ padding: '12px 24px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '20px', fontSize: '11px', fontWeight: '900', border: '1px solid rgba(16, 185, 129, 0.2)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Sincronización en Tiempo Real
            </div>
+           <div style={{ display: 'flex', gap: '1rem' }}>
+          <button 
+            onClick={exportToExcel}
+            className="hover:scale-[1.02] active:scale-95"
+            style={{ padding: '12px 24px', borderRadius: '16px', background: activeColors.card, border: `1px solid ${activeColors.border}`, color: activeColors.textMain, fontWeight: '800', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <Download size={18} />
+            EXPORTAR
+          </button>
+        </div>
            <button 
              onClick={fetchAnalytics}
              style={{ width: '56px', height: '56px', background: activeColors.card, borderRadius: '20px', border: `1.5px solid ${activeColors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.textMuted, cursor: 'pointer', transition: 'all 0.3s' }}
@@ -411,11 +421,10 @@ const SalesAnalytics = ({ user }) => {
           </div>
       </div>
 
-       <style>{`
+      <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
       `}</style>
-
     </div>
   );
 };

@@ -395,6 +395,20 @@ public enum PredictiveMetricType
     AverageTicket
 }
 
+public enum PredictiveComparisonStrategy
+{
+    FixedWeeks,
+    IntelligentComparison,
+    YearOverYear
+}
+
+public enum SpecialDateType
+{
+    Holiday,
+    SpecialEvent,
+    Promotion
+}
+
 public class PredictiveShiftRule : BaseEntity, IMultitenant
 {
     public string Name { get; set; } = string.Empty;
@@ -417,6 +431,10 @@ public class PredictiveShiftRule : BaseEntity, IMultitenant
     public bool IsActive { get; set; } = true;
     public int WeeklyRestDays { get; set; } = 1;
 
+    // Seasonality Settings
+    public int LookbackWeeks { get; set; } = 3;
+    public PredictiveComparisonStrategy ComparisonStrategy { get; set; } = PredictiveComparisonStrategy.IntelligentComparison;
+
     public Guid CompanyId { get; set; }
     [JsonIgnore]
     public Company Company { get; set; } = null!;
@@ -427,6 +445,18 @@ public class PredictiveShiftRule : BaseEntity, IMultitenant
 
     [JsonIgnore]
     public ICollection<PredictiveShiftRuleChannel> RuleChannels { get; set; } = new List<PredictiveShiftRuleChannel>();
+}
+
+public class PredictiveSpecialDate : BaseEntity
+{
+    public DateTime Date { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public SpecialDateType Type { get; set; }
+    public string? Country { get; set; } // For system-wide holidays (e.g. "CO", "MX")
+    public bool IsSystem { get; set; } // If true, it's a public holiday that applies to all companies in that country
+    public Guid? CompanyId { get; set; }
+    [JsonIgnore]
+    public Company? Company { get; set; }
 }
 
 public class PredictiveShiftRuleProfile : IMultitenant

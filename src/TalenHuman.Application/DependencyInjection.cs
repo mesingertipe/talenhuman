@@ -13,6 +13,7 @@ public static class DependencyInjection
         services.AddScoped<Services.AttendanceService>();
         services.AddScoped<Services.NotificationService>();
         services.AddScoped<Services.AttendanceReportService>();
+        services.AddScoped<IPredictiveHolidaysService, Services.PredictiveHolidaysService>();
         // Add Automapper or FluentValidation if needed
         return services;
     }

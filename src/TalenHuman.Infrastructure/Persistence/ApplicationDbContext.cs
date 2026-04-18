@@ -60,6 +60,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<PredictiveShiftRule> PredictiveShiftRules => Set<PredictiveShiftRule>();
     public DbSet<PredictiveShiftRuleProfile> PredictiveShiftRuleProfiles => Set<PredictiveShiftRuleProfile>();
     public DbSet<PredictiveShiftRuleChannel> PredictiveShiftRuleChannels => Set<PredictiveShiftRuleChannel>();
+    public DbSet<PredictiveSpecialDate> PredictiveSpecialDates => Set<PredictiveSpecialDate>();
     public Guid TenantId => _tenantProvider.GetTenantId();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -99,7 +100,10 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<StoreType>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<PredictiveShiftRule>().HasQueryFilter(p => p.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<PredictiveShiftRuleProfile>().HasQueryFilter(p => p.CompanyId == TenantId || TenantId == Guid.Empty);
-        builder.Entity<PredictiveShiftRuleChannel>().HasQueryFilter(p => p.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<PredictiveShiftRuleChannel>().HasKey(rc => new { rc.RuleId, rc.SalesChannelId });
+        builder.Entity<PredictiveShiftRuleChannel>().HasQueryFilter(rc => rc.CompanyId == TenantId || TenantId == Guid.Empty);
+
+        builder.Entity<PredictiveSpecialDate>().HasQueryFilter(sd => (sd.CompanyId == TenantId || sd.CompanyId == null) || TenantId == Guid.Empty);
 
         // Many-to-Many: Supervisor -> Stores
         builder.Entity<SupervisorStore>()

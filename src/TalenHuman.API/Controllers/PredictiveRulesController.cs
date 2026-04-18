@@ -40,6 +40,8 @@ public class PredictiveRulesController : ControllerBase
                 r.MinStaffClosing,
                 r.IsActive,
                 r.WeeklyRestDays,
+                r.LookbackWeeks,
+                r.ComparisonStrategy,
                 Profiles = r.RuleProfiles.Select(rp => new { rp.ProfileId, rp.Profile.Name }),
                 ChannelIds = r.RuleChannels.Select(rc => rc.SalesChannelId).ToList()
             })
@@ -90,6 +92,8 @@ public class PredictiveRulesController : ControllerBase
             MinStaffClosing = dto.MinStaffClosing,
             IsActive = dto.IsActive,
             WeeklyRestDays = dto.WeeklyRestDays,
+            LookbackWeeks = dto.LookbackWeeks,
+            ComparisonStrategy = dto.ComparisonStrategy,
             CompanyId = companyId
         };
 
@@ -122,6 +126,7 @@ public class PredictiveRulesController : ControllerBase
     {
         var rule = await _context.PredictiveShiftRules
             .Include(r => r.RuleProfiles)
+            .Include(r => r.RuleChannels)
             .FirstOrDefaultAsync(r => r.Id == id);
 
         if (rule == null) return NotFound();
@@ -136,6 +141,8 @@ public class PredictiveRulesController : ControllerBase
         rule.MinStaffClosing = dto.MinStaffClosing;
         rule.IsActive = dto.IsActive;
         rule.WeeklyRestDays = dto.WeeklyRestDays;
+        rule.LookbackWeeks = dto.LookbackWeeks;
+        rule.ComparisonStrategy = dto.ComparisonStrategy;
 
         // Sync Profiles
         _context.PredictiveShiftRuleProfiles.RemoveRange(rule.RuleProfiles);
@@ -187,6 +194,8 @@ public class PredictiveRulesController : ControllerBase
                 r.MinStaffClosing,
                 r.IsActive,
                 r.WeeklyRestDays,
+                r.LookbackWeeks,
+                r.ComparisonStrategy,
                 Profiles = r.RuleProfiles.Select(rp => new { rp.ProfileId, rp.Profile.Name }),
                 ChannelIds = r.RuleChannels.Select(rc => rc.SalesChannelId).ToList()
             })
@@ -218,6 +227,8 @@ public class PredictiveRuleDto
     public int MinStaffClosing { get; set; }
     public bool IsActive { get; set; }
     public int WeeklyRestDays { get; set; }
+    public int LookbackWeeks { get; set; } = 3;
+    public PredictiveComparisonStrategy ComparisonStrategy { get; set; } = PredictiveComparisonStrategy.IntelligentComparison;
     public List<Guid> ProfileIds { get; set; } = new List<Guid>();
     public List<Guid> ChannelIds { get; set; } = new List<Guid>();
 }

@@ -236,7 +236,7 @@ public class SalesController : ControllerBase
     }
 
     [HttpGet("analytics/evolution")]
-    public async Task<ActionResult> GetEvolution([FromQuery] DateTime startDate, [FromQuery] Guid? storeId, [FromQuery] Guid? channelId)
+    public async Task<ActionResult> GetEvolution([FromQuery] DateTime startDate, [FromQuery] Guid? storeId, [FromQuery] Guid? channelId, [FromQuery] int weeksBack = 3)
     {
         var companyId = _tenantProvider.GetTenantId();
         var targetDate = startDate.Date;
@@ -252,9 +252,77 @@ public class SalesController : ControllerBase
             .Select(s => new { s.RecordDate, s.VentaNeta, s.CantidadTickets, s.Comensales, s.TicketPromedio })
             .ToListAsync();
 
-        // Cargar histórico de las últimas 3 semanas (mismo día de la semana)
-        var historicalDates = new List<DateTime> { targetDate.AddDays(-7), targetDate.AddDays(-14), targetDate.AddDays(-21) };
+        // 1. Obtener reglas para determinar estacionalidad (si hay storeId)
+        var lookbackCount = weeksBack;
+        var strategy = PredictiveComparisonStrategy.IntelligentComparison;
+
+        if (storeId.HasValue)
+        {
+            var store = await _context.Stores.FindAsync(storeId);
+            if (store != null)
+            {
+                var rule = await _context.PredictiveShiftRules
+                    .Where(r => r.StoreTypeId == store.StoreTypeId && r.IsActive)
+                    .OrderByDescending(r => r.CreatedAt)
+                    .FirstOrDefaultAsync();
+                
+                if (rule != null)
+                {
+                    lookbackCount = rule.LookbackWeeks > 0 ? rule.LookbackWeeks : weeksBack;
+                    strategy = rule.ComparisonStrategy;
+                }
+            }
+        }
+
+        // 2. Determinar si el día objetivo es Especial (Festivo/Evento)
+        var company = await _context.Companies.FindAsync(companyId);
+        var countryCode = company?.CountryCode ?? "CO";
+
+        var specialDates = await _context.PredictiveSpecialDates
+            .Where(d => (d.Country == countryCode && d.IsSystem) || d.CompanyId == companyId)
+            .ToListAsync();
+
+        var targetSpecial = specialDates.FirstOrDefault(d => d.Date.Date == targetDate.Date);
+
+        // 3. Buscar fechas comparables recursivamente
+        var historicalDates = new List<DateTime>();
         
+        if (targetSpecial != null && strategy == PredictiveComparisonStrategy.IntelligentComparison)
+        {
+            // Caso Festivo: buscar festivos anteriores (del mismo nombre o tipo)
+            var comparableHolidays = specialDates
+                .Where(h => h.Date < targetDate && (h.Name == targetSpecial.Name || h.Type == targetSpecial.Type))
+                .OrderByDescending(h => h.Date)
+                .Take(lookbackCount)
+                .Select(h => h.Date.Date)
+                .ToList();
+            
+            historicalDates.AddRange(comparableHolidays);
+        }
+        else
+        {
+            // Caso Normal: buscar últimas N semanas saltando festivos
+            var searchDate = targetDate.AddDays(-7);
+            int found = 0;
+            int maxAttempts = 52; // Evitar loop infinito (1 año atrás max)
+
+            while (found < lookbackCount && maxAttempts > 0)
+            {
+                var isHistoricalSpecial = specialDates.Any(d => d.Date.Date == searchDate.Date);
+                
+                if (!isHistoricalSpecial || strategy == PredictiveComparisonStrategy.FixedWeeks)
+                {
+                    historicalDates.Add(searchDate);
+                    found++;
+                }
+                
+                searchDate = searchDate.AddDays(-7);
+                maxAttempts--;
+            }
+        }
+
+        if (historicalDates.Count == 0) historicalDates.Add(targetDate.AddDays(-7)); // Fallback
+
         var historicalData = await _context.SalesData
             .Where(s => s.CompanyId == companyId)
             .Where(s => allowedStores.Contains(s.StoreId))
@@ -263,8 +331,7 @@ public class SalesController : ControllerBase
             .Where(s => !channelId.HasValue || s.SalesChannelId == channelId.Value)
             .ToListAsync();
 
-        // Agrupar histórico por hora y canal para un promedio preciso
-        var numWeeks = historicalDates.Count > 0 ? historicalDates.Count : 1;
+        var numWeeks = historicalDates.Count;
 
         // 1. Agrupar por (Día, Hora, Canal) para sumar registros intradía (si los hay)
         var dailyHourlyChannelData = historicalData
@@ -302,7 +369,13 @@ public class SalesController : ControllerBase
             .OrderBy(x => x.Time)
             .ToList();
 
-        return Ok(new { current = currentDayData, history = averagedHistory });
+        return Ok(new { 
+            current = currentDayData, 
+            history = averagedHistory,
+            historicalDates = historicalDates.Select(d => d.ToString("yyyy-MM-dd")).ToList(),
+            isHoliday = targetSpecial != null,
+            holidayName = targetSpecial?.Name
+        });
     }
 
     [HttpGet("analytics/channels")]

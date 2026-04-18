@@ -57,6 +57,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
         { icon: <BarChart3 size={20} />, label: 'Analítica BI', sub: 'SALES_ANALYTICS' },
         { icon: <Clock size={20} />, label: 'Franjas Horarias', sub: 'SALES_TIME_BANDS' },
         { icon: <Target size={20} />, label: 'Reglas Predictivas', sub: 'PREDICTIVE_RULES' },
+        { icon: <Calendar size={20} />, label: 'Días Especiales', sub: 'SPECIAL_DATES' },
       ]
     },
     { 
@@ -246,6 +247,7 @@ const getPageInfo = (page) => {
     case 'Franjas Horarias': return { title: 'Parámetros de Tiempo', subtitle: 'Definición de periodos operativos para análisis segmentado' };
     case 'Tipos de Tienda': return { title: 'Tipos de Tienda', subtitle: 'Categorización estratégica de sedes para motor predictivo' };
     case 'Reglas Predictivas': return { title: 'Reglas Predictivas', subtitle: 'Configuración de inteligencia de carga operacional' };
+    case 'Días Especiales': return { title: 'Días Especiales y Festivos', subtitle: 'Gestión de estacionalidad y eventos para el motor predictivo' };
     default: return { title: page, subtitle: '' };
   }
 };
