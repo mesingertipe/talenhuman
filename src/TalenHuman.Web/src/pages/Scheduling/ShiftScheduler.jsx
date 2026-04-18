@@ -1340,7 +1340,21 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         }
     };
 
-    const copyFromPreviousWeek = async () =            // Operación Atómica para evitar solapamientos y desfases de estado
+    const copyFromPreviousWeek = async () => {
+        try {
+            setLoading(true);
+            
+            const ps = getMonday(weekOffset - 1);
+            const pe = new Date(ps); pe.setDate(pe.getDate() + 7);
+            
+            const res = await api.get(`/shifts?storeId=${selectedStore}&startDate=${toLocalISO(ps)}&endDate=${toLocalISO(pe)}`);
+            
+            if (res.data.length === 0) { 
+                showToast("No se encontraron turnos previos para clonar", "warning"); 
+                return; 
+            }
+
+            // Operación Atómica para evitar solapamientos y desfases de estado
             setShifts(prevShifts => {
                 // 1. Identificar con precisión extrema los empleados que ya tienen algo en la malla (IA o Manual)
                 const currentEmployeeIds = new Set(
@@ -1415,6 +1429,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             ? `Se clonaron ${localCopiedCount} turnos. (${localSkippedCount} empleados con IA/Manual se respetaron)`
                             : `Se clonaron ${localCopiedCount} turnos exitosamente.`;
                         showToast(msg, "success");
+                    } else {
+                        showToast("No se añadieron turnos (IA detectada o novedades para todos)", "info");
                     }
                 }, 100);
 
