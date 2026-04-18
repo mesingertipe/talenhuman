@@ -48,9 +48,17 @@ public class ResendEmailService : IEmailService
             html = body,
             attachments = attachments?.Select(a => new {
                 filename = a.Filename,
-                content = Convert.ToBase64String(a.Content)
+                content = Convert.ToBase64String(a.Content),
+                content_type = a.ContentType // Resend supports explicit content-type (Optional but recommended for PDFs)
             }).ToList()
         }).ToList();
+
+        // Logging for diagnostics
+        if (attachments != null && attachments.Any())
+        {
+            var totalBytes = attachments.Sum(a => a.Content.Length);
+            Console.WriteLine($"[RESEND] Sending email batch with {attachments.Count} attachments. Total size: {totalBytes / 1024.0:F2} KB");
+        }
 
         // Execute with Polly retry policy
         await _retryPolicy.ExecuteAsync(async () => {
@@ -59,7 +67,15 @@ public class ResendEmailService : IEmailService
                 Content = JsonContent.Create(emails)
             };
             httpRequest.Headers.Add("Authorization", $"Bearer {apiKey}");
-            return await _httpClient.SendAsync(httpRequest);
+            var response = await _httpClient.SendAsync(httpRequest);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[RESEND ERROR] Status: {response.StatusCode}. Details: {error}");
+            }
+            
+            return response;
         });
     }
 }

@@ -278,7 +278,7 @@ public class NotificationService
 
         // Since we are sending an administrative notification (Approval/Rejection), 
         // we use the batch capability of the infrastructure service.
-        await _emailService.SendBatchEmailAsync(activeEmails, request.Subject, request.Message);
+        await _emailService.SendBatchEmailAsync(activeEmails, request.Subject, request.Message, request.Attachments);
         
         _logger.LogInformation("📧 [BATCH-EMAIL] Notification sent to {Count} recipients. Subject: {Subject}", activeEmails.Count, request.Subject);
     }
