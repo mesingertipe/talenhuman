@@ -1038,7 +1038,10 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             }
         } else if (source === 'GRID') {
             // Lógica de COPIADO entre celdas
-            const sourceShift = shifts.find(s => s.id === payload.shiftId || (s.employeeId === payload.employeeId && new Date(s.startTime).toDateString() === new Date(payload.date).toDateString()));
+            const sourceShift = shifts.find(s => 
+                (s.id && payload.shiftId && s.id === payload.shiftId) || 
+                (!payload.shiftId && s.employeeId === payload.employeeId && new Date(s.startTime).toDateString() === new Date(payload.date).toDateString())
+            );
             if (!sourceShift) return;
 
             const newStart = new Date(targetDate);
