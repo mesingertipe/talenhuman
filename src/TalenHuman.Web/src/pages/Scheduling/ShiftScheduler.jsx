@@ -448,7 +448,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             const normalizedAttendances = (attRes.data || []).map(a => ({
                 ...a,
                 id: (a.id || a.Id || '').toString().toLowerCase(),
-                employeeId: (a.employeeId || a.EmployeeId || a.EmployeeInternalId || '').toString().toLowerCase(), // 🔴 V13.0 FIX: Map EmployeeInternalId from API & Normalize casing
+                employeeId: (a.employeeInternalId || a.EmployeeInternalId || a.employeeId || a.EmployeeId || '').toString().toLowerCase(),
                 shiftId: (a.shiftId || a.ShiftId || '').toString().toLowerCase(),
                 clockIn: a.clockIn || a.ClockIn || a.clock_in,
                 clockOut: a.clockOut || a.ClockOut || a.clock_out,
