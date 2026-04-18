@@ -183,7 +183,20 @@ const PredictiveRules = ({ user }) => {
                 onClick={() => { 
                   setCurrentRule(null); 
                   setFormData({ 
-                    minStaff: 1, minStaffOpening: 1, minStaffClosing: 1, isActive: true, weeklyRestDays: 1, profileIds: [], channelIds: [] 
+                    name: '',
+                    description: '',
+                    storeTypeId: '',
+                    metricType: 0,
+                    ratio: 100,
+                    minStaff: 1,
+                    minStaffOpening: 1,
+                    minStaffClosing: 1,
+                    isActive: true,
+                    weeklyRestDays: 1,
+                    lookbackWeeks: 3,
+                    comparisonStrategy: 1,
+                    profileIds: [],
+                    channelIds: []
                   }); 
                   setWizardStep(1);
                   setShowWizard(true); 
