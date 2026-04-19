@@ -1966,7 +1966,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 <FileText size={14} className="text-indigo-500" />
                                 <p className="text-[11px] font-bold text-slate-500 leading-none m-0 truncate">
                                     <span className="text-indigo-600 font-black text-[9px] mr-2 italic tracking-tighter">ÚLTIMA OBSERVACIÓN:</span>
-                                    {lastSaveComment}
+                                    {weeklyStatus.comment || lastSaveComment || 'Sin observaciones'}
                                 </p>
                             </div>
                         )}
