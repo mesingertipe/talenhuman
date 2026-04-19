@@ -175,6 +175,8 @@ public class ShiftApprovalController : ControllerBase
         
         // Notifications Logic
         var settings = await _context.OperationalSettings.FirstOrDefaultAsync(o => o.CompanyId == companyId);
+        var displayEnd = request.EndDate.AddDays(-1);
+
         if (settings?.EnableEmailNotifications ?? true)
         {
             var store = await _context.Stores.Include(s => s.Brand).FirstOrDefaultAsync(s => s.Id == request.StoreId);
@@ -185,12 +187,12 @@ public class ShiftApprovalController : ControllerBase
             string storeInfo = store != null ? $"{store.Brand?.Name} - Sede: {store.Name} ({store.ExternalId})" : request.StoreId.ToString();
             await _notificationService.SendBatchEmailNotificationAsync(emails, new NotificationRequest {
                 Subject = $"✅ Programación APROBADA - {store?.Name}",
-                Message = $"La programación de la sede <b>{storeInfo}</b> para el periodo <b>{request.StartDate:dd/MM}</b> al <b>{request.EndDate:dd/MM}</b> ha sido validada oficialmente.\n\nComentario: {request.Comment}",
+                Message = $"La programación de la sede <b>{storeInfo}</b> para el periodo <b>{request.StartDate:dd/MM}</b> al <b>{displayEnd:dd/MM}</b> ha sido validada oficialmente.\n\nComentario: {request.Comment}",
                 Type = NotificationType.Email
             });
         }
 
-        await _auditService.LogAsync("APPROVAL_FLOW", "Shifts", request.StoreId.ToString(), $"Programación aprobada para el periodo {request.StartDate:dd/MM} - {request.EndDate:dd/MM}.");
+        await _auditService.LogAsync("APPROVAL_FLOW", "Shifts", request.StoreId.ToString(), $"Programación aprobada para el periodo {request.StartDate:dd/MM} - {displayEnd:dd/MM}.");
 
         return Ok(new { Message = "Turnos aprobados satisfactoriamente." });
     }
@@ -297,14 +299,16 @@ public class ShiftApprovalController : ControllerBase
             .Where(ss => ss.StoreId == request.StoreId).Select(ss => ss.User).ToListAsync();
         var emails = managers.Where(m => !string.IsNullOrEmpty(m.Email)).Select(m => m.Email).ToList();
 
+        var displayEnd = request.EndDate.AddDays(-1);
+
         string storeInfo = store != null ? $"{store.Brand?.Name} - Sede: {store.Name} ({store.ExternalId})" : request.StoreId.ToString();
         await _notificationService.SendBatchEmailNotificationAsync(emails, new NotificationRequest {
             Subject = $"🚨 Programación RECHAZADA - {store?.Name}",
-            Message = $"La programación de la sede <b>{storeInfo}</b> para el periodo <b>{request.StartDate:dd/MM}</b> al <b>{request.EndDate:dd/MM}</b> ha sido RECHAZADA.\n\nMotivo: {request.Comment}",
+            Message = $"La programación de la sede <b>{storeInfo}</b> para el periodo <b>{request.StartDate:dd/MM}</b> al <b>{displayEnd:dd/MM}</b> ha sido RECHAZADA.\n\nMotivo: {request.Comment}",
             Type = NotificationType.Email
         });
 
-        await _auditService.LogAsync("REJECTION_FLOW", "Shifts", request.StoreId.ToString(), $"Programación rechazada para el periodo {request.StartDate:dd/MM} - {request.EndDate:dd/MM}.");
+        await _auditService.LogAsync("REJECTION_FLOW", "Shifts", request.StoreId.ToString(), $"Programación rechazada para el periodo {request.StartDate:dd/MM} - {displayEnd:dd/MM}.");
 
         return Ok(new { Message = "Turnos rechazados correctamente." });
     }
