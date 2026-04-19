@@ -61,13 +61,13 @@ const ShiftApproval = ({ user }) => {
   };
 
   const handleSelectStore = (store) => {
-    const key = `${store.storeId}-${store.weekStartDate}`;
+    const key = `${store.storeId}|${store.weekStartDate}`;
     setSelectedKeys(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
   };
 
   const handleSelectAll = (fStores) => {
     if (selectedKeys.length === fStores.length && fStores.length > 0) { setSelectedKeys([]); } 
-    else { setSelectedKeys(fStores.map(s => `${s.storeId}-${s.weekStartDate}`)); }
+    else { setSelectedKeys(fStores.map(s => `${s.storeId}|${s.weekStartDate}`)); }
   };
 
   const [isInspecting, setIsInspecting] = useState(false);
@@ -92,7 +92,7 @@ const ShiftApproval = ({ user }) => {
       setProcessing(true); setSyncPhase(1); await delay(600);
       for (const key of selectedKeys) {
         setSyncPhase(2);
-        const [storeId, weekStartDate] = key.split('-');
+        const [storeId, weekStartDate] = key.split('|');
         const storeData = stores.find(s => s.storeId === storeId && s.weekStartDate === weekStartDate);
         if (storeData) {
           const exclusiveEnd = getExclusiveEndDate(storeData.weekStartDate);
@@ -149,7 +149,7 @@ const ShiftApproval = ({ user }) => {
       setProcessing(true); setSyncPhase(1); await delay(600);
       for (const key of selectedKeys) {
         setSyncPhase(2);
-        const [storeId, weekStartDate] = key.split('-');
+        const [storeId, weekStartDate] = key.split('|');
         const storeData = stores.find(s => s.storeId === storeId && s.weekStartDate === weekStartDate);
         if (storeData) {
           const exclusiveEnd = getExclusiveEndDate(storeData.weekStartDate);
@@ -363,8 +363,8 @@ const ShiftApproval = ({ user }) => {
                 {loading ? <tr><td colSpan="4" style={{ padding: '50px', textAlign: 'center' }}>
                    <div className="animate-pulse" style={{ color: activeColors.accent, fontWeight: '800' }}>Sincronizando registros...</div>
                 </td></tr> : filteredStores.length === 0 ? <tr><td colSpan="4" style={{ padding: '50px', textAlign: 'center', color: activeColors.textMuted }}>No se encontraron registros para los filtros aplicados.</td></tr> : filteredStores.map(store => (
-                  <tr key={`${store.storeId}-${store.weekStartDate}`} style={{ background: activeColors.bg, transition: 'transform 0.2s' }} className="hover:scale-[1.005]">
-                    {activeTab === 'PENDIENTES' && <td style={{ padding: '15px 20px' }}><input type="checkbox" style={{ width: '18px', height: '18px' }} checked={selectedKeys.includes(`${store.storeId}-${store.weekStartDate}`)} onChange={() => handleSelectStore(store)} /></td>}
+                  <tr key={`${store.storeId}|${store.weekStartDate}`} style={{ background: activeColors.bg, transition: 'transform 0.2s' }} className="hover:scale-[1.005]">
+                    {activeTab === 'PENDIENTES' && <td style={{ padding: '15px 20px' }}><input type="checkbox" style={{ width: '18px', height: '18px' }} checked={selectedKeys.includes(`${store.storeId}|${store.weekStartDate}`)} onChange={() => handleSelectStore(store)} /></td>}
                     <td style={{ padding: '15px 20px' }}>
                       <div style={{ fontWeight: '900', color: activeColors.textMain, fontSize: '1.05rem' }}>{store.name}</div>
                       <div style={{ fontSize: '0.75rem', color: activeColors.accent, fontWeight: '900', marginTop: '2px' }}>
