@@ -2030,15 +2030,15 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                     <div className="flex flex-col items-center gap-0 w-full overflow-hidden">
                                                         <p className="text-xl font-[1000] text-slate-800 dark:text-white leading-none tracking-tighter">{day.getDate()}</p>
                                                         {(isHoliday || isSpecial) && (
-                                                            <span onMouseEnter={(e) => {
+                                                            <div onMouseEnter={(e) => {
                                                                     const rect = e.currentTarget.getBoundingClientRect();
                                                                     setHoveredDayMeta({ name: holidayName || (isHoliday ? 'Festivo' : 'Día Especial'), type: isHoliday ? 'FESTIVO' : 'ESPECIAL', color: isHoliday ? 'rose' : 'amber' });
                                                                     setHoverPos({ x: rect.left + rect.width / 2, y: rect.top });
                                                                 }}
                                                                 onMouseLeave={() => setHoveredDayMeta(null)}
-                                                                className={`text-[6px] font-black uppercase mt-1 px-2 py-0.5 rounded-full ${isHoliday ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'} leading-none truncate w-[80px] text-center shadow-sm cursor-help hover:scale-110 transition-transform`}>
+                                                                className={`block text-[6px] font-black uppercase mt-1 px-1 py-1 rounded-full ${isHoliday ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'} leading-none truncate w-[90px] max-w-[90px] text-center shadow-sm cursor-help hover:scale-110 transition-transform mx-auto`}>
                                                                 {holidayName || (isHoliday ? 'FESTIVO' : 'ESPECIAL')}
-                                                            </span>
+                                                            </div>
                                                         )}
                                                     </div>
                                                 </th>
@@ -3385,7 +3385,6 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 </div>,
                 document.body
             )}
-            )}
 
             {/* V13.0 PREDICTIVE TRANSPARENCY TOOLTIP (Hover) */}
             {hoveredShiftData && (
@@ -3493,7 +3492,6 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 </p>
                             </div>
                         </div>
-                        {/* Decorative background shape */}
                         <div className={`absolute -top-2 -right-2 h-8 w-8 rounded-full blur-xl opacity-50 ${hoveredDayMeta.color === 'rose' ? 'bg-rose-500' : 'bg-amber-500'}`}></div>
                     </div>
                 </div>
