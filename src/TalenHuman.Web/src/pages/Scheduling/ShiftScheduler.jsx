@@ -27,6 +27,7 @@ import {
     Copy as CopyIcon,
     ArrowRight,
     FileText,
+    FileEdit,
     ShieldCheck,
     CheckSquare,
     Square,
