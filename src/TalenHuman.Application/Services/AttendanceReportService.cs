@@ -151,15 +151,14 @@ public class AttendanceReportService
             var empCount = employeeCounts.ContainsKey(s.Id) ? employeeCounts[s.Id] : 0;
 
             // Link Attendances to Shifts found for this store (V65.1.32 Logic)
-            // A shift is linked if attendance.ShiftId matches or if they share employee and date
             return new {
                 Store = s.Name,
                 Plantilla = empCount,
                 TotalTurnos = storeShifts.Count,
-                Correcto = storeShifts.Count(sh => storeAttendances.Any(a => a.ShiftId == sh.Id && a.Status == AttendanceStatus.Correcto)),
-                Errada = storeShifts.Count(sh => storeAttendances.Any(a => a.ShiftId == sh.Id && a.Status == AttendanceStatus.MarcacionErrada)),
-                Desfase = storeShifts.Count(sh => storeAttendances.Any(a => a.ShiftId == sh.Id && a.Status == AttendanceStatus.Desfasado)),
-                Ausente = storeShifts.Count(sh => !storeAttendances.Any(a => a.ShiftId == sh.Id) || storeAttendances.Any(a => a.ShiftId == sh.Id && a.Status == AttendanceStatus.SinMarcacion)),
+                Correcto = storeAttendances.Count(a => a.Status == AttendanceStatus.Correcto),
+                Errada = storeAttendances.Count(a => a.Status == AttendanceStatus.MarcacionErrada),
+                Desfase = storeAttendances.Count(a => a.Status == AttendanceStatus.Desfasado),
+                Ausente = storeAttendances.Count(a => a.Status == AttendanceStatus.SinMarcacion),
                 Marcaciones = storeAttendances.Count(a => a.Status != AttendanceStatus.SinMarcacion)
             };
         }).OrderBy(s => s.Store).ToList();
@@ -197,13 +196,14 @@ public class AttendanceReportService
                     {
                         table.ColumnsDefinition(columns =>
                         {
-                            columns.RelativeColumn();
-                            columns.RelativeColumn();
-                            columns.RelativeColumn();
-                            columns.RelativeColumn();
-                            columns.RelativeColumn();
-                            columns.RelativeColumn();
-                            columns.RelativeColumn();
+                            columns.RelativeColumn(3); // Sede
+                            columns.RelativeColumn(1); // Plantilla
+                            columns.RelativeColumn(1); // Marcaciones
+                            columns.RelativeColumn(1); // Turnos
+                            columns.RelativeColumn(1); // Correcto
+                            columns.RelativeColumn(1); // Errada
+                            columns.RelativeColumn(1); // Desfase
+                            columns.RelativeColumn(1); // Ausente
                         });
 
                         table.Header(header =>
