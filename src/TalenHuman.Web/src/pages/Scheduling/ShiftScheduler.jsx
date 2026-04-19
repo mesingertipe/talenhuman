@@ -2207,7 +2207,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                     const shiftTime = `${new Date(shift.startTime).getHours().toString().padStart(2, '0')}:${new Date(shift.startTime).getMinutes().toString().padStart(2, '0')}-${new Date(shift.endTime).getHours().toString().padStart(2, '0')}:${new Date(shift.endTime).getMinutes().toString().padStart(2, '0')}`;
                                                                     const attTime = att ? `${new Date(att.clockIn).getHours().toString().padStart(2, '0')}:${new Date(att.clockIn).getMinutes().toString().padStart(2, '0')}—${att.clockOut ? new Date(att.clockOut).getHours().toString().padStart(2, '0') + ':' + new Date(att.clockOut).getMinutes().toString().padStart(2, '0') : '...'}` : 'S/MARCAR';
                                                                     const displayText = viewMode === 'SHIFTS' ? (shift.isDescanso ? '00:00-00:00' : shiftTime) : (shift.isDescanso ? '00:00-00:00' : attTime);
-                                                                    const isLocked = !!att || isLockedDay;
+                                                                    const isLocked = !!att || isLockedDay || weeklyStatus.status === 'Approved';
                                                                      
                                                                     return (
                                                                          <div key={`shift-${si}`} 
@@ -2217,7 +2217,14 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                                   handleDragStart(e, 'GRID', { employeeId: emp.id, date: day, shiftId: shift.id });
                                                                               }}
                                                                               onClick={() => {
-                                                                                  if (isLocked) { if (!att) showToast("Turno bloqueado: Dato histórico", "info"); return; }
+                                                                                  if (isLocked) { 
+                                                                                      if (att) return;
+                                                                                      let msg = "Turno bloqueado";
+                                                                                      if (isLockedDay) msg += ": Dato histórico";
+                                                                                      else if (weeklyStatus.status === 'Approved') msg += ": Semana Validada (Use casillas vacías para cambios justificados)";
+                                                                                      showToast(msg, "info");
+                                                                                      return; 
+                                                                                  }
                                                                                   setPendingEvent({ employeeId: emp.id, date: day, type: shift.isDescanso ? 'Descanso' : shift.isFuera ? 'Turno Fuera' : 'Turno', existingShift: shift });
                                                                                   if (!shift.isDescanso && !shift.isFuera) {
                                                                                       const sd = new Date(shift.startTime); const ed = new Date(shift.endTime);
@@ -2232,7 +2239,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                                  setHoverPos({ x: rect.left + rect.width / 2, y: rect.top });
                                                                               }}
                                                                               onMouseLeave={() => setHoveredShiftData(null)}
-                                                                              className={`group rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-md transition-all relative ${isLocked ? (att ? 'cursor-help hover:ring-2 ring-white/50 scale-105' : 'cursor-default opacity-[0.9]') : 'cursor-grab active:cursor-grabbing hover:scale-[1.05] hover:z-50'}`}
+                                                                              className={`group rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-md transition-all relative ${isLocked ? (att ? 'cursor-help hover:ring-2 ring-white/50 scale-105' : 'cursor-default opacity-[0.9]') : 'cursor-grab active:cursor-grabbing hover:scale-[1.05] hover:z-50'} ${nov ? 'opacity-40 grayscale-[0.5]' : ''}`}
                                                                                style={{ background: bgColor, minWidth: '72px', minHeight: '28px', filter: isLocked ? 'contrast(0.9) saturate(0.8)' : 'none', borderLeft: shift.status === 1 ? '4px solid #10b981' : (shift.status === 2 ? '4px solid #ef4444' : 'none') }}
                                                                          >
                                                                              <div className="flex items-center gap-2 mb-0.5">
@@ -2281,8 +2288,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                 {/* Only show "Plus" if no shifts AND no orphan attendances */}
                                                                 {!nov && dayShifts.length === 0 && dayOrphanAttendances.length === 0 && (
                                                                     <div onClick={() => {
-                                                                                 if (effectiveReadOnly || isLockedDay) {
-                                                                                     showToast(isLockedDay ? "Dato histórico bloqueado" : "Control de cambios bloqueado (Semana Validada)", "info");
+                                                                                 if (readOnly || isLockedDay) {
+                                                                                     showToast(isLockedDay ? "Dato histórico bloqueado" : "Modo lectura activo", "info");
                                                                                      return;
                                                                                  }
                                                                                  setPendingEvent({ employeeId: emp.id, date: day, type: 'Turno', existingShift: null });
