@@ -2008,12 +2008,34 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </span>
                                             </div>
                                         </th>
-                                        {days.map((day, i) => (
-                                            <th key={i} className="p-2 text-center border-r dark:border-slate-700 w-[110px] min-w-[110px]" style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f8fafc' }}>
-                                                <p className="text-[10px] font-black text-indigo-500 dark:text-indigo-400 tracking-[0.2em] mb-0.5 uppercase drop-shadow-sm">{day.toLocaleDateString('es-CO', { weekday: 'short' })}</p>
-                                                <p className="text-xl font-[1000] text-slate-800 dark:text-white leading-none tracking-tighter">{day.getDate()}</p>
-                                            </th>
-                                        ))}
+                                        {days.map((day, i) => {
+                                            const dayStr = toLocalISO(day);
+                                            const dayMeta = historicalAverages[dayStr] || {};
+                                            const isHoliday = dayMeta.isHoliday;
+                                            const isSpecial = dayMeta.type === 1 || dayMeta.type === 2; // Evento/Manual
+                                            const holidayName = dayMeta.holidayName;
+                                            
+                                            let headerBg = isDarkMode ? '#1e293b' : '#f8fafc';
+                                            if (isHoliday) headerBg = isDarkMode ? 'rgba(225, 29, 72, 0.15)' : 'rgba(255, 228, 230, 0.5)';
+                                            else if (isSpecial) headerBg = isDarkMode ? 'rgba(217, 119, 6, 0.15)' : 'rgba(254, 243, 199, 0.5)';
+
+                                            return (
+                                                <th key={i} className={`p-2 text-center border-r dark:border-slate-700 w-[110px] min-w-[110px] transition-colors duration-500 ${isHoliday ? 'border-b-2 border-rose-500/50' : (isSpecial ? 'border-b-2 border-amber-500/50' : '')}`} 
+                                                    style={{ backgroundColor: headerBg }}>
+                                                    <p className={`text-[9px] font-black tracking-[0.2em] mb-0.5 uppercase drop-shadow-sm ${isHoliday ? 'text-rose-500' : (isSpecial ? 'text-amber-600' : 'text-indigo-500 dark:text-indigo-400')}`}>
+                                                        {day.toLocaleDateString('es-CO', { weekday: 'short' })}
+                                                    </p>
+                                                    <div className="flex flex-col items-center gap-0">
+                                                        <p className="text-xl font-[1000] text-slate-800 dark:text-white leading-none tracking-tighter">{day.getDate()}</p>
+                                                        {(isHoliday || isSpecial) && (
+                                                            <span className={`text-[7px] font-black uppercase mt-1 px-1.5 py-0.5 rounded-full ${isHoliday ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'} leading-none truncate max-w-[90px] shadow-sm animate-in fade-in zoom-in duration-300`}>
+                                                                {holidayName || (isHoliday ? 'FESTIVO' : 'ESPECIAL')}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </th>
+                                            );
+                                        })}
                                         <th className="p-4 text-center w-[120px] min-w-[120px] font-[950] text-[10px] text-slate-500 dark:text-indigo-300 tracking-[0.2em] border-l dark:border-slate-700 sticky right-0 z-[160]"
                                             style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f8fafc' }}>
                                             Total
@@ -2154,6 +2176,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </div>
                                             </td>
                                                 {days.map((day, di) => {
+                                                    const dayStr = toLocalISO(day);
+                                                    const dayMeta = historicalAverages[dayStr] || {};
+                                                    const isHoliday = dayMeta.isHoliday;
+                                                    const isSpecial = dayMeta.type === 1 || dayMeta.type === 2;
+
                                                     const dayShifts = shifts.filter(s => String(s.employeeId).toLowerCase() === String(emp.id).toLowerCase() && new Date(s.startTime).toDateString() === day.toDateString());
                                                     const dayOrphanAttendances = (attendances || []).filter(a => 
                                                         String(a.employeeId).toLowerCase() === String(emp.id).toLowerCase() && 
@@ -2165,6 +2192,10 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                     today.setHours(0,0,0,0);
                                                     const isLockedDay = new Date(day).getTime() < today.getTime();
 
+                                                    let cellBg = isDarkMode ? 'transparent' : 'transparent';
+                                                    if (isHoliday) cellBg = isDarkMode ? 'rgba(225, 29, 72, 0.03)' : 'rgba(255, 228, 230, 0.2)';
+                                                    else if (isSpecial) cellBg = isDarkMode ? 'rgba(245, 158, 11, 0.03)' : 'rgba(254, 243, 199, 0.2)';
+
                                                     return (
                                                         <td
                                                             key={di}
@@ -2173,6 +2204,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                             onDragLeave={e => !effectiveReadOnly && e.currentTarget.classList.remove('elite-drop-active')}
                                                             onDrop={e => !effectiveReadOnly && handleDropOnGrid(e, emp.id, day)}
                                                             className="p-1 border-r dark:border-slate-800 transition-colors"
+                                                            style={{ backgroundColor: cellBg }}
                                                         >
                                                             <div className="flex flex-col gap-1 min-h-[96px] justify-center">
                                                                 {nov && (
