@@ -145,6 +145,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const [isOptimizing, setIsOptimizing] = useState(false);
     const [showPredictiveOverlay, setShowPredictiveOverlay] = useState(false);
     const [selectedCoverageDay, setSelectedCoverageDay] = useState(null); // V13.5
+    const [hoveredDayMeta, setHoveredDayMeta] = useState(null); // V20.6
+
     
     // V20.0: JUSTIFIED EXCEPTION STATES (Hot-fix for approved weeks)
     const [showJustificationModal, setShowJustificationModal] = useState(false);
@@ -2025,10 +2027,16 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                     <p className={`text-[9px] font-black tracking-[0.2em] mb-0.5 uppercase drop-shadow-sm ${isHoliday ? 'text-rose-500' : (isSpecial ? 'text-amber-600' : 'text-indigo-500 dark:text-indigo-400')}`}>
                                                         {day.toLocaleDateString('es-CO', { weekday: 'short' })}
                                                     </p>
-                                                    <div className="flex flex-col items-center gap-0">
+                                                    <div className="flex flex-col items-center gap-0 w-full overflow-hidden">
                                                         <p className="text-xl font-[1000] text-slate-800 dark:text-white leading-none tracking-tighter">{day.getDate()}</p>
                                                         {(isHoliday || isSpecial) && (
-                                                            <span className={`text-[7px] font-black uppercase mt-1 px-1.5 py-0.5 rounded-full ${isHoliday ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'} leading-none truncate max-w-[90px] shadow-sm animate-in fade-in zoom-in duration-300`}>
+                                                            <span onMouseEnter={(e) => {
+                                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                                    setHoveredDayMeta({ name: holidayName || (isHoliday ? 'Festivo' : 'Día Especial'), type: isHoliday ? 'FESTIVO' : 'ESPECIAL', color: isHoliday ? 'rose' : 'amber' });
+                                                                    setHoverPos({ x: rect.left + rect.width / 2, y: rect.top });
+                                                                }}
+                                                                onMouseLeave={() => setHoveredDayMeta(null)}
+                                                                className={`text-[6px] font-black uppercase mt-1 px-2 py-0.5 rounded-full ${isHoliday ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'} leading-none truncate w-[80px] text-center shadow-sm cursor-help hover:scale-110 transition-transform`}>
                                                                 {holidayName || (isHoliday ? 'FESTIVO' : 'ESPECIAL')}
                                                             </span>
                                                         )}
@@ -2216,6 +2224,118 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                         </div>
                                                                     </div>
                                                                 )}
+                                                                
+                                                                {/* V13.0 PREDICTIVE TRANSPARENCY TOOLTIP (Hover) */}
+            {hoveredShiftData && (
+                <div 
+                    className="fixed z-[999] pointer-events-none animate-in fade-in zoom-in duration-200"
+                    style={{ left: hoverPos.x, top: hoverPos.y, transform: 'translate(-50%, -105%)' }}
+                >
+                    <div className="bg-white dark:bg-slate-900 border-2 dark:border-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] p-4 min-w-[200px]"
+                         style={{ borderTop: `6px solid ${hoveredShiftData.borderCol || '#4f46e5'}` }}>
+                        {hoveredShiftData.isOrphan ? (
+                            <div className="flex flex-col gap-2">
+                                <div className="flex items-center justify-between gap-4">
+                                    <h5 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-none">Marcación Sin Turno</h5>
+                                    <div className="h-8 w-8 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg">
+                                        <Check size={16} strokeWidth={4} />
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Sparkles size={12} className="text-emerald-500 animate-pulse" />
+                                    <span className="text-[9px] font-black text-emerald-600 uppercase tracking-tighter">Trabajo no Programado</span>
+                                </div>
+                                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-3 border border-slate-100 dark:border-slate-700">
+                                    <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400 mb-1">
+                                        <ArrowRight size={14} className="text-slate-400" />
+                                        <span className="text-[9.5px] font-bold">ENTRADA: <b className="text-emerald-600 ml-1">{new Date(hoveredShiftData.att.clockIn).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</b></span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400 mb-1">
+                                        <ArrowDown size={14} className="text-slate-400 rotate-180" />
+                                        <span className="text-[9.5px] font-bold">SALIDA: <b className="text-emerald-600 ml-1">{hoveredShiftData.att.clockOut ? new Date(hoveredShiftData.att.clockOut).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '...'}</b></span>
+                                    </div>
+                                    <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center gap-2">
+                                        <Activity size={12} className="text-indigo-500" />
+                                        <span className="text-[9px] font-black uppercase text-indigo-400">Real: {(() => {
+                                            if (!hoveredShiftData.att.clockIn || !hoveredShiftData.att.clockOut) return 'N/A';
+                                            const diff = (new Date(hoveredShiftData.att.clockOut) - new Date(hoveredShiftData.att.clockIn)) / (1000 * 60);
+                                            const h = Math.floor(diff / 60);
+                                            const m = Math.round(diff % 60);
+                                            return `${h}h ${m}m`;
+                                        })()}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-2">
+                                <div className="flex items-center justify-between gap-4 mb-2">
+                                    <div className="flex flex-col">
+                                        <span className="text-[6.5px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Detalles del Turno</span>
+                                        <h5 className="text-[12px] font-[1000] text-slate-800 dark:text-white leading-none tracking-tight">
+                                            {hoveredShiftData.startTime} {hoveredShiftData.isLocked ? <Lock size={10} className="inline ml-1 opacity-50" /> : ''}
+                                        </h5>
+                                    </div>
+                                    <div className="h-10 w-10 rounded-2xl flex items-center justify-center shadow-lg" style={{ background: hoveredShiftData.borderCol }}>
+                                        <Clock size={20} className="text-white" strokeWidth={3} />
+                                    </div>
+                                </div>
+                                
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2 border border-slate-100 dark:border-slate-700">
+                                        <User size={12} className="text-slate-400" />
+                                        <span className="text-[9px] font-bold text-slate-600 dark:text-slate-300">TIPO: <b className="uppercase">{hoveredShiftData.isDescanso ? 'Descanso' : hoveredShiftData.isFuera ? 'Turno Fuera' : 'Programación'}</b></span>
+                                    </div>
+                                    {hoveredShiftData.att && (
+                                        <div className="flex flex-col gap-1.5 bg-emerald-500/10 rounded-xl px-3 py-2 border border-emerald-500/20">
+                                            <div className="flex items-center gap-2">
+                                                <Activity size={12} className="text-emerald-500" />
+                                                <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase">Marcación Real</span>
+                                            </div>
+                                            <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-300">{hoveredShiftData.attTime}</span>
+                                        </div>
+                                    )}
+                                </div>
+                                {hoveredShiftData.isLocked && !hoveredShiftData.att && (
+                                    <div className="mt-1 flex items-center gap-1.5 opacity-60">
+                                        <ShieldCheck size={10} className="text-slate-400" />
+                                        <span className="text-[8px] font-bold italic text-slate-500">Registro histórico bloqueado</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* V20.6 HOLIDAY FLOATING INFO CARD */}
+            {hoveredDayMeta && (
+                <div 
+                    className="fixed z-[999] pointer-events-none animate-in fade-in slide-in-from-bottom-2 duration-300"
+                    style={{ left: hoverPos.x, top: hoverPos.y, transform: 'translate(-50%, -115%)' }}
+                >
+                    <div className={`bg-white dark:bg-slate-900 border-2 rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.4)] p-5 min-w-[220px] ${hoveredDayMeta.color === 'rose' ? 'border-rose-500/30' : 'border-amber-500/30'}`}>
+                        <div className="flex flex-col items-center text-center">
+                            <div className={`h-12 w-12 rounded-full flex items-center justify-center mb-3 shadow-inner ${hoveredDayMeta.color === 'rose' ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                                <Sparkles size={24} strokeWidth={2.5} className="animate-pulse" />
+                            </div>
+                            <span className={`text-[8px] font-black uppercase tracking-[0.3em] mb-2 px-3 py-1 rounded-full ${hoveredDayMeta.color === 'rose' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'}`}>
+                                {hoveredDayMeta.type}
+                            </span>
+                            <h4 className="text-[14px] font-[1000] text-slate-800 dark:text-white leading-tight uppercase tracking-tighter">
+                                {hoveredDayMeta.name}
+                            </h4>
+                            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 w-full">
+                                <p className="text-[9px] font-bold text-slate-400 leading-relaxed">
+                                    Día con tratamiento operativo especial.<br/>
+                                    <span className="text-indigo-500">Contemplado en previsión IA.</span>
+                                </p>
+                            </div>
+                        </div>
+                        {/* Decorative background shape */}
+                        <div className={`absolute -top-2 -right-2 h-8 w-8 rounded-full blur-xl opacity-50 ${hoveredDayMeta.color === 'rose' ? 'bg-rose-500' : 'bg-amber-500'}`}></div>
+                    </div>
+                </div>
+            )}
                                                                 
                                                                 {/* Render Programmed Shifts */}
                                                                 {dayShifts.reduce((acc, current) => { const hasAtt = (attendances || []).some(a => String(a.shiftId) === String(current.id)); const existing = acc.find(s => s.startTime === current.startTime); if (!existing) return [...acc, current]; if (hasAtt && !attendances.some(a => String(a.shiftId) === String(existing.id))) { return acc.map(s => s.startTime === current.startTime ? current : s); } return acc; }, []).map((shift, si) => {
