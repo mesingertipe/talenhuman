@@ -1222,6 +1222,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 showToast("Programación guardada exitosamente");
                 setShowSaveModal(false); 
                 fetchData();
+                fetchWeeklyStatus();
             }, 800);
             
         } catch (err) { 

@@ -363,8 +363,8 @@ const ShiftApproval = ({ user }) => {
                 {loading ? <tr><td colSpan="4" style={{ padding: '50px', textAlign: 'center' }}>
                    <div className="animate-pulse" style={{ color: activeColors.accent, fontWeight: '800' }}>Sincronizando registros...</div>
                 </td></tr> : filteredStores.length === 0 ? <tr><td colSpan="4" style={{ padding: '50px', textAlign: 'center', color: activeColors.textMuted }}>No se encontraron registros para los filtros aplicados.</td></tr> : filteredStores.map(store => (
-                  <tr key={`${store.storeId}-${store.weekStart}`} style={{ background: activeColors.bg, transition: 'transform 0.2s' }} className="hover:scale-[1.005]">
-                    {activeTab === 'PENDIENTES' && <td style={{ padding: '15px 20px' }}><input type="checkbox" style={{ width: '18px', height: '18px' }} checked={selectedKeys.includes(`${store.storeId}-${store.weekStart}`)} onChange={() => handleSelectStore(store)} /></td>}
+                  <tr key={`${store.storeId}-${store.weekStartDate}`} style={{ background: activeColors.bg, transition: 'transform 0.2s' }} className="hover:scale-[1.005]">
+                    {activeTab === 'PENDIENTES' && <td style={{ padding: '15px 20px' }}><input type="checkbox" style={{ width: '18px', height: '18px' }} checked={selectedKeys.includes(`${store.storeId}-${store.weekStartDate}`)} onChange={() => handleSelectStore(store)} /></td>}
                     <td style={{ padding: '15px 20px' }}>
                       <div style={{ fontWeight: '900', color: activeColors.textMain, fontSize: '1.05rem' }}>{store.name}</div>
                       <div style={{ fontSize: '0.75rem', color: activeColors.accent, fontWeight: '900', marginTop: '2px' }}>
