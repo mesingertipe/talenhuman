@@ -1949,15 +1949,18 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         <div className={`px-4 py-2 rounded-[20px] flex items-center gap-2 shadow-sm border transition-all animate-in zoom-in-95 duration-500 btn-chiclet ${
                             weeklyStatus.status === 'Approved' ? 'bg-emerald-600 border-emerald-400/30 text-white shadow-glow-emerald' :
                             weeklyStatus.status === 'Rejected' ? 'bg-rose-600 border-rose-400/30 text-white shadow-glow-rose' :
-                            'bg-amber-500 border-amber-400/30 text-white shadow-glow-amber'
+                            weeklyStatus.status === 'Published' ? 'bg-amber-500 border-amber-400/30 text-white shadow-glow-amber' :
+                            'bg-slate-500 border-slate-400/30 text-white shadow-glow-slate'
                         }`}>
                             {weeklyStatus.status === 'Approved' ? <CheckCircle size={16} strokeWidth={3} /> :
                              weeklyStatus.status === 'Rejected' ? <XCircle size={16} strokeWidth={3} /> :
-                             <Clock size={16} strokeWidth={3} className="animate-pulse" />}
+                             weeklyStatus.status === 'Published' ? <Clock size={16} strokeWidth={3} className="animate-pulse" /> :
+                             <FileEdit size={16} strokeWidth={3} />}
                             <span className="text-[10px] font-black tracking-[0.1em] uppercase">
                                 {weeklyStatus.status === 'Approved' ? 'Semana Aprobada' :
                                  weeklyStatus.status === 'Rejected' ? 'Semana Rechazada' :
-                                 'Estado: Pendiente de Aprobación'}
+                                 weeklyStatus.status === 'Published' ? 'Pendiente de Aprobación' :
+                                 'Esperando Registro de Turnos'}
                             </span>
                         </div>
 
