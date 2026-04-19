@@ -2036,7 +2036,27 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                     setHoverPos({ x: rect.left + rect.width / 2, y: rect.top });
                                                                 }}
                                                                 onMouseLeave={() => setHoveredDayMeta(null)}
-                                                                className={`block text-[6px] font-black uppercase mt-1 px-1 py-1 rounded-full ${isHoliday ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'} leading-none truncate w-[90px] max-w-[90px] text-center shadow-sm cursor-help hover:scale-110 transition-transform mx-auto`}>
+                                                                style={{ 
+                                                                    fontSize: '7px', 
+                                                                    fontWeight: '900', 
+                                                                    textTransform: 'uppercase', 
+                                                                    marginTop: '4px', 
+                                                                    padding: '2px 4px', 
+                                                                    borderRadius: '9999px', 
+                                                                    backgroundColor: isHoliday ? '#f43f5e' : '#f59e0b',
+                                                                    color: 'white',
+                                                                    lineHeight: '1',
+                                                                    whiteSpace: 'nowrap',
+                                                                    overflow: 'hidden',
+                                                                    textOverflow: 'ellipsis',
+                                                                    width: '90px',
+                                                                    maxWidth: '90px',
+                                                                    textAlign: 'center',
+                                                                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                                                                    cursor: 'help',
+                                                                    margin: '0 auto',
+                                                                    display: 'block'
+                                                                }}>
                                                                 {holidayName || (isHoliday ? 'FESTIVO' : 'ESPECIAL')}
                                                             </div>
                                                         )}
