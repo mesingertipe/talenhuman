@@ -121,7 +121,7 @@ const ShiftApproval = ({ user }) => {
       });
       setSyncPhase(3); await delay(800); setSyncPhase(4); await delay(1200);
       showToast(`Sede ${inspectedStore.name} aprobada exitosamente`);
-      setInspectedStore(null); fetchStores();
+      setInspectedStore(null); setApprovalComment(''); setShowApprovalModal(false); fetchStores();
     } catch (err) { showToast('Error al aprobar la sede', 'error'); } 
     finally { setProcessing(false); setSyncPhase(0); }
   };
@@ -446,7 +446,7 @@ const ShiftApproval = ({ user }) => {
               </div>
               <div>
                 <h3 style={{ fontWeight: '1000', fontSize: '1.4rem', color: activeColors.textMain, margin: 0, letterSpacing: '-0.02em' }}>Aprobar Selección</h3>
-                <p style={{ margin: 0, fontSize: '0.8rem', color: activeColors.textMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Se validarán {selectedKeys.length} registros semanales</p>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: activeColors.textMuted, fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Se validarán {inspectedStore ? 1 : selectedKeys.length} registros semanales</p>
               </div>
             </div>
 
