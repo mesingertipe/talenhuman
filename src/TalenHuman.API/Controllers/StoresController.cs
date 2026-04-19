@@ -35,7 +35,7 @@ public class StoresController : ControllerBase
 
             var query = _context.Stores.Include(s => s.Brand).Where(s => s.CompanyId == companyId).AsQueryable();
 
-            if (!User.IsInRole("SuperAdmin") && !User.IsInRole("Admin"))
+            if (!User.IsInRole("SuperAdmin") && !User.IsInRole("Admin") && !User.IsInRole("RH"))
             {
                 if (User.IsInRole("Distrital"))
                 {
