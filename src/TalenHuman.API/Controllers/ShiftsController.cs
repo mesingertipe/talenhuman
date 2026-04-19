@@ -167,7 +167,8 @@ public class ShiftsController : ControllerBase
         await _context.SaveChangesAsync(default);
 
         // 5. Audit Trace (Replacing previous PUSH logic)
-        await _auditService.LogAsync("MASS_UPLOAD", "Shifts", dto.StoreId.ToString(), $"Malla cargada para periodo {start:dd/MM} - {end:dd/MM}. Pendiente de aprobación.");
+        var displayEnd = end.AddDays(-1);
+        await _auditService.LogAsync("MASS_UPLOAD", "Shifts", dto.StoreId.ToString(), $"Malla cargada para periodo {start:dd/MM} - {displayEnd:dd/MM}. Pendiente de aprobación.");
 
         // 6. Notify Approvers based on Configuration (V13.0 Requirement: RH vs Distrital)
         try {
@@ -217,7 +218,7 @@ public class ShiftsController : ControllerBase
                     ? $"{store.Brand?.Name} - Sede: {store.Name} ({store.ExternalId})" 
                     : dto.StoreId.ToString();
 
-                string emailBody = $"Se ha cargado una nueva programación de turnos para la sede <b>{storeInfo}</b> para el periodo <b>{start:dd/MM}</b> al <b>{end:dd/MM}</b>.\n\nPor favor, ingresa al panel administrativo para revisarla.";
+                string emailBody = $"Se ha cargado una nueva programación de turnos para la sede <b>{storeInfo}</b> para el periodo <b>{start:dd/MM}</b> al <b>{displayEnd:dd/MM}</b>.\n\nPor favor, ingresa al panel administrativo para revisarla.";
 
                 // V18.10.X: ELITE RESILIENCE - Use SEND BATCH to avoid 429 Rate Limits
                 var emailService = HttpContext.RequestServices.GetRequiredService<IEmailService>();
