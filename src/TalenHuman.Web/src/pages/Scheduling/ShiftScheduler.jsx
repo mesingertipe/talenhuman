@@ -2954,7 +2954,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         </div>
                                         <div style={{ padding: '24px', background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc', borderRadius: '32px', border: '1px solid rgba(0,0,0,0.05)' }}>
                                             <p style={{ fontSize: '10px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '5px' }}>Data Histórica</p>
-                                            <p style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>3 SEMANAS</p>
+                                            <p style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>
+                                                {(() => {
+                                                    const firstDay = toLocalISO(currentWeekStart);
+                                                    const weeksCount = historicalAverages[firstDay]?.historicalDates?.length || 3;
+                                                    return `${weeksCount} SEMANA${weeksCount !== 1 ? 'S' : ''}`;
+                                                })()}
+                                            </p>
                                         </div>
                                     </div>
 

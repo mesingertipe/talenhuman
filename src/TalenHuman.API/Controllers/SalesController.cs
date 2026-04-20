@@ -261,15 +261,24 @@ public class SalesController : ControllerBase
             var store = await _context.Stores.FindAsync(storeId);
             if (store != null)
             {
-                var rule = await _context.PredictiveShiftRules
+                var activeRules = await _context.PredictiveShiftRules
                     .Where(r => r.StoreTypeId == store.StoreTypeId && r.IsActive)
-                    .OrderByDescending(r => r.CreatedAt)
-                    .FirstOrDefaultAsync();
+                    .ToListAsync();
                 
-                if (rule != null)
+                if (activeRules.Any())
                 {
-                    lookbackCount = rule.LookbackWeeks > 0 ? rule.LookbackWeeks : weeksBack;
-                    strategy = rule.ComparisonStrategy;
+                    // V13.5: Union de requerimientos - Usar el máximo periodo necesario entre todas las reglas
+                    lookbackCount = activeRules.Max(r => r.LookbackWeeks > 0 ? r.LookbackWeeks : weeksBack);
+                    
+                    // Si alguna regla requiere comparación inteligente, se habilita globalmente para el día
+                    if (activeRules.Any(r => r.ComparisonStrategy == PredictiveComparisonStrategy.IntelligentComparison))
+                    {
+                        strategy = PredictiveComparisonStrategy.IntelligentComparison;
+                    }
+                    else
+                    {
+                        strategy = activeRules.First().ComparisonStrategy;
+                    }
                 }
             }
         }
