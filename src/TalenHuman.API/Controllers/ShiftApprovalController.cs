@@ -41,7 +41,7 @@ public class ShiftApprovalController : ControllerBase
         if (string.IsNullOrEmpty(userClaimIdString)) return Unauthorized();
         
         var userClaimId = Guid.Parse(userClaimIdString);
-        bool isTopAdmin = User.IsInRole("Admin") || User.IsInRole("SuperAdmin");
+        bool isTopAdmin = User.IsInRole("Admin") || User.IsInRole("SuperAdmin") || User.IsInRole("RH");
         
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userClaimId);
         if (user == null && !isTopAdmin) return Unauthorized();

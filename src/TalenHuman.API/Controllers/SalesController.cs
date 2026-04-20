@@ -38,8 +38,8 @@ public class SalesController : ControllerBase
         if (!Guid.TryParse(userIdStr, out Guid userId))
             return new List<Guid>();
 
-        // If SuperAdmin or Admin, they see everything in the company
-        if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+        // If SuperAdmin, Admin or RH, they see everything in the company
+        if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("RH"))
         {
             return await _context.Stores
                 .Where(s => s.CompanyId == companyId)
