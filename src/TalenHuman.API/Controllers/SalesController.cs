@@ -24,7 +24,18 @@ public class SalesController : ControllerBase
     {
         var companyId = _tenantProvider.GetTenantId();
         var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out Guid userId))
+        
+        // V13.6 MASTER FIX: If it's an API Key request (Integration), we don't have a UserId claim.
+        // We grant full access to the company's stores as the API Key is a system-level secret.
+        if (string.IsNullOrEmpty(userIdStr))
+        {
+            return await _context.Stores
+                .Where(s => s.CompanyId == companyId)
+                .Select(s => s.Id)
+                .ToListAsync();
+        }
+
+        if (!Guid.TryParse(userIdStr, out Guid userId))
             return new List<Guid>();
 
         // If SuperAdmin or Admin, they see everything in the company
