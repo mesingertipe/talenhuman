@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Building2, Save, CheckCircle, XCircle, ChevronRight, Activity, Boxes, Settings, Clock, Layout, Fingerprint, MapPin, Users, Briefcase, FileText, Monitor, Palette, Terminal, Search, ArrowLeft, ChevronDown, Check, X, Megaphone, Target, TrendingUp, Filter, Presentation } from 'lucide-react';
+import { Shield, Building2, Save, CheckCircle, XCircle, ChevronRight, Activity, Boxes, Settings, Clock, Layout, Fingerprint, MapPin, Users, Briefcase, FileText, Monitor, Palette, Terminal, Search, ArrowLeft, ChevronDown, Check, X, Megaphone, Target, TrendingUp, Filter, Presentation, Calendar } from 'lucide-react';
 import api from '../../services/api';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
 
@@ -36,7 +36,8 @@ const ModulePermissions = ({ user }) => {
       { code: 'SALES_CHANNELS', name: 'Canales de Venta', icon: Filter, desc: 'Configuración de canales (Comedor, Uber, etc.)' },
       { code: 'SALES_ANALYTICS', name: 'Analítica BI', icon: Presentation, desc: 'Dashboard de análisis predictivo y evolutivo' },
       { code: 'SALES_TIME_BANDS', name: 'Franjas Horarias', icon: Clock, desc: 'Configuración de periodos operativos (Mañana, Almuerzo, etc.)' },
-      { code: 'PREDICTIVE_RULES', name: 'Reglas Predictivas', icon: Target, desc: 'Configuración de motor de carga operacional' }
+      { code: 'PREDICTIVE_RULES', name: 'Reglas Predictivas', icon: Target, desc: 'Configuración de motor de carga operacional' },
+      { code: 'SPECIAL_DATES', name: 'Días Especiales', icon: Calendar, desc: 'Gestión de estacionalidad y eventos para el motor predictivo' }
     ],
     'OPERATIONS': [
       { code: 'SHIFTS', name: 'Programación Turnos', icon: Activity, desc: 'Malla horaria y asignaciones' },
