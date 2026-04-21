@@ -3330,26 +3330,26 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             <div className="flex flex-wrap gap-2 pb-4 border-b border-slate-100 dark:border-white/5">
                                 <button 
                                     onClick={() => setAnalysisRuleId(null)}
-                                    className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${!analysisRuleId ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-500 hover:bg-slate-200'}`}
+                                    className={`px-5 py-2.5 rounded-2xl text-[10px] font-black tracking-widest transition-all ${!analysisRuleId ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-500 hover:bg-slate-200'}`}
                                 >
-                                    Resumen Global
+                                    resumen global
                                 </button>
                                 {Object.values(selectedCoverageDay.ruleMetadata || {}).map((meta, idx) => (
                                     <button 
                                         key={idx}
                                         onClick={() => setAnalysisRuleId(Object.keys(selectedCoverageDay.ruleMetadata)[idx])}
-                                        className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${analysisRuleId === Object.keys(selectedCoverageDay.ruleMetadata)[idx] ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-500 hover:bg-slate-200'}`}
+                                        className={`px-5 py-2.5 rounded-2xl text-[10px] font-black tracking-widest transition-all flex items-center gap-2 ${analysisRuleId === Object.keys(selectedCoverageDay.ruleMetadata)[idx] ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-500 hover:bg-slate-200'}`}
                                     >
                                         <div className={`w-2 h-2 rounded-full ${meta.isActive ? 'bg-emerald-400' : 'bg-slate-400'}`}></div>
-                                        {meta.name}
+                                        {meta.name?.toLowerCase()}
                                     </button>
                                 ))}
                             </div>
 
                             <div className="flex flex-col lg:flex-row items-stretch gap-4 bg-slate-50/50 dark:bg-white/5 p-4 rounded-3xl border border-slate-200 dark:border-white/10 backdrop-blur-sm mb-6">
-                                {/* Section 1: Déficit */}
-                                <div className="flex-1 flex flex-col justify-center px-6 py-2 border-r border-slate-200 dark:border-white/10">
-                                    <p className="text-[10px] font-bold text-rose-500/80 mb-1">Déficit segmentado</p>
+                                 {/* Section 1: Déficit */}
+                                <div className="flex-1 flex flex-col justify-center px-6 py-2 border-r border-slate-200 dark:border-white/10 min-w-[140px]">
+                                    <p className="text-[10px] font-bold text-rose-500/80 mb-1 leading-none">déficit segmentado</p>
                                     <div className="flex items-baseline gap-2">
                                         <span className="text-2xl font-[950] text-rose-600 dark:text-rose-500 tracking-tighter">
                                             -{(() => {
@@ -3378,41 +3378,39 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 return deficit === 0 ? "0" : deficit;
                                             })()}
                                         </span>
-                                        <span className="text-xs font-bold text-slate-400">colaboradores</span>
+                                        <span className="text-[10px] font-bold text-slate-400">colaboradores</span>
                                     </div>
                                 </div>
 
                                 {/* Section 2: AI Intelligence */}
-                                <div className="flex-[2] flex flex-col justify-center px-6 py-2 border-r border-slate-200 dark:border-white/10">
+                                <div className="flex-[2.5] flex flex-col justify-center px-6 py-2 border-r border-slate-200 dark:border-white/10 min-w-[320px]">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <Sparkles size={12} className="text-indigo-500" />
-                                        <span className="text-[10px] font-bold text-slate-400">Lógica de inteligencia artificial</span>
+                                        <Sparkles size={11} className="text-indigo-500" />
+                                        <span className="text-[10px] font-bold text-slate-400">lógica de inteligencia artificial</span>
                                     </div>
                                     
                                     {analysisRuleId && selectedCoverageDay.ruleMetadata[analysisRuleId] ? (
-                                        <div className="flex items-center justify-between gap-8">
-                                            <div className="flex gap-6">
-                                                <div>
-                                                    <p className="text-[9px] font-bold text-indigo-400 mb-0.5">Ratio</p>
-                                                    <p className="text-lg font-black text-indigo-600 dark:text-indigo-400 leading-none">{selectedCoverageDay.ruleMetadata[analysisRuleId].math.ratio}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-[9px] font-bold text-emerald-500 mb-0.5">Base</p>
-                                                    <p className="text-lg font-black text-emerald-600 dark:text-emerald-400 leading-none">{selectedCoverageDay.ruleMetadata[analysisRuleId].math.minBase}</p>
-                                                </div>
+                                        <div className="grid grid-cols-3 gap-4 items-center">
+                                            <div className="flex flex-col">
+                                                <p className="text-[9px] font-bold text-indigo-400 mb-0.5">ratio</p>
+                                                <p className="text-lg font-black text-indigo-600 dark:text-indigo-400 leading-none">{selectedCoverageDay.ruleMetadata[analysisRuleId].math.ratio}</p>
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <p className="text-[9px] font-bold text-emerald-500 mb-0.5">base</p>
+                                                <p className="text-lg font-black text-emerald-600 dark:text-emerald-400 leading-none">{selectedCoverageDay.ruleMetadata[analysisRuleId].math.minBase}</p>
                                             </div>
 
-                                            <div className="flex-1 max-w-[240px]">
+                                            <div className="flex flex-col min-w-[140px]">
                                                 <div className="flex justify-between items-center mb-1.5">
-                                                    <p className="text-[9px] font-bold text-slate-400">Días de aplicación</p>
-                                                    <span className="text-[9px] font-bold text-indigo-400/80">mín. {selectedCoverageDay.ruleMetadata[analysisRuleId].math.opening} / {selectedCoverageDay.ruleMetadata[analysisRuleId].math.closing}</span>
+                                                    <p className="text-[9px] font-bold text-slate-400">días de aplicación</p>
+                                                    <span className="text-[9px] font-extrabold text-indigo-400/80">mín. {selectedCoverageDay.ruleMetadata[analysisRuleId].math.opening || 0} — {selectedCoverageDay.ruleMetadata[analysisRuleId].math.closing || 0}</span>
                                                 </div>
-                                                <div className="flex gap-1">
+                                                <div className="flex gap-0.5">
                                                     {['1','2','3','4','5','6','0'].map(d => {
                                                         const wd = selectedCoverageDay.ruleMetadata[analysisRuleId].math.workingDays;
                                                         const isActive = String(wd || "1,2,3,4,5,6,0").split(',').includes(d);
                                                         return (
-                                                            <div key={d} className={`flex-1 h-5 rounded-lg flex items-center justify-center text-[9px] font-bold transition-all ${isActive ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-200 dark:bg-white/5 text-slate-400 opacity-40'}`}>
+                                                            <div key={d} className={`flex-1 h-5 rounded-md flex items-center justify-center text-[9px] font-bold transition-all ${isActive ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-200 dark:bg-white/5 text-slate-400 opacity-40'}`}>
                                                                 {d === '0' ? 'd' : d === '1' ? 'l' : d === '2' ? 'm' : d === '3' ? 'x' : d === '4' ? 'j' : d === '5' ? 'v' : 's'}
                                                             </div>
                                                         );
@@ -3421,46 +3419,44 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             </div>
                                         </div>
                                     ) : (
-                                        <p className="text-[10px] font-medium text-slate-400 italic">Selecciona una regla para ver parámetros</p>
+                                        <p className="text-[10px] font-medium text-slate-400 italic">selecciona una regla para ver parámetros</p>
                                     )}
                                 </div>
 
                                 {/* Section 3: Business Window */}
-                                <div className="flex-1 flex flex-col justify-center px-6 py-2 relative overflow-hidden group">
+                                <div className="flex-1 flex flex-col justify-center px-6 py-2 relative overflow-hidden group min-w-[180px]">
                                     <div className="flex items-center gap-2 mb-1">
-                                        <Clock size={12} className="text-emerald-500" />
-                                        <span className="text-[10px] font-bold text-slate-400">Ventana de operación</span>
+                                        <Clock size={11} className="text-emerald-500" />
+                                        <span className="text-[10px] font-bold text-slate-400">ventana de operación</span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <p className="text-xl font-black text-slate-700 dark:text-white tracking-tighter leading-none">
-                                            {selectedCoverageDay.opWindow.isClosed ? 'Cerrado hoy' : `${selectedCoverageDay.opWindow.start} — ${selectedCoverageDay.opWindow.end}`}
+                                            {selectedCoverageDay.opWindow.isClosed ? 'cerrado hoy' : `${selectedCoverageDay.opWindow.start} — ${selectedCoverageDay.opWindow.end}`}
                                         </p>
-                                        <span className="text-[10px] font-bold text-indigo-400/70">
-                                            {selectedCoverageDay.day.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' })}
+                                        <span className="text-[10px] font-black text-indigo-400/70">
+                                            {selectedCoverageDay.day.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' }).toLowerCase()}
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-1.5 mt-1">
                                         <div className="w-1 h-1 rounded-full bg-emerald-500"></div>
-                                        <p className="text-[9px] font-medium text-emerald-500/80 italic leading-none">Sincronizado vía formato</p>
+                                        <p className="text-[9px] font-medium text-emerald-500/80 italic leading-none">sincronizado vía formato</p>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* HOUR-BY-HOUR TRAFFIC LIGHT */}
-                            <div>
-                                <div className="flex justify-between items-center mb-6">
-                                    <div className="flex flex-col gap-1">
-                                        <h4 className="text-[11px] font-[1000] text-indigo-500 uppercase tracking-widest leading-none">Semáforo de Demanda x Hora</h4>
-                                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">
-                                            {analysisRuleId ? `Inspección: ${selectedCoverageDay.ruleMetadata[analysisRuleId].name}` : 'Análisis Operativo Consolidado'}
-                                        </p>
-                                    </div>
-                                    <div className="flex items-center gap-4 text-[9px] font-black bg-slate-50 dark:bg-slate-800/50 px-4 py-2 rounded-full border border-slate-100 dark:border-white/5">
-                                        <div className="flex items-center gap-1.5 text-rose-500"><div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></div> Déficit</div>
-                                        <div className="flex items-center gap-1.5 text-emerald-500"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div> Cubierto</div>
-                                        <div className="flex items-center gap-1.5 text-slate-400"><div className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700"></div> S/Demanda</div>
-                                    </div>
+                            <div className="flex justify-between items-center mb-6">
+                                <div className="flex flex-col gap-1">
+                                    <h4 className="text-[11px] font-[1000] text-indigo-500 tracking-widest leading-none">semáforo de demanda x hora</h4>
+                                    <p className="text-[9px] text-slate-400 font-bold tracking-tight">
+                                        {analysisRuleId ? `inspección: ${selectedCoverageDay.ruleMetadata[analysisRuleId].name?.toLowerCase()}` : 'análisis operativo consolidado'}
+                                    </p>
                                 </div>
+                                <div className="flex items-center gap-4 text-[9px] font-black bg-slate-50 dark:bg-slate-800/50 px-4 py-2 rounded-full border border-slate-100 dark:border-white/5">
+                                    <div className="flex items-center gap-1.5 text-rose-500"><div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></div> déficit</div>
+                                    <div className="flex items-center gap-1.5 text-emerald-500"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div> cubierto</div>
+                                    <div className="flex items-center gap-1.5 text-slate-400"><div className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700"></div> sin demanda</div>
+                                </div>
+                            </div>
                                 <div className="bg-slate-50/50 dark:bg-slate-800/40 p-10 rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-inner">
                                     <div 
                                         style={{ 
@@ -3535,13 +3531,12 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                             {hourVolume.toFixed(1)}
                                                         </span>
                                                         <span className={`text-[9.5px] font-[1000] mt-0.5 ${isDeficit ? 'text-rose-600' : isOptimal ? 'text-emerald-600' : 'text-slate-400'}`}>
-                                                            {scheduled}/{hourNeeds}
+                                                            {scheduled} / {hourNeeds}
                                                         </span>
                                                     </div>
                                                 </div>
                                             );
                                         })}
-                                    </div>
                                 </div>
                             </div>
 
