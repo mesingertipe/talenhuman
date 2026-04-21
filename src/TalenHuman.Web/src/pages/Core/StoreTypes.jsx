@@ -224,6 +224,7 @@ const StoreTypes = ({ user }) => {
                             onClick={() => { 
                                 setCurrentType(type);
                                 setFormData({ 
+                                    id: type.id,
                                     name: type.name, 
                                     description: type.description || '', 
                                     isActive: type.isActive,
