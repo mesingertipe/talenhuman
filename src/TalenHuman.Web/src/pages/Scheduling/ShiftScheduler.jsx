@@ -167,6 +167,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const [dragSource, setDragSource] = useState(null);
     const [draggedData, setDraggedData] = useState(null);
     const [isProcessingStatus, setIsProcessingStatus] = useState(false);
+    
+    // V13.0 ELITE RECOVERY: Persistence Logic
+    const [hasLocalDraft, setHasLocalDraft] = useState(false);
+    const [draftShifts, setDraftShifts] = useState([]);
+    const [draftKey, setDraftKey] = useState(null);
 
 
 
@@ -477,6 +482,22 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             setAttendances(normalizedAttendances);
             setNews(newsRes.data);
 
+            // V13.0 ELITE RECOVERY: Detect if there's a local draft with changes
+            const localDraftRaw = localStorage.getItem(`talenhuman_draft_${targetStore}_${startDateStr}`);
+            if (localDraftRaw) {
+                try {
+                    const localDraft = JSON.parse(localDraftRaw);
+                    // Simple check: if counts are different or content hash (implied) might be different
+                    // We show the banner if the local draft exists and is not identical to what's in DB
+                    if (JSON.stringify(localDraft) !== JSON.stringify(normalizedShifts)) {
+                        setDraftShifts(localDraft);
+                        setHasLocalDraft(true);
+                    }
+                } catch (e) {
+                    console.error("Error parsing local draft", e);
+                }
+            }
+
             // Extract the common observation/comment for this week
             const firstComment = normalizedShifts.find(s => s.observation)?.observation || '';
             setLastSaveComment(firstComment);
@@ -487,6 +508,20 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             setLoading(false);
         }
     };
+
+    // V13.0 ELITE RECOVERY: Auto-save debounced to LocalStorage
+    useEffect(() => {
+        if (!selectedStore || shifts.length === 0 || effectiveReadOnly) return;
+
+        const timer = setTimeout(() => {
+            const startDateStr = toLocalISO(currentWeekStart);
+            const key = `talenhuman_draft_${selectedStore}_${startDateStr}`;
+            localStorage.setItem(key, JSON.stringify(shifts));
+            setDraftKey(key);
+        }, 2000); // 2s debounce
+
+        return () => clearTimeout(timer);
+    }, [shifts, selectedStore, currentWeekStart, effectiveReadOnly]);
 
     // V13.0.1: PREDICTIVE CALCULATION ENGINE (Strict store hours)
     const calculateHourlyNeeds = useCallback((dayDate) => {
@@ -1305,6 +1340,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 setSyncPhase(4);
                 setLastSaveComment(saveComment);
                 showToast("Programación guardada exitosamente");
+                
+                // V13.0 ELITE RECOVERY: Clear local draft upon successful remote save
+                if (draftKey) localStorage.removeItem(draftKey);
+                setHasLocalDraft(false);
+
                 setShowSaveModal(false); 
                 fetchData();
                 fetchWeeklyStatus();
@@ -1804,6 +1844,45 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
     return (
         <>
+            {/* V13.0 ELITE RECOVERY BANNER */}
+            {hasLocalDraft && !effectiveReadOnly && (
+                <div className="fixed top-0 left-0 right-0 z-[200000] animate-in slide-in-from-top duration-700">
+                    <div className="bg-gradient-to-r from-indigo-700/90 via-purple-800/90 to-indigo-900/90 backdrop-blur-2xl border-b border-white/20 p-4 shadow-2xl flex items-center justify-between px-12">
+                        <div className="flex items-center gap-6">
+                            <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-white shadow-inner">
+                                <Sparkles className="animate-pulse" size={24} />
+                            </div>
+                            <div>
+                                <h4 className="text-white font-black text-sm tracking-tight m-0">¡Borrador Detectado!</h4>
+                                <p className="text-indigo-200 text-[10px] font-bold m-0 opacity-80 uppercase tracking-widest">Tienes cambios locales sin sincronizar en esta sede.</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button 
+                                onClick={() => { 
+                                    setShifts(draftShifts); 
+                                    setHasLocalDraft(false); 
+                                    showToast("Progreso recuperado localmente", "success");
+                                }}
+                                className="px-6 py-2.5 bg-white text-indigo-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-50 transition-all active:scale-95 shadow-lg"
+                            >
+                                Restaurar Sesión
+                            </button>
+                            <button 
+                                onClick={() => { 
+                                    if (draftKey) localStorage.removeItem(draftKey);
+                                    setHasLocalDraft(false);
+                                    showToast("Borrador descartado", "info");
+                                }}
+                                className="px-6 py-2.5 bg-indigo-500/20 text-white border border-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95"
+                            >
+                                Descartar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div id="printable-area" className="page-container animate-in fade-in duration-500" style={{ padding: '2rem' }}>
                 <style>
                     {`
