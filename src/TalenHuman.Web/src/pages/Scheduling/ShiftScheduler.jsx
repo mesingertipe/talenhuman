@@ -113,7 +113,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     useEffect(() => {
         if (initialDate) {
             // V19.5: PARSEO LITERAL - Usar la 'Llave Maestra' del padre sin transformaciones
-            const parts = initialDate.split('T')[0].split('-');
+            const parts = String(initialDate).split('T')[0].split('-');
             const requestedMonday = new Date(parts[0], parts[1] - 1, parts[2]);
             requestedMonday.setHours(0, 0, 0, 0);
             
@@ -181,7 +181,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
     const [currentWeekStart, setCurrentWeekStart] = useState(() => {
         if (initialDate) {
-            const parts = initialDate.split('T')[0].split('-');
+            const parts = String(initialDate).split('T')[0].split('-');
             const date = new Date(parts[0], parts[1] - 1, parts[2]);
             date.setHours(0, 0, 0, 0);
             return date;
@@ -504,15 +504,17 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
         // V21.7: Case-insensitive store matching to prevent metadata loss
         const store = stores.find(s => String(s.id).toLowerCase() === String(selectedStore).toLowerCase());
+        
         // Normalize date safely extracting YYYY-MM-DD to avoid timezone jumps during getDay()
-        const dateStr = dayDate.split('T')[0];
+        // V22.8: Robust check for dayDate type (String vs Date)
+        const dateStr = (typeof dayDate === 'string' ? dayDate : dayDate.toISOString()).split('T')[0];
         const [y, m, d] = dateStr.split('-');
         const normalizedDate = new Date(y, m - 1, d);
         const dayOfWeek = normalizedDate.getDay(); // 0=Sun, 1=Mon...
         
         // V13.8: Determine Dynamic Operational Windows from StoreType
-        let opStart = store?.defaultStartTime ? parseInt(store.defaultStartTime.split(':')[0]) : 8;
-        let opEndHour = store?.defaultEndTime ? parseInt(store.defaultEndTime.split(':')[0]) : 22;
+        let opStart = store?.defaultStartTime ? parseInt(String(store.defaultStartTime).split(':')[0]) : 8;
+        let opEndHour = store?.defaultEndTime ? parseInt(String(store.defaultEndTime).split(':')[0]) : 22;
         let isClosedToday = false;
 
         let opStartDisplay = store?.defaultStartTime || "08:00";
@@ -524,8 +526,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 if (todayHours.isClosed) {
                     isClosedToday = true;
                 } else {
-                    opStart = parseInt(todayHours.startTime.split(':')[0]);
-                    opEndHour = parseInt(todayHours.endTime.split(':')[0]);
+                    opStart = parseInt(String(todayHours.startTime || "08:00").split(':')[0]);
+                    opEndHour = parseInt(String(todayHours.endTime || "22:00").split(':')[0]);
                     opStartDisplay = todayHours.startTime;
                     opEndDisplay = todayHours.endTime;
                 }
@@ -537,7 +539,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             const ruleVolumes = new Array(24).fill(0);
             
             // V13.8: Check Rule Working Days
-            const activeDays = (rule.workingDays || "1,2,3,4,5,6,0").split(',').map(d => parseInt(d));
+            const activeDays = String(rule.workingDays || "1,2,3,4,5,6,0").split(',').map(d => parseInt(d));
             const isRuleActiveToday = activeDays.includes(dayOfWeek) && !isClosedToday;
 
             const metricKey = rule.metricType === 0 ? 'ventaNetaAvg' : 
@@ -551,7 +553,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 }
 
                 dayHistory.forEach(h => {
-                    const hour = parseInt(h.time.split(':')[0]);
+                    const hour = parseInt(String(h.time || "00:00").split(':')[0]);
                     if (hour < opStart || hour >= opEndHour) return;
 
                     // V20.0: Channel Filtering logic
@@ -644,8 +646,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             }
 
             const store = stores.find(s => s.id === selectedStore);
-            const opStart = store?.defaultStartTime ? parseInt(store.defaultStartTime.split(':')[0]) : 8;
-            const opEndHour = store?.defaultEndTime ? parseInt(store.defaultEndTime.split(':')[0]) : 22;
+            const opStart = store?.defaultStartTime ? parseInt(String(store.defaultStartTime).split(':')[0]) : 8;
+            const opEndHour = store?.defaultEndTime ? parseInt(String(store.defaultEndTime).split(':')[0]) : 22;
 
             // TRACKING: Work days per employee
             const workDaysCount = {};
@@ -919,11 +921,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             days.forEach((day, index) => {
                 if (activeDays[index]) {
                     const start = new Date(day);
-                    const [sh, sm] = bStart.split(':');
+                    const [sh, sm] = String(bStart || "08:00").split(':');
                     start.setHours(parseInt(sh), parseInt(sm), 0);
 
                     const end = new Date(day);
-                    const [eh, em] = bEnd.split(':');
+                    const [eh, em] = String(bEnd || "17:00").split(':');
                     end.setHours(parseInt(eh), parseInt(em), 0);
                     if (end < start) end.setDate(end.getDate() + 1);
 
@@ -1162,8 +1164,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
     const confirmTimeModal = () => {
         const { employeeId, date, type } = pendingEvent;
-        const start = new Date(date); const [sh, sm] = startTime.split(':'); start.setHours(parseInt(sh), parseInt(sm), 0);
-        const end = new Date(date); const [eh, em] = endTime.split(':'); end.setHours(parseInt(eh), parseInt(em), 0);
+        const start = new Date(date); const [sh, sm] = String(startTime).split(':'); start.setHours(parseInt(sh), parseInt(sm), 0);
+        const end = new Date(date); const [eh, em] = String(endTime).split(':'); end.setHours(parseInt(eh), parseInt(em), 0);
 
         const newShift = {
             employeeId,
