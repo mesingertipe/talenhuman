@@ -67,19 +67,25 @@ public class StoreTypesController : ControllerBase
 
         existing.Name = storeType.Name;
         existing.IsActive = storeType.IsActive;
+        existing.Description = storeType.Description;
 
-        // Sync Daily Hours
+        // Atomic Sync of Daily Hours
         _context.StoreTypeDailyHours.RemoveRange(existing.DailyHours);
-        foreach (var dh in storeType.DailyHours)
+        existing.DailyHours.Clear();
+
+        if (storeType.DailyHours != null)
         {
-            existing.DailyHours.Add(new StoreTypeDailyHour
+            foreach (var dh in storeType.DailyHours)
             {
-                DayOfWeek = dh.DayOfWeek,
-                StartTime = dh.StartTime,
-                EndTime = dh.EndTime,
-                IsClosed = dh.IsClosed,
-                CompanyId = existing.CompanyId
-            });
+                existing.DailyHours.Add(new StoreTypeDailyHour
+                {
+                    DayOfWeek = dh.DayOfWeek,
+                    StartTime = dh.StartTime,
+                    EndTime = dh.EndTime,
+                    IsClosed = dh.IsClosed,
+                    CompanyId = existing.CompanyId
+                });
+            }
         }
 
         await _context.SaveChangesAsync(CancellationToken.None);

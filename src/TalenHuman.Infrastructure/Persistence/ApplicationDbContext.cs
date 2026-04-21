@@ -99,6 +99,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<WeeklyApproval>().HasQueryFilter(w => w.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<WeeklyApprovalLog>().HasQueryFilter(w => w.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<StoreType>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<StoreTypeDailyHour>().HasQueryFilter(dh => dh.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<PredictiveShiftRule>().HasQueryFilter(p => p.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<PredictiveShiftRuleProfile>().HasQueryFilter(p => p.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<PredictiveShiftRuleChannel>().HasKey(rc => new { rc.RuleId, rc.SalesChannelId });

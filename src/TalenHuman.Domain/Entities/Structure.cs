@@ -135,6 +135,7 @@ public class Profile : BaseEntity, IMultitenant
 public class StoreType : BaseEntity, IMultitenant
 {
     public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
     public bool IsActive { get; set; } = true;
 
     public Guid CompanyId { get; set; }
