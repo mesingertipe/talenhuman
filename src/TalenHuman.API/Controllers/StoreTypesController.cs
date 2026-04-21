@@ -66,31 +66,29 @@ public class StoreTypesController : ControllerBase
 
         try
         {
+            // 1. Load Parent ONLY (No Include to avoid tracker collisions)
             var existing = await _context.StoreTypes
-                .Include(st => st.DailyHours)
                 .FirstOrDefaultAsync(st => st.Id == id);
 
             if (existing == null) return NotFound("Formato de tienda no encontrado.");
 
-            // 1. Update Parent properties
+            // 2. Update Parent properties
             existing.Name = storeType.Name;
             existing.IsActive = storeType.IsActive;
             existing.Description = storeType.Description;
 
-            // 2. Nuclear Cleanup: Direct DB Delete (Bypasses Concurrency/Filters issues)
+            // 3. Absolute Cleanup: Direct SQL Delete ignoring filters to avoid orphans/concurrency errors
             await _context.StoreTypeDailyHours
+                .IgnoreQueryFilters()
                 .Where(dh => dh.StoreTypeId == id)
                 .ExecuteDeleteAsync();
 
-            // 3. Clear Tracker state for DailyHours to avoid tracking overlaps
-            existing.DailyHours.Clear();
-
-            // 4. Re-insert fresh records
+            // 4. Atomic Insertion of fresh records
             if (storeType.DailyHours != null)
             {
                 foreach (var dh in storeType.DailyHours)
                 {
-                    existing.DailyHours.Add(new StoreTypeDailyHour
+                    _context.StoreTypeDailyHours.Add(new StoreTypeDailyHour
                     {
                         DayOfWeek = dh.DayOfWeek,
                         StartTime = dh.StartTime ?? "08:00",
@@ -108,7 +106,7 @@ public class StoreTypesController : ControllerBase
         catch (DbUpdateException ex)
         {
             var inner = ex.InnerException?.Message ?? ex.Message;
-            return StatusCode(500, new { error = "Fallo en persistencia atómica (DB)", detail = inner });
+            return StatusCode(500, new { error = "Fallo en persistencia aislada (DB)", detail = inner });
         }
         catch (Exception ex)
         {
