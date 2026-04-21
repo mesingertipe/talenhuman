@@ -517,24 +517,16 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         let opStartDisplay = store?.defaultStartTime || "08:00";
         let opEndDisplay = store?.defaultEndTime || "22:00";
 
-        // V22.0: Robust StoreType property access (PascalCase & camelCase support)
-        const storeTypeData = store?.storeType || store?.StoreType;
-        const dailyHours = storeTypeData?.dailyHours || storeTypeData?.DailyHours;
-
-        if (dailyHours) {
-            const todayHours = dailyHours.find(dh => dh.dayOfWeek === dayOfWeek || dh.DayOfWeek === dayOfWeek);
+        if (store?.storeType?.dailyHours) {
+            const todayHours = store.storeType.dailyHours.find(dh => dh.dayOfWeek === dayOfWeek);
             if (todayHours) {
-                const sT = todayHours.startTime || todayHours.StartTime;
-                const eT = todayHours.endTime || todayHours.EndTime;
-                const isC = todayHours.isClosed || todayHours.IsClosed;
-
-                if (isC) {
+                if (todayHours.isClosed) {
                     isClosedToday = true;
-                } else if (sT && eT) {
-                    opStart = parseInt(sT.split(':')[0]);
-                    opEndHour = parseInt(eT.split(':')[0]);
-                    opStartDisplay = sT;
-                    opEndDisplay = eT;
+                } else {
+                    opStart = parseInt(todayHours.startTime.split(':')[0]);
+                    opEndHour = parseInt(todayHours.endTime.split(':')[0]);
+                    opStartDisplay = todayHours.startTime;
+                    opEndDisplay = todayHours.endTime;
                 }
             }
         }
@@ -3377,70 +3369,58 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     </p>
                                 </div>
                                 
-                                <div className="flex flex-col md:flex-row gap-4 items-stretch">
-                                    {/* Intelligence Metrics Card */}
-                                    <div className="flex-1 p-5 bg-slate-50 dark:bg-slate-800/40 rounded-3xl border border-slate-200 dark:border-white/5 flex flex-col justify-center">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <Sparkles size={12} className="text-indigo-500" />
-                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Métricas de IA</span>
+                                    {/* Intelligence Card */}
+                                    <div className="p-6 bg-slate-50 dark:bg-slate-800/40 rounded-3xl border border-slate-200 dark:border-white/5">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <Sparkles size={14} className="text-indigo-500" />
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Lógica de IA</span>
                                         </div>
+
                                         {analysisRuleId && selectedCoverageDay.ruleMetadata[analysisRuleId] ? (
-                                            <div className="flex items-center justify-between gap-6">
-                                                <div className="flex-1 px-4 py-2 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-white/5">
-                                                    <p className="text-[7px] font-black text-slate-400 uppercase mb-1">Ratio</p>
-                                                    <p className="text-2xl font-black text-indigo-600 leading-none">{selectedCoverageDay.ruleMetadata[analysisRuleId].math.ratio}</p>
+                                            <div className="space-y-4">
+                                                <div className="flex justify-between items-center py-2 border-b border-slate-100 dark:border-white/5">
+                                                    <div>
+                                                        <p className="text-[8px] font-black text-slate-400 uppercase">Ratio</p>
+                                                        <p className="text-xl font-black text-indigo-600 leading-none">{selectedCoverageDay.ruleMetadata[analysisRuleId].math.ratio}</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-[8px] font-black text-slate-400 uppercase">Personal Base</p>
+                                                        <p className="text-xl font-black text-emerald-600 leading-none">{selectedCoverageDay.ruleMetadata[analysisRuleId].math.minBase}</p>
+                                                    </div>
                                                 </div>
-                                                <div className="flex-1 px-4 py-2 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-white/5">
-                                                    <p className="text-[7px] font-black text-slate-400 uppercase mb-1">Base</p>
-                                                    <p className="text-2xl font-black text-emerald-600 leading-none">{selectedCoverageDay.ruleMetadata[analysisRuleId].math.minBase}</p>
+                                                <div>
+                                                    <p className="text-[8px] font-black text-slate-400 uppercase mb-2">Días de Aplicación</p>
+                                                    <div className="flex gap-1">
+                                                        {['1','2','3','4','5','6','0'].map(d => (
+                                                            <div key={d} className={`flex-1 h-6 rounded flex items-center justify-center text-[9px] font-black ${selectedCoverageDay.ruleMetadata[analysisRuleId].math.workingDays.split(',').includes(d) ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                                                                {d === '0' ? 'D' : d === '1' ? 'L' : d === '2' ? 'M' : d === '3' ? 'X' : d === '4' ? 'J' : d === '5' ? 'V' : 'S'}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <div className="flex justify-between items-center text-[10px] font-bold">
+                                                    <span className="text-slate-500">Mín. Apertura/Cierre:</span>
+                                                    <span className="text-slate-800 dark:text-white">{selectedCoverageDay.ruleMetadata[analysisRuleId].math.opening} / {selectedCoverageDay.ruleMetadata[analysisRuleId].math.closing}</span>
                                                 </div>
                                             </div>
-                                        ) : <p className="text-[9px] text-slate-400 italic">Sin regla</p>}
+                                        ) : <p className="text-[10px] text-slate-400 italic">No hay regla seleccionada</p>}
                                     </div>
 
-                                    {/* Application Context Card */}
-                                    <div className="flex-1 p-5 bg-slate-50 dark:bg-slate-800/40 rounded-3xl border border-slate-200 dark:border-white/5">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <Calendar size={12} className="text-indigo-500" />
-                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Contexto de Regla</span>
-                                        </div>
-                                        {analysisRuleId && selectedCoverageDay.ruleMetadata[analysisRuleId] ? (
-                                            <div className="space-y-3">
-                                                <div className="flex gap-1">
-                                                    {['1','2','3','4','5','6','0'].map(d => (
-                                                        <div key={d} className={`flex-1 h-5 rounded flex items-center justify-center text-[8px] font-black ${selectedCoverageDay.ruleMetadata[analysisRuleId].math.workingDays.split(',').includes(d) ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-200 text-slate-400 opacity-40'}`}>
-                                                            {d === '0' ? 'D' : d === '1' ? 'L' : d === '2' ? 'M' : d === '3' ? 'X' : d === '4' ? 'J' : d === '5' ? 'V' : 'S'}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                                <div className="flex justify-between items-center px-3 py-1.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-white/5">
-                                                    <span className="text-[8px] font-black text-slate-400 uppercase">Apertura/Cierre</span>
-                                                    <span className="text-[10px] font-black text-slate-700 dark:text-white uppercase">
-                                                        {selectedCoverageDay.ruleMetadata[analysisRuleId].math.opening} / {selectedCoverageDay.ruleMetadata[analysisRuleId].math.closing} <span className="opacity-40 ml-1">PAX</span>
-                                                    </span>
-                                                </div>
+                                    {/* Business Card */}
+                                    <div className="p-6 bg-slate-900 rounded-3xl text-white shadow-xl flex flex-col justify-between">
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <Clock size={14} className="text-emerald-400" />
+                                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Ventana de Negocio</span>
                                             </div>
-                                        ) : null}
-                                    </div>
-
-                                    {/* Operational Window Card */}
-                                    <div className="flex-[1.2] p-5 bg-slate-900 rounded-3xl text-white shadow-xl flex flex-col justify-center relative overflow-hidden">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <Clock size={12} className="text-emerald-400" />
-                                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Ventana Operativa</span>
-                                        </div>
-                                        <div className="flex items-baseline gap-2">
-                                            <h3 className="text-2xl font-[1000] tracking-tighter leading-none">
+                                            <h3 className="text-2xl font-black tracking-tighter mb-1 leading-none">
                                                 {selectedCoverageDay.opWindow.isClosed ? 'CERRADO' : `${selectedCoverageDay.opWindow.start} — ${selectedCoverageDay.opWindow.end}`}
                                             </h3>
-                                            <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded text-[7px] font-black uppercase">SYNC</span>
+                                            <p className="text-[10px] text-slate-500 italic">Sincronizado vía Formato</p>
                                         </div>
-                                        <div className="mt-3 pt-3 border-t border-white/10 flex justify-between items-center">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-                                                <span className="text-[9px] font-black uppercase text-indigo-200">{selectedCoverageDay.day.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-                                            </div>
-                                            {selectedCoverageDay.isHoliday && <span className="bg-rose-600 px-2 py-0.5 rounded text-[8px] font-black animate-pulse uppercase">FESTIVO</span>}
+                                        <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
+                                            <span className="text-[9px] font-black uppercase text-slate-400">{selectedCoverageDay.day.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                                            {selectedCoverageDay.isHoliday && <span className="bg-rose-600 px-2 py-0.5 rounded text-[8px] font-black">FESTIVO</span>}
                                         </div>
                                     </div>
                                 </div>
@@ -3577,7 +3557,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 </div>
                             </div>
                         </div>
-                    </div>,
+                    </div>
+                </div>,
                 document.body
             )}
             {/* V13.0 PREDICTIVE TRANSPARENCY TOOLTIP (Hover) */}
