@@ -72,13 +72,17 @@ public class StoreTypesController : ControllerBase
 
             if (existing == null) return NotFound("Formato de tienda no encontrado.");
 
+            // Basic Properties
             existing.Name = storeType.Name;
             existing.IsActive = storeType.IsActive;
             existing.Description = storeType.Description;
 
-            // Intelligent Sync (Upsert Pattern)
+            // Robust Multitenant Intelligent Sync
             if (storeType.DailyHours != null)
             {
+                var requestDays = storeType.DailyHours.Select(x => x.DayOfWeek).ToList();
+                
+                // 1. Update Existing or Add New
                 foreach (var dh in storeType.DailyHours)
                 {
                     var existingHour = existing.DailyHours
@@ -86,27 +90,26 @@ public class StoreTypesController : ControllerBase
 
                     if (existingHour != null)
                     {
-                        // Update
                         existingHour.StartTime = dh.StartTime ?? "08:00";
                         existingHour.EndTime = dh.EndTime ?? "17:00";
                         existingHour.IsClosed = dh.IsClosed;
+                        existingHour.CompanyId = existing.CompanyId; // Ensure multitenancy consistency
                     }
                     else
                     {
-                        // Add
                         existing.DailyHours.Add(new StoreTypeDailyHour
                         {
                             DayOfWeek = dh.DayOfWeek,
                             StartTime = dh.StartTime ?? "08:00",
                             EndTime = dh.EndTime ?? "17:00",
                             IsClosed = dh.IsClosed,
-                            CompanyId = existing.CompanyId
+                            CompanyId = existing.CompanyId,
+                            StoreTypeId = existing.Id
                         });
                     }
                 }
 
-                // Cleanup: Remove days not present in the request (if any)
-                var requestDays = storeType.DailyHours.Select(x => x.DayOfWeek).ToList();
+                // 2. Remove days not present in this request
                 var toRemove = existing.DailyHours
                     .Where(x => !requestDays.Contains(x.DayOfWeek))
                     .ToList();
@@ -127,7 +130,7 @@ public class StoreTypesController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = "Error interno del motor", detail = ex.Message });
+            return StatusCode(500, new { error = "Internal Server Exception", detail = ex.Message });
         }
     }
 

@@ -98,7 +98,9 @@ const StoreTypes = ({ user }) => {
       setShowModal(false);
       fetchData();
     } catch (err) {
-      showToast("Error en la persistencia", "error");
+      const serverMsg = err.response?.data?.detail || err.response?.data?.error || "Error en la persistencia";
+      showToast(serverMsg, "error");
+      console.error("Persistence Failure:", err.response?.data);
     } finally {
       setIsSubmitting(false);
     }
