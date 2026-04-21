@@ -510,6 +510,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         let opEndHour = store?.defaultEndTime ? parseInt(store.defaultEndTime.split(':')[0]) : 22;
         let isClosedToday = false;
 
+        let opStartDisplay = store?.defaultStartTime || "08:00";
+        let opEndDisplay = store?.defaultEndTime || "22:00";
+
         if (store?.storeType?.dailyHours) {
             const todayHours = store.storeType.dailyHours.find(dh => dh.dayOfWeek === dayOfWeek);
             if (todayHours) {
@@ -518,6 +521,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 } else {
                     opStart = parseInt(todayHours.startTime.split(':')[0]);
                     opEndHour = parseInt(todayHours.endTime.split(':')[0]);
+                    opStartDisplay = todayHours.startTime;
+                    opEndDisplay = todayHours.endTime;
                 }
             }
         }
@@ -535,9 +540,14 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                (rule.metricType === 2 ? 'comensalesAvg' : 'ticketPromedioAvg'));
 
             if (isRuleActiveToday) {
+                // V21.0: Ensure MINIMUM STAFF across entire operational window BEFORE history
+                for (let h = opStart; h < opEndHour; h++) {
+                    ruleNeeds[h] = rule.minStaff || 1;
+                }
+
                 dayHistory.forEach(h => {
                     const hour = parseInt(h.time.split(':')[0]);
-                    if (hour < opStart || hour > opEndHour) return;
+                    if (hour < opStart || hour >= opEndHour) return;
 
                     // V20.0: Channel Filtering logic
                     let forecastValue = 0;
@@ -557,11 +567,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 });
 
                 // Apply MinStaffOpening / MinStaffClosing based on DYNAMIC WINDOW
-                for (let h = 0; h < 24; h++) {
+                for (let h = opStart; h < opEndHour; h++) {
                     if (h >= opStart && h < opStart + 3) {
                         ruleNeeds[h] = Math.max(ruleNeeds[h], rule.minStaffOpening || 1);
                     }
-                    if (h > opEndHour - 3 && h <= opEndHour) {
+                    if (h >= opEndHour - 3 && h < opEndHour) {
                         ruleNeeds[h] = Math.max(ruleNeeds[h], rule.minStaffClosing || 1);
                     }
                 }
@@ -573,8 +583,16 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 needs: ruleNeeds,
                 volumes: ruleVolumes,
                 isActive: isRuleActiveToday,
-                opWindow: { start: opStart, end: opEndHour, isClosed: isClosedToday },
-                math: { ratio: rule.ratio, metric: rule.metricType, minBase: rule.minStaff }
+                opWindow: { start: opStartDisplay, end: opEndDisplay, isClosed: isClosedToday },
+                math: { 
+                    ratio: rule.ratio, 
+                    metric: rule.metricType, 
+                    minBase: rule.minStaff,
+                    workingDays: rule.workingDays || "1,2,3,4,5,6,0",
+                    restDays: rule.weeklyRestDays || 1,
+                    opening: rule.minStaffOpening || 1,
+                    closing: rule.minStaffClosing || 1
+                }
             };
 
             needsPerRule[rule.id] = ruleNeeds;
@@ -599,7 +617,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             historicalDates: dayData.historicalDates || [],
             isHoliday: dayData.isHoliday,
             holidayName: dayData.holidayName,
-            opWindow: { start: opStart, end: opEndHour, isClosed: isClosedToday }
+            opWindow: { start: opStartDisplay, end: opEndDisplay, isClosed: isClosedToday }
         };
     }, [historicalAverages, predictiveRules, stores, selectedStore, toLocalISO]);
 
@@ -3361,19 +3379,56 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 <div className="p-6 bg-slate-50 dark:bg-white/5 rounded-[2.5rem] border border-slate-200 dark:border-white/5 shadow-inner">
                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 opacity-80">Lógica de Inteligencia</p>
                                     {analysisRuleId ? (
-                                        <div className="flex items-end gap-3 h-full pb-2">
-                                            <div className="flex flex-col">
-                                                <span className="text-[8px] font-black text-slate-400 uppercase">Ratio</span>
-                                                <span className="text-xl font-black text-indigo-500">{selectedCoverageDay.ruleMetadata[analysisRuleId].math.ratio}</span>
+                                        <div className="flex flex-col gap-4 w-full">
+                                            <div className="flex items-end gap-3 h-full pb-2">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[8px] font-black text-slate-400 uppercase">Ratio</span>
+                                                    <span className="text-xl font-black text-indigo-500">{selectedCoverageDay.ruleMetadata[analysisRuleId].math.ratio}</span>
+                                                </div>
+                                                <div className="text-slate-300 dark:text-slate-700 text-2xl font-thin">/</div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[8px] font-black text-slate-400 uppercase">Piso</span>
+                                                    <span className="text-xl font-black text-emerald-500">{selectedCoverageDay.ruleMetadata[analysisRuleId].math.minBase}</span>
+                                                </div>
+                                                <div className="ml-auto flex items-center pr-2">
+                                                    <div className="px-3 py-1.5 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-xl text-[10px] font-black text-indigo-500">
+                                                        {selectedCoverageDay.ruleMetadata[analysisRuleId].isActive ? 'REGLA ACTIVA' : 'DÍA NO LABORAL'}
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="text-slate-300 dark:text-slate-700 text-2xl font-thin">/</div>
-                                            <div className="flex flex-col">
-                                                <span className="text-[8px] font-black text-slate-400 uppercase">Piso</span>
-                                                <span className="text-xl font-black text-emerald-500">{selectedCoverageDay.ruleMetadata[analysisRuleId].math.minBase}</span>
-                                            </div>
-                                            <div className="ml-auto flex items-center pr-2">
-                                                <div className="px-3 py-1.5 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-xl text-[10px] font-black text-indigo-500">
-                                                    {selectedCoverageDay.ruleMetadata[analysisRuleId].isActive ? 'REGLA ACTIVA' : 'DÍA NO LABORAL'}
+                                            
+                                            {/* V21.0 NEW: Rule Parameters (Days, Shifts, Rests) */}
+                                            <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-100 dark:border-white/5">
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-[7.5px] font-black text-slate-400 uppercase tracking-tighter">Días Laborales</span>
+                                                    <div className="flex gap-1">
+                                                        {['1','2','3','4','5','6','0'].map(d => (
+                                                            <span key={d} className={`w-4 h-4 rounded-md flex items-center justify-center text-[7.5px] font-black ${selectedCoverageDay.ruleMetadata[analysisRuleId].math.workingDays.split(',').includes(d) ? 'bg-indigo-500 text-white' : 'bg-slate-100 text-slate-300'}`}>
+                                                                {d === '0' ? 'D' : d === '1' ? 'L' : d === '2' ? 'M' : d === '3' ? 'X' : d === '4' ? 'J' : d === '5' ? 'V' : 'S'}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col gap-1 border-x border-slate-100 dark:border-white/5 px-3">
+                                                    <span className="text-[7.5px] font-black text-slate-400 uppercase tracking-tighter">Mín. Apertura / Cierre</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex items-center gap-1">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                                                            <span className="text-[9px] font-black text-slate-600 dark:text-slate-300">{selectedCoverageDay.ruleMetadata[analysisRuleId].math.opening}</span>
+                                                        </div>
+                                                        <div className="text-slate-200">/</div>
+                                                        <div className="flex items-center gap-1">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-rose-400"></div>
+                                                            <span className="text-[9px] font-black text-slate-600 dark:text-slate-300">{selectedCoverageDay.ruleMetadata[analysisRuleId].math.closing}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col gap-1 pl-1">
+                                                    <span className="text-[7.5px] font-black text-slate-400 uppercase tracking-tighter">Descansos</span>
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-[10px] font-black text-indigo-500">{selectedCoverageDay.ruleMetadata[analysisRuleId].math.restDays}</span>
+                                                        <span className="text-[7.5px] font-bold text-slate-400 tracking-tight uppercase">DÍA(S)</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -3389,7 +3444,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 opacity-80">Ventana Operativa</p>
                                     <div className="flex items-center gap-3">
                                         <div className="px-4 py-2 bg-slate-900 rounded-2xl text-[12px] font-black text-white">
-                                            {selectedCoverageDay.opWindow.isClosed ? 'CERRADO' : `${selectedCoverageDay.opWindow.start}:00 - ${selectedCoverageDay.opWindow.end}:00`}
+                                            {selectedCoverageDay.opWindow.isClosed ? 'CERRADO' : `${selectedCoverageDay.opWindow.start} - ${selectedCoverageDay.opWindow.end}`}
                                         </div>
                                         <span className="text-[10px] font-bold text-slate-500 italic">Horario por Formato</span>
                                     </div>
