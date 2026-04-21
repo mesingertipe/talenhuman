@@ -3398,7 +3398,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                         </div>
                                                         <div className="flex gap-1.5">
                                                             {['1','2','3','4','5','6','0'].map(d => {
-                                                                const isActive = selectedCoverageDay.ruleMetadata[analysisRuleId].math.workingDays.split(',').includes(d);
+                                                                const wd = selectedCoverageDay.ruleMetadata[analysisRuleId].math.workingDays;
+                                                                const isActive = String(wd || "1,2,3,4,5,6,0").split(',').includes(d);
                                                                 return (
                                                                     <div key={d} className={`flex-1 h-8 rounded-xl flex items-center justify-center text-[10px] font-black transition-colors ${isActive ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'bg-slate-100 dark:bg-slate-700/50 text-slate-400 opacity-60'}`}>
                                                                         {d === '0' ? 'D' : d === '1' ? 'L' : d === '2' ? 'M' : d === '3' ? 'X' : d === '4' ? 'J' : d === '5' ? 'V' : 'S'}
