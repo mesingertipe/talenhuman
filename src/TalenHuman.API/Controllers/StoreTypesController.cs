@@ -59,37 +59,57 @@ public class StoreTypesController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> PutStoreType(Guid id, StoreType storeType)
     {
-        var existing = await _context.StoreTypes
-            .Include(st => st.DailyHours)
-            .FirstOrDefaultAsync(st => st.Id == id);
-
-        if (existing == null) return NotFound();
-
-        existing.Name = storeType.Name;
-        existing.IsActive = storeType.IsActive;
-        existing.Description = storeType.Description;
-
-        // Atomic Sync of Daily Hours
-        _context.StoreTypeDailyHours.RemoveRange(existing.DailyHours);
-        existing.DailyHours.Clear();
-
-        if (storeType.DailyHours != null)
+        if (id != storeType.Id)
         {
-            foreach (var dh in storeType.DailyHours)
-            {
-                existing.DailyHours.Add(new StoreTypeDailyHour
-                {
-                    DayOfWeek = dh.DayOfWeek,
-                    StartTime = dh.StartTime,
-                    EndTime = dh.EndTime,
-                    IsClosed = dh.IsClosed,
-                    CompanyId = existing.CompanyId
-                });
-            }
+            return BadRequest("El ID de la ruta no coincide con el ID del cuerpo.");
         }
 
-        await _context.SaveChangesAsync(CancellationToken.None);
-        return NoContent();
+        try
+        {
+            var existing = await _context.StoreTypes
+                .Include(st => st.DailyHours)
+                .FirstOrDefaultAsync(st => st.Id == id);
+
+            if (existing == null) return NotFound("Formato de tienda no encontrado.");
+
+            existing.Name = storeType.Name;
+            existing.IsActive = storeType.IsActive;
+            existing.Description = storeType.Description;
+
+            // Robust Atomic Sync
+            if (existing.DailyHours != null && existing.DailyHours.Any())
+            {
+                _context.StoreTypeDailyHours.RemoveRange(existing.DailyHours);
+                existing.DailyHours.Clear();
+            }
+
+            if (storeType.DailyHours != null)
+            {
+                foreach (var dh in storeType.DailyHours)
+                {
+                    existing.DailyHours.Add(new StoreTypeDailyHour
+                    {
+                        DayOfWeek = dh.DayOfWeek,
+                        StartTime = dh.StartTime ?? "08:00",
+                        EndTime = dh.EndTime ?? "17:00",
+                        IsClosed = dh.IsClosed,
+                        CompanyId = existing.CompanyId
+                    });
+                }
+            }
+
+            await _context.SaveChangesAsync(CancellationToken.None);
+            return NoContent();
+        }
+        catch (DbUpdateException ex)
+        {
+            var inner = ex.InnerException?.Message ?? ex.Message;
+            return StatusCode(500, new { error = "Fallo en persistencia de datos (DB)", detail = inner });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "Error interno del motor", detail = ex.Message });
+        }
     }
 
     [HttpDelete("{id}")]
