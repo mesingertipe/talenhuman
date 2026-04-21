@@ -668,7 +668,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             historicalDates: dayData.historicalDates || [],
             isHoliday: dayData.isHoliday,
             holidayName: dayData.holidayName,
-            opWindow: { start: opStartDisplay, end: opEndDisplay, isClosed: isClosedToday }
+            opWindow: { 
+                start: opStartDisplay, 
+                end: opEndDisplay, 
+                startHour: opStart, 
+                endHour: opEndHour, 
+                isClosed: isClosedToday 
+            }
         };
     }, [historicalAverages, predictiveRules, stores, selectedStore, toLocalISO]);
 
@@ -706,9 +712,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 const result = calculateHourlyNeeds(day);
                 const needs = result.needs || {};
                 
-                // V13.8: Extract Dynamic Operational Window for THIS specific day
-                const opStart = result.opWindow?.isClosed ? 0 : (result.opWindow?.opStart || 8);
-                const opEndHour = result.opWindow?.isClosed ? 0 : (result.opWindow?.opEnd || 22);
+                // V13.8.2: 100% DYNAMIC - RESPECT STORE RULES (NO FALLBACKS BEYOND CONFIG)
+                const opStart = result.opWindow?.isClosed ? 0 : result.opWindow?.startHour;
+                const opEndHour = result.opWindow?.isClosed ? 0 : result.opWindow?.endHour;
 
                 if (result.opWindow?.isClosed) return; // Skip closed days
 
@@ -991,14 +997,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         isFuera: false
                     };
 
-                    // Check for overlap to avoid exact duplicates
-                    const isOverlap = newShifts.some(s => 
-                        s.employeeId === empId && 
-                        s.startTime === newShift.startTime && 
-                        s.endTime === newShift.endTime
+                    // V13.8.2: Granular Duplicate Prevention - Do not stack on IA or other shifts
+                    const hasShiftThatDay = newShifts.some(s => 
+                        String(s.employeeId).toLowerCase() === String(empId).toLowerCase() && 
+                        new Date(s.startTime).toDateString() === day.toDateString()
                     );
                     
-                    if (!isOverlap) newShifts.push(newShift);
+                    if (!hasShiftThatDay) newShifts.push(newShift);
                 }
             });
         });
@@ -1504,14 +1509,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     const nid = normalizeId(empIdRaw);
                     if (!nid) return;
 
-                    // REGLA ELITE: Si ya tiene IA o Manual en la semana, se ignora todo para este empleado
-                    if (employeesWithAnyShift.has(nid)) {
-                        if (!localSkippedEmployees.has(nid)) {
-                            localSkippedCount++;
-                            localSkippedEmployees.add(nid);
-                        }
-                        return;
-                    }
+                    // V13.8.2: Refined Daily Skip - Only skip cloning for days already covered
+                    // Previously this was per-week, now it is day-by-day (handled below)
 
                     // Calcular fecha destino
                     const sStartOrig = psh.startTime || psh.StartTime;
