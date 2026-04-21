@@ -76,25 +76,44 @@ public class StoreTypesController : ControllerBase
             existing.IsActive = storeType.IsActive;
             existing.Description = storeType.Description;
 
-            // Robust Atomic Sync
-            if (existing.DailyHours != null && existing.DailyHours.Any())
-            {
-                _context.StoreTypeDailyHours.RemoveRange(existing.DailyHours);
-                existing.DailyHours.Clear();
-            }
-
+            // Intelligent Sync (Upsert Pattern)
             if (storeType.DailyHours != null)
             {
                 foreach (var dh in storeType.DailyHours)
                 {
-                    existing.DailyHours.Add(new StoreTypeDailyHour
+                    var existingHour = existing.DailyHours
+                        .FirstOrDefault(x => x.DayOfWeek == dh.DayOfWeek);
+
+                    if (existingHour != null)
                     {
-                        DayOfWeek = dh.DayOfWeek,
-                        StartTime = dh.StartTime ?? "08:00",
-                        EndTime = dh.EndTime ?? "17:00",
-                        IsClosed = dh.IsClosed,
-                        CompanyId = existing.CompanyId
-                    });
+                        // Update
+                        existingHour.StartTime = dh.StartTime ?? "08:00";
+                        existingHour.EndTime = dh.EndTime ?? "17:00";
+                        existingHour.IsClosed = dh.IsClosed;
+                    }
+                    else
+                    {
+                        // Add
+                        existing.DailyHours.Add(new StoreTypeDailyHour
+                        {
+                            DayOfWeek = dh.DayOfWeek,
+                            StartTime = dh.StartTime ?? "08:00",
+                            EndTime = dh.EndTime ?? "17:00",
+                            IsClosed = dh.IsClosed,
+                            CompanyId = existing.CompanyId
+                        });
+                    }
+                }
+
+                // Cleanup: Remove days not present in the request (if any)
+                var requestDays = storeType.DailyHours.Select(x => x.DayOfWeek).ToList();
+                var toRemove = existing.DailyHours
+                    .Where(x => !requestDays.Contains(x.DayOfWeek))
+                    .ToList();
+                
+                foreach (var rem in toRemove)
+                {
+                    _context.StoreTypeDailyHours.Remove(rem);
                 }
             }
 
