@@ -43,7 +43,8 @@ import {
     CalendarSearch,
     Briefcase,
     ShieldAlert,
-    RotateCcw
+    RotateCcw,
+    Layout
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import HelpIcon from '../../components/Shared/HelpIcon';
@@ -401,7 +402,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     };
 
     const isApprover = useMemo(() => {
-        // V18.10.1: BLINDAJE DE AUDITORÃA - Forzar permisos si viene de la consola
+        // V18.10.1: BLINDAJE DE AUDITORÍA - Forzar permisos si viene de la consola
         if (forceApprover) return true;
 
         if (!user || !operationalSettings) return false;
@@ -1437,7 +1438,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     targetDate.setDate(targetDate.getDate() + dayIndex);
                     const targetDateStr = targetDate.toDateString();
 
-                    // SEGURIDAD NIVEL 3: Verificar específicamente este DÃA por si acaso
+                    // SEGURIDAD NIVEL 3: Verificar específicamente este DÍA por si acaso
                     const yaTieneTurnoEseDia = prevShifts.some(s => 
                         normalizeId(s.employeeId || s.EmployeeId) === nid && 
                         new Date(s.startTime).toDateString() === targetDateStr
@@ -1634,7 +1635,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
             // Configuración de Columnas
             worksheet.columns = [
-                { header: 'ID/CÃ‰DULA', key: 'id', width: 18 },
+                { header: 'ID/CÉDULA', key: 'id', width: 18 },
                 { header: 'COLABORADOR', key: 'name', width: 35 },
                 ...days.map((day, i) => ({ 
                     header: day.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric' }).toUpperCase(), 
@@ -1666,7 +1667,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             worksheet.addRow([]);
 
             // 3. Encabezados
-            const headerRow = worksheet.addRow(['ID/CÃ‰DULA', 'COLABORADOR', ...days.map(d => d.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric' }).toUpperCase()), 'TOTAL HRS']);
+            const headerRow = worksheet.addRow(['ID/CÉDULA', 'COLABORADOR', ...days.map(d => d.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric' }).toUpperCase()), 'TOTAL HRS']);
             headerRow.eachCell((cell) => {
                 cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
                 cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
@@ -3236,7 +3237,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             </p>
                                             {selectedCoverageDay.isHoliday && (
                                                 <div className="ml-3 px-3 py-1 bg-rose-500/20 text-rose-200 border border-rose-500/30 rounded-full text-[10px] font-black uppercase tracking-tighter animate-in fade-in zoom-in duration-300">
-                                                    âœ¨ {selectedCoverageDay.holidayName || 'Festivo'}
+                                                    ✨ {selectedCoverageDay.holidayName || 'Festivo'}
                                                 </div>
                                             )}
                                         </div>
@@ -3367,7 +3368,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             </div>
                                             <div className="ml-auto flex items-center pr-2">
                                                 <div className="px-3 py-1.5 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-xl text-[10px] font-black text-indigo-500">
-                                                    {selectedCoverageDay.ruleMetadata[analysisRuleId].isActive ? 'REGLA ACTIVA' : 'DÃA NO LABORAL'}
+                                                    {selectedCoverageDay.ruleMetadata[analysisRuleId].isActive ? 'REGLA ACTIVA' : 'DÍA NO LABORAL'}
                                                 </div>
                                             </div>
                                         </div>
