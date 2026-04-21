@@ -2159,6 +2159,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                 totalDeficit, 
                                                                 volumes, 
                                                                 needsByRule,
+                                                                opWindow: result.opWindow,
+                                                                ruleMetadata: result.ruleMetadata,
                                                                 historicalDates: result.historicalDates,
                                                                 isHoliday: result.isHoliday,
                                                                 holidayName: result.holidayName
@@ -3220,6 +3222,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 totalDeficit, 
                                                 volumes, 
                                                 needsByRule,
+                                                opWindow: result.opWindow,
+                                                ruleMetadata: result.ruleMetadata,
                                                 historicalDates: result.historicalDates,
                                                 isHoliday: result.isHoliday,
                                                 holidayName: result.holidayName
@@ -3279,6 +3283,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 totalDeficit, 
                                                 volumes, 
                                                 needsByRule,
+                                                opWindow: result.opWindow,
                                                 ruleMetadata: result.ruleMetadata,
                                                 historicalDates: result.historicalDates,
                                                 isHoliday: result.isHoliday,
