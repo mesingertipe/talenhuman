@@ -72,51 +72,33 @@ public class StoreTypesController : ControllerBase
 
             if (existing == null) return NotFound("Formato de tienda no encontrado.");
 
-            // Basic Properties
+            // 1. Update Parent properties
             existing.Name = storeType.Name;
             existing.IsActive = storeType.IsActive;
             existing.Description = storeType.Description;
 
-            // Robust Multitenant Intelligent Sync
+            // 2. Nuclear Cleanup: Direct DB Delete (Bypasses Concurrency/Filters issues)
+            await _context.StoreTypeDailyHours
+                .Where(dh => dh.StoreTypeId == id)
+                .ExecuteDeleteAsync();
+
+            // 3. Clear Tracker state for DailyHours to avoid tracking overlaps
+            existing.DailyHours.Clear();
+
+            // 4. Re-insert fresh records
             if (storeType.DailyHours != null)
             {
-                var requestDays = storeType.DailyHours.Select(x => x.DayOfWeek).ToList();
-                
-                // 1. Update Existing or Add New
                 foreach (var dh in storeType.DailyHours)
                 {
-                    var existingHour = existing.DailyHours
-                        .FirstOrDefault(x => x.DayOfWeek == dh.DayOfWeek);
-
-                    if (existingHour != null)
+                    existing.DailyHours.Add(new StoreTypeDailyHour
                     {
-                        existingHour.StartTime = dh.StartTime ?? "08:00";
-                        existingHour.EndTime = dh.EndTime ?? "17:00";
-                        existingHour.IsClosed = dh.IsClosed;
-                        existingHour.CompanyId = existing.CompanyId; // Ensure multitenancy consistency
-                    }
-                    else
-                    {
-                        existing.DailyHours.Add(new StoreTypeDailyHour
-                        {
-                            DayOfWeek = dh.DayOfWeek,
-                            StartTime = dh.StartTime ?? "08:00",
-                            EndTime = dh.EndTime ?? "17:00",
-                            IsClosed = dh.IsClosed,
-                            CompanyId = existing.CompanyId,
-                            StoreTypeId = existing.Id
-                        });
-                    }
-                }
-
-                // 2. Remove days not present in this request
-                var toRemove = existing.DailyHours
-                    .Where(x => !requestDays.Contains(x.DayOfWeek))
-                    .ToList();
-                
-                foreach (var rem in toRemove)
-                {
-                    _context.StoreTypeDailyHours.Remove(rem);
+                        DayOfWeek = dh.DayOfWeek,
+                        StartTime = dh.StartTime ?? "08:00",
+                        EndTime = dh.EndTime ?? "17:00",
+                        IsClosed = dh.IsClosed,
+                        CompanyId = existing.CompanyId,
+                        StoreTypeId = existing.Id
+                    });
                 }
             }
 
@@ -126,7 +108,7 @@ public class StoreTypesController : ControllerBase
         catch (DbUpdateException ex)
         {
             var inner = ex.InnerException?.Message ?? ex.Message;
-            return StatusCode(500, new { error = "Fallo en persistencia de datos (DB)", detail = inner });
+            return StatusCode(500, new { error = "Fallo en persistencia atómica (DB)", detail = inner });
         }
         catch (Exception ex)
         {
