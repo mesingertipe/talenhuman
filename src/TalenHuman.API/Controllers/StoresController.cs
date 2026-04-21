@@ -33,7 +33,12 @@ public class StoresController : ControllerBase
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out Guid userId))
                 return Unauthorized();
 
-            var query = _context.Stores.Include(s => s.Brand).Where(s => s.CompanyId == companyId).AsQueryable();
+            var query = _context.Stores
+                .Include(s => s.Brand)
+                .Include(s => s.StoreType)
+                    .ThenInclude(st => st.DailyHours)
+                .Where(s => s.CompanyId == companyId)
+                .AsQueryable();
 
             if (!User.IsInRole("SuperAdmin") && !User.IsInRole("Admin") && !User.IsInRole("RH"))
             {
@@ -72,7 +77,11 @@ public class StoresController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<Store>> GetStore(Guid id)
     {
-        var store = await _context.Stores.Include(s => s.Brand).FirstOrDefaultAsync(s => s.Id == id);
+        var store = await _context.Stores
+            .Include(s => s.Brand)
+            .Include(s => s.StoreType)
+                .ThenInclude(st => st.DailyHours)
+            .FirstOrDefaultAsync(s => s.Id == id);
         if (store == null) return NotFound();
         return store;
     }

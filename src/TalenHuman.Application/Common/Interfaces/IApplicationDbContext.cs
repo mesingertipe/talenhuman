@@ -41,6 +41,7 @@ public interface IApplicationDbContext
     DbSet<WeeklyApproval> WeeklyApprovals { get; }
     DbSet<WeeklyApprovalLog> WeeklyApprovalLogs { get; }
     DbSet<StoreType> StoreTypes { get; }
+    DbSet<StoreTypeDailyHour> StoreTypeDailyHours { get; }
     DbSet<PredictiveShiftRule> PredictiveShiftRules { get; }
     DbSet<PredictiveShiftRuleProfile> PredictiveShiftRuleProfiles { get; }
     DbSet<PredictiveShiftRuleChannel> PredictiveShiftRuleChannels { get; }

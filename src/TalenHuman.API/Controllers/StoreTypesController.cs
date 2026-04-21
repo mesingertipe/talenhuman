@@ -22,6 +22,7 @@ public class StoreTypesController : ControllerBase
     public async Task<ActionResult<IEnumerable<StoreType>>> GetStoreTypes()
     {
         return await _context.StoreTypes
+            .Include(st => st.DailyHours)
             .OrderBy(st => st.Name)
             .ToListAsync();
     }
@@ -29,12 +30,11 @@ public class StoreTypesController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<StoreType>> GetStoreType(Guid id)
     {
-        var storeType = await _context.StoreTypes.FindAsync(id);
-
-        if (storeType == null)
-        {
-            return NotFound();
-        }
+        var storeType = await _context.StoreTypes
+            .Include(st => st.DailyHours)
+            .FirstOrDefaultAsync(st => st.Id == id);
+            
+        if (storeType == null) return NotFound();
 
         return storeType;
     }
@@ -42,7 +42,14 @@ public class StoreTypesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<StoreType>> PostStoreType(StoreType storeType)
     {
-        storeType.CompanyId = _tenantProvider.GetTenantId();
+        var companyId = _tenantProvider.GetTenantId();
+        storeType.CompanyId = companyId;
+        
+        foreach (var dh in storeType.DailyHours)
+        {
+            dh.CompanyId = companyId;
+        }
+        
         _context.StoreTypes.Add(storeType);
         await _context.SaveChangesAsync(CancellationToken.None);
 
@@ -52,29 +59,30 @@ public class StoreTypesController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> PutStoreType(Guid id, StoreType storeType)
     {
-        if (id != storeType.Id)
-        {
-            return BadRequest();
-        }
+        var existing = await _context.StoreTypes
+            .Include(st => st.DailyHours)
+            .FirstOrDefaultAsync(st => st.Id == id);
 
-        _context.StoreTypes.Update(storeType);
+        if (existing == null) return NotFound();
 
-        try
+        existing.Name = storeType.Name;
+        existing.IsActive = storeType.IsActive;
+
+        // Sync Daily Hours
+        _context.StoreTypeDailyHours.RemoveRange(existing.DailyHours);
+        foreach (var dh in storeType.DailyHours)
         {
-            await _context.SaveChangesAsync(CancellationToken.None);
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!StoreTypeExists(id))
+            existing.DailyHours.Add(new StoreTypeDailyHour
             {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
+                DayOfWeek = dh.DayOfWeek,
+                StartTime = dh.StartTime,
+                EndTime = dh.EndTime,
+                IsClosed = dh.IsClosed,
+                CompanyId = existing.CompanyId
+            });
         }
 
+        await _context.SaveChangesAsync(CancellationToken.None);
         return NoContent();
     }
 

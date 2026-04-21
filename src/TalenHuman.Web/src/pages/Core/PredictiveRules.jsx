@@ -47,6 +47,7 @@ const PredictiveRules = ({ user }) => {
     minStaffClosing: 1,
     isActive: true,
     weeklyRestDays: 1,
+    workingDays: "1,2,3,4,5,6,0",
     lookbackWeeks: 3,
     comparisonStrategy: 1, // 1 = IntelligentComparison
     profileIds: [],
@@ -193,6 +194,7 @@ const PredictiveRules = ({ user }) => {
                     minStaffClosing: 1,
                     isActive: true,
                     weeklyRestDays: 1,
+                    workingDays: "1,2,3,4,5,6,0",
                     lookbackWeeks: 3,
                     comparisonStrategy: 1,
                     profileIds: [],
@@ -281,6 +283,7 @@ const PredictiveRules = ({ user }) => {
                                         minStaffClosing: rule.minStaffClosing || 1,
                                         isActive: rule.isActive,
                                         weeklyRestDays: rule.weeklyRestDays || 1,
+                                        workingDays: rule.workingDays || "1,2,3,4,5,6,0",
                                         lookbackWeeks: rule.lookbackWeeks || 3,
                                         comparisonStrategy: rule.comparisonStrategy || 1,
                                         profileIds: (rule.profiles || rule.Profiles || []).map(p => p.profileId || p.ProfileId),
@@ -623,6 +626,59 @@ const PredictiveRules = ({ user }) => {
                                     </div>
                                     <p style={{ marginTop: '15px', fontSize: '11px', color: activeColors.textMuted, fontWeight: '600' }}>
                                         El motor garantizará que cada colaborador tenga al menos {formData.weeklyRestDays} día(s) de descanso propuestos en la malla.
+                                    </p>
+                                </div>
+
+                                {/* V13.8: DÍAS LABORALES SELECTION */}
+                                <div style={{ marginTop: '40px', padding: '35px', background: isDarkMode ? 'rgba(16, 185, 129, 0.05)' : '#ecfdf5', borderRadius: '32px', border: `2px solid ${activeColors.border}` }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                        <label style={{ display: 'block', fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase' }}>Días Laborales de la Regla (Aplicación)</label>
+                                        <button 
+                                            onClick={() => setFormData({...formData, workingDays: "1,2,3,4,5,6,0"})}
+                                            style={{ background: 'none', border: 'none', color: activeColors.accent, fontSize: '10px', fontWeight: '900', cursor: 'pointer', textTransform: 'uppercase' }}
+                                        >Todos los días</button>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        {[
+                                            { v: '1', l: 'L' }, { v: '2', l: 'M' }, { v: '3', l: 'X' }, 
+                                            { v: '4', l: 'J' }, { v: '5', l: 'V' }, { v: '6', l: 'S' }, { v: '0', l: 'D' }
+                                        ].map(day => {
+                                            const days = formData.workingDays.split(',');
+                                            const isSelected = days.includes(day.v);
+                                            return (
+                                                <button
+                                                    key={day.v}
+                                                    onClick={() => {
+                                                        let newDays;
+                                                        if (isSelected) {
+                                                            newDays = days.filter(d => d !== day.v);
+                                                        } else {
+                                                            newDays = [...days, day.v];
+                                                        }
+                                                        setFormData({...formData, workingDays: newDays.sort().join(',')});
+                                                    }}
+                                                    style={{ 
+                                                        flex: 1, 
+                                                        height: '48px', 
+                                                        borderRadius: '14px', 
+                                                        background: isSelected ? activeColors.accent : activeColors.card, 
+                                                        color: isSelected ? 'white' : activeColors.textMain,
+                                                        border: `2px solid ${isSelected ? activeColors.accent : activeColors.border}`,
+                                                        fontSize: '13px',
+                                                        fontWeight: '950',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                >
+                                                    {day.l}
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
+                                    <p style={{ marginTop: '15px', fontSize: '10px', color: activeColors.textMuted, fontWeight: '700', fontStyle: 'italic' }}>
+                                        {formData.workingDays.split(',').length === 7 
+                                            ? "La regla se aplicará todos los días de la semana." 
+                                            : `La regla solo generará carga para los ${formData.workingDays.split(',').length} días seleccionados.`}
                                     </p>
                                 </div>
                             </div>

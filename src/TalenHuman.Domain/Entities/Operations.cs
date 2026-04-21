@@ -430,6 +430,7 @@ public class PredictiveShiftRule : BaseEntity, IMultitenant
     
     public bool IsActive { get; set; } = true;
     public int WeeklyRestDays { get; set; } = 1;
+    public string WorkingDays { get; set; } = "1,2,3,4,5,6,0"; // 0=Sun, 1=Mon...
 
     // Seasonality Settings
     public int LookbackWeeks { get; set; } = 3;

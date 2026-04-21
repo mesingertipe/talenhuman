@@ -57,6 +57,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<WeeklyApproval> WeeklyApprovals => Set<WeeklyApproval>();
     public DbSet<WeeklyApprovalLog> WeeklyApprovalLogs => Set<WeeklyApprovalLog>();
     public DbSet<StoreType> StoreTypes => Set<StoreType>();
+    public DbSet<StoreTypeDailyHour> StoreTypeDailyHours => Set<StoreTypeDailyHour>();
     public DbSet<PredictiveShiftRule> PredictiveShiftRules => Set<PredictiveShiftRule>();
     public DbSet<PredictiveShiftRuleProfile> PredictiveShiftRuleProfiles => Set<PredictiveShiftRuleProfile>();
     public DbSet<PredictiveShiftRuleChannel> PredictiveShiftRuleChannels => Set<PredictiveShiftRuleChannel>();

@@ -42,6 +42,7 @@ public class PredictiveRulesController : ControllerBase
                 r.WeeklyRestDays,
                 r.LookbackWeeks,
                 r.ComparisonStrategy,
+                r.WorkingDays,
                 Profiles = r.RuleProfiles.Select(rp => new { rp.ProfileId, rp.Profile.Name }),
                 ChannelIds = r.RuleChannels.Select(rc => rc.SalesChannelId).ToList()
             })
@@ -70,6 +71,7 @@ public class PredictiveRulesController : ControllerBase
             r.MinStaffClosing,
             r.IsActive,
             r.WeeklyRestDays,
+            r.WorkingDays,
             ProfileIds = r.RuleProfiles.Select(rp => rp.ProfileId).ToList(),
             ChannelIds = r.RuleChannels.Select(rc => rc.SalesChannelId).ToList()
         };
@@ -96,6 +98,7 @@ public class PredictiveRulesController : ControllerBase
                 WeeklyRestDays = dto.WeeklyRestDays,
                 LookbackWeeks = dto.LookbackWeeks,
                 ComparisonStrategy = dto.ComparisonStrategy,
+                WorkingDays = dto.WorkingDays ?? "1,2,3,4,5,6,0",
                 CompanyId = companyId
             };
 
@@ -151,6 +154,7 @@ public class PredictiveRulesController : ControllerBase
         rule.WeeklyRestDays = dto.WeeklyRestDays;
         rule.LookbackWeeks = dto.LookbackWeeks;
         rule.ComparisonStrategy = dto.ComparisonStrategy;
+        rule.WorkingDays = dto.WorkingDays ?? "1,2,3,4,5,6,0";
 
         // Sync Profiles
         _context.PredictiveShiftRuleProfiles.RemoveRange(rule.RuleProfiles);
@@ -204,6 +208,7 @@ public class PredictiveRulesController : ControllerBase
                 r.WeeklyRestDays,
                 r.LookbackWeeks,
                 r.ComparisonStrategy,
+                r.WorkingDays,
                 Profiles = r.RuleProfiles.Select(rp => new { rp.ProfileId, rp.Profile.Name }),
                 ChannelIds = r.RuleChannels.Select(rc => rc.SalesChannelId).ToList()
             })
@@ -237,6 +242,7 @@ public class PredictiveRuleDto
     public int WeeklyRestDays { get; set; }
     public int LookbackWeeks { get; set; } = 3;
     public PredictiveComparisonStrategy ComparisonStrategy { get; set; } = PredictiveComparisonStrategy.IntelligentComparison;
+    public string WorkingDays { get; set; } = "1,2,3,4,5,6,0";
     public List<Guid> ProfileIds { get; set; } = new List<Guid>();
     public List<Guid> ChannelIds { get; set; } = new List<Guid>();
 }

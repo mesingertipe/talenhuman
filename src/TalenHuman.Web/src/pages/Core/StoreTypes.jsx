@@ -28,7 +28,20 @@ const StoreTypes = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [currentType, setCurrentType] = useState(null);
-  const [formData, setFormData] = useState({ name: '', description: '', isActive: true });
+  const [formData, setFormData] = useState({ 
+    name: '', 
+    description: '', 
+    isActive: true,
+    dailyHours: [
+      { dayOfWeek: 1, startTime: '08:00', endTime: '17:00', isClosed: false },
+      { dayOfWeek: 2, startTime: '08:00', endTime: '17:00', isClosed: false },
+      { dayOfWeek: 3, startTime: '08:00', endTime: '17:00', isClosed: false },
+      { dayOfWeek: 4, startTime: '08:00', endTime: '17:00', isClosed: false },
+      { dayOfWeek: 5, startTime: '08:00', endTime: '17:00', isClosed: false },
+      { dayOfWeek: 6, startTime: '08:00', endTime: '17:00', isClosed: false },
+      { dayOfWeek: 0, startTime: '08:00', endTime: '17:00', isClosed: false }
+    ]
+  });
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -129,7 +142,20 @@ const StoreTypes = ({ user }) => {
               <button 
                 onClick={() => { 
                   setCurrentType(null); 
-                  setFormData({ name: '', description: '', isActive: true }); 
+                  setFormData({ 
+                    name: '', 
+                    description: '', 
+                    isActive: true,
+                    dailyHours: [
+                      { dayOfWeek: 1, startTime: '08:00', endTime: '17:00', isClosed: false },
+                      { dayOfWeek: 2, startTime: '08:00', endTime: '17:00', isClosed: false },
+                      { dayOfWeek: 3, startTime: '08:00', endTime: '17:00', isClosed: false },
+                      { dayOfWeek: 4, startTime: '08:00', endTime: '17:00', isClosed: false },
+                      { dayOfWeek: 5, startTime: '08:00', endTime: '17:00', isClosed: false },
+                      { dayOfWeek: 6, startTime: '08:00', endTime: '17:00', isClosed: false },
+                      { dayOfWeek: 0, startTime: '08:00', endTime: '17:00', isClosed: false }
+                    ]
+                  }); 
                   setShowModal(true); 
                 }}
                 className="btn-premium btn-premium-primary"
@@ -197,7 +223,20 @@ const StoreTypes = ({ user }) => {
                         <button 
                             onClick={() => { 
                                 setCurrentType(type);
-                                setFormData({ name: type.name, description: type.description || '', isActive: type.isActive });
+                                setFormData({ 
+                                    name: type.name, 
+                                    description: type.description || '', 
+                                    isActive: type.isActive,
+                                    dailyHours: type.dailyHours && type.dailyHours.length > 0 ? type.dailyHours : [
+                                        { dayOfWeek: 1, startTime: '08:00', endTime: '17:00', isClosed: false },
+                                        { dayOfWeek: 2, startTime: '08:00', endTime: '17:00', isClosed: false },
+                                        { dayOfWeek: 3, startTime: '08:00', endTime: '17:00', isClosed: false },
+                                        { dayOfWeek: 4, startTime: '08:00', endTime: '17:00', isClosed: false },
+                                        { dayOfWeek: 5, startTime: '08:00', endTime: '17:00', isClosed: false },
+                                        { dayOfWeek: 6, startTime: '08:00', endTime: '17:00', isClosed: false },
+                                        { dayOfWeek: 0, startTime: '08:00', endTime: '17:00', isClosed: false }
+                                    ]
+                                });
                                 setShowModal(true);
                             }}
                             style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', padding: '0.5rem' }}
@@ -319,6 +358,64 @@ const StoreTypes = ({ user }) => {
                                     </div>
                                 </div>
                                 <Shield size={24} style={{ color: activeColors.accent, opacity: 0.3 }} />
+                            </div>
+
+                            {/* V13.8: DAILY HOURS GRID */}
+                            <div style={{ padding: '30px', background: isDarkMode ? 'rgba(79, 70, 229, 0.05)' : '#f8faff', borderRadius: '32px', border: `1px solid ${activeColors.border}` }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px' }}>
+                                    <Settings size={20} style={{ color: activeColors.accent }} />
+                                    <h4 style={{ fontSize: '10px', fontWeight: '950', color: activeColors.accent, textTransform: 'uppercase', letterSpacing: '0.15em', margin: 0 }}>Horarios de Operación Estándar</h4>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((dayName, index) => {
+                                        const dIndex = [1, 2, 3, 4, 5, 6, 0][index];
+                                        const dayData = formData.dailyHours.find(dh => dh.dayOfWeek === dIndex) || { startTime: '08:00', endTime: '17:00', isClosed: false };
+                                        return (
+                                            <div key={dIndex} style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '15px', background: isDarkMode ? 'rgba(255,255,255,0.02)' : 'white', borderRadius: '18px', border: `1px solid ${activeColors.border}` }}>
+                                                <div style={{ width: '100px', fontSize: '0.85rem', fontWeight: '800', color: dayData.isClosed ? activeColors.textMuted : activeColors.textMain }}>{dayName}</div>
+                                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <input 
+                                                        type="time" 
+                                                        disabled={dayData.isClosed}
+                                                        value={dayData.startTime}
+                                                        onChange={(e) => {
+                                                            const newHours = [...formData.dailyHours];
+                                                            const idx = newHours.findIndex(dh => dh.dayOfWeek === dIndex);
+                                                            newHours[idx] = { ...newHours[idx], startTime: e.target.value };
+                                                            setFormData({ ...formData, dailyHours: newHours });
+                                                        }}
+                                                        style={{ flex: 1, padding: '8px 12px', borderRadius: '10px', border: `1px solid ${activeColors.border}`, background: dayData.isClosed ? activeColors.bg : 'transparent', color: activeColors.textMain, fontWeight: '700', fontSize: '0.85rem', outline: 'none' }}
+                                                    />
+                                                    <span style={{ color: activeColors.textMuted }}>a</span>
+                                                    <input 
+                                                        type="time" 
+                                                        disabled={dayData.isClosed}
+                                                        value={dayData.endTime}
+                                                        onChange={(e) => {
+                                                            const newHours = [...formData.dailyHours];
+                                                            const idx = newHours.findIndex(dh => dh.dayOfWeek === dIndex);
+                                                            newHours[idx] = { ...newHours[idx], endTime: e.target.value };
+                                                            setFormData({ ...formData, dailyHours: newHours });
+                                                        }}
+                                                        style={{ flex: 1, padding: '8px 12px', borderRadius: '10px', border: `1px solid ${activeColors.border}`, background: dayData.isClosed ? activeColors.bg : 'transparent', color: activeColors.textMain, fontWeight: '700', fontSize: '0.85rem', outline: 'none' }}
+                                                    />
+                                                </div>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const newHours = [...formData.dailyHours];
+                                                        const idx = newHours.findIndex(dh => dh.dayOfWeek === dIndex);
+                                                        newHours[idx] = { ...newHours[idx], isClosed: !newHours[idx].isClosed };
+                                                        setFormData({ ...formData, dailyHours: newHours });
+                                                    }}
+                                                    style={{ padding: '8px 16px', borderRadius: '12px', border: 'none', background: dayData.isClosed ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)', color: dayData.isClosed ? '#ef4444' : '#10b981', fontSize: '10px', fontWeight: '950', cursor: 'pointer', textTransform: 'uppercase' }}
+                                                >
+                                                    {dayData.isClosed ? 'Cerrado' : 'Abierto'}
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '20px 30px', background: isDarkMode ? 'rgba(79, 70, 229, 0.1)' : '#f1f5f9', borderRadius: '24px', color: activeColors.textMuted }}>

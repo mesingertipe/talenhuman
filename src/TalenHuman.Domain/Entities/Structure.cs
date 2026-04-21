@@ -144,6 +144,24 @@ public class StoreType : BaseEntity, IMultitenant
     // Relationships
     [System.Text.Json.Serialization.JsonIgnore]
     public ICollection<Store> Stores { get; set; } = new List<Store>();
+
+    public ICollection<StoreTypeDailyHour> DailyHours { get; set; } = new List<StoreTypeDailyHour>();
+}
+
+public class StoreTypeDailyHour : BaseEntity, IMultitenant
+{
+    public Guid StoreTypeId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
+    public StoreType? StoreType { get; set; }
+    
+    public int DayOfWeek { get; set; } // 0=Sun, 1=Mon...
+    public string StartTime { get; set; } = "08:00";
+    public string EndTime { get; set; } = "17:00";
+    public bool IsClosed { get; set; } = false;
+
+    public Guid CompanyId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
+    public Company? Company { get; set; }
 }
 
 public class City : BaseEntity, IMultitenant
