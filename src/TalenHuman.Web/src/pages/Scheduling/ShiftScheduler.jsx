@@ -105,7 +105,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         days: [true, true, true, true, true, true, false] // Mon-Sun
     });
 
-    // V12.24: ProtecciÃ³n de concurrencia
+    // V12.24: Protección de concurrencia
     const fetchIdRef = useRef(0);
 
     // V18.8 Logic for initial date alignment
@@ -155,7 +155,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const [pendingJustifiedShift, setPendingJustifiedShift] = useState(null);
     const [isSavingJustified, setIsSavingJustified] = useState(false);
 
-    // V19.2: BLINDAJE DE SEGURIDAD PREMIUM - Modo InspecciÃ³n AuditorÃ­a
+    // V19.2: BLINDAJE DE SEGURIDAD PREMIUM - Modo Inspección Auditoría
     const effectiveReadOnly = useMemo(() => {
         if (readOnly) return true;
         // V20.0: Individual Exception Rule - Approve week blocks everything EXCEPT if we are in the middle of a justified addition
@@ -203,7 +203,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             let filteredStores = res.data.filter(s => s.isActive);
             setStores(filteredStores);
 
-            // V12.24: BLINDAJE DE INSPECCIÃ“N - Evitar sobreescritura automÃ¡tica de la sede
+            // V12.24: BLINDAJE DE INSPECCIÓN - Evitar sobreescritura automática de la sede
             if (initialStoreId) {
                 // No llamamos a setSelectedStore si ya es el valor inicial
                 return;
@@ -303,10 +303,10 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             const res = await api.get(url);
             setWeeklyStatus(res.data);
 
-            // V19.8: SincronizaciÃ³n Maestra - Si consultamos por ID, la fecha de la DB es la LEY
+            // V19.8: Sincronización Maestra - Si consultamos por ID, la fecha de la DB es la LEY
             if (approvalId && res.data.weekStartDate) {
                 const dbDate = new Date(res.data.weekStartDate);
-                // Usamos comparaciÃ³n segura de fecha ISO para evitar re-triggers innecesarios
+                // Usamos comparación segura de fecha ISO para evitar re-triggers innecesarios
                 const currentISO = toLocalISO(currentWeekStart);
                 const dbISO = toLocalISO(dbDate);
 
@@ -377,7 +377,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, '0');
         const day = String(d.getDate()).padStart(2, '0');
-        // V19.5: Retornar solo la llave de fecha (YYYY-MM-DD) para alineaciÃ³n con backend en filtros
+        // V19.5: Retornar solo la llave de fecha (YYYY-MM-DD) para alineación con backend en filtros
         return `${y}-${m}-${day}`;
     };
 
@@ -390,7 +390,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         const h = String(d.getHours()).padStart(2, '0');
         const min = String(d.getMinutes()).padStart(2, '0');
         const s = String(d.getSeconds()).padStart(2, '0');
-        // V20.5: ISO Completo para persistencia de turnos con duraciÃ³n
+        // V20.5: ISO Completo para persistencia de turnos con duración
         return `${y}-${m}-${day}T${h}:${min}:${s}`;
     };
 
@@ -424,7 +424,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         try {
             setLoading(true);
             
-            // V12.26: Priorizar parÃ¡metros autoritarios (Secuencialidad)
+            // V12.26: Priorizar parámetros autoritarios (Secuencialidad)
             const targetStore = overrideStoreId || selectedStore;
             const targetWeekStart = overrideWeekStart || currentWeekStart;
 
@@ -821,15 +821,15 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             if (createdCount > 0) {
                 setShifts(newShifts);
                 if (totalRemainingDeficit > 0) {
-                    showToast(`IA: Sugeridos ${createdCount} turnos, pero aÃºn faltan ${totalRemainingDeficit} posiciones por cubrir (sin personal disponible).`, "warning");
+                    showToast(`IA: Sugeridos ${createdCount} turnos, pero aún faltan ${totalRemainingDeficit} posiciones por cubrir (sin personal disponible).`, "warning");
                 } else {
-                    showToast(`Â¡OptimizaciÃ³n completa! IA sugiriÃ³ ${createdCount} turnos para cubrir toda la demanda.`, "success");
+                    showToast(`¡Optimización completa! IA sugirió ${createdCount} turnos para cubrir toda la demanda.`, "success");
                 }
             } else {
                 if (totalRemainingDeficit > 0) {
                     showToast(`IA: No se pueden cubrir los ${totalRemainingDeficit} huecos detectados porque todo el personal ya tiene turnos asignados.`, "warning");
                 } else {
-                    showToast("IA: Tu malla ya estÃ¡ optimizada segÃºn la demanda histÃ³rica.", "info");
+                    showToast("IA: Tu malla ya está optimizada según la demanda histórica.", "info");
                 }
             }
 
@@ -837,7 +837,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             setShowPredictiveOverlay(true); 
         } catch (err) {
             console.error("Optimization failed", err);
-            showToast("Error en la optimizaciÃ³n IA", "error");
+            showToast("Error en la optimización IA", "error");
         } finally {
             setIsOptimizing(false);
         }
@@ -1032,20 +1032,20 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         }
 
         if (hasNovedad(targetEmployeeId, targetDate)) {
-            showToast("DÃ­a bloqueado por novedad", "error");
+            showToast("Día bloqueado por novedad", "error");
             return;
         }
 
         const today = new Date();
         today.setHours(0,0,0,0);
         if (new Date(targetDate).getTime() < today.getTime()) {
-            showToast("DÃ­a bloqueado: Dato histÃ³rico", "error");
+            showToast("Día bloqueado: Dato histórico", "error");
             return;
         }
 
         const existingDayShifts = shifts.filter(s => s.employeeId === targetEmployeeId && new Date(s.startTime).toDateString() === targetDate.toDateString());
         if (existingDayShifts.some(s => attendances.some(a => String(a.shiftId) === String(s.id)))) {
-            showToast("DÃ­a bloqueado: Ya existe marcaciÃ³n", "warning");
+            showToast("Día bloqueado: Ya existe marcación", "warning");
             return;
         }
 
@@ -1092,7 +1092,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 setStartTime('08:00'); setEndTime('17:00'); setShowTimeModal(true);
             }
         } else if (source === 'GRID') {
-            // LÃ³gica de COPIADO entre celdas
+            // Lógica de COPIADO entre celdas
             const sourceShift = shifts.find(s => 
                 (s.id && payload.shiftId && s.id === payload.shiftId) || 
                 (!payload.shiftId && s.employeeId === payload.employeeId && new Date(s.startTime).toDateString() === new Date(payload.date).toDateString())
@@ -1167,7 +1167,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
     const handleConfirmJustification = async () => {
         if (!justificationComment || justificationComment.trim().length < 10) {
-            showToast("La justificaciÃ³n debe tener al menos 10 caracteres.", "error");
+            showToast("La justificación debe tener al menos 10 caracteres.", "error");
             return;
         }
 
@@ -1180,7 +1180,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
             await api.post('/shifts/individual-justified', payload);
             
-            // Actualizar estado local para visualizaciÃ³n inmediata
+            // Actualizar estado local para visualización inmediata
             setShifts(prev => [...prev, { ...pendingJustifiedShift, id: 'temp-' + Date.now() }]);
             
             showToast("Turno agregado y justificado correctamente", "success");
@@ -1202,7 +1202,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
     const performSave = async () => {
         if (!saveComment || saveComment.trim().length < 10) {
-            showToast("Ingresa un comentario descriptivo (mÃ­nimo 10 caracteres)", "error");
+            showToast("Ingresa un comentario descriptivo (mínimo 10 caracteres)", "error");
             return;
         }
         try {
@@ -1261,7 +1261,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             setTimeout(() => {
                 setSyncPhase(4);
                 setLastSaveComment(saveComment);
-                showToast("ProgramaciÃ³n guardada exitosamente");
+                showToast("Programación guardada exitosamente");
                 setShowSaveModal(false); 
                 fetchData();
                 fetchWeeklyStatus();
@@ -1280,7 +1280,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             showToast(errorMsg, "error"); 
             setIsSaving(false);
         } finally { 
-            // El setSaving(false) se maneja tras la animaciÃ³n 'Done'
+            // El setSaving(false) se maneja tras la animación 'Done'
             if (syncPhase !== 3) {
                 setTimeout(() => {
                     setIsSaving(false);
@@ -1311,7 +1311,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 storeId: selectedStore,
                 startDate: toLocalISO(currentWeekStart),
                 endDate: toLocalISO(endDate),
-                comment: approvalComment || "AprobaciÃ³n desde panel de inspecciÃ³n"
+                comment: approvalComment || "Aprobación desde panel de inspección"
             });
 
             setSyncPhase(3); // Fase: Notificando
@@ -1341,7 +1341,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
     const confirmReject = async () => {
         if (!rejectionComment || rejectionComment.trim().length < 5) {
-            showToast("Debes indicar un motivo vÃ¡lido (mÃ­nimo 5 caracteres)", "warning");
+            showToast("Debes indicar un motivo válido (mínimo 5 caracteres)", "warning");
             return;
         }
 
@@ -1366,7 +1366,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             setSyncPhase(3); // Fase: Notificando
             setTimeout(() => {
                 setSyncPhase(4);
-                showToast("ProgramaciÃ³n rechazada y gerente notificado");
+                showToast("Programación rechazada y gerente notificado");
                 setWeeklyStatus({ status: 'Rejected', comment: rejectionComment, date: new Date() });
                 fetchData();
                 fetchWeeklyStatus();
@@ -1397,9 +1397,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 return; 
             }
 
-            // OperaciÃ³n AtÃ³mica con "Blindaje de Identidad v3"
+            // Operación Atómica con "Blindaje de Identidad v3"
             setShifts(prevShifts => {
-                // FunciÃ³n de NormalizaciÃ³n Extrema: Solo deja letras y nÃºmeros (elimina guiones, llaves, espacios)
+                // Función de Normalización Extrema: Solo deja letras y números (elimina guiones, llaves, espacios)
                 const normalizeId = (id) => String(id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
                 // 1. Identificar empleados con turnos actuales (IA, Manual, Real)
@@ -1437,14 +1437,14 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     targetDate.setDate(targetDate.getDate() + dayIndex);
                     const targetDateStr = targetDate.toDateString();
 
-                    // SEGURIDAD NIVEL 3: Verificar especÃ­ficamente este DÃA por si acaso
+                    // SEGURIDAD NIVEL 3: Verificar específicamente este DÃA por si acaso
                     const yaTieneTurnoEseDia = prevShifts.some(s => 
                         normalizeId(s.employeeId || s.EmployeeId) === nid && 
                         new Date(s.startTime).toDateString() === targetDateStr
                     );
 
                     if (yaTieneTurnoEseDia) {
-                        return; // Evita solapamiento fÃ­sico en la celda
+                        return; // Evita solapamiento físico en la celda
                     }
 
                     // Validar novedades
@@ -1503,7 +1503,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const handlePdfExport = useCallback(() => {
         const element = document.getElementById('printable-area');
         if (!element) {
-            showToast("No se encontrÃ³ el Ã¡rea de impresiÃ³n", "error");
+            showToast("No se encontró el área de impresión", "error");
             return;
         }
 
@@ -1611,7 +1611,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             
             document.head.removeChild(style);
             setIsExporting(false);
-            showToast("PDF generado con Ã©xito");
+            showToast("PDF generado con éxito");
         }).catch(err => {
             console.error("PDF Error:", err);
             setIsExporting(false);
@@ -1626,13 +1626,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             setIsExporting(true);
             showToast("Preparando Excel Corporativo...", "success");
             const workbook = new ExcelJS.Workbook();
-            const worksheet = workbook.addWorksheet('ProgramaciÃ³n');
+            const worksheet = workbook.addWorksheet('Programación');
             const storeNameOrg = stores.find(s => s.id === selectedStore)?.name || 'Sede';
             const safeStoreName = storeNameOrg.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20);
             const fileNameExcel = `Programacion_${safeStoreName}.xlsx`;
-            const dateRange = `${formatDate(currentWeekStart)} â€” ${formatDate(new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000))}`;
+            const dateRange = `${formatDate(currentWeekStart)} — ${formatDate(new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000))}`;
 
-            // ConfiguraciÃ³n de Columnas
+            // Configuración de Columnas
             worksheet.columns = [
                 { header: 'ID/CÃ‰DULA', key: 'id', width: 18 },
                 { header: 'COLABORADOR', key: 'name', width: 35 },
@@ -1644,7 +1644,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 { header: 'TOTAL HRS', key: 'total', width: 15 }
             ];
 
-            // 1. TÃ­tulo TalenHuman
+            // 1. Título TalenHuman
             worksheet.mergeCells('A1:J1');
             const titleRow = worksheet.getRow(1);
             titleRow.getCell(1).value = 'PROGRAMACION DE TURNOS TALENHUMAN';
@@ -1715,7 +1715,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     } else if (orphan) {
                         const st = new Date(orphan.clockIn); const et = orphan.clockOut ? new Date(orphan.clockOut) : null;
                         rowValues.push(`REAL: ${String(st.getHours()).padStart(2, '0')}:${String(st.getMinutes()).padStart(2, '0')}${et ? ' - ' + String(et.getHours()).padStart(2, '0') + ':' + String(et.getMinutes()).padStart(2, '0') : '...'}`);
-                    } else rowValues.push("â€”");
+                    } else rowValues.push("—");
                 });
                 rowValues.push(formatHours(totalHours));
                 const dr = worksheet.addRow(rowValues);
@@ -1743,7 +1743,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             }, 5000);
             
             setIsExporting(false);
-            showToast("Excel generado con Ã©xito");
+            showToast("Excel generado con éxito");
         } catch (error) {
             console.error("Excel Error:", error);
             setIsExporting(false);
@@ -1798,11 +1798,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     `}
                 </style>
 
-                {/* 1. Header para ImpresiÃ³n (Solo Visible al Imprimir) */}
+                {/* 1. Header para Impresión (Solo Visible al Imprimir) */}
                 <div className="print-only mb-12 border-b-4 border-slate-900 pb-6">
                     <div className="flex justify-between items-end">
                         <div>
-                            <h1 className="text-4xl font-[950] text-slate-900 tracking-tighter">ProgramaciÃ³n de Turnos</h1>
+                            <h1 className="text-4xl font-[950] text-slate-900 tracking-tighter">Programación de Turnos</h1>
                             <p className="text-slate-500 font-bold mt-2 text-xs tracking-widest">
                                 Generado por: {user?.fullName || user?.name || 'Administrador'} | {formatTenantDate(new Date(), tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour12: true })}
                             </p>
@@ -1810,7 +1810,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         <div className="text-right">
                             <p className="text-xl font-[950] text-slate-900">{stores.find(s => s.id === selectedStore)?.name}</p>
                             <p className="text-slate-500 font-black text-xs tracking-widest mt-1">
-                                {formatDate(currentWeekStart)} â€” {formatDate(new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000))}
+                                {formatDate(currentWeekStart)} — {formatDate(new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000))}
                             </p>
                         </div>
                     </div>
@@ -1835,7 +1835,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             />
                         </div>
 
-                        {/* Semana (NavegaciÃ³n Compacta) */}
+                        {/* Semana (Navegación Compacta) */}
                         <div className="flex-1 flex items-center justify-center gap-3 bg-slate-50/50 dark:bg-slate-800/40 p-1.5 rounded-2xl border border-slate-100 dark:border-white/5 mx-2">
                             <button onClick={() => setWeekOffset(prev => prev - 1)} 
                                     disabled={readOnly}
@@ -1843,10 +1843,10 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     title="Anterior"><ChevronLeft size={18} strokeWidth={3} /></button>
                             
                             <div className="flex flex-col items-center min-w-[160px] relative group/jumper">
-                                <span className="text-[9px] font-bold text-indigo-500/70 tracking-tight mb-0">ProgramaciÃ³n Semanal</span>
+                                <span className="text-[9px] font-bold text-indigo-500/70 tracking-tight mb-0">Programación Semanal</span>
                                 <div className="flex items-center gap-2">
                                     <span className={`text-[12px] font-black text-center whitespace-nowrap ${readOnly ? 'text-slate-400' : 'text-slate-800 dark:text-white'}`}>
-                                        {currentWeekStart.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} â€” {new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
+                                        {currentWeekStart.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })} — {new Date(new Date(currentWeekStart).getTime() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
                                     </span>
                                     {!readOnly && (
                                         <div className="relative">
@@ -1886,21 +1886,21 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         </div>
                     </div>
 
-                    {/* 2.2 Fila 2: Barra de Herramientas Premium (MÃ³dulos de Control Pods) */}
+                    {/* 2.2 Fila 2: Barra de Herramientas Premium (Módulos de Control Pods) */}
                     <div className="flex flex-row items-stretch justify-center gap-6 w-full mt-4 no-print overflow-x-auto pb-6 px-2 relative z-[1]">
                         
-                        {/* MÃ³dulo A: Inteligencia (Glass Pod) */}
+                        {/* Módulo A: Inteligencia (Glass Pod) */}
                         <div className="flex flex-col gap-2 p-4 px-8 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.8rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod min-w-[280px]">
                             <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-1 group-hover/pod:text-indigo-500 transition-colors text-center w-full block">Inteligencia</span>
                             <div className="flex items-center gap-3">
                                 <button onClick={() => setShowPredictiveOverlay(!showPredictiveOverlay)}
-                                    className={`w-11 h-11 transition-all rounded-[18px] flex items-center justify-center shadow-lg active:scale-95 btn-chiclet ${showPredictiveOverlay ? 'bg-indigo-600 text-white shadow-glow-indigo' : 'bg-white text-indigo-400 border border-indigo-100 hover:bg-slate-50'}`} title={showPredictiveOverlay ? 'Ocultar GuÃ­a IA' : 'Ver GuÃ­a IA'}>
+                                    className={`w-11 h-11 transition-all rounded-[18px] flex items-center justify-center shadow-lg active:scale-95 btn-chiclet ${showPredictiveOverlay ? 'bg-indigo-600 text-white shadow-glow-indigo' : 'bg-white text-indigo-400 border border-indigo-100 hover:bg-slate-50'}`} title={showPredictiveOverlay ? 'Ocultar Guía IA' : 'Ver Guía IA'}>
                                     <Sparkles size={20} strokeWidth={2.5} />
                                 </button>
                                 {!effectiveReadOnly && (
                                     <>
                                         <button onClick={() => setShowBulkModal(true)}
-                                            className="w-11 h-11 bg-amber-500 text-white rounded-[18px] flex items-center justify-center hover:bg-amber-600 transition-all shadow-glow-amber active:scale-95 btn-chiclet" title="ProgramaciÃ³n Masiva">
+                                            className="w-11 h-11 bg-amber-500 text-white rounded-[18px] flex items-center justify-center hover:bg-amber-600 transition-all shadow-glow-amber active:scale-95 btn-chiclet" title="Programación Masiva">
                                             <Calendar size={20} strokeWidth={2.5} />
                                         </button>
                                         <button onClick={copyFromPreviousWeek} 
@@ -1916,7 +1916,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             </div>
                         </div>
 
-                        {/* MÃ³dulo B: Centro de Eventos (Glass Pod) */}
+                        {/* Módulo B: Centro de Eventos (Glass Pod) */}
                         <div className="flex flex-col gap-2 p-4 px-8 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.8rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod items-center min-w-[300px]">
                             <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 tracking-wider mb-1 group-hover/pod:text-indigo-500 transition-colors text-center w-full block">Centro de Eventos</span>
                             <div className="flex items-center gap-3">
@@ -1924,8 +1924,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     <>
                                         {[
                                             { type: 'Turno', shadow: 'shadow-glow-indigo', color: 'bg-indigo-600', icon: Clock, title: 'Nuevo Turno' },
-                                            { type: 'Descanso', shadow: 'shadow-glow-amber', color: 'bg-amber-500', icon: Calendar, title: 'DÃ­a de Descanso' },
-                                            { type: 'Turno Fuera', shadow: 'shadow-glow-purple', color: 'bg-purple-600', icon: AlertCircle, title: 'AsignaciÃ³n Fuera' }
+                                            { type: 'Descanso', shadow: 'shadow-glow-amber', color: 'bg-amber-500', icon: Calendar, title: 'Día de Descanso' },
+                                            { type: 'Turno Fuera', shadow: 'shadow-glow-purple', color: 'bg-purple-600', icon: AlertCircle, title: 'Asignación Fuera' }
                                         ].map((tool, idx) => (
                                             <div key={idx} draggable onDragStart={(e) => handleDragStart(e, 'PANEL', { type: tool.type })} 
                                                 className={`w-11 h-11 ${tool.color} text-white rounded-[18px] flex items-center justify-center cursor-grab hover:scale-110 hover:shadow-2xl transition-all ${tool.shadow} active:scale-95 btn-chiclet`} title={tool.title}>
@@ -1943,7 +1943,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             </div>
                         </div>
 
-                        {/* MÃ³dulo C: Utilidades (Glass Pod) */}
+                        {/* Módulo C: Utilidades (Glass Pod) */}
                         <div className="flex flex-col gap-2 p-4 px-8 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-slate-800/80 rounded-[2.8rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] transition-all hover:shadow-[0_30px_70px_rgba(0,0,0,0.1)] group/pod min-w-[280px]">
                             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wider mb-1 px-1 group-hover/pod:text-indigo-500 transition-colors text-center w-full block">Utilidades</span>
                             <div className="flex items-center gap-3">
@@ -2001,7 +2001,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             <span className="text-[10px] font-black tracking-[0.1em] uppercase">
                                 {weeklyStatus.status === 'Approved' ? 'Semana Aprobada' :
                                  weeklyStatus.status === 'Rejected' ? 'Semana Rechazada' :
-                                 weeklyStatus.status === 'Published' ? 'Pendiente de AprobaciÃ³n' :
+                                 weeklyStatus.status === 'Published' ? 'Pendiente de Aprobación' :
                                  'Esperando Registro de Turnos'}
                             </span>
                         </div>
@@ -2010,7 +2010,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             <div className="flex-1 flex items-center gap-3 p-2.5 px-4 bg-white/60 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200/50 dark:border-white/5 rounded-[22px] shadow-sm">
                                 <FileText size={14} className="text-indigo-500" />
                                 <p className="text-[11px] font-bold text-slate-500 leading-none m-0 truncate">
-                                    <span className="text-indigo-600 font-black text-[9px] mr-2 italic tracking-tighter">ÃšLTIMA OBSERVACIÃ“N:</span>
+                                    <span className="text-indigo-600 font-black text-[9px] mr-2 italic tracking-tighter">ÚLTIMA OBSERVACIÓN:</span>
                                     {weeklyStatus.comment || lastSaveComment || 'Sin observaciones'}
                                 </p>
                             </div>
@@ -2071,7 +2071,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                         {(isHoliday || isSpecial) && (
                                                             <div onMouseEnter={(e) => {
                                                                     const rect = e.currentTarget.getBoundingClientRect();
-                                                                    setHoveredDayMeta({ name: holidayName || (isHoliday ? 'Festivo' : 'DÃ­a Especial'), type: isHoliday ? 'FESTIVO' : 'ESPECIAL', color: isHoliday ? 'rose' : 'amber' });
+                                                                    setHoveredDayMeta({ name: holidayName || (isHoliday ? 'Festivo' : 'Día Especial'), type: isHoliday ? 'FESTIVO' : 'ESPECIAL', color: isHoliday ? 'rose' : 'amber' });
                                                                     setHoverPos({ x: rect.left + rect.width / 2, y: rect.top });
                                                                 }}
                                                                 onMouseLeave={() => setHoveredDayMeta(null)}
@@ -2116,7 +2116,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f1f5f9', width: '230px', minWidth: '230px' }}>
                                                 <div className="flex items-center gap-2">
                                                     <Sparkles size={12} className="text-indigo-500 animate-pulse" />
-                                                    <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest leading-none">PrevisiÃ³n IA</span>
+                                                    <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest leading-none">Previsión IA</span>
                                                 </div>
                                             </th>
                                             {days.map((day, di) => {
@@ -2196,7 +2196,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             const start = new Date(s.startTime);
                                             const end = new Date(s.endTime);
                                             let diff = (end - start) / (1000 * 60 * 60);
-                                            if (diff < 0) diff += 24; // CorrecciÃ³n cruce medianoche
+                                            if (diff < 0) diff += 24; // Corrección cruce medianoche
                                             return acc + diff;
                                         }, 0);
 
@@ -2304,7 +2304,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                     if (shift.isFuera) bgColor = '#8b5cf6';
 
                                                                     const shiftTime = `${new Date(shift.startTime).getHours().toString().padStart(2, '0')}:${new Date(shift.startTime).getMinutes().toString().padStart(2, '0')}-${new Date(shift.endTime).getHours().toString().padStart(2, '0')}:${new Date(shift.endTime).getMinutes().toString().padStart(2, '0')}`;
-                                                                    const attTime = att ? `${new Date(att.clockIn).getHours().toString().padStart(2, '0')}:${new Date(att.clockIn).getMinutes().toString().padStart(2, '0')}â€”${att.clockOut ? new Date(att.clockOut).getHours().toString().padStart(2, '0') + ':' + new Date(att.clockOut).getMinutes().toString().padStart(2, '0') : '...'}` : 'S/MARCAR';
+                                                                    const attTime = att ? `${new Date(att.clockIn).getHours().toString().padStart(2, '0')}:${new Date(att.clockIn).getMinutes().toString().padStart(2, '0')}—${att.clockOut ? new Date(att.clockOut).getHours().toString().padStart(2, '0') + ':' + new Date(att.clockOut).getMinutes().toString().padStart(2, '0') : '...'}` : 'S/MARCAR';
                                                                     const displayText = viewMode === 'SHIFTS' ? (shift.isDescanso ? '00:00-00:00' : shiftTime) : (shift.isDescanso ? '00:00-00:00' : attTime);
                                                                     const isLocked = !!att || isLockedDay || weeklyStatus.status === 'Approved';
                                                                      
@@ -2319,8 +2319,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                                   if (isLocked) { 
                                                                                       if (att) return;
                                                                                       let msg = "Turno bloqueado";
-                                                                                      if (isLockedDay) msg += ": Dato histÃ³rico";
-                                                                                      else if (weeklyStatus.status === 'Approved') msg += ": Semana Validada (Use casillas vacÃ­as para cambios justificados)";
+                                                                                      if (isLockedDay) msg += ": Dato histórico";
+                                                                                      else if (weeklyStatus.status === 'Approved') msg += ": Semana Validada (Use casillas vacías para cambios justificados)";
                                                                                       showToast(msg, "info");
                                                                                       return; 
                                                                                   }
@@ -2345,7 +2345,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                                  {isLocked && <Lock size={11} className="text-white opacity-70" />}
                                                                                  {att && <Activity size={12} className="text-white opacity-100 animate-pulse" />}
                                                                                  <span className="text-[6.5px] font-black uppercase tracking-[0.1em] opacity-80 leading-none">
-                                                                                   {viewMode === 'SHIFTS' ? (shift.isDescanso ? 'DESC' : shift.isFuera ? 'FUERA' : 'TURNO') : 'MARCACIÃ“N'}
+                                                                                   {viewMode === 'SHIFTS' ? (shift.isDescanso ? 'DESC' : shift.isFuera ? 'FUERA' : 'TURNO') : 'MARCACIÓN'}
                                                                                  </span>
                                                                              </div>
                                                                              <span className={`text-[7.5px] font-[1000] tracking-tighter whitespace-nowrap mt-0.5 ${viewMode === 'ATTENDANCE' && !att ? 'opacity-40 animate-pulse' : ''}`}>
@@ -2357,7 +2357,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
                                                                 {/* Render Orphan Attendances (Unscheduled Punches) */}
                                                                 {dayOrphanAttendances.map((att, ai) => {
-                                                                    const attTime = `${new Date(att.clockIn).getHours().toString().padStart(2, '0')}:${new Date(att.clockIn).getMinutes().toString().padStart(2, '0')}â€”${att.clockOut ? new Date(att.clockOut).getHours().toString().padStart(2, '0') + ':' + new Date(att.clockOut).getMinutes().toString().padStart(2, '0') : '...'}`;
+                                                                    const attTime = `${new Date(att.clockIn).getHours().toString().padStart(2, '0')}:${new Date(att.clockIn).getMinutes().toString().padStart(2, '0')}—${att.clockOut ? new Date(att.clockOut).getHours().toString().padStart(2, '0') + ':' + new Date(att.clockOut).getMinutes().toString().padStart(2, '0') : '...'}`;
                                                                     let bgColor = '#10b981'; // Emerald/Green for real work
                                                                     if (att.status === 1) bgColor = '#eab308'; // Yellow
                                                                     if (att.status === 3 || !att.clockOut) bgColor = '#f97316'; // Orange
@@ -2388,7 +2388,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                 {!nov && dayShifts.length === 0 && dayOrphanAttendances.length === 0 && (
                                                                     <div onClick={() => {
                                                                                  if (readOnly || isLockedDay) {
-                                                                                     showToast(isLockedDay ? "Dato histÃ³rico bloqueado" : "Modo lectura activo", "info");
+                                                                                     showToast(isLockedDay ? "Dato histórico bloqueado" : "Modo lectura activo", "info");
                                                                                      return;
                                                                                  }
                                                                                  setPendingEvent({ employeeId: emp.id, date: day, type: 'Turno', existingShift: null });
@@ -2463,10 +2463,10 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         </div>
                 </div>
 
-                {/* JustificaciÃ³n de la semana (Print) */}
+                {/* Justificación de la semana (Print) */}
                 {(saveComment || lastSaveComment) && (
                     <div className="print-only print-comment-box mt-10 p-6 bg-slate-50 border-2 border-slate-200 rounded-3xl">
-                        <p className="text-[10px] font-black text-indigo-600 mb-2 tracking-widest">Observaciones de la programaciÃ³n:</p>
+                        <p className="text-[10px] font-black text-indigo-600 mb-2 tracking-widest">Observaciones de la programación:</p>
                         <p className="text-[13px] font-bold text-slate-800 leading-relaxed italic">
                             "{saveComment || lastSaveComment}"
                         </p>
@@ -2500,9 +2500,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 <div style={{ width: '80px', height: '80px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', margin: '0 auto 30px' }}>
                                     <ShieldCheck size={40} />
                                 </div>
-                                <h3 style={{ fontSize: '1.8rem', fontWeight: '950', color: activeColors.textMain, marginBottom: '15px' }}>Confirmar AprobaciÃ³n</h3>
+                                <h3 style={{ fontSize: '1.8rem', fontWeight: '950', color: activeColors.textMain, marginBottom: '15px' }}>Confirmar Aprobación</h3>
                                 <p style={{ color: activeColors.textMuted, fontSize: '0.95rem', fontWeight: '600', marginBottom: '35px', lineHeight: '1.6' }}>
-                                    EstÃ¡s a punto de validar administrativamente la programaciÃ³n de la sede <span style={{ color: activeColors.accent, fontWeight: '900' }}>{stores.find(s => s.id === selectedStore)?.name}</span>. Una vez aprobado, los colaboradores podrÃ¡n ver sus turnos de forma oficial.
+                                    Estás a punto de validar administrativamente la programación de la sede <span style={{ color: activeColors.accent, fontWeight: '900' }}>{stores.find(s => s.id === selectedStore)?.name}</span>. Una vez aprobado, los colaboradores podrán ver sus turnos de forma oficial.
                                 </p>
                                 
                                 <div style={{ marginBottom: '35px' }}>
@@ -2538,7 +2538,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         <XCircle size={44} strokeWidth={2.5} />
                                     </div>
                                     <h2 style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', letterSpacing: '-0.03em', margin: '0 0 10px' }}>Rechazar Turno</h2>
-                                    <p style={{ color: '#94a3b8', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Solicitar correcciÃ³n inmediata</p>
+                                    <p style={{ color: '#94a3b8', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Solicitar corrección inmediata</p>
                                 </div>
                                 <div style={{ padding: '0 50px 50px' }}>
                                     <div style={{ marginBottom: '35px' }}>
@@ -2546,13 +2546,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         <textarea
                                             value={rejectionComment}
                                             onChange={e => setRejectionComment(e.target.value)}
-                                            placeholder="Indica quÃ© debe corregir el gerente..."
+                                            placeholder="Indica qué debe corregir el gerente..."
                                             rows={4}
                                             style={{ width: '100%', padding: '24px', borderRadius: '24px', border: `2px solid ${isDarkMode ? '#334155' : '#f1f5f9'}`, background: isDarkMode ? '#0f172a' : '#f8fafc', color: isDarkMode ? 'white' : '#1e293b', fontWeight: '700', minHeight: '130px', boxSizing: 'border-box', outline: 'none', resize: 'none', transition: 'border-color 0.3s' }}
                                             className="focus:border-rose-500"
                                         />
                                         {rejectionComment.length > 0 && rejectionComment.length < 5 && (
-                                            <p className="text-rose-500 text-[10px] font-black uppercase mt-2 px-2 tracking-widest">MÃ­nimo 5 caracteres</p>
+                                            <p className="text-rose-500 text-[10px] font-black uppercase mt-2 px-2 tracking-widest">Mínimo 5 caracteres</p>
                                         )}
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -2585,7 +2585,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         <Save size={36} />
                                     </div>
                                     <h2 style={{ fontSize: '1.4rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', letterSpacing: '-0.02em', margin: '0 0 8px' }}>Publicar cambios</h2>
-                                    <p style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.15em' }}>ProgramaciÃ³n Semanal</p>
+                                    <p style={{ color: '#64748b', fontSize: '0.85rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Programación Semanal</p>
                                     {lastSaveComment && (
                                         <div style={{ marginTop: '20px', padding: '15px', background: isDarkMode ? 'rgba(79, 70, 229, 0.1)' : '#f5f7ff', borderRadius: '16px', textAlign: 'left', border: '1px dashed #4f46e5' }}>
                                             <p style={{ fontSize: '9px', fontWeight: '950', color: '#4f46e5', textTransform: 'uppercase', marginBottom: '5px' }}>Comentario anterior:</p>
@@ -2595,16 +2595,16 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 </div>
                                 <div style={{ padding: '0 50px 50px' }}>
                                     <div style={{ marginBottom: '30px' }}>
-                                        <label style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.1em' }}>JustificaciÃ³n / Comentarios *</label>
+                                        <label style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.1em' }}>Justificación / Comentarios *</label>
                                         <textarea
                                             value={saveComment}
                                             onChange={e => setSaveComment(e.target.value)}
-                                            placeholder="Detalle los motivos del cambio (mÃ­nimo 10 caracteres)..."
+                                            placeholder="Detalle los motivos del cambio (mínimo 10 caracteres)..."
                                             style={{ width: '100%', padding: '24px', borderRadius: '24px', border: `2px solid ${isDarkMode ? (saveComment.trim().length >= 10 ? '#334155' : '#ef4444') : (saveComment.trim().length >= 10 ? '#f1f5f9' : '#fee2e2')}`, background: isDarkMode ? '#0f172a' : '#f8fafc', color: isDarkMode ? 'white' : '#1e293b', fontWeight: '700', minHeight: '120px', boxSizing: 'border-box', outline: 'none', resize: 'none', fontSize: '1rem' }}
                                         />
                                         <div className="flex justify-between mt-2 px-2">
                                             <span style={{ fontSize: '9px', fontWeight: '950', color: saveComment.trim().length >= 10 ? '#10b981' : '#f43f5e', textTransform: 'uppercase' }}>
-                                                {saveComment.trim().length < 10 ? `Faltan ${10 - saveComment.trim().length} caracteres` : 'Comentario vÃ¡lido'}
+                                                {saveComment.trim().length < 10 ? `Faltan ${10 - saveComment.trim().length} caracteres` : 'Comentario válido'}
                                             </span>
                                             <span style={{ fontSize: '9px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase' }}>
                                                 {saveComment.length} caracteres
@@ -2615,14 +2615,14 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         <button onClick={performSave} disabled={isSaving} style={{ width: '100%', padding: '22px', borderRadius: '22px', border: 'none', background: '#4f46e5', color: 'white', fontWeight: '950', fontSize: '12px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 15px 30px rgba(79, 70, 229, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', transition: 'all 0.2s' }} className="hover:scale-[1.02] active:scale-95">
                                             {isSaving ? <div className="loader !w-5 !h-5 !border-white"></div> : <><CheckCircle size={20} /> Finalizar y Enviar</>}
                                         </button>
-                                        <button onClick={() => setShowSaveModal(false)} style={{ width: '100%', padding: '18px', borderRadius: '20px', border: 'none', background: 'transparent', color: '#94a3b8', fontWeight: '800', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', letterSpacing: '0.2em' }}>Cancelar OperaciÃ³n</button>
+                                        <button onClick={() => setShowSaveModal(false)} style={{ width: '100%', padding: '18px', borderRadius: '20px', border: 'none', background: 'transparent', color: '#94a3b8', fontWeight: '800', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer', letterSpacing: '0.2em' }}>Cancelar Operación</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* V20.0: JustificaciÃ³n de ExcepciÃ³n Elite Modal */}
+                    {/* V20.0: Justificación de Excepción Elite Modal */}
                     {showJustificationModal && (
                         <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 15, 0.92)', backdropFilter: 'blur(30px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
                             <div style={{ background: isDarkMode ? '#1e293b' : '#ffffff', width: '100%', maxWidth: '450px', borderRadius: '48px', overflow: 'hidden', border: isDarkMode ? '1px solid #334155' : 'none', boxShadow: '0 50px 100px rgba(0,0,0,0.6)', animation: 'modalSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1)' }}>
@@ -2630,8 +2630,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     <div style={{ width: '70px', height: '70px', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 25px', boxShadow: 'inset 0 0 20px rgba(245, 158, 11, 0.1)' }}>
                                         <ShieldAlert size={36} />
                                     </div>
-                                    <h2 style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', letterSpacing: '-0.03em', margin: '0 0 10px' }}>ExcepciÃ³n de Seguridad</h2>
-                                    <p style={{ color: '#94a3b8', fontSize: '13px', fontWeight: '600', lineHeight: '1.6', margin: 0 }}>Esta semana ya estÃ¡ <b>APROBADA</b>. Para aÃ±adir este turno individual, se requiere una justificaciÃ³n vÃ¡lida que quedarÃ¡ registrada en la auditorÃ­a.</p>
+                                    <h2 style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', letterSpacing: '-0.03em', margin: '0 0 10px' }}>Excepción de Seguridad</h2>
+                                    <p style={{ color: '#94a3b8', fontSize: '13px', fontWeight: '600', lineHeight: '1.6', margin: 0 }}>Esta semana ya está <b>APROBADA</b>. Para añadir este turno individual, se requiere una justificación válida que quedará registrada en la auditoría.</p>
                                 </div>
                                 
                                 <div style={{ padding: '0 40px 40px' }}>
@@ -2639,7 +2639,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         <textarea 
                                             value={justificationComment}
                                             onChange={(e) => setJustificationComment(e.target.value)}
-                                            placeholder="Describa el motivo de la adiciÃ³n (ej. Refuerzo solicitado por operaciÃ³n)..."
+                                            placeholder="Describa el motivo de la adición (ej. Refuerzo solicitado por operación)..."
                                             disabled={isSavingJustified}
                                             style={{ 
                                                 width: '100%', 
@@ -2657,7 +2657,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             }}
                                         />
                                         <div style={{ position: 'absolute', bottom: '15px', right: '20px', fontSize: '10px', fontWeight: '900', color: justificationComment.length < 10 ? '#ef4444' : '#10b981' }}>
-                                            {justificationComment.length}/10 mÃ­n.
+                                            {justificationComment.length}/10 mín.
                                         </div>
                                     </div>
 
@@ -2761,7 +2761,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     </div>
 
                                     <div style={{ marginBottom: '30px' }}>
-                                        <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '15px', letterSpacing: '0.1em', textAlign: 'center' }}>Aplicar a los dÃ­as:</label>
+                                        <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '15px', letterSpacing: '0.1em', textAlign: 'center' }}>Aplicar a los días:</label>
                                         <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
                                             {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
                                                 <button
@@ -2864,7 +2864,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-white/5">
                                     <div className="flex flex-col text-left">
                                         <span className={`text-[12px] font-[1000] tracking-tight`} style={{ color: hoveredShiftData.borderCol }}>
-                                            {hoveredShiftData.isOrphan ? 'MARCACIÃ“N SIN TURNO' : (hoveredShiftData.status === 6 ? 'TURNO APROBADO' : (hoveredShiftData.status === 7 ? 'TURNO RECHAZADO' : (hoveredShiftData.status === 5 ? 'PENDIENTE VALIDACIÃ“N' : (hoveredShiftData.att ? `TURNO ${hoveredShiftData.att.status === 0 ? 'CORRECTO' : (hoveredShiftData.att.status === 3 ? 'INCOMPLETO' : 'DESFASADO')}` : (hoveredShiftData.isDescanso ? 'DESCANSO' : (hoveredShiftData.isLocked ? 'SIN MARCACIONES' : 'REGISTRADO'))))))}
+                                            {hoveredShiftData.isOrphan ? 'MARCACIÓN SIN TURNO' : (hoveredShiftData.status === 6 ? 'TURNO APROBADO' : (hoveredShiftData.status === 7 ? 'TURNO RECHAZADO' : (hoveredShiftData.status === 5 ? 'PENDIENTE VALIDACIÓN' : (hoveredShiftData.att ? `TURNO ${hoveredShiftData.att.status === 0 ? 'CORRECTO' : (hoveredShiftData.att.status === 3 ? 'INCOMPLETO' : 'DESFASADO')}` : (hoveredShiftData.isDescanso ? 'DESCANSO' : (hoveredShiftData.isLocked ? 'SIN MARCACIONES' : 'REGISTRADO'))))))}
                                         </span>
                                     </div>
                                     <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg`} style={{ backgroundColor: hoveredShiftData.borderCol, color: 'white' }}>
@@ -2982,7 +2982,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         <Cpu size={40} className={isOptimizing ? "animate-spin" : "animate-pulse"} />
                                     </div>
                                     <h2 style={{ fontSize: '2.2rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', letterSpacing: '-0.04em', margin: 0 }}>Hub de Inteligencia</h2>
-                                    <p style={{ color: '#6366f1', fontSize: '11px', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '0.2em', marginTop: '10px' }}>OptimizaciÃ³n Basada en Demanda</p>
+                                    <p style={{ color: '#6366f1', fontSize: '11px', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '0.2em', marginTop: '10px' }}>Optimización Basada en Demanda</p>
                                 </div>
 
                                 <div style={{ padding: '0 50px 50px' }}>
@@ -2992,7 +2992,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             <p style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>{predictiveRules.length}</p>
                                         </div>
                                         <div style={{ padding: '24px', background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc', borderRadius: '32px', border: '1px solid rgba(0,0,0,0.05)' }}>
-                                            <p style={{ fontSize: '10px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '5px' }}>Data HistÃ³rica</p>
+                                            <p style={{ fontSize: '10px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '5px' }}>Data Histórica</p>
                                             <p style={{ fontSize: '1.6rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>
                                                 {(() => {
                                                     const firstDay = toLocalISO(currentWeekStart);
@@ -3007,7 +3007,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     <div style={{ marginBottom: '40px', padding: '30px', background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(147, 51, 234, 0.1))', borderRadius: '40px', border: '1px solid rgba(79, 70, 229, 0.2)' }}>
                                         <div className="flex justify-between items-center mb-6">
                                             <h4 style={{ fontSize: '11px', fontWeight: '950', color: '#6366f1', textTransform: 'uppercase', tracking: '0.15em', margin: 0 }}>Balance Operativo Semanal</h4>
-                                            <div className="px-3 py-1 bg-indigo-500/20 text-indigo-400 rounded-full text-[9px] font-black uppercase">AnÃ¡lisis en Vivo</div>
+                                            <div className="px-3 py-1 bg-indigo-500/20 text-indigo-400 rounded-full text-[9px] font-black uppercase">Análisis en Vivo</div>
                                         </div>
                                         
                                         <div className="grid grid-cols-3 gap-6">
@@ -3073,7 +3073,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 <p className="text-[8px] font-black text-slate-400 mt-1 uppercase">Cobertura</p>
                                             </div>
                                             <div className="text-center">
-                                                <p className="text-[9px] font-bold text-slate-500 mb-1 uppercase">CrÃ­tico</p>
+                                                <p className="text-[9px] font-bold text-slate-500 mb-1 uppercase">Crítico</p>
                                                 <p className="text-xl font-black text-rose-500">
                                                     {(() => {
                                                         const hourDeltas = new Array(24).fill(0);
@@ -3228,7 +3228,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     ><ChevronLeft size={20} strokeWidth={3} /></button>
                                     
                                     <div className="text-center min-w-[280px]">
-                                        <h3 className="text-3xl font-[1000] tracking-tighter drop-shadow-lg text-white mb-0.5">AnÃ¡lisis de Cobertura</h3>
+                                        <h3 className="text-3xl font-[1000] tracking-tighter drop-shadow-lg text-white mb-0.5">Análisis de Cobertura</h3>
                                         <div className="flex items-center justify-center gap-2">
                                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
                                             <p className="text-indigo-50 font-black uppercase tracking-widest text-[12px]">
@@ -3322,7 +3322,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             {/* Summary Cards with Calculation Insights */}
                             <div className="grid grid-cols-3 gap-6">
                                 <div className="p-6 bg-rose-500/5 dark:bg-rose-500/10 rounded-[2.5rem] border border-rose-500/20 shadow-inner">
-                                    <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest mb-2 opacity-80">DÃ©ficit Segmentado</p>
+                                    <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest mb-2 opacity-80">Déficit Segmentado</p>
                                     <p className="text-4xl font-[950] text-rose-600 dark:text-rose-500 tracking-tighter">
                                         -{(() => {
                                             const rulesToCalc = analysisRuleId ? [analysisRuleId] : Object.keys(selectedCoverageDay.ruleMetadata || {});
@@ -3353,7 +3353,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 </div>
                                 
                                 <div className="p-6 bg-slate-50 dark:bg-white/5 rounded-[2.5rem] border border-slate-200 dark:border-white/5 shadow-inner">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 opacity-80">LÃ³gica de Inteligencia</p>
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 opacity-80">Lógica de Inteligencia</p>
                                     {analysisRuleId ? (
                                         <div className="flex items-end gap-3 h-full pb-2">
                                             <div className="flex flex-col">
@@ -3374,7 +3374,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     ) : (
                                         <div className="flex gap-2 items-center h-full">
                                             <Layout className="text-indigo-500 opacity-30" size={32} />
-                                            <p className="text-[10px] font-bold text-slate-500">Seleccione una regla para ver el desglose matemÃ¡tico.</p>
+                                            <p className="text-[10px] font-bold text-slate-500">Seleccione una regla para ver el desglose matemático.</p>
                                         </div>
                                     )}
                                 </div>
@@ -3394,13 +3394,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             <div>
                                 <div className="flex justify-between items-center mb-6">
                                     <div className="flex flex-col gap-1">
-                                        <h4 className="text-[11px] font-[1000] text-indigo-500 uppercase tracking-widest leading-none">SemÃ¡foro de Demanda x Hora</h4>
+                                        <h4 className="text-[11px] font-[1000] text-indigo-500 uppercase tracking-widest leading-none">Semáforo de Demanda x Hora</h4>
                                         <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">
-                                            {analysisRuleId ? `InspecciÃ³n: ${selectedCoverageDay.ruleMetadata[analysisRuleId].name}` : 'AnÃ¡lisis Operativo Consolidado'}
+                                            {analysisRuleId ? `Inspección: ${selectedCoverageDay.ruleMetadata[analysisRuleId].name}` : 'Análisis Operativo Consolidado'}
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-4 text-[9px] font-black bg-slate-50 dark:bg-slate-800/50 px-4 py-2 rounded-full border border-slate-100 dark:border-white/5">
-                                        <div className="flex items-center gap-1.5 text-rose-500"><div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></div> DÃ©ficit</div>
+                                        <div className="flex items-center gap-1.5 text-rose-500"><div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></div> Déficit</div>
                                         <div className="flex items-center gap-1.5 text-emerald-500"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div> Cubierto</div>
                                         <div className="flex items-center gap-1.5 text-slate-400"><div className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700"></div> S/Demanda</div>
                                     </div>
@@ -3497,20 +3497,20 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                          <Sparkles className="absolute -right-4 -bottom-4 w-24 h-24 text-white/5" />
                                          <p className="text-[11px] leading-relaxed font-medium text-slate-300 relative z-10">
                                              {analysisRuleId ? 
-                                                `La regla "${selectedCoverageDay.ruleMetadata[analysisRuleId].name}" sugiere ${selectedCoverageDay.ruleMetadata[analysisRuleId].isActive ? 'una cobertura activa' : 'cero personal hoy por ser dÃ­a no laboral'}.` 
-                                                : "El anÃ¡lisis consolidado integra todas las reglas activas hoy para determinar el piso mÃ­nimo de operaciÃ³n eficiente."
+                                                `La regla "${selectedCoverageDay.ruleMetadata[analysisRuleId].name}" sugiere ${selectedCoverageDay.ruleMetadata[analysisRuleId].isActive ? 'una cobertura activa' : 'cero personal hoy por ser día no laboral'}.` 
+                                                : "El análisis consolidado integra todas las reglas activas hoy para determinar el piso mínimo de operación eficiente."
                                              }
                                          </p>
                                          <button 
                                             onClick={() => { performOptimization(); setSelectedCoverageDay(null); }}
                                             className="mt-6 w-full py-4 bg-indigo-600 hover:bg-indigo-500 rounded-2xl text-[10px] font-black uppercase tracking-tighter transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
                                          >
-                                             Efectuar OptimizaciÃ³n AI
+                                             Efectuar Optimización AI
                                          </button>
                                      </div>
                                 </div>
                                 <div className="p-8 bg-slate-50 dark:bg-white/5 rounded-[2.5rem] border border-slate-200 dark:border-white/5 flex flex-col justify-center relative">
-                                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">DÃ­as de Referencia</h4>
+                                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Días de Referencia</h4>
                                     <div className="flex gap-3">
                                         {selectedCoverageDay.historicalDates?.map((d, idx) => (
                                             <div key={idx} className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-2xl text-[10px] font-black text-slate-600 dark:text-slate-300 shadow-sm">
@@ -3518,7 +3518,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             </div>
                                         ))}
                                     </div>
-                                    <p className="mt-4 text-[9px] font-bold text-slate-400 italic opacity-60">Los cÃ¡lculos se basan en el promedio ponderado de estos perÃ­odos histÃ³ricos.</p>
+                                    <p className="mt-4 text-[9px] font-bold text-slate-400 italic opacity-60">Los cálculos se basan en el promedio ponderado de estos períodos históricos.</p>
                                 </div>
                             </div>
                         </div>
@@ -3537,7 +3537,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         {hoveredShiftData.isOrphan ? (
                             <div className="flex flex-col gap-2">
                                 <div className="flex items-center justify-between gap-4">
-                                    <h5 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-none">MarcaciÃ³n Sin Turno</h5>
+                                    <h5 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-none">Marcación Sin Turno</h5>
                                     <div className="h-8 w-8 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg">
                                         <Check size={16} strokeWidth={4} />
                                     </div>
@@ -3584,13 +3584,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 <div className="space-y-1.5">
                                     <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2 border border-slate-100 dark:border-slate-700">
                                         <User size={12} className="text-slate-400" />
-                                        <span className="text-[9px] font-bold text-slate-600 dark:text-slate-300">TIPO: <b className="uppercase">{hoveredShiftData.isDescanso ? 'Descanso' : hoveredShiftData.isFuera ? 'Turno Fuera' : 'ProgramaciÃ³n'}</b></span>
+                                        <span className="text-[9px] font-bold text-slate-600 dark:text-slate-300">TIPO: <b className="uppercase">{hoveredShiftData.isDescanso ? 'Descanso' : hoveredShiftData.isFuera ? 'Turno Fuera' : 'Programación'}</b></span>
                                     </div>
                                     {hoveredShiftData.att && (
                                         <div className="flex flex-col gap-1.5 bg-emerald-500/10 rounded-xl px-3 py-2 border border-emerald-500/20">
                                             <div className="flex items-center gap-2">
                                                 <Activity size={12} className="text-emerald-500" />
-                                                <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase">MarcaciÃ³n Real</span>
+                                                <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase">Marcación Real</span>
                                             </div>
                                             <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-300">{hoveredShiftData.attTime}</span>
                                         </div>
@@ -3599,7 +3599,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 {hoveredShiftData.isLocked && !hoveredShiftData.att && (
                                     <div className="mt-1 flex items-center gap-1.5 opacity-60">
                                         <ShieldCheck size={10} className="text-slate-400" />
-                                        <span className="text-[8px] font-bold italic text-slate-500">Registro histÃ³rico bloqueado</span>
+                                        <span className="text-[8px] font-bold italic text-slate-500">Registro histórico bloqueado</span>
                                     </div>
                                 )}
                             </div>
@@ -3627,8 +3627,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             </h4>
                             <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 w-full">
                                 <p className="text-[9px] font-bold text-slate-400 leading-relaxed">
-                                    DÃ­a con tratamiento operativo especial.<br/>
-                                    <span className="text-indigo-500">Contemplado en previsiÃ³n IA.</span>
+                                    Día con tratamiento operativo especial.<br/>
+                                    <span className="text-indigo-500">Contemplado en previsión IA.</span>
                                 </p>
                             </div>
                         </div>
