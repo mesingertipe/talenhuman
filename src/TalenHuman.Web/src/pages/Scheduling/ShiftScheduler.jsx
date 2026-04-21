@@ -702,6 +702,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
             // 1. MAIN ASSIGNMENT PASS
             daysInWeek.forEach(day => {
+                const dayStr = day.toDateString(); // V13.8.1 HOTFIX: Define missing variable
                 const result = calculateHourlyNeeds(day);
                 const needs = result.needs || {};
                 
