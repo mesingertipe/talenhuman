@@ -49,14 +49,7 @@ const MobileShifts = ({ user }) => {
       }
 
       const res = await api.get('/shifts/my-shifts', { params: { start, end } });
-      
-      // V22.7 FILTER: Enforce strict local day match to prevent UTC bleed-over
-      const filtered = res.data.filter(s => {
-        const itemDate = new Date(s.startTime);
-        return itemDate.toDateString() === d.toDateString();
-      });
-      
-      setShifts(filtered);
+      setShifts(res.data);
     } catch (err) {
       console.error("Fetch shifts error", err);
     } finally {

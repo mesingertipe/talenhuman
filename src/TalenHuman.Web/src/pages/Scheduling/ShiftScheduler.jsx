@@ -1883,7 +1883,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 </div>
             )}
 
-            <div id="printable-area" className="page-container animate-in fade-in duration-500 flex flex-col h-[calc(100vh-100px)] overflow-hidden" style={{ padding: '1.5rem 2rem' }}>
+            <div id="printable-area" className="page-container animate-in fade-in duration-500" style={{ padding: '2rem' }}>
                 <style>
                     {`
                         @media print {
@@ -1938,10 +1938,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                     </div>
                 </div>
 
-                {/* 2. Centro de Comando Premium (v13.0) - FIXED TOP */}
-                <div className="bg-[#f8fafc] dark:bg-[#060914] -mx-8 px-8 pb-4 border-b dark:border-slate-800 shadow-sm transition-all duration-300">
+                {/* 2. Centro de Comando Premium (v13.0) */}
+                <div className="no-print space-y-4 mb-32">
+                    
                     {/* 2.1 Fila 1: Selectores Maestros Compactos */}
-                    <div className="flex flex-row items-center justify-between gap-3 p-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-slate-200/50 dark:border-white/5 relative z-[100000] shadow-xl" style={{ borderRadius: '32px', overflow: 'visible' }}>
+                    <div className="flex flex-row items-center justify-between gap-3 p-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-slate-200/50 dark:border-white/5 sticky top-4 z-[100000] shadow-xl" style={{ borderRadius: '32px', overflow: 'visible' }}>
                         
                         {/* Sedes */}
                         <div className="flex-1 min-w-[200px]">
@@ -2090,14 +2091,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     <button onClick={() => setViewMode('ATTENDANCE')} className={`w-[34px] h-[34px] flex items-center justify-center rounded-full transition-all ${viewMode === 'ATTENDANCE' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}>
                                         <Clock size={16} strokeWidth={2.5} />
                                     </button>
-                                    <div className="w-[1px] h-6 bg-slate-200 dark:bg-slate-700/50 mx-1"></div>
-                                    <button onClick={() => {}} className="w-[34px] h-[34px] flex items-center justify-center rounded-full transition-all text-slate-400 hover:text-indigo-500 hover:bg-indigo-50/50" title="Vista Diaria / Hora por Hora (Próximamente)">
-                                        <Activity size={16} strokeWidth={2.5} />
-                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
                     {/* Fila Opcional: Contador Flotante Minimalista */}
                     <div className="flex justify-end pr-8 -mt-4 mb-4">
@@ -2108,6 +2106,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             </span>
                         </div>
                     </div>
+
 
                     <div className="flex flex-wrap items-center gap-3 mb-4 no-print">
                         {/* Status Badge Chiclet */}
@@ -2139,16 +2138,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             </div>
                         )}
                     </div>
-                </div>
-                {/* --- FIN SECCIÓN STICKY: CENTRO DE COMANDO --- */}
                 
-                {/* 3. Grid Area (INTERNAL SCROLL) */}
-                <div className="flex-1 min-h-0 overflow-auto custom-scrollbar relative mt-4 bg-white dark:bg-slate-900 border-2 dark:border-slate-800 shadow-[0_40px_100px_rgba(0,0,0,0.12)]" style={{ borderRadius: '48px' }}>
-                    <div className="elite-scheduler-grid-container">
+                <div className="card shadow-[0_40px_100px_rgba(0,0,0,0.12)] bg-white dark:bg-slate-900 border-2 dark:border-slate-800 relative" style={{ borderRadius: '48px', overflow: 'hidden', minHeight: '600px' }}>
+                    <div className="overflow-x-auto">
                             <footer className="absolute bottom-4 right-8 z-[100] opacity-30 select-none pointer-events-none">
                                 <div className="text-[8px] font-black tracking-widest text-slate-400 opacity-50">v13.9.46-elite</div>
                             </footer>
-                            <table className="border-separate border-spacing-0" style={{ tableLayout: 'fixed', width: '1120px', minWidth: '1120px' }}>
+                            <table className="border-collapse" style={{ tableLayout: 'fixed', width: '1120px', borderSpacing: 0, minWidth: '1120px' }}>
                                 <colgroup>
                                     <col style={{ width: '230px' }} />
                                     {days.map((_, i) => <col key={i} style={{ width: '110px' }} />)}
@@ -2156,7 +2152,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 </colgroup>
                                 <thead>
                                     <tr className="bg-slate-50 dark:bg-slate-800 border-b-2 dark:border-indigo-500/20">
-                                        <th className="p-4 py-8 text-left sticky left-0 top-0 z-[230] border-r border-b dark:border-slate-800" 
+                                        <th className="p-4 py-8 text-left sticky left-0 z-[160] border-r dark:border-slate-800" 
                                             style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '230px', minWidth: '230px', maxWidth: '230px' }}>
                                             <div className="flex items-center gap-2">
                                                 <button 
@@ -2186,7 +2182,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             else if (isSpecial) headerBg = isDarkMode ? 'rgba(217, 119, 6, 0.15)' : 'rgba(254, 243, 199, 0.5)';
 
                                             return (
-                                                <th key={i} className={`p-2 text-center border-r border-b dark:border-slate-700 w-[110px] min-w-[110px] transition-colors duration-500 sticky top-0 z-[220] ${isHoliday ? 'border-b-2 border-rose-500/50' : (isSpecial ? 'border-b-2 border-amber-500/50' : '')}`} 
+                                                <th key={i} className={`p-2 text-center border-r dark:border-slate-700 w-[110px] min-w-[110px] transition-colors duration-500 ${isHoliday ? 'border-b-2 border-rose-500/50' : (isSpecial ? 'border-b-2 border-amber-500/50' : '')}`} 
                                                     style={{ backgroundColor: headerBg }}>
                                                     <p className={`text-[9px] font-black tracking-tight mb-0.5 drop-shadow-sm ${isHoliday ? 'text-rose-500' : (isSpecial ? 'text-amber-600' : 'text-slate-400 dark:text-slate-500')}`}>
                                                         {day.toLocaleDateString('es-CO', { weekday: 'short' })}
@@ -2227,7 +2223,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </th>
                                             );
                                         })}
-                                        <th className="p-4 text-center w-[120px] min-w-[120px] font-[950] text-[10px] text-slate-500 dark:text-indigo-300 tracking-[0.2em] border-l border-b dark:border-slate-700 sticky right-0 top-0 z-[220]"
+                                        <th className="p-4 text-center w-[120px] min-w-[120px] font-[950] text-[10px] text-slate-500 dark:text-indigo-300 tracking-[0.2em] border-l dark:border-slate-700 sticky right-0 z-[160]"
                                             style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f8fafc' }}>
                                             Total
                                         </th>
@@ -2236,7 +2232,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     {/* V13.0 COORDINATED GAP ANALYSIS ROW */}
                                     {showPredictiveOverlay && (
                                         <tr className="border-b dark:border-slate-800 bg-indigo-50/10 dark:bg-indigo-900/10 animate-in slide-in-from-top duration-500">
-                                            <th className="p-3 sticky left-0 top-[103px] z-[210] border-r border-b dark:border-slate-800" 
+                                            <th className="p-3 sticky left-0 z-[160] border-r dark:border-slate-800" 
                                                 style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f1f5f9', width: '230px', minWidth: '230px' }}>
                                                 <div className="flex items-center gap-2">
                                                     <Sparkles size={12} className="text-indigo-500 animate-pulse" />
@@ -2267,10 +2263,10 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                         if (need > scheduledAtHour) totalDeficit += (need - scheduledAtHour);
                                                     });
                                                 });
-          
+ 
                                                 return (
-                                                    <td key={di} className="p-1 border-r border-b dark:border-slate-800 text-center align-middle cursor-pointer hover:bg-rose-500/5 group/gap transition-colors sticky top-[103px] z-[190]" 
-                                                        style={{ height: '60px', backgroundColor: isDarkMode ? '#1e293b' : '#f1f5f9' }}
+                                                    <td key={di} className="p-1 border-r dark:border-slate-800 text-center align-middle cursor-pointer hover:bg-rose-500/5 group/gap transition-colors" 
+                                                        style={{ height: '60px' }}
                                                         onClick={() => { 
                                                             const result = calculateHourlyNeeds(day);
                                                             const needs = result.needs || {};
@@ -2299,7 +2295,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                     </td>
                                                 );
                                             })}
-                                            <td className="p-2 border-l border-b dark:border-slate-800 sticky right-0 top-[103px] z-[210]" 
+                                            <td className="p-2 border-l dark:border-slate-800 sticky right-0 z-[160]" 
                                                 style={{ width: '120px', minWidth: '120px', maxWidth: '120px', backgroundColor: isDarkMode ? '#1e293b' : '#f8fafc' }}></td>
                                         </tr>
                                     )}
@@ -2332,7 +2328,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         const isSelected = selectedEmployees.includes(emp.id);
                                         return (
                                             <tr key={emp.id} className="border-b dark:border-slate-800 hover:bg-slate-50/10 dark:hover:bg-slate-800/50 transition-colors">
-                                            <td className="p-4 border-r border-b dark:border-slate-800 sticky left-0 z-[200] shadow-[10px_0_30px_rgba(0,0,0,0.03)]" 
+                                            <td className="p-4 border-r dark:border-slate-800 sticky left-0 z-[160] shadow-[10px_0_30px_rgba(0,0,0,0.03)]" 
                                                 style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '230px', minWidth: '230px' }}>
                                                 <div className="flex flex-col gap-1.5">
                                                     <div className="flex items-start gap-3 overflow-hidden">
