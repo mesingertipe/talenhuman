@@ -47,7 +47,14 @@ const MobileAttendance = ({ user }) => {
       }
 
       const res = await api.get('/attendance/my-attendance', { params: { start, end } });
-      setData(res.data);
+      
+      // V22.7 FILTER: Enforce strict local day match to prevent UTC bleed-over
+      const filtered = res.data.filter(item => {
+        const itemDate = new Date(item.clockIn);
+        return itemDate.toDateString() === d.toDateString();
+      });
+      
+      setData(filtered);
     } catch (err) {
       console.error("Fetch attendance error", err);
     } finally {

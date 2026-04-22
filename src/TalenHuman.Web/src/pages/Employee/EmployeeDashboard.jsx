@@ -14,8 +14,8 @@ const EmployeeDashboard = ({ user }) => {
         // Individual Safe Fetches
         try {
           const shiftsRes = await api.get('/scheduling/my-shifts');
-          const today = new Date().toISOString().split('T')[0];
-          const currentShift = shiftsRes.data.find(s => s.startTime.startsWith(today));
+          const todayStr = new Date().toDateString();
+          const currentShift = shiftsRes.data.find(s => new Date(s.startTime).toDateString() === todayStr);
           setTodayShift(currentShift);
         } catch (e) {
           console.error("Dashboard Shifts Error", e);
