@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Layout from './components/Layout/Layout'
 import api from './services/api'
 import Dashboard from './pages/Dashboard'
@@ -54,8 +54,13 @@ import { useTheme } from './context/ThemeContext'
 import DebugPortal from './components/Shared/DebugPortal'
 import MobileCommunicationModal from './components/Mobile/MobileCommunicationModal'
 
-// V13.9.45 FUNCTIONAL MASTER SYNC
-const APP_VERSION = "V13.9.45-PREMIUM-STABLE";
+// 🚀 V13.9.46 FINAL STABILIZATION
+const APP_VERSION = "V13.9.46-STABLE";
+
+// Global boot protection
+if (typeof window !== 'undefined' && window.__TALENHUMAN_BOOTED__ === undefined) {
+    window.__TALENHUMAN_BOOTED__ = false;
+}
 
 function App() {
   // 🚀 V54 FORCE DOMAIN UNIFICATION
@@ -73,7 +78,11 @@ function App() {
   
   const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [currentPage, setCurrentPage] = useState('Dashboard');
-  const [booting, setBooting] = useState(true); 
+  const [booting, setBooting] = useState(() => {
+     if (typeof window !== 'undefined' && window.__TALENHUMAN_BOOTED__) return false;
+     return true;
+  }); 
+  const fcmSyncRef = useRef(false);
   const [authView, setAuthView] = useState('login'); // 'login', 'forgot', 'self-service', 'reset-forgotten'
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const { isDarkMode, toggleTheme } = useTheme();
@@ -135,13 +144,16 @@ function App() {
 
   // 🔐 IDENTITY SYNC (V65.1.9)
   useEffect(() => {
-    if (user && !booting) {
+    if (user && !booting && !fcmSyncRef.current) {
       const syncCloudId = async () => {
         try {
+          fcmSyncRef.current = true;
           const fcmToken = await requestForToken();
-          console.log(`FCM Sync: Iniciando registro en el Núcleo de Seguridad...`);
-          const response = await SecurityService.syncFcmToken(fcmToken);
-          console.log('FCM Sync OK:', response);
+          if (fcmToken) {
+              console.log(`FCM Sync: Iniciando registro en el Núcleo de Seguridad...`);
+              const response = await SecurityService.syncFcmToken(fcmToken);
+              console.log('FCM Sync OK:', response);
+          }
         } catch (err) {
           console.warn('FCM Sync skipped:', err);
         }
@@ -263,15 +275,17 @@ function App() {
 
   useEffect(() => {
     try {
-      // Auto-update check is handled in the dedicated useEffect above for clarity
-      
       if (user && token) {
         initializeFirebase(user).catch(err => console.warn('Firebase Init suppressed:', err));
       }
     } catch (e) {
       console.error('Fatal startup error:', e);
     } finally {
-      setTimeout(() => setBooting(false), 800);
+      const timer = setTimeout(() => {
+          setBooting(false);
+          if (typeof window !== 'undefined') window.__TALENHUMAN_BOOTED__ = true;
+      }, 800);
+      return () => clearTimeout(timer);
     }
   }, [user, token]); 
 

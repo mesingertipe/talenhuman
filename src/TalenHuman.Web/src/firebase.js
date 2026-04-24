@@ -86,13 +86,13 @@ export const initializeFirebase = async (tenantConfig = {}) => {
 
         const swUrl = `/firebase-messaging-sw.js?${configParams}`;
         const registrations = await navigator.serviceWorker.getRegistrations();
-        const alreadyRegistered = registrations.some(reg => reg.active && reg.active.scriptURL.includes(finalConfig.projectId));
+        const swBaseUrl = window.location.origin + '/firebase-messaging-sw.js';
+        const alreadyRegistered = registrations.some(reg => reg.active && reg.active.scriptURL.startsWith(swBaseUrl));
 
         if (!alreadyRegistered && !isRegistering) {
           isRegistering = true;
           navigator.serviceWorker.register(swUrl).then((registration) => {
             console.log("🔥 Firebase SW registered for tenant:", finalConfig.projectId);
-            registration.update();
             isRegistering = false;
           }).catch((err) => { 
             console.error("SW Registration failed:", err);
