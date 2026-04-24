@@ -930,3 +930,30 @@ tr.bg-red-50\/40 .sticky { background-color: #fef2f2 !important; opacity: 1 !imp
 .dark .login-biometric-btn:hover:not(:disabled) {
   background: #334155 !important;
 }
+
+/* --- Elite V13 Predictive UI Stabilization --- */
+.elite-sticky-ai-row {
+  position: sticky !important;
+  top: 48px; /* Below the main header row */
+  z-index: 170 !important;
+}
+
+.elite-ai-corner-left {
+  position: sticky !important;
+  left: 0;
+  z-index: 180 !important;
+  box-shadow: 10px 0 30px rgba(79, 70, 229, 0.08) !important;
+  backdrop-filter: blur(8px);
+}
+
+.elite-ai-corner-right {
+  position: sticky !important;
+  right: 0;
+  z-index: 180 !important;
+  box-shadow: -10px 0 30px rgba(79, 70, 229, 0.08) !important;
+}
+
+/* Glassmorphism for AI Row */
+.bg-indigo-50\/10, .bg-indigo-900\/10 {
+  backdrop-filter: blur(4px);
+}

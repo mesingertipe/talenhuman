@@ -1887,7 +1887,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 </div>
             )}
 
-            <div id="printable-area" className="page-container animate-in fade-in duration-500" style={{ padding: '2rem' }}>
+            <div id="printable-area" className="page-container animate-in fade-in duration-500 elite-scheduler-v13-container" style={{ padding: '1rem 2rem' }}>
                 <style>
                     {`
                         @media print {
@@ -1911,6 +1911,62 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         
                         .elite-drop-active { background-color: rgba(79, 70, 229, 0.08) !important; border: 2px dashed #4f46e5 !important; transition: all 0.2s ease; }
                         .dark .elite-drop-active { background-color: rgba(79, 70, 229, 0.15) !important; border-color: #6366f1 !important; }
+
+                        /* V13.9.50: Elite Fixed Header System */
+                        .elite-scheduler-v13-container {
+                            height: calc(100vh - 180px); /* Ajuste dinámico para evitar scroll de página */
+                            display: flex;
+                            flex-direction: column;
+                            overflow: hidden;
+                        }
+                        
+                        .elite-scrollable-area {
+                            flex: 1;
+                            overflow: auto;
+                            position: relative;
+                            border-radius: 32px;
+                        }
+
+                        .elite-sticky-header th {
+                            position: sticky !important;
+                            top: 0;
+                            z-index: 180;
+                            border-bottom: 2px solid rgba(79, 70, 229, 0.1);
+                        }
+
+                        .elite-sticky-ai-row th, .elite-sticky-ai-row td {
+                            position: sticky !important;
+                            top: 98px; /* Altura aproximada de la primera fila */
+                            z-index: 170;
+                        }
+
+                        .elite-corner-left {
+                            position: sticky !important;
+                            left: 0;
+                            top: 0;
+                            z-index: 210 !important;
+                        }
+
+                        .elite-corner-right {
+                            position: sticky !important;
+                            right: 0;
+                            top: 0;
+                            z-index: 200 !important;
+                        }
+
+                        /* Intersection of AI and sticky columns */
+                        .elite-ai-corner-left {
+                            position: sticky !important;
+                            left: 0;
+                            top: 98px;
+                            z-index: 195 !important;
+                        }
+                        .elite-ai-corner-right {
+                            position: sticky !important;
+                            right: 0;
+                            top: 98px;
+                            z-index: 195 !important;
+                        }
 
                         /* Premium Glow Effects */
                         .shadow-glow-amber { box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), 0 10px 25px -5px rgba(245, 158, 11, 0.4), 0 8px 10px -6px rgba(245, 158, 11, 0.4); }
@@ -1943,7 +1999,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 </div>
 
                 {/* 2. Centro de Comando Premium (v13.0) */}
-                <div className="no-print space-y-4 mb-32">
+                <div className="no-print space-y-4 mb-8">
                     
                     {/* 2.1 Fila 1: Selectores Maestros Compactos */}
                     <div className="flex flex-row items-center justify-between gap-3 p-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-slate-200/50 dark:border-white/5 sticky top-4 z-[100000] shadow-xl" style={{ borderRadius: '32px', overflow: 'visible' }}>
@@ -2143,8 +2199,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         )}
                     </div>
                 
-                <div className="card shadow-[0_40px_100px_rgba(0,0,0,0.12)] bg-white dark:bg-slate-900 border-2 dark:border-slate-800 relative" style={{ borderRadius: '48px', overflow: 'hidden', minHeight: '600px' }}>
-                    <div className="overflow-x-auto">
+                <div className="card shadow-[0_40px_100px_rgba(0,0,0,0.12)] bg-white dark:bg-slate-900 border-2 dark:border-slate-800 relative flex-1 flex flex-col" style={{ borderRadius: '48px', overflow: 'hidden' }}>
+                    <div className="overflow-auto custom-scrollbar flex-1 elite-scrollable-area">
                             <footer className="absolute bottom-4 right-8 z-[100] opacity-30 select-none pointer-events-none">
                                 <div className="text-[8px] font-black tracking-widest text-slate-400 opacity-50">v13.9.46-elite</div>
                             </footer>
@@ -2155,8 +2211,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     <col style={{ width: '120px' }} />
                                 </colgroup>
                                 <thead>
-                                    <tr className="bg-slate-50 dark:bg-slate-800 border-b-2 dark:border-indigo-500/20">
-                                        <th className="p-4 py-8 text-left sticky left-0 z-[160] border-r dark:border-slate-800" 
+                                    <tr className="bg-slate-50 dark:bg-slate-800 border-b-2 dark:border-indigo-500/20 elite-sticky-header">
+                                        <th className="p-4 py-8 text-left elite-corner-left border-r dark:border-slate-800" 
                                             style={{ backgroundColor: isDarkMode ? '#060914' : '#ffffff', width: '230px', minWidth: '230px', maxWidth: '230px' }}>
                                             <div className="flex items-center gap-2">
                                                 <button 
@@ -2186,7 +2242,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             else if (isSpecial) headerBg = isDarkMode ? 'rgba(217, 119, 6, 0.15)' : 'rgba(254, 243, 199, 0.5)';
 
                                             return (
-                                                <th key={i} className={`p-2 text-center border-r dark:border-slate-700 w-[110px] min-w-[110px] transition-colors duration-500 ${isHoliday ? 'border-b-2 border-rose-500/50' : (isSpecial ? 'border-b-2 border-amber-500/50' : '')}`} 
+                                                <th key={i} className={`p-2 text-center border-r dark:border-slate-700 w-[110px] min-w-[110px] transition-colors duration-500 elite-sticky-header ${isHoliday ? 'border-b-2 border-rose-500/50' : (isSpecial ? 'border-b-2 border-amber-500/50' : '')}`} 
                                                     style={{ backgroundColor: headerBg }}>
                                                     <p className={`text-[9px] font-black tracking-tight mb-0.5 drop-shadow-sm ${isHoliday ? 'text-rose-500' : (isSpecial ? 'text-amber-600' : 'text-slate-400 dark:text-slate-500')}`}>
                                                         {day.toLocaleDateString('es-CO', { weekday: 'short' })}
@@ -2227,7 +2283,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </th>
                                             );
                                         })}
-                                        <th className="p-4 text-center w-[120px] min-w-[120px] font-[950] text-[10px] text-slate-500 dark:text-indigo-300 tracking-[0.2em] border-l dark:border-slate-700 sticky right-0 z-[160]"
+                                        <th className="p-4 text-center w-[120px] min-w-[120px] font-[950] text-[10px] text-slate-500 dark:text-indigo-300 tracking-[0.2em] border-l dark:border-slate-700 elite-corner-right"
                                             style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f8fafc' }}>
                                             Total
                                         </th>
@@ -2235,8 +2291,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     
                                     {/* V13.0 COORDINATED GAP ANALYSIS ROW */}
                                     {showPredictiveOverlay && (
-                                        <tr className="border-b dark:border-slate-800 bg-indigo-50/10 dark:bg-indigo-900/10 animate-in slide-in-from-top duration-500">
-                                            <th className="p-3 sticky left-0 z-[160] border-r dark:border-slate-800" 
+                                        <tr className="border-b dark:border-slate-800 bg-indigo-50/10 dark:bg-indigo-900/10 animate-in slide-in-from-top duration-500 elite-sticky-ai-row">
+                                            <th className="p-3 elite-ai-corner-left border-r dark:border-slate-800" 
                                                 style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f1f5f9', width: '230px', minWidth: '230px' }}>
                                                 <div className="flex items-center gap-2">
                                                     <Sparkles size={12} className="text-indigo-500 animate-pulse" />
@@ -2269,7 +2325,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 });
  
                                                 return (
-                                                    <td key={di} className="p-1 border-r dark:border-slate-800 text-center align-middle cursor-pointer hover:bg-rose-500/5 group/gap transition-colors" 
+                                                    <td key={di} className="p-1 border-r dark:border-slate-800 text-center align-middle cursor-pointer hover:bg-rose-500/5 group/gap transition-colors elite-sticky-ai-row" 
                                                         style={{ height: '60px' }}
                                                         onClick={() => { 
                                                             const result = calculateHourlyNeeds(day);
@@ -2299,7 +2355,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                     </td>
                                                 );
                                             })}
-                                            <td className="p-2 border-l dark:border-slate-800 sticky right-0 z-[160]" 
+                                            <td className="p-2 border-l dark:border-slate-800 elite-ai-corner-right" 
                                                 style={{ width: '120px', minWidth: '120px', maxWidth: '120px', backgroundColor: isDarkMode ? '#1e293b' : '#f8fafc' }}></td>
                                         </tr>
                                     )}
