@@ -93,38 +93,8 @@ function App() {
   const [showPRModal, setShowPRModal] = useState(false);
   const [notification, setNotification] = useState({ show: false, title: '', body: '' });
 
-  const CURRENT_VERSION = "v45_functional_repair";
-  
   
   useEffect(() => {
-      const lastVersion = localStorage.getItem('app_version');
-      
-      // 🚀 SILENT AUTO-UPDATE (V65.1.18)
-      // Detects version mismatch and forces a full internal reset to fix Workbox precaching errors
-      if (lastVersion && lastVersion !== CURRENT_VERSION) {
-          console.log(`PWA: Version mismatch (${lastVersion} vs ${CURRENT_VERSION}). Initializing silent reset...`);
-          
-          const performSilentReset = async () => {
-              if ('serviceWorker' in navigator) {
-                  const regs = await navigator.serviceWorker.getRegistrations();
-                  for (let r of regs) await r.unregister();
-              }
-              if ('caches' in window) {
-                  const keys = await caches.keys();
-                  for (let k of keys) await caches.delete(k);
-              }
-              localStorage.setItem('app_version', CURRENT_VERSION);
-              // Wait 1 second before reload to ensure storage is committed
-              setTimeout(() => {
-                  window.location.reload(true);
-              }, 1000);
-          };
-          
-          performSilentReset();
-      }
-      
-      localStorage.setItem('app_version', CURRENT_VERSION);
-
       const syncToken = async () => {
           const token = localStorage.getItem('fcm_token');
           const user = JSON.parse(localStorage.getItem('user') || '{}');
