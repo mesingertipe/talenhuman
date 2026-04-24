@@ -1911,61 +1911,69 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         
                         .elite-drop-active { background-color: rgba(79, 70, 229, 0.08) !important; border: 2px dashed #4f46e5 !important; transition: all 0.2s ease; }
                         .dark .elite-drop-active { background-color: rgba(79, 70, 229, 0.15) !important; border-color: #6366f1 !important; }
-
-                        /* V13.9.50: Elite Fixed Header System */
                         .elite-scheduler-v13-container {
-                            height: calc(100vh - 180px); /* Ajuste dinámico para evitar scroll de página */
-                            display: flex;
-                            flex-direction: column;
-                            overflow: hidden;
+                            height: calc(100vh - 140px) !important; /* Forces fixed height based on viewport */
+                            display: flex !important;
+                            flex-direction: column !important;
+                            overflow: hidden !important;
+                            gap: 0 !important;
                         }
                         
                         .elite-scrollable-area {
-                            flex: 1;
-                            overflow: auto;
-                            position: relative;
-                            border-radius: 32px;
+                            flex: 1 !important;
+                            overflow: auto !important;
+                            position: relative !important;
+                            background: inherit;
+                            border-radius: 40px !important;
                         }
 
+                        /* Cabecera pegajosa (Días) */
                         .elite-sticky-header th {
                             position: sticky !important;
-                            top: 0;
-                            z-index: 180;
+                            top: 0 !important;
+                            z-index: 100 !important;
+                            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+                        }
+
+                        /* Fila de IA pegajosa */
+                        .elite-sticky-ai-row th, .elite-sticky-ai-row td {
+                            position: sticky !important;
+                            top: 86px !important; /* Altura exacta de la cabecera th (p-4 py-8) */
+                            z-index: 90 !important;
                             border-bottom: 2px solid rgba(79, 70, 229, 0.1);
                         }
 
-                        .elite-sticky-ai-row th, .elite-sticky-ai-row td {
-                            position: sticky !important;
-                            top: 98px; /* Altura aproximada de la primera fila */
-                            z-index: 170;
-                        }
-
+                        /* Esquinas pegajosas (Columna Empleados) */
                         .elite-corner-left {
                             position: sticky !important;
-                            left: 0;
-                            top: 0;
-                            z-index: 210 !important;
+                            left: 0 !important;
+                            z-index: 150 !important;
                         }
 
                         .elite-corner-right {
                             position: sticky !important;
-                            right: 0;
-                            top: 0;
-                            z-index: 200 !important;
+                            right: 0 !important;
+                            z-index: 140 !important;
                         }
 
-                        /* Intersection of AI and sticky columns */
+                        /* Intersecciones Críticas */
+                        .elite-sticky-header .elite-corner-left { z-index: 200 !important; top: 0 !important; }
+                        .elite-sticky-header .elite-corner-right { z-index: 190 !important; top: 0 !important; }
+                        
+                        .elite-sticky-ai-row .elite-corner-left { z-index: 185 !important; top: 86px !important; }
+                        .elite-sticky-ai-row .elite-corner-right { z-index: 180 !important; top: 86px !important; }
+
                         .elite-ai-corner-left {
                             position: sticky !important;
                             left: 0;
-                            top: 98px;
-                            z-index: 195 !important;
+                            top: 86px !important;
+                            z-index: 185 !important;
                         }
                         .elite-ai-corner-right {
                             position: sticky !important;
                             right: 0;
-                            top: 98px;
-                            z-index: 195 !important;
+                            top: 86px !important;
+                            z-index: 185 !important;
                         }
 
                         /* Premium Glow Effects */
