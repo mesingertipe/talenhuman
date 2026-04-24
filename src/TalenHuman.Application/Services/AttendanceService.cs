@@ -57,9 +57,12 @@ public class AttendanceService
             foreach (var employee in employees)
             {
                 currentStep = $"[{store.Name}] Limpiando marcaciones anteriores de {employee.FirstName} {employee.LastName} ({employee.IdentificationNumber}).";
-                // Clear previous attendances for this operational window
+                // Clear previous attendances for this operational window (Corrected for nullable ClockIn)
                 var existingAttendances = await _context.Attendances
-                    .Where(a => a.EmployeeId == employee.Id && a.ClockIn >= windowStart && a.ClockIn <= windowEnd)
+                    .Where(a => a.EmployeeId == employee.Id && (
+                        (a.ClockIn != null && a.ClockIn >= windowStart && a.ClockIn <= windowEnd) ||
+                        (a.Shift != null && a.Shift.StartTime >= windowStart && a.Shift.StartTime <= windowEnd)
+                    ))
                     .ToListAsync();
                 _context.Attendances.RemoveRange(existingAttendances);
 
@@ -262,7 +265,7 @@ public class AttendanceService
                     StoreId = store.Id,
                     CompanyId = companyId,
                     Shift = remainingShift,
-                    ClockIn = remainingShift.StartTime,
+                    ClockIn = null,
                     Status = AttendanceStatus.SinMarcacion,
                     StatusObservation = "Sin registros biométricos."
                 });
@@ -283,7 +286,7 @@ public class AttendanceService
                     StoreId = store.Id,
                     CompanyId = companyId,
                     Shift = s,
-                    ClockIn = s.StartTime,
+                    ClockIn = null,
                     Status = AttendanceStatus.SinMarcacion,
                     StatusObservation = "Sin registros biométricos."
                 });

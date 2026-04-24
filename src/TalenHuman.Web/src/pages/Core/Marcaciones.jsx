@@ -182,6 +182,15 @@ const Marcaciones = ({ user }) => {
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
                     <button 
+                        onClick={handleSync}
+                        disabled={isSyncing}
+                        style={{ background: activeColors.card, color: isSyncing ? activeColors.textMuted : activeColors.accent, padding: '14px 24px', borderRadius: '20px', border: `1px solid ${activeColors.border}`, fontWeight: '800', fontSize: '0.75rem', cursor: isSyncing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.2s' }}
+                        className="hover:scale-[1.02] active:scale-95 shadow-sm"
+                    >
+                        <RefreshCw size={18} className={isSyncing ? "animate-spin" : ""} /> 
+                        <span className="hidden lg:inline">{isSyncing ? "Procesando..." : "Consolidar Día"}</span>
+                    </button>
+                    <button 
                         onClick={handleExport}
                         style={{ background: activeColors.card, color: activeColors.textMain, padding: '14px 24px', borderRadius: '20px', border: `1px solid ${activeColors.border}`, fontWeight: '800', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.2s' }}
                         className="hover:scale-[1.02] active:scale-95"
