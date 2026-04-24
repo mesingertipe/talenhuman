@@ -43,9 +43,9 @@ public class AttendanceController : ControllerBase
             .Where(a => a.EmployeeId == employee.Id && a.CompanyId == companyId);
 
         if (start.HasValue)
-            attendanceQuery = attendanceQuery.Where(a => a.ClockIn >= start.Value.Date);
+            attendanceQuery = attendanceQuery.Where(a => (a.ClockIn ?? (a.Shift != null ? a.Shift.StartTime : DateTime.MinValue)) >= start.Value.Date);
         if (end.HasValue)
-            attendanceQuery = attendanceQuery.Where(a => a.ClockIn <= end.Value.Date.AddDays(1).AddTicks(-1));
+            attendanceQuery = attendanceQuery.Where(a => (a.ClockIn ?? (a.Shift != null ? a.Shift.StartTime : DateTime.MaxValue)) <= end.Value.Date.AddDays(1).AddTicks(-1));
 
         var consolidatedList = await attendanceQuery.ToListAsync();
 
@@ -80,7 +80,7 @@ public class AttendanceController : ControllerBase
         foreach (var group in groupedRaw)
         {
             // If we don't have a consolidated record for this date, show the raw one
-            if (!consolidatedList.Any(a => a.ClockIn.Date == group.Key))
+            if (!consolidatedList.Any(a => (a.ClockIn ?? (a.Shift != null ? a.Shift.StartTime : DateTime.MinValue)).Date == group.Key))
             {
                 var first = group.First();
                 var last = group.Count() > 1 ? group.Last() : null;
@@ -100,7 +100,7 @@ public class AttendanceController : ControllerBase
         // 🟢 4. SORT AND LIMIT
         var sortedResult = resultList
             .Cast<dynamic>()
-            .OrderByDescending(a => a.ClockIn);
+            .OrderByDescending(a => a.ClockIn ?? DateTime.MinValue);
 
         if (!start.HasValue && !end.HasValue)
             return Ok(sortedResult.Take(10).ToList());
@@ -131,7 +131,7 @@ public class AttendanceController : ControllerBase
         var endDate = end?.Date ?? tenantToday;
 
         var employeesQuery = _context.Employees.Where(e => e.CompanyId == companyId && e.IsActive);
-        var attendanceQuery = _context.Attendances.Where(a => a.CompanyId == companyId && a.ClockIn.Date >= startDate && a.ClockIn.Date <= endDate);
+        var attendanceQuery = _context.Attendances.Where(a => a.CompanyId == companyId && (a.ClockIn ?? (a.Shift != null ? a.Shift.StartTime : DateTime.MinValue)).Date >= startDate && (a.ClockIn ?? (a.Shift != null ? a.Shift.StartTime : DateTime.MinValue)).Date <= endDate);
         var storesQuery = _context.Stores.Where(s => s.CompanyId == companyId && s.IsActive);
         var brandsQuery = _context.Brands.Where(b => b.CompanyId == companyId && b.IsActive);
 
@@ -224,7 +224,7 @@ public class AttendanceController : ControllerBase
     {
         // Return stats for the last 7 days for charts
         var startDate = _tenantTimeProvider.Now.Date.AddDays(-6);
-        var query = _context.Attendances.Where(a => a.CompanyId == companyId && a.ClockIn >= startDate);
+        var query = _context.Attendances.Where(a => a.CompanyId == companyId && (a.ClockIn ?? (a.Shift != null ? a.Shift.StartTime : DateTime.MinValue)) >= startDate);
 
         // Apply same RBAC filters (simplified for brevity)
         if (roles.Contains("Gerente"))
@@ -234,7 +234,7 @@ public class AttendanceController : ControllerBase
         }
 
         var history = await query.ToListAsync();
-        return history.GroupBy(a => a.ClockIn.Date)
+        return history.GroupBy(a => (a.ClockIn ?? (a.Shift != null ? a.Shift.StartTime : DateTime.MinValue)).Date)
             .Select(g => new {
                 Date = g.Key.ToString("yyyy-MM-dd"),
                 CorrectO = g.Count(x => x.Status == AttendanceStatus.Correcto),
@@ -295,10 +295,10 @@ public class AttendanceController : ControllerBase
         }
 
         if (start.HasValue)
-            query = query.Where(a => a.ClockIn >= start.Value.Date);
+            query = query.Where(a => (a.ClockIn ?? (a.Shift != null ? a.Shift.StartTime : DateTime.MinValue)) >= start.Value.Date);
         
         if (end.HasValue)
-            query = query.Where(a => a.ClockIn <= end.Value.Date.AddDays(1).AddTicks(-1));
+            query = query.Where(a => (a.ClockIn ?? (a.Shift != null ? a.Shift.StartTime : DateTime.MaxValue)) <= end.Value.Date.AddDays(1).AddTicks(-1));
 
         var consolidated = await query.ToListAsync();
         
@@ -378,7 +378,7 @@ public class AttendanceController : ControllerBase
             var deviceUser = group.Key.DeviceUser?.TrimStart('0');
             var hasConsolidated = consolidated.Any(a => 
                 (a.Employee?.IdentificationNumber?.TrimStart('0') == deviceUser || a.EmployeeId.ToString().ToLower() == deviceUser?.ToLower()) && 
-                a.ClockIn.Date == group.Key.Date);
+                (a.ClockIn ?? (a.Shift != null ? a.Shift.StartTime : DateTime.MinValue)).Date == group.Key.Date);
                 
             if (!hasConsolidated)
             {
@@ -419,7 +419,7 @@ public class AttendanceController : ControllerBase
             ).ToList();
         }
 
-        return Ok(consolidated.OrderByDescending(a => a.ClockIn).Select(a => {
+        return Ok(consolidated.OrderByDescending(a => a.ClockIn ?? (a.Shift != null ? a.Shift.StartTime : DateTime.MinValue)).Select(a => {
             string statusText = "N/A";
             switch(a.Status) {
                 case (AttendanceStatus)(-1): statusText = "Tiempo Real"; break;

@@ -310,7 +310,7 @@ public class AttendanceService
         if (mainShift != null)
         {
             attendance.Shift = mainShift;
-            var diffStart = Math.Abs((attendance.ClockIn - mainShift.StartTime).TotalMinutes);
+            var diffStart = Math.Abs((attendance.ClockIn.Value - mainShift.StartTime).TotalMinutes);
             
             if (attendance.ClockOut.HasValue)
             {
@@ -370,7 +370,7 @@ public class AttendanceService
                 StoreId = store.Id,
                 CompanyId = companyId,
                 Shift = (shift.Id != Guid.Empty) ? shift : null,
-                ClockIn = shift.StartTime
+                ClockIn = null
             };
 
             var shiftRecords = availableRecords

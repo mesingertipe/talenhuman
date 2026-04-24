@@ -379,6 +379,10 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
     const toLocalISO = (date) => {
         if (!date) return null;
+        // V19.6: Si ya es un string ISO (contiene T), extraemos la fecha directamente para evitar desfases de zona horaria
+        if (typeof date === 'string' && date.includes('T')) {
+            return date.split('T')[0];
+        }
         const d = new Date(date);
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -3033,7 +3037,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                     <div className="flex items-center gap-1.5">
                                                         <LogOut size={13} className="text-rose-500" />
                                                         <span className="text-[12px] font-black text-slate-700 dark:text-slate-200 uppercase">
-                                                            SALIDA: <span className="text-rose-600 dark:text-rose-400">{hoveredShiftData.att && hoveredShiftData.att.clockOut ? new Date(hoveredShiftData.att.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (hoveredShiftData.att ? 'ACTIVE' : '---')}</span>
+                                                            SALIDA: <span className="text-rose-600 dark:text-rose-400">{hoveredShiftData.att && hoveredShiftData.att.clockOut ? new Date(hoveredShiftData.att.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (hoveredShiftData.att && hoveredShiftData.att.clockIn ? 'ACTIVE' : '---')}</span>
                                                         </span>
                                                     </div>
                                                 </div>

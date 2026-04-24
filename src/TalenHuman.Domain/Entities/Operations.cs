@@ -99,7 +99,7 @@ public enum AttendanceStatus
 
 public class Attendance : BaseEntity, IMultitenant
 {
-    public DateTime ClockIn { get; set; }
+    public DateTime? ClockIn { get; set; }
     public DateTime? ClockOut { get; set; }
     
     public string? DeviceId { get; set; } // Biometric device ID

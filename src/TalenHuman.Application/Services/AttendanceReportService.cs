@@ -118,7 +118,7 @@ public class AttendanceReportService
         var attendanceQuery = _context.Attendances
             .Include(a => a.Store)
             .Include(a => a.Employee)
-            .Where(a => a.CompanyId == companyId && a.ClockIn.Date == date.Date && a.Employee.IsActive);
+            .Where(a => a.CompanyId == companyId && a.ClockIn.HasValue && a.ClockIn.Value.Date == date.Date && a.Employee.IsActive);
 
         if (districtId.HasValue)
         {
