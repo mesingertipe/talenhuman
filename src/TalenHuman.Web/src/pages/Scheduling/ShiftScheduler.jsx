@@ -3691,7 +3691,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-3 border border-slate-100 dark:border-slate-700">
                                     <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400 mb-1">
                                         <ArrowRight size={14} className="text-slate-400" />
-                                        <span className="text-[9.5px] font-bold">ENTRADA: <b className="text-emerald-600 ml-1">{new Date(hoveredShiftData.att.clockIn).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</b></span>
+                                        <span className="text-[9.5px] font-bold">ENTRADA: <b className="text-emerald-600 ml-1">{hoveredShiftData.att.clockIn ? new Date(hoveredShiftData.att.clockIn).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '---'}</b></span>
                                     </div>
                                     <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400 mb-1">
                                         <ArrowDown size={14} className="text-slate-400 rotate-180" />

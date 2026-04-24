@@ -63,18 +63,18 @@ public class AttendanceController : ControllerBase
         var rawRecords = await rawQuery.OrderBy(r => r.RecordDate).ToListAsync();
 
         // 🟢 3. SYNTHESIZE VIRTUAL ENTRIES
-        var resultList = consolidatedList.Select(a => new {
+        var resultList = consolidatedList.Select(a => (object)new {
             a.Id,
             StoreName = a.Store?.Name ?? "Sede Principal",
-            a.ClockIn,
-            a.ClockOut,
+            ClockIn = a.Status == AttendanceStatus.SinMarcacion ? null : a.ClockIn,
+            ClockOut = a.Status == AttendanceStatus.SinMarcacion ? null : a.ClockOut,
             Status = (int)a.Status,
             StatusText = a.Status == AttendanceStatus.Correcto ? "Correcto" :
                          a.Status == AttendanceStatus.Desfasado ? "Desfase" :
                          a.Status == AttendanceStatus.MarcacionErrada ? "Errada" :
                          a.Status == AttendanceStatus.SinMarcacion ? "Sin Marcación" : "En Curso",
             a.StatusObservation
-        }).ToList<object>();
+        }).ToList();
 
         var groupedRaw = rawRecords.GroupBy(r => r.RecordDate.Date);
         foreach (var group in groupedRaw)
@@ -266,6 +266,7 @@ public class AttendanceController : ControllerBase
             .Include(a => a.Employee)
                 .ThenInclude(e => e.Profile)
             .Include(a => a.Store)
+            .Include(a => a.Shift)
             .Where(a => a.CompanyId == companyId);
 
         // RBAC Filtering (Master)

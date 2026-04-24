@@ -15,13 +15,14 @@ import TalenHumanDatePicker from '../../components/Shared/TalenHumanDatePicker';
 const Marcaciones = ({ user }) => {
     const { isDarkMode } = useTheme();
     const [marcaciones, setMarcaciones] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false); // V13.1: Initialize as false to avoid deadlock with loading guard
     const [isSyncing, setIsSyncing] = useState(false);
     const [dateRange, setDateRange] = useState({
         start: '',
         end: ''
     });
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+    const [refreshKey, setRefreshKey] = useState(0);
 
     // Premium Color System (V12 Elite)
     const activeColors = {
@@ -59,7 +60,6 @@ const Marcaciones = ({ user }) => {
                     });
                 }
             } catch (err) {
-                // Fallback to local if API fails
                 const localToday = new Date().toLocaleDateString('en-CA');
                 setDateRange({ start: localToday, end: localToday });
             }
@@ -68,41 +68,51 @@ const Marcaciones = ({ user }) => {
     }, []);
 
     useEffect(() => {
-        if (dateRange.start && dateRange.end) {
-            fetchMarcaciones();
-        }
-    }, [dateRange.start, dateRange.end]);
+        if (!dateRange.start || !dateRange.end) return;
+
+        const controller = new AbortController();
+        
+        const fetchMarcaciones = async () => {
+            try {
+                setLoading(true);
+                const res = await api.get('/attendance', { 
+                    params: { 
+                        start: dateRange.start, 
+                        end: dateRange.end 
+                    },
+                    signal: controller.signal
+                });
+                
+                setMarcaciones(res.data);
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    showToast("Error al cargar marcaciones", "error");
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchMarcaciones();
+
+        return () => controller.abort();
+    }, [dateRange.start, dateRange.end, refreshKey]);
 
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });
         setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
     };
 
-    const fetchMarcaciones = async () => {
-        if (loading) return; 
-        try {
-            setLoading(true);
-            const res = await api.get('/attendance', { 
-                params: { 
-                    start: dateRange.start, 
-                    end: dateRange.end 
-                } 
-            });
-            
-            setMarcaciones(res.data);
-        } catch (err) {
-            showToast("Error al cargar marcaciones", "error");
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleSync = async () => {
+        if (isSyncing) return;
         try {
             setIsSyncing(true);
             await api.post('/attendance/consolidate', { date: dateRange.start });
             showToast("Consolidación completada");
-            fetchMarcaciones();
+            // Trigger a re-fetch by keeping the same effect dependencies but we might need a refresh trigger if the dates didn't change
+            // Actually, fetchMarcaciones is inside the effect, so we can't call it directly anymore. 
+            // Let's add a refresh toggle.
+            setRefreshKey(prev => prev + 1);
         } catch (err) {
             showToast("Error en el proceso de consolidación", "error");
         } finally {
