@@ -56,10 +56,22 @@ public class AttendanceService
 
             foreach (var employee in employees)
             {
+                currentStep = $"[{store.Name}] Buscando turnos agendados en Shifts de {employee.IdentificationNumber}.";
+                // Get Scheduled Shifts for this employee in this window
+                var shifts = await _context.Shifts
+                    .Where(s => s.EmployeeId == employee.Id && 
+                                s.StartTime >= windowStart && 
+                                s.StartTime <= windowEnd && 
+                                !s.IsDescanso)
+                    .OrderBy(s => s.StartTime)
+                    .ToListAsync();
+
                 currentStep = $"[{store.Name}] Limpiando marcaciones anteriores de {employee.FirstName} {employee.LastName} ({employee.IdentificationNumber}).";
                 // Clear previous attendances for this operational window (Corrected for nullable ClockIn)
+                // Clean up previous records for this day/employee to avoid duplicates or ghost data
                 var existingAttendances = await _context.Attendances
                     .Where(a => a.EmployeeId == employee.Id && (
+                        (a.ShiftId != null && shifts.Select(s => s.Id).Contains(a.ShiftId.Value)) ||
                         (a.ClockIn != null && a.ClockIn >= windowStart && a.ClockIn <= windowEnd) ||
                         (a.Shift != null && a.Shift.StartTime >= windowStart && a.Shift.StartTime <= windowEnd)
                     ))
@@ -87,16 +99,6 @@ public class AttendanceService
                 currentStep = $"[{store.Name}] Filtrando rebotes biométricos de {employee.IdentificationNumber} ({rawRecords.Count} registros crudos).";
                 // Apply Rebound Filter (Ignore marks within 5 minutes)
                 var filteredRecords = FilterReboundRecords(rawRecords, 5);
-
-                currentStep = $"[{store.Name}] Buscando turnos agendados en Shifts de {employee.IdentificationNumber}.";
-                // Get Scheduled Shifts for this employee in this window
-                var shifts = await _context.Shifts
-                    .Where(s => s.EmployeeId == employee.Id && 
-                                s.StartTime >= windowStart && 
-                                s.StartTime <= windowEnd && 
-                                !s.IsDescanso)
-                    .OrderBy(s => s.StartTime)
-                    .ToListAsync();
 
                 // V13.0 Logic: Global Operational Preference
                 var opSetting = await _context.OperationalSettings.FirstOrDefaultAsync(os => os.CompanyId == companyId);

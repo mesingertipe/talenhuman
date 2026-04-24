@@ -68,10 +68,10 @@ const Marcaciones = ({ user }) => {
     }, []);
 
     useEffect(() => {
-        if (dateRange.start) {
+        if (dateRange.start && dateRange.end) {
             fetchMarcaciones();
         }
-    }, [dateRange]);
+    }, [dateRange.start, dateRange.end]);
 
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });
@@ -79,6 +79,7 @@ const Marcaciones = ({ user }) => {
     };
 
     const fetchMarcaciones = async () => {
+        if (loading) return; 
         try {
             setLoading(true);
             const res = await api.get('/attendance', { 

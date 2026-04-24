@@ -437,7 +437,10 @@ public class AttendanceController : ControllerBase
                 StoreId = a.StoreId,
                 StoreName = a.Store?.Name ?? "N/A",
                 a.ShiftId, 
-                a.ClockIn, a.ClockOut, Status = (int)a.Status,
+                // Force nulls for empty/absent records to prevent UI fallbacks
+                ClockIn = a.Status == AttendanceStatus.SinMarcacion ? null : a.ClockIn, 
+                ClockOut = a.Status == AttendanceStatus.SinMarcacion ? null : a.ClockOut, 
+                Status = (int)a.Status,
                 a.StatusObservation,
                 StatusText = statusText,
                 EmployeeJobTitle = a.Employee?.Profile?.Name ?? "N/A"
