@@ -8,6 +8,9 @@ import * as XLSX from 'xlsx';
 import api from '../../services/api';
 import BulkImportModal from '../../components/Shared/BulkImportModal';
 import PermissionGuard from '../../components/Shared/PermissionGuard';
+import SearchableSelect from '../../components/Shared/SearchableSelect';
+import Pagination from '../../components/Shared/Pagination';
+import { useTheme } from '../../context/ThemeContext';
 import { formatTenantDate } from '../../utils/localization';
 
 const SalesData = ({ user, tenantSettings }) => {

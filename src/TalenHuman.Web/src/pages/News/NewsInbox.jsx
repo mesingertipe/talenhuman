@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { formatTenantDate } from '../../utils/localization';
+import NewsRequest from './NewsRequest';
+import { useTheme } from '../../context/ThemeContext';
 import HelpIcon from '../../components/Shared/HelpIcon';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
 import EliteRichEditor from '../../components/Shared/EliteRichEditor';

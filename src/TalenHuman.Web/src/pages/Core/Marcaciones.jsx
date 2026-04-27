@@ -8,6 +8,9 @@ import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 import * as XLSX from 'xlsx';
 import Pagination from '../../components/Shared/Pagination';
+import { formatDate } from '../../utils/formatters';
+import { useTableData } from '../../hooks/useTableData';
+import TalenHumanDatePicker from '../../components/Shared/TalenHumanDatePicker';
 import { formatTenantDate } from '../../utils/localization';
 
 const Marcaciones = ({ user, tenantSettings }) => {

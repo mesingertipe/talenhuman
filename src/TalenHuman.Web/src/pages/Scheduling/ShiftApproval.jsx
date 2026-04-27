@@ -9,6 +9,7 @@ import { createPortal } from 'react-dom';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import { formatTenantDate } from '../../utils/localization';
+import ShiftScheduler from './ShiftScheduler';
 
 const ShiftApproval = ({ user, tenantSettings }) => {
   const { isDarkMode } = useTheme();
