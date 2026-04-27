@@ -301,13 +301,13 @@ const Marcaciones = ({ user, tenantSettings }) => {
                                             </td>
                                             <td style={{ padding: '1.5rem' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: m.clockIn ? activeColors.success : activeColors.textMuted, fontWeight: '900', fontSize: '0.85rem' }}>
-                                                    <ArrowUpRight size={16} /> {m.clockIn ? formatTenantDate(m.clockIn, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--'}
+                                                    <ArrowUpRight size={16} /> {m.clockIn ? formatTenantDate(m.clockIn, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour: '2-digit', minute: '2-digit', hour12: true }, true) : '--:--'}
                                                 </div>
                                                 {m.clockIn && <div className="text-[9px] font-black opacity-30 mt-0.5">{formatDate(m.clockIn)}</div>}
                                             </td>
                                             <td style={{ padding: '1.5rem' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: m.clockOut ? activeColors.accent : activeColors.textMuted, fontWeight: '900', fontSize: '0.85rem' }}>
-                                                    <ArrowDownLeft size={16} /> {m.clockOut ? formatTenantDate(m.clockOut, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--'}
+                                                    <ArrowDownLeft size={16} /> {m.clockOut ? formatTenantDate(m.clockOut, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour: '2-digit', minute: '2-digit', hour12: true }, true) : '--:--'}
                                                 </div>
                                                 {m.clockOut && <div className="text-[9px] font-black opacity-30 mt-0.5">{formatDate(m.clockOut)}</div>}
                                             </td>

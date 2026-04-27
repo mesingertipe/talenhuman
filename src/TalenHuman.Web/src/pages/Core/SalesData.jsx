@@ -12,6 +12,7 @@ import SearchableSelect from '../../components/Shared/SearchableSelect';
 import Pagination from '../../components/Shared/Pagination';
 import { useTheme } from '../../context/ThemeContext';
 import { formatTenantDate } from '../../utils/localization';
+import { formatDate } from '../../utils/formatters';
 
 const SalesData = ({ user, tenantSettings }) => {
   const { isDarkMode } = useTheme();
@@ -128,7 +129,7 @@ const SalesData = ({ user, tenantSettings }) => {
       const res = await api.get(`/sales?${queryParams.toString()}`);
       const dataToExport = (res.data.items || []).map(r => ({
         'Tienda/Local': r.storeName,
-        'Fecha/Hora': formatTenantDate(r.recordDate, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour12: true }),
+        'Fecha/Hora': formatTenantDate(r.recordDate, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour12: true }, true),
         'Canal': r.canal || 'GENERAL',
         'Venta Neta': r.ventaNeta,
         'Tickets': r.cantidadTickets,

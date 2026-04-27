@@ -17,8 +17,9 @@ Este workflow automatiza la preparación y subida del código para que GitHub Ac
    ```
 
 // turbo
-2. Verificar compilación Front-end:
+2. Verificar compilación Front-end (Lint & Build):
    ```powershell
+   npm run lint --prefix src/TalenHuman.Web
    npm run build --prefix src/TalenHuman.Web
    ```
 
