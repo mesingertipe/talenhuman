@@ -8,11 +8,9 @@ import * as XLSX from 'xlsx';
 import api from '../../services/api';
 import BulkImportModal from '../../components/Shared/BulkImportModal';
 import PermissionGuard from '../../components/Shared/PermissionGuard';
-import SearchableSelect from '../../components/Shared/SearchableSelect';
-import Pagination from '../../components/Shared/Pagination';
-import { useTheme } from '../../context/ThemeContext';
+import { formatTenantDate } from '../../utils/localization';
 
-const SalesData = ({ user }) => {
+const SalesData = ({ user, tenantSettings }) => {
   const { isDarkMode } = useTheme();
   
   const activeColors = {
@@ -106,8 +104,8 @@ const SalesData = ({ user }) => {
   };
 
   const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleString('es-CO', { 
-      day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' 
+    return formatTenantDate(dateStr, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { 
+      day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true
     });
   };
 
@@ -127,7 +125,7 @@ const SalesData = ({ user }) => {
       const res = await api.get(`/sales?${queryParams.toString()}`);
       const dataToExport = (res.data.items || []).map(r => ({
         'Tienda/Local': r.storeName,
-        'Fecha/Hora': new Date(r.recordDate).toLocaleString('es-CO'),
+        'Fecha/Hora': formatTenantDate(r.recordDate, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour12: true }),
         'Canal': r.canal || 'GENERAL',
         'Venta Neta': r.ventaNeta,
         'Tickets': r.cantidadTickets,

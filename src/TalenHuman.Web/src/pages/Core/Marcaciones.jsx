@@ -8,11 +8,9 @@ import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 import * as XLSX from 'xlsx';
 import Pagination from '../../components/Shared/Pagination';
-import { formatDate } from '../../utils/formatters';
-import { useTableData } from '../../hooks/useTableData';
-import TalenHumanDatePicker from '../../components/Shared/TalenHumanDatePicker';
+import { formatTenantDate } from '../../utils/localization';
 
-const Marcaciones = ({ user }) => {
+const Marcaciones = ({ user, tenantSettings }) => {
     const { isDarkMode } = useTheme();
     const [marcaciones, setMarcaciones] = useState([]);
     const [loading, setLoading] = useState(false); // V13.1: Initialize as false to avoid deadlock with loading guard
@@ -126,8 +124,8 @@ const Marcaciones = ({ user }) => {
             Número: m.employeeId,
             Cargo: m.employeeJobTitle || 'N/A', // V13.0 Requirement
             Sede: m.storeName,
-            Entrada: m.clockIn ? new Date(m.clockIn).toLocaleString() : 'N/A',
-            Salida: m.clockOut ? new Date(m.clockOut).toLocaleString() : 'N/A',
+            Entrada: m.clockIn ? formatTenantDate(m.clockIn, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour: '2-digit', minute: '2-digit', hour12: true }) : 'N/A',
+            Salida: m.clockOut ? formatTenantDate(m.clockOut, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour: '2-digit', minute: '2-digit', hour12: true }) : 'N/A',
             Estado: m.statusText,
             Observación: m.statusObservation
         }));
@@ -300,13 +298,13 @@ const Marcaciones = ({ user }) => {
                                             </td>
                                             <td style={{ padding: '1.5rem' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: m.clockIn ? activeColors.success : activeColors.textMuted, fontWeight: '900', fontSize: '0.85rem' }}>
-                                                    <ArrowUpRight size={16} /> {m.clockIn ? new Date(m.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                                                    <ArrowUpRight size={16} /> {m.clockIn ? formatTenantDate(m.clockIn, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--'}
                                                 </div>
                                                 {m.clockIn && <div className="text-[9px] font-black opacity-30 mt-0.5">{formatDate(m.clockIn)}</div>}
                                             </td>
                                             <td style={{ padding: '1.5rem' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: m.clockOut ? activeColors.accent : activeColors.textMuted, fontWeight: '900', fontSize: '0.85rem' }}>
-                                                    <ArrowDownLeft size={16} /> {m.clockOut ? new Date(m.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                                                    <ArrowDownLeft size={16} /> {m.clockOut ? formatTenantDate(m.clockOut, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--'}
                                                 </div>
                                                 {m.clockOut && <div className="text-[9px] font-black opacity-30 mt-0.5">{formatDate(m.clockOut)}</div>}
                                             </td>

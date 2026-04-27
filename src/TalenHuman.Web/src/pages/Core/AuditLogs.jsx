@@ -6,9 +6,9 @@ import {
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 import * as XLSX from 'xlsx';
-import TalenHumanDatePicker from '../../components/Shared/TalenHumanDatePicker';
+import { formatTenantDate } from '../../utils/localization';
 
-const AuditLogs = ({ user }) => {
+const AuditLogs = ({ user, tenantSettings }) => {
     const { isDarkMode } = useTheme();
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -89,7 +89,7 @@ const AuditLogs = ({ user }) => {
         if (logs.length === 0) return showToast("No hay datos para exportar", "error");
         
         const data = logs.map(l => ({
-            'Fecha y Hora': new Date(l.timestamp).toLocaleString('es-CO'),
+            'Fecha y Hora': formatTenantDate(l.timestamp, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour12: true }),
             'Usuario': l.userName,
             'Acción': l.action,
             'Módulo/Entidad': l.entityType,
@@ -268,8 +268,8 @@ const AuditLogs = ({ user }) => {
                                 logs.map(log => (
                                     <tr key={log.id} style={{ borderBottom: `1px solid ${activeColors.border}`, transition: 'background 0.2s' }} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                         <td style={{ padding: '16px', fontSize: '0.8rem', color: activeColors.textMain, whiteSpace: 'nowrap' }}>
-                                            <div style={{ fontWeight: '800' }}>{new Date(log.timestamp).toLocaleDateString('es-CO')}</div>
-                                            <div style={{ color: activeColors.textMuted }}>{new Date(log.timestamp).toLocaleTimeString('es-CO')}</div>
+                                            <div style={{ fontWeight: '800' }}>{formatTenantDate(log.timestamp, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { day: '2-digit', month: '2-digit', year: 'numeric' })}</div>
+                                            <div style={{ color: activeColors.textMuted }}>{formatTenantDate(log.timestamp, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour: '2-digit', minute: '2-digit', hour12: true })}</div>
                                         </td>
                                         <td style={{ padding: '16px', fontSize: '0.85rem' }}>
                                             <div style={{ fontWeight: '800', color: activeColors.textMain }}>{log.userName}</div>

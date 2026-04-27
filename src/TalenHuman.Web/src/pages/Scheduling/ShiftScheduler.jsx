@@ -2253,7 +2253,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 <th key={i} className={`p-2 text-center border-r dark:border-slate-700 w-[110px] min-w-[110px] transition-colors duration-500 elite-sticky-header ${isHoliday ? 'border-b-2 border-rose-500/50' : (isSpecial ? 'border-b-2 border-amber-500/50' : '')}`} 
                                                     style={{ backgroundColor: headerBg }}>
                                                     <p className={`text-[9px] font-black tracking-tight mb-0.5 drop-shadow-sm ${isHoliday ? 'text-rose-500' : (isSpecial ? 'text-amber-600' : 'text-slate-400 dark:text-slate-500')}`}>
-                                                        {day.toLocaleDateString('es-CO', { weekday: 'short' })}
+                                                        {formatTenantDate(day, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { weekday: 'short' })}
                                                     </p>
                                                     <div className="flex flex-col items-center gap-0 w-full overflow-hidden">
                                                         <p className="text-xl font-[1000] text-slate-800 dark:text-white leading-none tracking-tighter">{day.getDate()}</p>
@@ -3000,11 +3000,11 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         <p style={{ fontSize: '9px', fontWeight: '950', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '10px', letterSpacing: '0.1em' }}>Vigencia de Novedad</p>
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' }}>
                                             <div style={{ textAlign: 'center' }}>
-                                                <p style={{ fontSize: '12px', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>{new Date(selectedNov.fechaInicio).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}</p>
+                                                <p style={{ fontSize: '12px', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>{formatTenantDate(selectedNov.fechaInicio, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { day: '2-digit', month: 'short' })}</p>
                                             </div>
                                             <ArrowRight size={14} className="text-slate-300" />
                                             <div style={{ textAlign: 'center' }}>
-                                                <p style={{ fontSize: '12px', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>{new Date(selectedNov.fechaFin).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}</p>
+                                                <p style={{ fontSize: '12px', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b' }}>{formatTenantDate(selectedNov.fechaFin, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { day: '2-digit', month: 'short' })}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -3095,13 +3095,15 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                     <div className="flex items-center gap-1.5 mb-1.5">
                                                         <LogIn size={13} className="text-emerald-500" />
                                                         <span className="text-[12px] font-black text-slate-700 dark:text-slate-200 uppercase">
-                                                            ENTRADA: <span className="text-emerald-600 dark:text-emerald-400">{hoveredShiftData.att && hoveredShiftData.att.clockIn ? new Date(hoveredShiftData.att.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '---'}</span>
+                                                            ENTRADA: <span className="text-emerald-600 dark:text-emerald-400">{hoveredShiftData.att && hoveredShiftData.att.clockIn ? formatTenantDate(hoveredShiftData.att.clockIn, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour: '2-digit', minute: '2-digit', hour12: true }) : '---'}</span>
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center gap-1.5">
                                                         <LogOut size={13} className="text-rose-500" />
                                                         <span className="text-[12px] font-black text-slate-700 dark:text-slate-200 uppercase">
-                                                            SALIDA: <span className="text-rose-600 dark:text-rose-400">{hoveredShiftData.att && hoveredShiftData.att.clockOut ? new Date(hoveredShiftData.att.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (hoveredShiftData.att && hoveredShiftData.att.clockIn ? 'ACTIVE' : '---')}</span>
+                                                            SALIDA: <span className="text-rose-600 dark:text-rose-400">{hoveredShiftData.att && hoveredShiftData.att.clockOut 
+                                                                ? formatTenantDate(hoveredShiftData.att.clockOut, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour: '2-digit', minute: '2-digit', hour12: true }) : 
+                                                                (hoveredShiftData.att && hoveredShiftData.att.clockIn ? 'ACTIVE' : '---')}</span>
                                                         </span>
                                                     </div>
                                                 </div>
@@ -3413,7 +3415,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         <div className="flex items-center justify-center gap-2">
                                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
                                             <p className="text-indigo-50 font-black uppercase tracking-widest text-[12px]">
-                                                {selectedCoverageDay.day.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                                {formatTenantDate(selectedCoverageDay.day, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { weekday: 'long', day: 'numeric', month: 'long' })}
                                             </p>
                                             {selectedCoverageDay.isHoliday && (
                                                 <div className="ml-3 px-3 py-1 bg-rose-500/20 text-rose-200 border border-rose-500/30 rounded-full text-[10px] font-black uppercase tracking-tighter animate-in fade-in zoom-in duration-300">
@@ -3589,7 +3591,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             {selectedCoverageDay.opWindow.isClosed ? 'cerrado hoy' : `${selectedCoverageDay.opWindow.start} — ${selectedCoverageDay.opWindow.end}`}
                                         </p>
                                         <span className="text-[10px] font-black text-indigo-400/70">
-                                            {selectedCoverageDay.day.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' }).toLowerCase()}
+                                            {formatTenantDate(selectedCoverageDay.day, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { weekday: 'short', day: 'numeric' }).toLowerCase()}
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-1.5 mt-1">
@@ -3720,7 +3722,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     <div className="flex gap-3">
                                         {selectedCoverageDay.historicalDates?.map((d, idx) => (
                                             <div key={idx} className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-2xl text-[10px] font-black text-slate-600 dark:text-slate-300 shadow-sm">
-                                                {new Date(d).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}
+                                                {formatTenantDate(d, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { day: 'numeric', month: 'short' })}
                                             </div>
                                         ))}
                                     </div>

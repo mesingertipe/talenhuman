@@ -8,9 +8,9 @@ import {
 import { createPortal } from 'react-dom';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
-import ShiftScheduler from './ShiftScheduler';
+import { formatTenantDate } from '../../utils/localization';
 
-const ShiftApproval = ({ user }) => {
+const ShiftApproval = ({ user, tenantSettings }) => {
   const { isDarkMode } = useTheme();
   const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -266,6 +266,7 @@ const ShiftApproval = ({ user }) => {
                         <div key={inspectedStore.id} style={{ background: activeColors.card, borderRadius: '32px', border: `1.5px solid ${activeColors.border}`, overflow: 'hidden', padding: '1rem', marginRight: showHistoryDrawer ? '400px' : '0', transition: 'margin 0.4s ease' }}>
                             <ShiftScheduler 
                                 user={user} 
+                                tenantSettings={tenantSettings}
                                 readOnly={true} 
                                 forceApprover={true} 
                                 initialStoreId={inspectedStore.storeId} 
@@ -290,7 +291,7 @@ const ShiftApproval = ({ user }) => {
                         {getActionLabel(log.action)}
                       </div>
                       <p style={{ fontSize: '0.85rem', fontWeight: '700', margin: '0 0 10px 0' }}>"{log.comment}"</p>
-                      <div style={{ fontSize: '0.7rem', color: activeColors.textMuted }}><span className="font-black text-indigo-500">{log.user || 'SISTEMA'}</span> • {log.date ? new Date(log.date).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Fecha no disponible'}</div>
+                      <div style={{ fontSize: '0.7rem', color: activeColors.textMuted }}><span className="font-black text-indigo-500">{log.user || 'SISTEMA'}</span> • {log.date ? formatTenantDate(log.date, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true }) : 'Fecha no disponible'}</div>
                    </div>
                  );
                })}
@@ -380,7 +381,7 @@ const ShiftApproval = ({ user }) => {
                           <Calendar size={14} className="text-indigo-500" /> {formatDateRange(store.minDate, store.maxDate)}
                         </div>
                         <div style={{ fontSize: '0.65rem', color: activeColors.textMuted, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Clock size={10} /> REGISTRO: {new Date(store.lastUploadAt).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          <Clock size={10} /> REGISTRO: {formatTenantDate(store.lastUploadAt, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true })}
                         </div>
                       </div>
                     </td>

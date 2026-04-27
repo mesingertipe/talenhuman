@@ -8,7 +8,7 @@ import api from '../../services/api';
 import { formatTenantDate } from '../../utils/localization';
 import TalenHumanDatePicker from '../../components/Shared/TalenHumanDatePicker';
 
-const AttendanceMonitoring = ({ user: sessionUser }) => {
+const AttendanceMonitoring = ({ user: sessionUser, tenantSettings }) => {
     const { isDarkMode } = useTheme();
     const [user, setUser] = useState(null);
     const [company, setCompany] = useState(null);
@@ -357,8 +357,8 @@ const AttendanceMonitoring = ({ user: sessionUser }) => {
                                 <div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <div style={{ fontSize: '0.9rem', fontWeight: '800', color: activeColors.textMain }}>
-                                            {formatTenantDate(log.startTime, company?.countryCode, null, { 
-                                                day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' 
+                                            {formatTenantDate(log.startTime, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { 
+                                                day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true 
                                             })}
                                         </div>
                                         {log.processedDate && (

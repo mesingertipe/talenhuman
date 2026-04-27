@@ -7,14 +7,12 @@ import {
     ChevronRight, LayoutGrid, ListTodo, ClipboardList, Download, ExternalLink
 } from 'lucide-react';
 import api from '../../services/api';
-import { formatDate } from '../../utils/formatters';
-import NewsRequest from './NewsRequest';
-import { useTheme } from '../../context/ThemeContext';
+import { formatTenantDate } from '../../utils/localization';
 import HelpIcon from '../../components/Shared/HelpIcon';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
 import EliteRichEditor from '../../components/Shared/EliteRichEditor';
 
-const NewsInbox = ({ user }) => {
+const NewsInbox = ({ user, tenantSettings }) => {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -211,7 +209,7 @@ const NewsInbox = ({ user }) => {
                                         <span style={{ fontSize: '9px', color: activeColors.textMuted, fontWeight: '900', textTransform: 'uppercase' }}>#{n.idSolicitud}</span>
                                     </div>
                                     <div style={{ color: activeColors.textMuted, fontSize: '10px', fontWeight: '800' }}>
-                                        {formatDate(n.fechaInicio)}
+                                        {formatTenantDate(n.fechaInicio, tenantSettings?.countryCode, tenantSettings?.timeZoneId)}
                                     </div>
                                 </div>
 
@@ -299,11 +297,11 @@ const NewsInbox = ({ user }) => {
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <span style={{ fontSize: '11px', fontWeight: '900', color: activeColors.textMuted }}>Fecha Inicio</span>
-                                        <span style={{ fontSize: '11px', fontWeight: '950', color: activeColors.textMain }}>{formatDate(selectedNews.fechaInicio)}</span>
+                                        <span style={{ fontSize: '11px', fontWeight: '950', color: activeColors.textMain }}>{formatTenantDate(selectedNews.fechaInicio, tenantSettings?.countryCode, tenantSettings?.timeZoneId)}</span>
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <span style={{ fontSize: '11px', fontWeight: '900', color: activeColors.textMuted }}>Fecha Fin</span>
-                                        <span style={{ fontSize: '11px', fontWeight: '950', color: activeColors.textMain }}>{formatDate(selectedNews.fechaFin)}</span>
+                                        <span style={{ fontSize: '11px', fontWeight: '950', color: activeColors.textMain }}>{formatTenantDate(selectedNews.fechaFin, tenantSettings?.countryCode, tenantSettings?.timeZoneId)}</span>
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <span style={{ fontSize: '11px', fontWeight: '900', color: activeColors.textMuted }}>Radicado por</span>
@@ -372,7 +370,7 @@ const NewsInbox = ({ user }) => {
                                             <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: log.accion.includes('Aprob') ? '#10b981' : log.accion.includes('Rech') ? '#ef4444' : '#4f46e5', marginTop: '6px', flexShrink: 0 }}></div>
                                             <div>
                                                 <p style={{ fontSize: '11px', fontWeight: '900', color: activeColors.textMain, margin: 0, textTransform: 'uppercase' }}>{log.accion} - <span style={{ color: activeColors.textMuted }}>{log.usuario}</span></p>
-                                                <p style={{ fontSize: '10px', color: activeColors.textMuted, margin: '2px 0 8px' }}>{new Date(log.fechaHoraColombia).toLocaleString()}</p>
+                                                <p style={{ fontSize: '10px', color: activeColors.textMuted, margin: '2px 0 8px' }}>{formatTenantDate(log.fechaHoraColombia, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour12: true })}</p>
                                                 {log.comentario && <p style={{ fontSize: '11px', fontWeight: '600', color: activeColors.textMuted, background: isDarkMode ? '#1e293b' : '#f8fafc', padding: '10px 15px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, fontStyle: 'italic' }}>{log.comentario}</p>}
                                             </div>
                                         </div>
@@ -435,6 +433,7 @@ const NewsInbox = ({ user }) => {
                     <div style={{ width: '100%', maxWidth: '1200px', animation: 'fadeInDown 0.5s ease-out' }}>
                         <NewsRequest 
                             user={user}
+                            tenantSettings={tenantSettings}
                             onComplete={() => { setShowRequest(false); fetchNews(); }} 
                             onCancel={() => setShowRequest(false)} 
                         />

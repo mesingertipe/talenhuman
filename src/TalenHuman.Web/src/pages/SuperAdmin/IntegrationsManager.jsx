@@ -5,8 +5,9 @@ import {
     Building, Lock
 } from 'lucide-react';
 import api from '../../services/api';
+import { formatTenantDate } from '../../utils/localization';
 
-const IntegrationsManager = ({ showToast }) => {
+const IntegrationsManager = ({ showToast, tenantSettings }) => {
     const [apiKeys, setApiKeys] = useState([]);
     const [companies, setCompanies] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -157,7 +158,7 @@ const IntegrationsManager = ({ showToast }) => {
                                         </div>
                                     </td>
                                     <td className="py-4 text-[11px] text-slate-400 font-bold">
-                                        {new Date(k.createdAt).toLocaleDateString()}
+                                        {formatTenantDate(k.createdAt, tenantSettings?.countryCode, tenantSettings?.timeZoneId)}
                                     </td>
                                     <td className="py-4 text-right">
                                         <button 
