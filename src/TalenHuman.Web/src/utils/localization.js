@@ -48,12 +48,25 @@ export const formatTenantDate = (date, countryCode, windowsTzId, options = {}, r
         return new Date(date).toLocaleString(locale, options);
     }
 
-    // Forzar que el string sea tratado como UTC si no trae zona horaria (para datos nativos del sistema)
-    const dateStr = typeof date === 'string' && !date.includes('Z') && !date.includes('+') 
-        ? `${date}Z` 
-        : date;
-    
-    return new Date(dateStr).toLocaleString(locale, {
+    // COMPORTAMIENTO PARA FECHAS "PURAS" (LITERALES)
+    // Si es un string y no tiene indicador de zona horaria (Z o +), 
+    // lo tratamos como literal para evitar desfases del navegador o del tenant.
+    if (typeof date === 'string' && !date.includes('Z') && !date.includes('+')) {
+        // Forzamos el parseo como UTC y la visualización en UTC para que el string sea "puro"
+        try {
+            return new Date(`${date}Z`).toLocaleString(locale, {
+                ...options,
+                timeZone: 'UTC'
+            });
+        } catch (e) {
+            console.error("Error formatting pure date:", e);
+            return new Date(date).toLocaleString(locale, options);
+        }
+    }
+
+    // COMPORTAMIENTO NORMAL (CONVERSIÓN AL TZ DEL TENANT)
+    // Se usa para objetos Date o strings que ya traen zona horaria.
+    return new Date(date).toLocaleString(locale, {
         timeZone,
         ...options
     });
