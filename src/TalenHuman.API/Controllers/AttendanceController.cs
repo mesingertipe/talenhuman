@@ -55,9 +55,12 @@ public class AttendanceController : ControllerBase
         var fetchStart = start?.Date ?? tenantToday;
         var fetchEnd = end?.Date ?? tenantToday;
 
+        var identification = employee.IdentificationNumber ?? "";
+        var idTrimmed = identification.Trim().TrimStart('0');
+
         var rawQuery = _context.BiometricRecords
             .Where(r => r.CompanyId == companyId && 
-                        (r.DeviceUser == employee.IdentificationNumber || r.DeviceUser == employee.IdentificationNumber.TrimStart('0')) &&
+                        (r.DeviceUser == identification || r.DeviceUser == idTrimmed) &&
                         r.RecordDate >= fetchStart && r.RecordDate <= fetchEnd.AddDays(1).AddTicks(-1));
 
         var rawRecords = await rawQuery.OrderBy(r => r.RecordDate).ToListAsync();

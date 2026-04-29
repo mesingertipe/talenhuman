@@ -313,10 +313,10 @@ public class ShiftsController : ControllerBase
         var query = _context.Shifts.Where(s => s.EmployeeId == employee.Id);
 
         if (start.HasValue) 
-            query = query.Where(s => s.StartTime >= DateTime.SpecifyKind(start.Value, DateTimeKind.Unspecified));
+            query = query.Where(s => s.StartTime >= DateTime.SpecifyKind(start.Value.Date, DateTimeKind.Unspecified));
         
         if (end.HasValue) 
-            query = query.Where(s => s.StartTime <= DateTime.SpecifyKind(end.Value, DateTimeKind.Unspecified));
+            query = query.Where(s => s.StartTime <= DateTime.SpecifyKind(end.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Unspecified));
 
         var shifts = await query
             .OrderByDescending(s => s.StartTime)

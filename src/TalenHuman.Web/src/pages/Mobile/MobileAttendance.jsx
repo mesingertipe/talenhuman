@@ -5,8 +5,21 @@ import {
   CalendarDays, CalendarRange, ListTodo, Sparkles 
 } from 'lucide-react';
 import { formatDate } from '../../utils/formatters';
+import { formatTenantDate } from '../../utils/localization';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
+
+// 🛡️ Helper to prevent timezone shifting for "pure" local dates from API
+const parsePureDate = (dateStr) => {
+    if (!dateStr) return null;
+    if (typeof dateStr === 'string' && dateStr.includes('T') && !dateStr.includes('Z') && !dateStr.includes('+')) {
+        const [datePart, timePart] = dateStr.split('T');
+        const [y, m, d] = datePart.split('-').map(Number);
+        const [hh, mm, ss] = timePart.split(':').map(Number);
+        return new Date(y, m - 1, d, hh, mm, ss || 0);
+    }
+    return new Date(dateStr);
+};
 
 const MobileAttendance = ({ user }) => {
   const { isDarkMode } = useTheme();
@@ -139,7 +152,7 @@ const MobileAttendance = ({ user }) => {
           </div>
         ) : data.length > 0 ? (
           data.map((item, idx) => (
-            <AttendanceCard key={idx} item={item} isDark={isDark} primaryText={primaryText} mutedText={mutedText} cardBg={cardBg} glassEffect={glassEffect} shadow={shadow} cardBorder={cardBorder} />
+            <AttendanceCard key={idx} item={item} isDark={isDark} primaryText={primaryText} mutedText={mutedText} cardBg={cardBg} glassEffect={glassEffect} shadow={shadow} cardBorder={cardBorder} parsePureDate={parsePureDate} />
           ))
         ) : (
           <div style={{ background: cardBg, borderRadius: '48px', padding: '64px 32px', ...glassEffect, boxShadow: shadow, textAlign: 'center' }}>
@@ -164,7 +177,7 @@ const TabButton = ({ active, onClick, label, isDark, color }) => (
    }}>{label}</button>
 );
 
-const AttendanceCard = ({ item, isDark, primaryText, mutedText, cardBg, glassEffect, shadow, cardBorder }) => (
+const AttendanceCard = ({ item, isDark, primaryText, mutedText, cardBg, glassEffect, shadow, cardBorder, parsePureDate }) => (
    <div style={{ 
        background: cardBg, borderRadius: '40px', padding: '32px', 
        ...glassEffect, boxShadow: shadow
@@ -176,7 +189,7 @@ const AttendanceCard = ({ item, isDark, primaryText, mutedText, cardBg, glassEff
             </div>
             <div>
                <p style={{ fontSize: '15px', fontWeight: '900', color: primaryText, margin: 0 }}>{item.storeName || 'Sede Principal'}</p>
-               <p style={{ fontSize: '9px', fontWeight: '800', color: mutedText, textTransform: 'uppercase', opacity: 0.6 }}>{formatDate(item.clockIn)}</p>
+               <p style={{ fontSize: '9px', fontWeight: '800', color: mutedText, textTransform: 'uppercase', opacity: 0.6 }}>{formatDate(parsePureDate(item.clockIn))}</p>
             </div>
          </div>
          <div style={{ 
@@ -188,8 +201,8 @@ const AttendanceCard = ({ item, isDark, primaryText, mutedText, cardBg, glassEff
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', padding: '24px', borderRadius: '32px', border: `1px solid ${cardBorder}` }}>
-         <TimeBlock label="Entrada" time={item.clockIn} icon={<ArrowUpRight size={16} />} color="#10b981" mutedText={mutedText} primaryText={primaryText} />
-         <TimeBlock label="Salida" time={item.clockOut} icon={<ArrowDownLeft size={16} />} color="#4f46e5" mutedText={mutedText} primaryText={primaryText} />
+         <TimeBlock label="Entrada" time={parsePureDate(item.clockIn)} icon={<ArrowUpRight size={16} />} color="#10b981" mutedText={mutedText} primaryText={primaryText} />
+         <TimeBlock label="Salida" time={parsePureDate(item.clockOut)} icon={<ArrowDownLeft size={16} />} color="#4f46e5" mutedText={mutedText} primaryText={primaryText} />
       </div>
    </div>
 );

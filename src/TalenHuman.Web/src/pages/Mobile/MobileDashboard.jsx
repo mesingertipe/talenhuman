@@ -8,6 +8,18 @@ import {
 } from 'lucide-react';
 import BiometricEnrollModal from '../../components/Biometrics/BiometricEnrollModal';
 
+// 🛡️ Helper to prevent timezone shifting for "pure" local dates from API
+const parsePureDate = (dateStr) => {
+    if (!dateStr) return null;
+    if (typeof dateStr === 'string' && dateStr.includes('T') && !dateStr.includes('Z') && !dateStr.includes('+')) {
+        const [datePart, timePart] = dateStr.split('T');
+        const [y, m, d] = datePart.split('-').map(Number);
+        const [hh, mm, ss] = timePart.split(':').map(Number);
+        return new Date(y, m - 1, d, hh, mm, ss || 0);
+    }
+    return new Date(dateStr);
+};
+
 const MobileDashboard = ({ user, theme, setPage }) => {
   const isDark = theme === 'dark';
   const [showBiometrics, setShowBiometrics] = useState(false);
@@ -37,7 +49,7 @@ const MobileDashboard = ({ user, theme, setPage }) => {
 
         // 🔔 PROACTIVE ALERT LOGIC (V65.1)
         if (todayShift && !todayShift.isDescanso && !marking) {
-           const shiftStart = new Date(todayShift.startTime);
+           const shiftStart = parsePureDate(todayShift.startTime);
            const diffMins = (shiftStart - new Date()) / (1000 * 60);
            
            if (diffMins > 0 && diffMins <= 20) {
@@ -65,8 +77,8 @@ const MobileDashboard = ({ user, theme, setPage }) => {
     if (!shiftData || shiftData.isDescanso) return { label: 'Descanso', color: '#10b981', gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' };
     
     const now = new Date();
-    const start = new Date(shiftData.startTime);
-    const hasMarking = lastMarking && new Date(lastMarking.clockIn).toDateString() === now.toDateString();
+    const start = parsePureDate(shiftData.startTime);
+    const hasMarking = lastMarking && new Date(parsePureDate(lastMarking.clockIn)).toDateString() === now.toDateString();
 
     if (hasMarking) return { label: 'En Turno', color: '#10b981', gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', sub: 'Excelente jornada' };
     
@@ -153,7 +165,7 @@ const MobileDashboard = ({ user, theme, setPage }) => {
                  <>
                     <h3 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 8px' }}>
                        {shiftData?.isDescanso ? 'Día de Descanso' : 
-                        shiftData ? `${new Date(shiftData.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 
+                        shiftData ? `${parsePureDate(shiftData.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 
                         'Sin Turno Hoy'}
                     </h3>
                     <p style={{ fontSize: '15px', fontWeight: '600', opacity: 0.8, margin: 0, textTransform: 'capitalize', letterSpacing: '0.1em' }}>
@@ -207,7 +219,7 @@ const MobileDashboard = ({ user, theme, setPage }) => {
                 </div>
                 <div>
                    <p style={{ fontSize: '13px', fontWeight: '800', margin: '0 0 2px' }}>Último Registro</p>
-                   <p style={{ fontSize: '11px', color: mutedText, margin: 0 }}>{lastMarking.storeName} • {new Date(lastMarking.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                   <p style={{ fontSize: '11px', color: mutedText, margin: 0 }}>{lastMarking.storeName} • {parsePureDate(lastMarking.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                 </div>
              </div>
              <ChevronRight size={18} color="#cbd5e1" />

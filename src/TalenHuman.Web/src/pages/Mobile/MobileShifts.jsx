@@ -6,8 +6,21 @@ import {
   LayoutGrid, List, Sparkles, Filter
 } from 'lucide-react';
 import { formatDate } from '../../utils/formatters';
+import { formatTenantDate } from '../../utils/localization';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
+
+// 🛡️ Helper to prevent timezone shifting for "pure" local dates from API
+const parsePureDate = (dateStr) => {
+    if (!dateStr) return null;
+    if (typeof dateStr === 'string' && dateStr.includes('T') && !dateStr.includes('Z') && !dateStr.includes('+')) {
+        const [datePart, timePart] = dateStr.split('T');
+        const [y, m, d] = datePart.split('-').map(Number);
+        const [hh, mm, ss] = timePart.split(':').map(Number);
+        return new Date(y, m - 1, d, hh, mm, ss || 0);
+    }
+    return new Date(dateStr);
+};
 
 const MobileShifts = ({ user }) => {
   const { isDarkMode } = useTheme();
@@ -176,6 +189,7 @@ const MobileShifts = ({ user }) => {
                   glassEffect={glassEffect}
                   shadow={shadow}
                   cardBorder={cardBorder}
+                  parsePureDate={parsePureDate}
                />
             ))
          ) : (
@@ -212,10 +226,10 @@ const TabButton = ({ active, onClick, label, isDark }) => (
    </button>
 );
 
-const ShiftCard = ({ shift, isDark, primaryText, mutedText, cardBg, glassEffect, shadow, cardBorder }) => {
+const ShiftCard = ({ shift, isDark, primaryText, mutedText, cardBg, glassEffect, shadow, cardBorder, parsePureDate }) => {
    const isDescanso = shift.isDescanso;
-   const startTime = new Date(shift.startTime);
-   const endTime = new Date(shift.endTime);
+   const startTime = parsePureDate(shift.startTime);
+   const endTime = parsePureDate(shift.endTime);
 
    return (
       <div style={{ 
