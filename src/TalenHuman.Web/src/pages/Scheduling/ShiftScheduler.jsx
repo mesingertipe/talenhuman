@@ -2253,7 +2253,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 <th key={i} className={`p-2 text-center border-r dark:border-slate-700 w-[110px] min-w-[110px] transition-colors duration-500 elite-sticky-header ${isHoliday ? 'border-b-2 border-rose-500/50' : (isSpecial ? 'border-b-2 border-amber-500/50' : '')}`} 
                                                     style={{ backgroundColor: headerBg }}>
                                                     <p className={`text-[9px] font-black tracking-tight mb-0.5 drop-shadow-sm ${isHoliday ? 'text-rose-500' : (isSpecial ? 'text-amber-600' : 'text-slate-400 dark:text-slate-500')}`}>
-                                                        {formatTenantDate(day, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { weekday: 'short' })}
+                                                        {formatTenantDate(day, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { weekday: 'short' }, true)}
                                                     </p>
                                                     <div className="flex flex-col items-center gap-0 w-full overflow-hidden">
                                                         <p className="text-xl font-[1000] text-slate-800 dark:text-white leading-none tracking-tighter">{day.getDate()}</p>
@@ -3125,14 +3125,14 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                     <div className="flex items-center gap-1.5 mb-1.5">
                                                         <LogIn size={13} className="text-emerald-500" />
                                                         <span className="text-[12px] font-black text-slate-700 dark:text-slate-200 uppercase">
-                                                            ENTRADA: <span className="text-emerald-600 dark:text-emerald-400">{hoveredShiftData.att && hoveredShiftData.att.clockIn ? formatTenantDate(hoveredShiftData.att.clockIn, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour: '2-digit', minute: '2-digit', hour12: true }) : '---'}</span>
+                                                            ENTRADA: <span className="text-emerald-600 dark:text-emerald-400">{hoveredShiftData.att && hoveredShiftData.att.clockIn ? formatTenantDate(hoveredShiftData.att.clockIn, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour: '2-digit', minute: '2-digit', hour12: true }, true) : '---'}</span>
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center gap-1.5">
                                                         <LogOut size={13} className="text-rose-500" />
                                                         <span className="text-[12px] font-black text-slate-700 dark:text-slate-200 uppercase">
                                                             SALIDA: <span className="text-rose-600 dark:text-rose-400">{hoveredShiftData.att && hoveredShiftData.att.clockOut 
-                                                                ? formatTenantDate(hoveredShiftData.att.clockOut, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour: '2-digit', minute: '2-digit', hour12: true }) : 
+                                                                ? formatTenantDate(hoveredShiftData.att.clockOut, tenantSettings?.countryCode, tenantSettings?.timeZoneId, { hour: '2-digit', minute: '2-digit', hour12: true }, true) : 
                                                                 (hoveredShiftData.att && hoveredShiftData.att.clockIn ? 'ACTIVE' : '---')}</span>
                                                         </span>
                                                     </div>
