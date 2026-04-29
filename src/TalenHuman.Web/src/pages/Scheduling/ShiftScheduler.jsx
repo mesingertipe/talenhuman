@@ -2463,105 +2463,128 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                                     </div>
                                                                 )}
                                                                 
-                                                                {/* Render Programmed Shifts */}
-                                                                {dayShifts.reduce((acc, current) => { const hasAtt = (attendances || []).some(a => String(a.shiftId) === String(current.id)); const existing = acc.find(s => s.startTime === current.startTime); if (!existing) return [...acc, current]; if (hasAtt && !attendances.some(a => String(a.shiftId) === String(existing.id))) { return acc.map(s => s.startTime === current.startTime ? current : s); } return acc; }, []).map((shift, si) => {
-                                                                    const att = attendances.find(a => String(a.shiftId) === String(shift.id) && shift.id);
-                                                                    let bgColor = '#4f46e5';
-                                                                    
-                                                                    if (att) {
-                                                                        if (att.status === 3) bgColor = '#f97316';
-                                                                        else if (att.clockIn && !att.clockOut) bgColor = '#f97316';
-                                                                        else if (att.status === 0) bgColor = '#10b981';
-                                                                        else if (att.status === 1) bgColor = '#eab308';
-                                                                        else if (att.status === 2) bgColor = '#3b82f6';
-                                                                        else bgColor = '#f97316';
-                                                                    } else if (!shift.isDescanso && !shift.isFuera && new Date(shift.startTime) < new Date()) {
-                                                                        bgColor = '#ef4444';
-                                                                    }
+                                                                {/* Render Programmed Shifts & Associated Attendances */}
+                                                                {(() => {
+                                                                    const processedShifts = dayShifts.reduce((acc, current) => { 
+                                                                        const hasAtt = (attendances || []).some(a => String(a.shiftId) === String(current.id)); 
+                                                                        const existing = acc.find(s => s.startTime === current.startTime); 
+                                                                        if (!existing) return [...acc, current]; 
+                                                                        if (hasAtt && !attendances.some(a => String(a.shiftId) === String(existing.id))) { 
+                                                                            return acc.map(s => s.startTime === current.startTime ? current : s); 
+                                                                        } 
+                                                                        return acc; 
+                                                                    }, []);
 
-                                                                    if (shift.isDescanso) bgColor = '#94a3b8';
-                                                                    if (shift.isFuera) bgColor = '#8b5cf6';
+                                                                    let remainingOrphans = [...dayOrphanAttendances];
+                                                                    const shiftElements = processedShifts.map((shift, si) => {
+                                                                        let att = attendances.find(a => String(a.shiftId) === String(shift.id) && shift.id);
+                                                                        let isVirtual = false;
 
-                                                                    const shiftTime = `${new Date(shift.startTime).getHours().toString().padStart(2, '0')}:${new Date(shift.startTime).getMinutes().toString().padStart(2, '0')}-${new Date(shift.endTime).getHours().toString().padStart(2, '0')}:${new Date(shift.endTime).getMinutes().toString().padStart(2, '0')}`;
-                                                                    const attTime = (att && att.clockIn) ? `${new Date(att.clockIn).getHours().toString().padStart(2, '0')}:${new Date(att.clockIn).getMinutes().toString().padStart(2, '0')}—${att.clockOut ? new Date(att.clockOut).getHours().toString().padStart(2, '0') + ':' + new Date(att.clockOut).getMinutes().toString().padStart(2, '0') : '...'}` : 'S/MARCAR';
-                                                                    const displayText = viewMode === 'SHIFTS' ? (shift.isDescanso ? '00:00-00:00' : shiftTime) : (shift.isDescanso ? '00:00-00:00' : attTime);
-                                                                    const isLocked = !!att || isLockedDay || weeklyStatus.status === 'Approved';
-                                                                     
-                                                                    return (
-                                                                         <div key={`shift-${si}`} 
-                                                                              draggable={!effectiveReadOnly && !isLocked} 
-                                                                              onDragStart={e => {
-                                                                                  if (effectiveReadOnly || isLocked) { e.preventDefault(); return; }
-                                                                                  handleDragStart(e, 'GRID', { employeeId: emp.id, date: day, shiftId: shift.id });
-                                                                              }}
-                                                                              onClick={() => {
-                                                                                  if (isLocked) { 
-                                                                                      if (att) return;
-                                                                                      let msg = "Turno bloqueado";
-                                                                                      if (isLockedDay) msg += ": Dato histórico";
-                                                                                      else if (weeklyStatus.status === 'Approved') msg += ": Semana Validada (Use casillas vacías para cambios justificados)";
-                                                                                      showToast(msg, "info");
-                                                                                      return; 
-                                                                                  }
-                                                                                  setPendingEvent({ employeeId: emp.id, date: day, type: shift.isDescanso ? 'Descanso' : shift.isFuera ? 'Turno Fuera' : 'Turno', existingShift: shift });
-                                                                                  if (!shift.isDescanso && !shift.isFuera) {
-                                                                                      const sd = new Date(shift.startTime); const ed = new Date(shift.endTime);
-                                                                                      setStartTime(`${String(sd.getHours()).padStart(2, '0')}:${String(sd.getMinutes()).padStart(2, '0')}`);
-                                                                                      setEndTime(`${String(ed.getHours()).padStart(2, '0')}:${String(ed.getMinutes()).padStart(2, '0')}`);
-                                                                                      setShowTimeModal(true);
-                                                                                  }
-                                                                              }}
-                                                                              onMouseEnter={e => {
-                                                                                 const rect = e.currentTarget.getBoundingClientRect();
-                                                                                 setHoveredShiftData({ ...shift, att, shiftTime, attTime, isLocked, borderCol: bgColor });
-                                                                                 setHoverPos({ x: rect.left + rect.width / 2, y: rect.top });
-                                                                              }}
-                                                                              onMouseLeave={() => setHoveredShiftData(null)}
-                                                                              className={`group rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-md transition-all relative ${isLocked ? (att ? 'cursor-help hover:ring-2 ring-white/50 scale-105' : 'cursor-default opacity-[0.9]') : 'cursor-grab active:cursor-grabbing hover:scale-[1.05] hover:z-50'} ${nov ? 'opacity-40 grayscale-[0.5]' : ''}`}
-                                                                               style={{ background: bgColor, minWidth: '72px', minHeight: '28px', filter: isLocked ? 'contrast(0.9) saturate(0.8)' : 'none', borderLeft: shift.status === 1 ? '4px solid #10b981' : (shift.status === 2 ? '4px solid #ef4444' : 'none') }}
-                                                                         >
-                                                                             <div className="flex items-center gap-2 mb-0.5">
-                                                                                 {isLocked && <Lock size={11} className="text-white opacity-70" />}
-                                                                                 {att && <Activity size={12} className="text-white opacity-100 animate-pulse" />}
-                                                                                 <span className="text-[6.5px] font-black uppercase tracking-[0.1em] opacity-80 leading-none">
-                                                                                   {viewMode === 'SHIFTS' ? (shift.isDescanso ? 'DESC' : shift.isFuera ? 'FUERA' : 'TURNO') : 'MARCACIÓN'}
+                                                                        // Logic: If shift has no linked attendance, "consume" an orphan attendance of the same day
+                                                                        if (!att && remainingOrphans.length > 0 && !shift.isDescanso) {
+                                                                            att = remainingOrphans.shift();
+                                                                            isVirtual = true;
+                                                                        }
+                                                                        
+                                                                        let bgColor = '#4f46e5';
+                                                                        if (att) {
+                                                                            if (att.status === 3 || isVirtual) bgColor = '#f97316';
+                                                                            else if (att.clockIn && !att.clockOut) bgColor = '#f97316';
+                                                                            else if (att.status === 0) bgColor = '#10b981';
+                                                                            else if (att.status === 1) bgColor = '#eab308';
+                                                                            else if (att.status === 2) bgColor = '#3b82f6';
+                                                                            else bgColor = '#f97316';
+                                                                        } else if (!shift.isDescanso && !shift.isFuera && new Date(shift.startTime) < new Date()) {
+                                                                            bgColor = '#ef4444';
+                                                                        }
+
+                                                                        if (shift.isDescanso) bgColor = '#94a3b8';
+                                                                        if (shift.isFuera) bgColor = '#8b5cf6';
+
+                                                                        const shiftTime = `${new Date(shift.startTime).getHours().toString().padStart(2, '0')}:${new Date(shift.startTime).getMinutes().toString().padStart(2, '0')}-${new Date(shift.endTime).getHours().toString().padStart(2, '0')}:${new Date(shift.endTime).getMinutes().toString().padStart(2, '0')}`;
+                                                                        const attTime = (att && att.clockIn) ? `${new Date(att.clockIn).getHours().toString().padStart(2, '0')}:${new Date(att.clockIn).getMinutes().toString().padStart(2, '0')}—${att.clockOut ? new Date(att.clockOut).getHours().toString().padStart(2, '0') + ':' + new Date(att.clockOut).getMinutes().toString().padStart(2, '0') : '...'}` : 'S/MARCAR';
+                                                                        const displayText = viewMode === 'SHIFTS' ? (shift.isDescanso ? '00:00-00:00' : shiftTime) : (shift.isDescanso ? '00:00-00:00' : attTime);
+                                                                        const isLocked = !!att || isLockedDay || weeklyStatus.status === 'Approved';
+
+                                                                        return (
+                                                                             <div key={`shift-${si}`} 
+                                                                                  draggable={!effectiveReadOnly && !isLocked} 
+                                                                                  onDragStart={e => {
+                                                                                      if (effectiveReadOnly || isLocked) { e.preventDefault(); return; }
+                                                                                      handleDragStart(e, 'GRID', { employeeId: emp.id, date: day, shiftId: shift.id });
+                                                                                  }}
+                                                                                  onClick={() => {
+                                                                                      if (isLocked) { 
+                                                                                          if (att) return;
+                                                                                          let msg = "Turno bloqueado";
+                                                                                          if (isLockedDay) msg += ": Dato histórico";
+                                                                                          else if (weeklyStatus.status === 'Approved') msg += ": Semana Validada (Use casillas vacías para cambios justificados)";
+                                                                                          showToast(msg, "info");
+                                                                                          return; 
+                                                                                      }
+                                                                                      setPendingEvent({ employeeId: emp.id, date: day, type: shift.isDescanso ? 'Descanso' : shift.isFuera ? 'Turno Fuera' : 'Turno', existingShift: shift });
+                                                                                      if (!shift.isDescanso && !shift.isFuera) {
+                                                                                          const sd = new Date(shift.startTime); const ed = new Date(shift.endTime);
+                                                                                          setStartTime(`${String(sd.getHours()).padStart(2, '0')}:${String(sd.getMinutes()).padStart(2, '0')}`);
+                                                                                          setEndTime(`${String(ed.getHours()).padStart(2, '0')}:${String(ed.getMinutes()).padStart(2, '0')}`);
+                                                                                          setShowTimeModal(true);
+                                                                                      }
+                                                                                  }}
+                                                                                  onMouseEnter={e => {
+                                                                                     const rect = e.currentTarget.getBoundingClientRect();
+                                                                                     setHoveredShiftData({ ...shift, att, shiftTime, attTime, isLocked, borderCol: bgColor, isVirtual });
+                                                                                     setHoverPos({ x: rect.left + rect.width / 2, y: rect.top });
+                                                                                  }}
+                                                                                  onMouseLeave={() => setHoveredShiftData(null)}
+                                                                                  className={`group rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-md transition-all relative ${isLocked ? (att ? 'cursor-help hover:ring-2 ring-white/50 scale-105' : 'cursor-default opacity-[0.9]') : 'cursor-grab active:cursor-grabbing hover:scale-[1.05] hover:z-50'} ${nov ? 'opacity-40 grayscale-[0.5]' : ''}`}
+                                                                                   style={{ background: bgColor, minWidth: '72px', minHeight: '28px', filter: isLocked ? 'contrast(0.9) saturate(0.8)' : 'none', borderLeft: shift.status === 1 ? '4px solid #10b981' : (shift.status === 2 ? '4px solid #ef4444' : 'none') }}
+                                                                             >
+                                                                                 <div className="flex items-center gap-2 mb-0.5">
+                                                                                     {isLocked && <Lock size={11} className="text-white opacity-70" />}
+                                                                                     {att && (isVirtual ? <Sparkles size={11} className="text-white animate-pulse" /> : <Activity size={12} className="text-white opacity-100 animate-pulse" />)}
+                                                                                     <span className="text-[6.5px] font-black uppercase tracking-[0.1em] opacity-80 leading-none">
+                                                                                       {viewMode === 'SHIFTS' 
+                                                                                        ? (shift.isDescanso ? 'DESC' : shift.isFuera ? 'FUERA' : (isVirtual ? 'TURNO (REAL)' : 'TURNO')) 
+                                                                                        : (isVirtual ? 'REAL / EXTRA' : 'MARCACIÓN')}
+                                                                                     </span>
+                                                                                 </div>
+                                                                                 <span className={`text-[7.5px] font-[1000] tracking-tighter whitespace-nowrap mt-0.5 ${viewMode === 'ATTENDANCE' && !att ? 'opacity-40 animate-pulse' : ''}`}>
+                                                                                     {displayText}
                                                                                  </span>
                                                                              </div>
-                                                                             <span className={`text-[7.5px] font-[1000] tracking-tighter whitespace-nowrap mt-0.5 ${viewMode === 'ATTENDANCE' && !att ? 'opacity-40 animate-pulse' : ''}`}>
-                                                                                 {displayText}
-                                                                             </span>
-                                                                         </div>
-                                                                     );
-                                                                })}
+                                                                        );
+                                                                    });
 
-                                                                {/* Render Orphan Attendances (Unscheduled Punches) */}
-                                                                {dayOrphanAttendances.map((att, ai) => {
-                                                                    const attTime = att.clockIn ? `${new Date(att.clockIn).getHours().toString().padStart(2, '0')}:${new Date(att.clockIn).getMinutes().toString().padStart(2, '0')}—${att.clockOut ? new Date(att.clockOut).getHours().toString().padStart(2, '0') + ':' + new Date(att.clockOut).getMinutes().toString().padStart(2, '0') : '...'}` : 'S/MARCAR';
-                                                                    let bgColor = '#10b981'; // Emerald/Green for real work
-                                                                    if (att.status === 1) bgColor = '#eab308'; // Yellow
-                                                                    if (att.status === 3 || !att.clockOut) bgColor = '#f97316'; // Orange
-                                                                    
-                                                                    return (
-                                                                        <div key={`orphan-${ai}`}
-                                                                            className="group rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-lg border-2 border-white/20 select-none animate-in zoom-in-95 duration-300"
-                                                                            style={{ background: bgColor, minWidth: '72px', minHeight: '28px' }}
-                                                                            onMouseEnter={e => {
-                                                                                const rect = e.currentTarget.getBoundingClientRect();
-                                                                                setHoveredShiftData({ isOrphan: true, att, attTime, isLocked: true, borderCol: bgColor });
-                                                                                setHoverPos({ x: rect.left + rect.width / 2, y: rect.top });
-                                                                            }}
-                                                                            onMouseLeave={() => setHoveredShiftData(null)}
-                                                                        >
-                                                                            <div className="flex items-center gap-2 mb-0.5">
-                                                                                <Sparkles size={10} className="text-white animate-pulse" />
-                                                                                <span className="text-[6.5px] font-black uppercase tracking-[0.1em] opacity-90 leading-none">REAL / EXTRA</span>
+                                                                    const orphanElements = remainingOrphans.map((att, ai) => {
+                                                                        const attTime = att.clockIn ? `${new Date(att.clockIn).getHours().toString().padStart(2, '0')}:${new Date(att.clockIn).getMinutes().toString().padStart(2, '0')}—${att.clockOut ? new Date(att.clockOut).getHours().toString().padStart(2, '0') + ':' + new Date(att.clockOut).getMinutes().toString().padStart(2, '0') : '...'}` : 'S/MARCAR';
+                                                                        let bgColor = '#10b981'; 
+                                                                        if (att.status === 1) bgColor = '#eab308'; 
+                                                                        if (att.status === 3 || !att.clockOut) bgColor = '#f97316'; 
+                                                                        
+                                                                        return (
+                                                                            <div key={`orphan-${ai}`}
+                                                                                className="group rounded-xl p-1.5 flex flex-col items-center justify-center text-white shadow-lg border-2 border-white/20 select-none animate-in zoom-in-95 duration-300"
+                                                                                style={{ background: bgColor, minWidth: '72px', minHeight: '28px' }}
+                                                                                onMouseEnter={e => {
+                                                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                                                    setHoveredShiftData({ isOrphan: true, att, attTime, isLocked: true, borderCol: bgColor });
+                                                                                    setHoverPos({ x: rect.left + rect.width / 2, y: rect.top });
+                                                                                }}
+                                                                                onMouseLeave={() => setHoveredShiftData(null)}
+                                                                            >
+                                                                                <div className="flex items-center gap-2 mb-0.5">
+                                                                                    <Sparkles size={10} className="text-white animate-pulse" />
+                                                                                    <span className="text-[6.5px] font-black uppercase tracking-[0.1em] opacity-90 leading-none">REAL / EXTRA</span>
+                                                                                </div>
+                                                                                <span className="text-[7.5px] font-[1000] tracking-tighter whitespace-nowrap mt-0.5">
+                                                                                    {attTime}
+                                                                                </span>
                                                                             </div>
-                                                                            <span className="text-[7.5px] font-[1000] tracking-tighter whitespace-nowrap mt-0.5">
-                                                                                {attTime}
-                                                                            </span>
-                                                                        </div>
-                                                                    );
-                                                                })}
+                                                                        );
+                                                                    });
+
+                                                                    return [...shiftElements, ...orphanElements];
+                                                                })()}
 
                                                                 {/* Only show "Plus" if no shifts AND no orphan attendances */}
                                                                 {!nov && dayShifts.length === 0 && dayOrphanAttendances.length === 0 && (
@@ -3043,17 +3066,24 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-white/5">
                                     <div className="flex flex-col text-left">
                                         <span className={`text-[12px] font-[1000] tracking-tight`} style={{ color: hoveredShiftData.borderCol }}>
-                                            {hoveredShiftData.isOrphan ? 'MARCACIÓN SIN TURNO' : (hoveredShiftData.status === 6 ? 'TURNO APROBADO' : (hoveredShiftData.status === 7 ? 'TURNO RECHAZADO' : (hoveredShiftData.status === 5 ? 'PENDIENTE VALIDACIÓN' : (hoveredShiftData.att ? `TURNO ${hoveredShiftData.att.status === 0 ? 'CORRECTO' : (hoveredShiftData.att.status === 3 ? 'INCOMPLETO' : 'DESFASADO')}` : (hoveredShiftData.isDescanso ? 'DESCANSO' : (hoveredShiftData.isLocked ? 'SIN MARCACIONES' : 'REGISTRADO'))))))}
+                                            {hoveredShiftData.isOrphan ? 'MARCACIÓN SIN TURNO' : 
+                                             (hoveredShiftData.isVirtual ? 'MARCACIÓN SIN VINCULAR' : 
+                                             (hoveredShiftData.status === 6 ? 'TURNO APROBADO' : 
+                                             (hoveredShiftData.status === 7 ? 'TURNO RECHAZADO' : 
+                                             (hoveredShiftData.status === 5 ? 'PENDIENTE VALIDACIÓN' : 
+                                             (hoveredShiftData.att ? `TURNO ${hoveredShiftData.att.status === 0 ? 'CORRECTO' : (hoveredShiftData.att.status === 3 ? 'INCOMPLETO' : 'DESFASADO')}` : 
+                                             (hoveredShiftData.isDescanso ? 'DESCANSO' : 
+                                             (hoveredShiftData.isLocked ? 'SIN MARCACIONES' : 'REGISTRADO')))))))}
                                         </span>
                                     </div>
                                     <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg`} style={{ backgroundColor: hoveredShiftData.borderCol, color: 'white' }}>
-                                        {hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? <CheckCircle size={22} strokeWidth={3} /> : (hoveredShiftData.att.status === 3 ? <AlertTriangle size={22} strokeWidth={3} /> : <AlertCircle size={22} strokeWidth={3} />)) : <Clock size={20} />}
+                                        {hoveredShiftData.att ? (hoveredShiftData.att.status === 0 ? <CheckCircle size={22} strokeWidth={3} /> : (hoveredShiftData.att.status === 3 || hoveredShiftData.isVirtual ? <AlertTriangle size={22} strokeWidth={3} /> : <AlertCircle size={22} strokeWidth={3} />)) : <Clock size={20} />}
                                     </div>
                                 </div>
 
                                 {/* Content */}
                                 <div className="space-y-3">
-                                    {!hoveredShiftData.isOrphan && (
+                                    {(!hoveredShiftData.isOrphan || hoveredShiftData.isVirtual) && (
                                         <div className="flex items-center gap-3">
                                             <Calendar size={14} className="text-indigo-500" />
                                             <div className="flex flex-col text-left">
@@ -3077,12 +3107,12 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         </div>
                                     )}
 
-                                    {hoveredShiftData.isOrphan && (
+                                    {(hoveredShiftData.isOrphan || hoveredShiftData.isVirtual) && (
                                         <div className="flex items-center gap-3">
                                             <Sparkles size={14} className="text-emerald-500" />
                                             <div className="flex flex-col text-left">
                                                 <span className="text-[12px] font-[1000] tracking-tight uppercase text-emerald-600">
-                                                    TRABAJO NO PROGRAMADO
+                                                    {hoveredShiftData.isVirtual ? 'PUNCH SIN VINCULAR' : 'TRABAJO NO PROGRAMADO'}
                                                 </span>
                                             </div>
                                         </div>
