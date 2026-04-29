@@ -316,7 +316,7 @@ public class ShiftsController : ControllerBase
             query = query.Where(s => s.StartTime >= DateTime.SpecifyKind(start.Value.Date, DateTimeKind.Unspecified));
         
         if (end.HasValue) 
-            query = query.Where(s => s.StartTime <= DateTime.SpecifyKind(end.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Unspecified));
+            query = query.Where(s => s.StartTime < DateTime.SpecifyKind(end.Value.Date.AddDays(1), DateTimeKind.Unspecified));
 
         var shifts = await query
             .OrderByDescending(s => s.StartTime)

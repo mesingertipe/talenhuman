@@ -177,8 +177,10 @@ const MobileShifts = ({ user }) => {
                <div style={{ width: '40px', height: '40px', border: '4px solid #4f46e5', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
                <p style={{ fontSize: '10px', fontWeight: '900', color: mutedText, textTransform: 'uppercase', letterSpacing: '0.15em' }}>Sincronizando...</p>
             </div>
-         ) : shifts.length > 0 ? (
-            shifts.map((shift, idx) => (
+         ) : shifts.filter(s => view !== 'day' || parsePureDate(s.startTime).toDateString() === currentDate.toDateString()).length > 0 ? (
+            shifts
+               .filter(s => view !== 'day' || parsePureDate(s.startTime).toDateString() === currentDate.toDateString())
+               .map((shift, idx) => (
                <ShiftCard 
                   key={idx} 
                   shift={shift} 
