@@ -72,6 +72,15 @@ const MobileDashboard = ({ user, theme, setPage }) => {
     fetchData();
   }, []);
 
+  // Premium Visual Tokens (V65.0)
+  const cardBg = isDark ? 'rgba(30, 41, 59, 0.4)' : 'rgba(255, 255, 255, 0.8)';
+  const cardBorder = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)';
+  const glassEffect = { backdropFilter: 'blur(20px)', border: `1px solid ${cardBorder}` };
+  const shadow = isDark ? '0 25px 50px -12px rgba(0, 0, 0, 0.5)' : '0 20px 40px rgba(0, 0, 0, 0.06)';
+  const primaryText = isDark ? '#ffffff' : '#1e293b';
+  const mutedText = isDark ? 'rgba(255, 255, 255, 0.5)' : '#64748b';
+  const accentGradient = 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)';
+
   // 🧠 DYNAMIC SHIFT STATUS (V65.1)
   const getShiftStatus = () => {
     if (!shiftData || shiftData.isDescanso) return { label: 'Descanso', color: '#10b981', gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' };
@@ -91,15 +100,6 @@ const MobileDashboard = ({ user, theme, setPage }) => {
   };
 
   const status = getShiftStatus();
-
-  // Premium Visual Tokens (V65.0)
-  const cardBg = isDark ? 'rgba(30, 41, 59, 0.4)' : 'rgba(255, 255, 255, 0.8)';
-  const cardBorder = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)';
-  const glassEffect = { backdropFilter: 'blur(20px)', border: `1px solid ${cardBorder}` };
-  const shadow = isDark ? '0 25px 50px -12px rgba(0, 0, 0, 0.5)' : '0 20px 40px rgba(0, 0, 0, 0.06)';
-  const primaryText = isDark ? '#ffffff' : '#1e293b';
-  const mutedText = isDark ? 'rgba(255, 255, 255, 0.5)' : '#64748b';
-  const accentGradient = 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)';
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-10 duration-700">
@@ -165,7 +165,7 @@ const MobileDashboard = ({ user, theme, setPage }) => {
                  <>
                     <h3 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 8px' }}>
                        {shiftData?.isDescanso ? 'Día de Descanso' : 
-                        shiftData ? `${parsePureDate(shiftData.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 
+                        shiftData ? `${parsePureDate(shiftData.startTime)?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '--:--'}` : 
                         'Sin Turno Hoy'}
                     </h3>
                     <p style={{ fontSize: '15px', fontWeight: '600', opacity: 0.8, margin: 0, textTransform: 'capitalize', letterSpacing: '0.1em' }}>
@@ -219,7 +219,7 @@ const MobileDashboard = ({ user, theme, setPage }) => {
                 </div>
                 <div>
                    <p style={{ fontSize: '13px', fontWeight: '800', margin: '0 0 2px' }}>Último Registro</p>
-                   <p style={{ fontSize: '11px', color: mutedText, margin: 0 }}>{lastMarking.storeName} • {parsePureDate(lastMarking.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                   <p style={{ fontSize: '11px', color: mutedText, margin: 0 }}>{lastMarking.storeName} • {parsePureDate(lastMarking.clockIn)?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '--:--'}</p>
                 </div>
              </div>
              <ChevronRight size={18} color="#cbd5e1" />

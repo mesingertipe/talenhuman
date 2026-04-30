@@ -284,13 +284,13 @@ const ShiftCard = ({ shift, isDark, primaryText, mutedText, cardBg, glassEffect,
                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <p style={{ fontSize: '9px', fontWeight: '800', color: mutedText, textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>Entrada</p>
                   <span style={{ fontSize: '20px', fontWeight: '950', color: primaryText, letterSpacing: '-0.5px' }}>
-                     {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                     {startTime?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '--:--'}
                   </span>
                </div>
                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <p style={{ fontSize: '9px', fontWeight: '800', color: mutedText, textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>Salida</p>
                   <span style={{ fontSize: '20px', fontWeight: '950', color: primaryText, letterSpacing: '-0.5px' }}>
-                     {endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                     {endTime?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '--:--'}
                   </span>
                </div>
             </div>
