@@ -150,9 +150,9 @@ const MobileAttendance = ({ user }) => {
           <div style={{ padding: '60px 0', textAlign: 'center' }}>
             <div style={{ width: '40px', height: '40px', border: '4px solid #10b981', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }} />
           </div>
-        ) : data.filter(item => view !== 'day' || parsePureDate(item.clockIn || (item.shift ? item.shift.startTime : null)).toDateString() === currentDate.toDateString()).length > 0 ? (
+        ) : data.filter(item => view !== 'day' || (parsePureDate(item.clockIn || (item.shift ? item.shift.startTime : null))?.toDateString() === currentDate.toDateString())).length > 0 ? (
           data
-            .filter(item => view !== 'day' || parsePureDate(item.clockIn || (item.shift ? item.shift.startTime : null)).toDateString() === currentDate.toDateString())
+            .filter(item => view !== 'day' || (parsePureDate(item.clockIn || (item.shift ? item.shift.startTime : null))?.toDateString() === currentDate.toDateString()))
             .map((item, idx) => (
             <AttendanceCard key={idx} item={item} isDark={isDark} primaryText={primaryText} mutedText={mutedText} cardBg={cardBg} glassEffect={glassEffect} shadow={shadow} cardBorder={cardBorder} parsePureDate={parsePureDate} />
           ))
