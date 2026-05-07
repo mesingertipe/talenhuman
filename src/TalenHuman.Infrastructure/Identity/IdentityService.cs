@@ -85,23 +85,22 @@ public class IdentityService : IIdentityService
         if (user == null) return new List<string>();
 
         var userRoles = await _userManager.GetRolesAsync(user);
-        var roleEntities = _context.Roles
-            .IgnoreQueryFilters()
-            .Where(r => userRoles.Contains(r.Name!))
-            .ToList();
-        var roleIds = roleEntities.Select(r => r.Id).ToList();
 
-        // Get permissions linked to these roles and the specific Company
-        var permissions = _context.ModulePermissions
+        // 4. Get granular permissions from matrix
+        // V13.9.60: Use Role Name instead of Role ID to ensure multi-tenant consistency across different DB states
+        var permissions = await _context.ModulePermissions
             .IgnoreQueryFilters()
             .Include(p => p.Module)
-            .Where(p => p.CompanyId == user.CompanyId && roleIds.Contains(p.RoleId) && p.IsAllowed)
-            .Select(p => new { 
-                ModuleCode = p.Module!.Code, 
-                SubModuleCode = p.SubModuleCode,
-                p.Action 
+            .Include(p => p.Role)
+            .Where(p => p.CompanyId == user.CompanyId && 
+                        userRoles.Contains(p.Role!.Name!) && 
+                        p.IsAllowed)
+            .Select(p => new {
+                ModuleCode = p.Module!.Code,
+                p.SubModuleCode,
+                p.Action
             })
-            .ToList();
+            .ToListAsync();
 
         // Group by Module and format actions
         // Logic: 

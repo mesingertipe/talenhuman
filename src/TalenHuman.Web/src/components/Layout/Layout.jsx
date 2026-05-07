@@ -96,9 +96,6 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
       if (!isModuleActive) return false;
 
       // 2. Check Granular Permissions
-      // Format in user.permissions: ["MODULE:SUBMODULE:ACTIONS"] or "MODULE:ACTIONS"
-      const granularKey = `${section.module}:${item.sub}`;
-      
       // 🛡️ ROBUST PERMISSION CHECK (V13.9.52)
       // We split and compare exactly to avoid naming collisions (e.g., SHIFTS vs SHIFT_APPROVAL)
       const permItem = user?.permissions?.find(p => {
@@ -108,27 +105,9 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
                parts[1].toUpperCase() === item.sub.toUpperCase();
       });
 
-      // 🔍 DEBUG LOG (Only for developers/admins to see in console)
-      if (user?.roles?.includes('RH') && item.sub === 'SHIFTS') {
-          console.log(`[AUTH-DEBUG] Submodule: ${item.sub}, Found Perm: ${permItem || 'NONE'}`);
-      }
-
-      if (!permItem) {
-          // 🛡️ SECURITY OVERRIDE (V13.9.55): If user is RH, they MUST have Read access to SHIFTS and SHIFT_APPROVAL 
-          // if the section is already active for their company, even if the granular permission string is missing.
-          if (user?.roles?.includes('RH') && (item.sub === 'SHIFTS' || item.sub === 'SHIFT_APPROVAL')) {
-              return true;
-          }
-          return false;
-      }
+      if (!permItem) return false;
 
       const allowedActions = permItem.split(':')[2] || ''; 
-      
-      // Also apply override if permItem exists but lacks 'R' for some reason
-      if (user?.roles?.includes('RH') && (item.sub === 'SHIFTS' || item.sub === 'SHIFT_APPROVAL')) {
-          return true;
-      }
-
       return allowedActions.includes('R'); // Sidebar items need Read access
     })
   })).filter(section => section.children.length > 0);
