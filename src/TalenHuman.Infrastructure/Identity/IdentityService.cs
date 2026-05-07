@@ -107,11 +107,12 @@ public class IdentityService : IIdentityService
         // Logic: 
         // 1. If SubModuleCode is present, use "Module:SubModule:Actions"
         // 2. If SubModuleCode is null, use "Module:Actions" (legacy/global)
+        // V13.9.52: Normalizing with Trim() and ToUpper() to prevent data inconsistencies
         var grouped = permissions
-            .GroupBy(p => string.IsNullOrEmpty(p.SubModuleCode) ? p.ModuleCode : $"{p.ModuleCode}:{p.SubModuleCode}")
+            .GroupBy(p => string.IsNullOrEmpty(p.SubModuleCode) ? p.ModuleCode?.Trim().ToUpper() : $"{p.ModuleCode?.Trim().ToUpper()}:{p.SubModuleCode?.Trim().ToUpper()}")
             .Select(g => 
             {
-                var actions = string.Join(",", g.Select(p => p.Action.ToString().Substring(0, 1)).Distinct().OrderBy(a => a));
+                var actions = string.Join("", g.Select(p => p.Action.ToString().Substring(0, 1).ToUpper()).Distinct().OrderBy(a => a));
                 return $"{g.Key}:{actions}";
             })
             .ToList();

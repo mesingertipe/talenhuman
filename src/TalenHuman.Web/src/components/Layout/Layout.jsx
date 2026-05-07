@@ -99,7 +99,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
       // Format in user.permissions: ["MODULE:SUBMODULE:ACTIONS"] or "MODULE:ACTIONS"
       const granularKey = `${section.module}:${item.sub}`;
       
-      // 🛡️ ROBUST PERMISSION CHECK (V13.9.51)
+      // 🛡️ ROBUST PERMISSION CHECK (V13.9.52)
       // We split and compare exactly to avoid naming collisions (e.g., SHIFTS vs SHIFT_APPROVAL)
       const permItem = user?.permissions?.find(p => {
         const parts = p.split(':');
@@ -107,6 +107,11 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
         return parts[0].toUpperCase() === section.module.toUpperCase() && 
                parts[1].toUpperCase() === item.sub.toUpperCase();
       });
+
+      // 🔍 DEBUG LOG (Only for developers/admins to see in console)
+      if (user?.roles?.includes('RH') && item.sub === 'SHIFTS') {
+          console.log(`[AUTH-DEBUG] Submodule: ${item.sub}, Found Perm: ${permItem || 'NONE'}`);
+      }
 
       if (!permItem) return false;
 
