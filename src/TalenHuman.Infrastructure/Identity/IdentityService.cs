@@ -86,24 +86,24 @@ public class IdentityService : IIdentityService
 
         var userRoles = await _userManager.GetRolesAsync(user);
 
-        // 4. Get granular permissions from matrix
-        // V13.9.61: Refined query using Role IDs to ensure compatibility with the Domain Model
         var roleIds = await _context.Roles
             .IgnoreQueryFilters()
             .Where(r => userRoles.Contains(r.Name!))
             .Select(r => r.Id)
             .ToListAsync();
 
-        var permissions = await _context.ModulePermissions
-            .IgnoreQueryFilters()
-            .Include(p => p.Module)
-            .Where(p => p.CompanyId == user.CompanyId && roleIds.Contains(p.RoleId) && p.IsAllowed)
-            .Select(p => new {
-                ModuleCode = p.Module!.Code,
-                p.SubModuleCode,
-                p.Action
-            })
-            .ToListAsync();
+        // 4. Get granular permissions from matrix
+        // V13.9.65: FINAL ROBUST QUERY - Direct Join to ensure Module Codes are never null and relations are solid
+        var permissions = await (from p in _context.ModulePermissions.IgnoreQueryFilters()
+                               join m in _context.Modules.IgnoreQueryFilters() on p.ModuleId equals m.Id
+                               where p.CompanyId == user.CompanyId && 
+                                     roleIds.Contains(p.RoleId) && 
+                                     p.IsAllowed
+                               select new {
+                                   ModuleCode = m.Code,
+                                   SubModuleCode = p.SubModuleCode,
+                                   Action = p.Action
+                               }).ToListAsync();
 
         // Group by Module and format actions
         // Logic: 
