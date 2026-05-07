@@ -98,11 +98,19 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
       // 2. Check Granular Permissions
       // Format in user.permissions: ["MODULE:SUBMODULE:ACTIONS"] or "MODULE:ACTIONS"
       const granularKey = `${section.module}:${item.sub}`;
-      const permItem = user?.permissions?.find(p => p.startsWith(`${granularKey}:`));
       
+      // 🛡️ ROBUST PERMISSION CHECK (V13.9.51)
+      // We split and compare exactly to avoid naming collisions (e.g., SHIFTS vs SHIFT_APPROVAL)
+      const permItem = user?.permissions?.find(p => {
+        const parts = p.split(':');
+        if (parts.length < 2) return false;
+        return parts[0].toUpperCase() === section.module.toUpperCase() && 
+               parts[1].toUpperCase() === item.sub.toUpperCase();
+      });
+
       if (!permItem) return false;
 
-      const allowedActions = permItem.split(':')[2]; // Index 2 for MODULE:SUB:ACTIONS
+      const allowedActions = permItem.split(':')[2] || ''; 
       return allowedActions.includes('R'); // Sidebar items need Read access
     })
   })).filter(section => section.children.length > 0);
