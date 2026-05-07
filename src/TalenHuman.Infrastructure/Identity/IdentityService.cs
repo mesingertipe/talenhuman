@@ -87,14 +87,17 @@ public class IdentityService : IIdentityService
         var userRoles = await _userManager.GetRolesAsync(user);
 
         // 4. Get granular permissions from matrix
-        // V13.9.60: Use Role Name instead of Role ID to ensure multi-tenant consistency across different DB states
+        // V13.9.61: Refined query using Role IDs to ensure compatibility with the Domain Model
+        var roleIds = await _context.Roles
+            .IgnoreQueryFilters()
+            .Where(r => userRoles.Contains(r.Name!))
+            .Select(r => r.Id)
+            .ToListAsync();
+
         var permissions = await _context.ModulePermissions
             .IgnoreQueryFilters()
             .Include(p => p.Module)
-            .Include(p => p.Role)
-            .Where(p => p.CompanyId == user.CompanyId && 
-                        userRoles.Contains(p.Role!.Name!) && 
-                        p.IsAllowed)
+            .Where(p => p.CompanyId == user.CompanyId && roleIds.Contains(p.RoleId) && p.IsAllowed)
             .Select(p => new {
                 ModuleCode = p.Module!.Code,
                 p.SubModuleCode,
