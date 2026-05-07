@@ -113,9 +113,22 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
           console.log(`[AUTH-DEBUG] Submodule: ${item.sub}, Found Perm: ${permItem || 'NONE'}`);
       }
 
-      if (!permItem) return false;
+      if (!permItem) {
+          // 🛡️ SECURITY OVERRIDE (V13.9.55): If user is RH, they MUST have Read access to SHIFTS and SHIFT_APPROVAL 
+          // if the section is already active for their company, even if the granular permission string is missing.
+          if (user?.roles?.includes('RH') && (item.sub === 'SHIFTS' || item.sub === 'SHIFT_APPROVAL')) {
+              return true;
+          }
+          return false;
+      }
 
       const allowedActions = permItem.split(':')[2] || ''; 
+      
+      // Also apply override if permItem exists but lacks 'R' for some reason
+      if (user?.roles?.includes('RH') && (item.sub === 'SHIFTS' || item.sub === 'SHIFT_APPROVAL')) {
+          return true;
+      }
+
       return allowedActions.includes('R'); // Sidebar items need Read access
     })
   })).filter(section => section.children.length > 0);
