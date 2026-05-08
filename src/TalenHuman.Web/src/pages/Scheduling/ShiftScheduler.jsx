@@ -1781,11 +1781,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 const empShifts = shifts.filter(s => s.employeeId === emp.id);
                 const empAtts = (attendances || []).filter(a => String(a.employeeId) === String(emp.id));
                 
-                // Total hours: use shift hours for programmed, but also sum orphaned attendances
+                // Total hours: use ONLY programmed shift hours for the calendar/programmed column
                 let totalHours = empShifts.reduce((acc, s) => acc + getShiftHours(s), 0);
-                // Add orphaned attendance hours (where no shiftId is present)
-                const orphanedAtts = empAtts.filter(a => !a.shiftId);
-                totalHours += orphanedAtts.reduce((acc, a) => acc + getAttendanceHours(a), 0);
 
                 const rowValues = [emp.documento || '---', `${emp.firstName} ${emp.lastName}`.toUpperCase()];
                 days.forEach(day => {
@@ -2392,7 +2389,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             return acc + diff;
                                         }, 0);
 
-                                        const empTotalHours = Math.round(totalScheduled + weekOrphanHours);
+                                        const empTotalHours = Math.round(totalScheduled);
                                         const isSelected = selectedEmployees.includes(emp.id);
                                         return (
                                             <tr key={emp.id} className="border-b dark:border-slate-800 hover:bg-slate-50/10 dark:hover:bg-slate-800/50 transition-colors">
