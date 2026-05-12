@@ -2726,13 +2726,14 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         );
                                     })}
                                 </tbody>
-                                <tfoot className="sticky bottom-0 z-[180] shadow-[0_-15px_40px_rgba(0,0,0,0.4)]">
+                                <tfoot className="sticky bottom-0 z-[200] shadow-[0_-20px_50px_rgba(0,0,0,0.4)]">
                                     {/* FILA PROGRAMADO */}
                                     <tr className="bg-slate-50 dark:bg-slate-900 border-t-2 border-slate-200 dark:border-slate-800">
-                                        <th className="p-3 text-left sticky left-0 z-[185] bg-slate-50 dark:bg-slate-900" style={{ width: '230px' }}>
+                                        <th className="p-3 text-left sticky left-0 z-[210] bg-slate-50 dark:bg-slate-900" style={{ width: '230px' }}>
                                             <div className="flex items-center gap-2">
                                                 <Calendar size={14} className="text-indigo-500" />
                                                 <span className="text-[10px] font-black uppercase text-slate-500">Total Programado</span>
+                                                <span className="text-[8px] bg-indigo-100 px-1.5 rounded text-indigo-600 font-bold">V13.6-OK</span>
                                             </div>
                                         </th>
                                         {dailyTotals.map((td, idx) => (
@@ -2742,15 +2743,15 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </span>
                                             </td>
                                         ))}
-                                        <td className="p-2 sticky right-0 z-[185] text-center" 
-                                            style={{ width: '120px', minWidth: '120px', background: '#4f46e5', color: '#ffffff', fontWeight: '900', display: 'table-cell' }}>
-                                            <span className="text-[11px] uppercase">{formatHours(weeklyGlobalTotals.prog || 0)}</span>
+                                        <td className="p-2 sticky right-0 z-[210] text-center" 
+                                            style={{ width: '120px', minWidth: '120px', backgroundColor: '#4f46e5', color: '#ffffff', fontWeight: '900' }}>
+                                            <span style={{ fontSize: '11px' }}>{formatHours(weeklyGlobalTotals.prog || 0)}</span>
                                         </td>
                                     </tr>
 
                                     {/* FILA REAL */}
                                     <tr className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
-                                        <th className="p-3 text-left sticky left-0 z-[185] bg-white dark:bg-slate-900" style={{ width: '230px' }}>
+                                        <th className="p-3 text-left sticky left-0 z-[210] bg-white dark:bg-slate-900" style={{ width: '230px' }}>
                                             <div className="flex items-center gap-2">
                                                 <Clock size={14} className="text-emerald-500" />
                                                 <span className="text-[10px] font-black uppercase text-slate-500">Total Real</span>
@@ -2763,15 +2764,15 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </span>
                                             </td>
                                         ))}
-                                        <td className="p-2 sticky right-0 z-[185] text-center" 
-                                            style={{ width: '120px', minWidth: '120px', background: '#10b981', color: '#ffffff', fontWeight: '900', display: 'table-cell' }}>
-                                            <span className="text-[11px] uppercase">{formatHours(weeklyGlobalTotals.real || 0)}</span>
+                                        <td className="p-2 sticky right-0 z-[210] text-center" 
+                                            style={{ width: '120px', minWidth: '120px', backgroundColor: '#10b981', color: '#ffffff', fontWeight: '900' }}>
+                                            <span style={{ fontSize: '11px' }}>{formatHours(weeklyGlobalTotals.real || 0)}</span>
                                         </td>
                                     </tr>
 
                                     {/* FILA EFECTIVIDAD */}
                                     <tr className="bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
-                                        <th className="p-3 text-left sticky left-0 z-[185] bg-slate-50 dark:bg-slate-900" style={{ width: '230px' }}>
+                                        <th className="p-3 text-left sticky left-0 z-[210] bg-slate-50 dark:bg-slate-900" style={{ width: '230px' }}>
                                             <div className="flex items-center gap-2">
                                                 <Activity size={14} className="text-amber-500" />
                                                 <span className="text-[10px] font-black uppercase text-slate-500">% Efectividad</span>
@@ -2794,14 +2795,14 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </td>
                                             );
                                         })}
-                                        <td className="p-2 sticky right-0 z-[185] text-center" 
+                                        <td className="p-2 sticky right-0 z-[210] text-center" 
                                             style={{ width: '120px', minWidth: '120px', background: (() => {
                                                 const val = weeklyGlobalTotals.eff || 0;
                                                 if (val < 85 || val > 110) return '#ef4444';
                                                 if ((val >= 85 && val < 95) || (val > 105 && val <= 110)) return '#f59e0b';
                                                 return '#10b981';
-                                            })(), color: '#ffffff', fontWeight: '900', display: 'table-cell' }}>
-                                            <span className="text-[11.5px]">{(weeklyGlobalTotals.eff || 0).toFixed(1)}%</span>
+                                            })(), color: '#ffffff', fontWeight: '900' }}>
+                                            <span style={{ fontSize: '11.5px' }}>{(weeklyGlobalTotals.eff || 0).toFixed(1)}%</span>
                                         </td>
                                     </tr>
                                 </tfoot>
