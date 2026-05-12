@@ -2727,13 +2727,20 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                     })}
                                 </tbody>
                                 <tfoot className="sticky bottom-0 z-[200] shadow-[0_-20px_50px_rgba(0,0,0,0.4)]">
+                                    <style>{`
+                                        .cell-total-prog { background-color: #4f46e5 !important; color: white !important; }
+                                        .cell-total-real { background-color: #10b981 !important; color: white !important; }
+                                        .cell-total-eff-red { background-color: #ef4444 !important; color: white !important; }
+                                        .cell-total-eff-amber { background-color: #f59e0b !important; color: white !important; }
+                                        .cell-total-eff-green { background-color: #10b981 !important; color: white !important; }
+                                    `}</style>
+
                                     {/* FILA PROGRAMADO */}
                                     <tr className="bg-slate-50 dark:bg-slate-900 border-t-2 border-slate-200 dark:border-slate-800">
                                         <th className="p-3 text-left sticky left-0 z-[210] bg-slate-50 dark:bg-slate-900" style={{ width: '230px' }}>
                                             <div className="flex items-center gap-2">
                                                 <Calendar size={14} className="text-indigo-500" />
                                                 <span className="text-[10px] font-black uppercase text-slate-500">Total Programado</span>
-                                                <span className="text-[8px] bg-indigo-100 px-1.5 rounded text-indigo-600 font-bold">V13.6-OK</span>
                                             </div>
                                         </th>
                                         {dailyTotals.map((td, idx) => (
@@ -2743,8 +2750,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </span>
                                             </td>
                                         ))}
-                                        <td className="p-2 sticky right-0 z-[210] text-center" 
-                                            style={{ width: '120px', minWidth: '120px', backgroundColor: '#4f46e5', color: '#ffffff', fontWeight: '900' }}>
+                                        <td className="p-2 sticky right-0 z-[210] text-center cell-total-prog" 
+                                            style={{ width: '120px', minWidth: '120px', fontWeight: '900' }}>
                                             <span style={{ fontSize: '11px' }}>{formatHours(weeklyGlobalTotals.prog || 0)}</span>
                                         </td>
                                     </tr>
@@ -2764,8 +2771,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </span>
                                             </td>
                                         ))}
-                                        <td className="p-2 sticky right-0 z-[210] text-center" 
-                                            style={{ width: '120px', minWidth: '120px', backgroundColor: '#10b981', color: '#ffffff', fontWeight: '900' }}>
+                                        <td className="p-2 sticky right-0 z-[210] text-center cell-total-real" 
+                                            style={{ width: '120px', minWidth: '120px', fontWeight: '900' }}>
                                             <span style={{ fontSize: '11px' }}>{formatHours(weeklyGlobalTotals.real || 0)}</span>
                                         </td>
                                     </tr>
@@ -2795,15 +2802,19 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </td>
                                             );
                                         })}
-                                        <td className="p-2 sticky right-0 z-[210] text-center" 
-                                            style={{ width: '120px', minWidth: '120px', background: (() => {
-                                                const val = weeklyGlobalTotals.eff || 0;
-                                                if (val < 85 || val > 110) return '#ef4444';
-                                                if ((val >= 85 && val < 95) || (val > 105 && val <= 110)) return '#f59e0b';
-                                                return '#10b981';
-                                            })(), color: '#ffffff', fontWeight: '900' }}>
-                                            <span style={{ fontSize: '11.5px' }}>{(weeklyGlobalTotals.eff || 0).toFixed(1)}%</span>
-                                        </td>
+                                        {(() => {
+                                            const val = weeklyGlobalTotals.eff || 0;
+                                            let effClass = 'cell-total-eff-green';
+                                            if (val < 85 || val > 110) effClass = 'cell-total-eff-red';
+                                            else if ((val >= 85 && val < 95) || (val > 105 && val <= 110)) effClass = 'cell-total-eff-amber';
+                                            
+                                            return (
+                                                <td className={`p-2 sticky right-0 z-[210] text-center ${effClass}`} 
+                                                    style={{ width: '120px', minWidth: '120px', fontWeight: '900' }}>
+                                                    <span style={{ fontSize: '11.5px' }}>{val.toFixed(1)}%</span>
+                                                </td>
+                                            );
+                                        })()}
                                     </tr>
                                 </tfoot>
                             </table>
