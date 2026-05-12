@@ -2726,13 +2726,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         );
                                     })}
                                 </tbody>
-                                <tfoot className="sticky bottom-0 z-[200] shadow-[0_-20px_50px_rgba(0,0,0,0.4)]">
+                                <tfoot className="sticky bottom-0 z-[200] shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
                                     <style>{`
-                                        .cell-total-prog { background-color: #4f46e5 !important; color: white !important; }
-                                        .cell-total-real { background-color: #10b981 !important; color: white !important; }
-                                        .cell-total-eff-red { background-color: #ef4444 !important; color: white !important; }
-                                        .cell-total-eff-amber { background-color: #f59e0b !important; color: white !important; }
-                                        .cell-total-eff-green { background-color: #10b981 !important; color: white !important; }
+                                        .cell-weekly-total { background-color: #4f46e5 !important; color: white !important; }
                                     `}</style>
 
                                     {/* FILA PROGRAMADO */}
@@ -2750,7 +2746,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </span>
                                             </td>
                                         ))}
-                                        <td className="p-2 sticky right-0 z-[210] text-center cell-total-prog" 
+                                        <td className="p-2 sticky right-0 z-[210] text-center cell-weekly-total" 
                                             style={{ width: '120px', minWidth: '120px', fontWeight: '900' }}>
                                             <span style={{ fontSize: '11px' }}>{formatHours(weeklyGlobalTotals.prog || 0)}</span>
                                         </td>
@@ -2771,7 +2767,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </span>
                                             </td>
                                         ))}
-                                        <td className="p-2 sticky right-0 z-[210] text-center cell-total-real" 
+                                        <td className="p-2 sticky right-0 z-[210] text-center cell-weekly-total" 
                                             style={{ width: '120px', minWidth: '120px', fontWeight: '900' }}>
                                             <span style={{ fontSize: '11px' }}>{formatHours(weeklyGlobalTotals.real || 0)}</span>
                                         </td>
@@ -2802,19 +2798,10 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </td>
                                             );
                                         })}
-                                        {(() => {
-                                            const val = weeklyGlobalTotals.eff || 0;
-                                            let effClass = 'cell-total-eff-green';
-                                            if (val < 85 || val > 110) effClass = 'cell-total-eff-red';
-                                            else if ((val >= 85 && val < 95) || (val > 105 && val <= 110)) effClass = 'cell-total-eff-amber';
-                                            
-                                            return (
-                                                <td className={`p-2 sticky right-0 z-[210] text-center ${effClass}`} 
-                                                    style={{ width: '120px', minWidth: '120px', fontWeight: '900' }}>
-                                                    <span style={{ fontSize: '11.5px' }}>{val.toFixed(1)}%</span>
-                                                </td>
-                                            );
-                                        })()}
+                                        <td className="p-2 sticky right-0 z-[210] text-center cell-weekly-total" 
+                                            style={{ width: '120px', minWidth: '120px', fontWeight: '900' }}>
+                                            <span style={{ fontSize: '11.5px' }}>{(weeklyGlobalTotals.eff || 0).toFixed(1)}%</span>
+                                        </td>
                                     </tr>
                                 </tfoot>
                             </table>
