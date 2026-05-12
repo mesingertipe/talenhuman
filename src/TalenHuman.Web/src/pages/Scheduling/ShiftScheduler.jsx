@@ -140,6 +140,54 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const [syncPhase, setSyncPhase] = useState(0); // 0: Init, 1: Validating, 2: Syncing, 3: Notifying, 4: Done
     const [dataLoaded, setDataLoaded] = useState(false);
     
+    // V13.5: CALCULO DE TOTALES DIARIOS Y EFECTIVIDAD
+    const dailyTotals = useMemo(() => {
+        if (!days || days.length === 0) return [];
+        
+        const helperGetShiftHours = (s) => {
+            if (!s || s.isDescanso) return 0;
+            const start = new Date(s.startTime); const end = new Date(s.endTime);
+            let diff = (end - start) / (1000 * 60 * 60);
+            if (diff < 0) diff += 24; return diff;
+        };
+
+        const helperGetAttendanceHours = (att) => {
+            if (!att || !att.clockIn || !att.clockOut) return 0;
+            const start = new Date(att.clockIn); const end = new Date(att.clockOut);
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+            let diff = (end - start) / (1000 * 60 * 60);
+            if (diff < 0) diff += 24; return diff;
+        };
+
+        return days.map(day => {
+            const dayStr = day.toDateString();
+            let prog = 0;
+            let real = 0;
+
+            filteredEmployees.forEach(emp => {
+                // Programado
+                const empShifts = shifts.filter(s => String(s.employeeId) === String(emp.id));
+                const shift = empShifts.find(s => new Date(s.startTime).toDateString() === dayStr);
+                if (shift) prog += helperGetShiftHours(shift);
+
+                // Real
+                const empAtts = (attendances || []).filter(a => String(a.employeeId) === String(emp.id));
+                const att = empAtts.find(a => a.clockIn && new Date(a.clockIn).toDateString() === dayStr);
+                if (att) real += helperGetAttendanceHours(att);
+            });
+
+            const eff = prog > 0 ? (real / prog) * 100 : 0;
+            return { prog, real, eff };
+        });
+    }, [days, filteredEmployees, shifts, attendances]);
+
+    const weeklyGlobalTotals = useMemo(() => {
+        const prog = dailyTotals.reduce((acc, d) => acc + d.prog, 0);
+        const real = dailyTotals.reduce((acc, d) => acc + d.real, 0);
+        const eff = prog > 0 ? (real / prog) * 100 : 0;
+        return { prog, real, eff };
+    }, [dailyTotals]);
+    
     // V13.0 PREDICTIVE INTELLIGENCE STATES
     const [predictiveRules, setPredictiveRules] = useState([]);
     const [historicalAverages, setHistoricalAverages] = useState({}); // { 'ISO_DATE': [ { time, value } ] }
@@ -1807,7 +1855,27 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 dr.eachCell(c => c.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } });
             });
 
-            // 5. Firma y Descarga
+            // 5. FILAS DE TOTALES (V13.5)
+            worksheet.addRow([]);
+            const progRow = worksheet.addRow(['', 'TOTAL PROGRAMADO', ...dailyTotals.map(td => formatHours(td.prog)), formatHours(weeklyGlobalTotals.prog)]);
+            const realRow = worksheet.addRow(['', 'TOTAL REAL', ...dailyTotals.map(td => formatHours(td.real)), formatHours(weeklyGlobalTotals.real)]);
+            const effRow = worksheet.addRow(['', '% EFECTIVIDAD', ...dailyTotals.map(td => `${td.eff.toFixed(1)}%`), `${weeklyGlobalTotals.eff.toFixed(1)}%`]);
+
+            [progRow, realRow, effRow].forEach((row, rIdx) => {
+                row.eachCell((cell, cIdx) => {
+                    cell.font = { bold: true, size: 10 };
+                    cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+                    if (cIdx === 2) cell.alignment = { horizontal: 'right' };
+                    else cell.alignment = { horizontal: 'center' };
+                    
+                    // Colores por tipo
+                    if (rIdx === 0) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } }; // Prog
+                    if (rIdx === 1) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0FDF4' } }; // Real
+                    if (rIdx === 2) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFBEB' } }; // Eff
+                });
+            });
+
+            // 6. Firma y Descarga
             worksheet.addRow([]); worksheet.addRow([]);
             const signRow = worksheet.addRow(['', '_______________________', '', '', '', '', '', '', '_______________________']);
             const signText = worksheet.addRow(['', 'FIRMA JEFE DE SEDE', '', '', '', '', '', '', 'FIRMA TALENTO HUMANO']);
@@ -1833,7 +1901,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             setIsExporting(false);
             showToast("Error al generar Excel", "error");
         }
-    }, [isExporting, stores, selectedStore, currentWeekStart, days, employees, shifts]);
+    }, [isExporting, stores, selectedStore, currentWeekStart, days, employees, shifts, attendances, dailyTotals, weeklyGlobalTotals]);
 
     const lookupJornadaId = (id) => {
         const emp = employees.find(e => e.id === id);
@@ -2658,6 +2726,65 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         );
                                     })}
                                 </tbody>
+                                <tfoot className="sticky bottom-0 z-[170] shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
+                                    {/* FILA PROGRAMADO */}
+                                    <tr className="bg-slate-50 dark:bg-slate-900/80 border-t-2 border-slate-200 dark:border-slate-800">
+                                        <th className="p-3 text-left sticky left-0 z-[165] bg-slate-50 dark:bg-slate-900" style={{ width: '230px' }}>
+                                            <div className="flex items-center gap-2">
+                                                <Calendar size={14} className="text-indigo-500" />
+                                                <span className="text-[10px] font-black uppercase text-slate-500">Total Programado</span>
+                                            </div>
+                                        </th>
+                                        {dailyTotals.map((td, idx) => (
+                                            <td key={`prog-${idx}`} className="p-2 border-r dark:border-slate-800 text-center bg-slate-50/50 dark:bg-slate-900/50">
+                                                <span className="text-[11px] font-black text-indigo-600 dark:text-indigo-400">
+                                                    {formatHours(td.prog)}
+                                                </span>
+                                            </td>
+                                        ))}
+                                        <td className="p-2 sticky right-0 z-[165] bg-indigo-600 text-center shadow-[-10px_0_20px_rgba(0,0,0,0.1)]">
+                                            <span className="text-[11px] font-black text-white">{formatHours(weeklyGlobalTotals.prog)}</span>
+                                        </td>
+                                    </tr>
+                                    {/* FILA REAL */}
+                                    <tr className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+                                        <th className="p-3 text-left sticky left-0 z-[165] bg-white dark:bg-slate-900" style={{ width: '230px' }}>
+                                            <div className="flex items-center gap-2">
+                                                <Clock size={14} className="text-emerald-500" />
+                                                <span className="text-[10px] font-black uppercase text-slate-500">Total Real</span>
+                                            </div>
+                                        </th>
+                                        {dailyTotals.map((td, idx) => (
+                                            <td key={`real-${idx}`} className="p-2 border-r dark:border-slate-800 text-center">
+                                                <span className="text-[11px] font-black text-emerald-600 dark:text-emerald-400">
+                                                    {formatHours(td.real)}
+                                                </span>
+                                            </td>
+                                        ))}
+                                        <td className="p-2 sticky right-0 z-[165] bg-emerald-600 text-center shadow-[-10px_0_20px_rgba(0,0,0,0.1)]">
+                                            <span className="text-[11px] font-black text-white">{formatHours(weeklyGlobalTotals.real)}</span>
+                                        </td>
+                                    </tr>
+                                    {/* FILA EFECTIVIDAD */}
+                                    <tr className="bg-slate-50 dark:bg-slate-900/80 border-t border-slate-200 dark:border-slate-800">
+                                        <th className="p-3 text-left sticky left-0 z-[165] bg-slate-50 dark:bg-slate-900" style={{ width: '230px' }}>
+                                            <div className="flex items-center gap-2">
+                                                <Activity size={14} className="text-amber-500" />
+                                                <span className="text-[10px] font-black uppercase text-slate-500">% Efectividad</span>
+                                            </div>
+                                        </th>
+                                        {dailyTotals.map((td, idx) => (
+                                            <td key={`eff-${idx}`} className="p-2 border-r dark:border-slate-800 text-center">
+                                                <div className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-black ${td.eff >= 95 ? 'bg-emerald-100 text-emerald-700' : (td.eff >= 80 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700')}`}>
+                                                    {td.eff.toFixed(1)}%
+                                                </div>
+                                            </td>
+                                        ))}
+                                        <td className="p-2 sticky right-0 z-[165] bg-slate-800 text-center shadow-[-10px_0_20px_rgba(0,0,0,0.1)]">
+                                            <span className="text-[11px] font-black text-white">{weeklyGlobalTotals.eff.toFixed(1)}%</span>
+                                        </td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                 </div>

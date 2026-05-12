@@ -31,6 +31,7 @@ const ShiftApproval = ({ user, tenantSettings }) => {
   const [filterStore, setFilterStore] = useState('ALL');
   const [filterWeek, setFilterWeek] = useState('ALL');
   const [selectedKeys, setSelectedKeys] = useState([]);
+  const [sortConfig, setSortConfig] = useState({ key: 'lastUploadAt', direction: 'desc' });
 
   const activeColors = {
     card: isDarkMode ? '#1e293b' : '#ffffff',
@@ -195,7 +196,33 @@ const ShiftApproval = ({ user, tenantSettings }) => {
     const matchesStore = filterStore === 'ALL' || s.name === filterStore;
     const matchesWeek = filterWeek === 'ALL' || formatDateRange(s.minDate, s.maxDate) === filterWeek;
     return matchesSearch && matchesDistrict && matchesStore && matchesWeek;
+  }).sort((a, b) => {
+    if (!sortConfig.key) return 0;
+    
+    let aVal = a[sortConfig.key];
+    let bVal = b[sortConfig.key];
+
+    // Tratamiento especial para fechas
+    if (sortConfig.key === 'lastUploadAt' || sortConfig.key === 'minDate') {
+      aVal = new Date(aVal || 0).getTime();
+      bVal = new Date(bVal || 0).getTime();
+    } else {
+      aVal = String(aVal || "").toLowerCase();
+      bVal = String(bVal || "").toLowerCase();
+    }
+
+    if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+    return 0;
   });
+
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
 
   const districtsList = [...new Set(stores.map(s => s.districtName))].sort();
   const storesList = [...new Set(stores.map(s => s.name))].sort();
@@ -356,8 +383,22 @@ const ShiftApproval = ({ user, tenantSettings }) => {
               <thead>
                 <tr style={{ textAlign: 'left', color: activeColors.textMuted }}>
                   {activeTab === 'PENDIENTES' && <th style={{ padding: '15px 20px' }}><input type="checkbox" style={{ width: '18px', height: '18px', borderRadius: '6px' }} onChange={() => handleSelectAll(filteredStores)} checked={selectedKeys.length === filteredStores.length && filteredStores.length > 0} /></th>}
-                  <th style={{ padding: '15px 20px', fontSize: '0.8rem', fontWeight: '900', textTransform: 'uppercase' }}>Sede / Auditoría</th>
-                  <th style={{ padding: '15px 20px', fontSize: '0.8rem', fontWeight: '900', textTransform: 'uppercase' }}>Periodo Operativo</th>
+                  <th 
+                    onClick={() => requestSort('name')} 
+                    style={{ padding: '15px 20px', fontSize: '0.8rem', fontWeight: '900', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      Sede / Auditoría {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </div>
+                  </th>
+                  <th 
+                    onClick={() => requestSort('minDate')} 
+                    style={{ padding: '15px 20px', fontSize: '0.8rem', fontWeight: '900', textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      Periodo Operativo {sortConfig.key === 'minDate' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                    </div>
+                  </th>
                   <th style={{ padding: '15px 20px', fontSize: '0.8rem', fontWeight: '900', textTransform: 'uppercase', textAlign: 'right' }}>Análisis</th>
                 </tr>
               </thead>
