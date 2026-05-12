@@ -1007,8 +1007,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     }, [days, filteredEmployees, shifts, attendances]);
 
     const weeklyGlobalTotals = useMemo(() => {
-        const prog = (dailyTotals || []).reduce((acc, d) => acc + d.prog, 0);
-        const real = (dailyTotals || []).reduce((acc, d) => acc + d.real, 0);
+        const prog = (dailyTotals || []).reduce((acc, d) => acc + (Number(d.prog) || 0), 0);
+        const real = (dailyTotals || []).reduce((acc, d) => acc + (Number(d.real) || 0), 0);
         const eff = prog > 0 ? (real / prog) * 100 : 0;
         return { prog, real, eff };
     }, [dailyTotals]);
@@ -2726,7 +2726,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         );
                                     })}
                                 </tbody>
-                                <tfoot className="sticky bottom-0 z-[180] shadow-[0_-15px_40px_rgba(0,0,0,0.3)]">
+                                <tfoot className="sticky bottom-0 z-[180] shadow-[0_-15px_40px_rgba(0,0,0,0.4)]">
                                     {/* FILA PROGRAMADO */}
                                     <tr className="bg-slate-50 dark:bg-slate-900 border-t-2 border-slate-200 dark:border-slate-800">
                                         <th className="p-3 text-left sticky left-0 z-[185] bg-slate-50 dark:bg-slate-900" style={{ width: '230px' }}>
@@ -2738,13 +2738,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         {dailyTotals.map((td, idx) => (
                                             <td key={`prog-${idx}`} className="p-2 border-r dark:border-slate-800 text-center">
                                                 <span className="text-[11px] font-black text-indigo-700 dark:text-indigo-400">
-                                                    {formatHours(td.prog)}
+                                                    {formatHours(td.prog || 0)}
                                                 </span>
                                             </td>
                                         ))}
-                                        <td className="p-2 sticky right-0 z-[185] text-center shadow-[-10px_0_20px_rgba(0,0,0,0.2)]" 
-                                            style={{ width: '120px', minWidth: '120px', background: '#4f46e5', color: '#ffffff', fontWeight: '900' }}>
-                                            <span className="text-[11px] uppercase">{formatHours(weeklyGlobalTotals.prog)}</span>
+                                        <td className="p-2 sticky right-0 z-[185] text-center" 
+                                            style={{ width: '120px', minWidth: '120px', background: '#4f46e5', color: '#ffffff', fontWeight: '900', display: 'table-cell' }}>
+                                            <span className="text-[11px] uppercase">{formatHours(weeklyGlobalTotals.prog || 0)}</span>
                                         </td>
                                     </tr>
 
@@ -2759,13 +2759,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         {dailyTotals.map((td, idx) => (
                                             <td key={`real-${idx}`} className="p-2 border-r dark:border-slate-800 text-center">
                                                 <span className="text-[11px] font-black text-emerald-600 dark:text-emerald-400">
-                                                    {formatHours(td.real)}
+                                                    {formatHours(td.real || 0)}
                                                 </span>
                                             </td>
                                         ))}
-                                        <td className="p-2 sticky right-0 z-[185] text-center shadow-[-10px_0_20px_rgba(0,0,0,0.2)]" 
-                                            style={{ width: '120px', minWidth: '120px', background: '#10b981', color: '#ffffff', fontWeight: '900' }}>
-                                            <span className="text-[11px] uppercase">{formatHours(weeklyGlobalTotals.real)}</span>
+                                        <td className="p-2 sticky right-0 z-[185] text-center" 
+                                            style={{ width: '120px', minWidth: '120px', background: '#10b981', color: '#ffffff', fontWeight: '900', display: 'table-cell' }}>
+                                            <span className="text-[11px] uppercase">{formatHours(weeklyGlobalTotals.real || 0)}</span>
                                         </td>
                                     </tr>
 
@@ -2778,15 +2778,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             </div>
                                         </th>
                                         {dailyTotals.map((td, idx) => {
-                                            const val = td.eff;
-                                            let bg = '#f1f5f9'; let text = '#64748b'; // Default Grey for 0%
-                                            
+                                            const val = Number(td.eff) || 0;
+                                            let bg = '#f1f5f9'; let text = '#64748b'; 
                                             if (val > 0) {
-                                                if (val < 85 || val > 110) { bg = '#fee2e2'; text = '#b91c1c'; } // Red
-                                                else if ((val >= 85 && val < 95) || (val > 105 && val <= 110)) { bg = '#fef3c7'; text = '#b45309'; } // Amber
-                                                else { bg = '#d1fae5'; text = '#065f46'; } // Green
+                                                if (val < 85 || val > 110) { bg = '#fee2e2'; text = '#b91c1c'; }
+                                                else if ((val >= 85 && val < 95) || (val > 105 && val <= 110)) { bg = '#fef3c7'; text = '#b45309'; }
+                                                else { bg = '#d1fae5'; text = '#065f46'; }
                                             }
-
                                             return (
                                                 <td key={`eff-${idx}`} className="p-2 border-r dark:border-slate-800 text-center">
                                                     <div className="inline-block px-2 py-0.5 rounded-full text-[10px] font-[900]" 
@@ -2796,19 +2794,15 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </td>
                                             );
                                         })}
-                                        {(() => {
-                                            const val = weeklyGlobalTotals.eff;
-                                            let finalBg = '#10b981'; // Green
-                                            if (val < 85 || val > 110) finalBg = '#ef4444'; // Red
-                                            else if ((val >= 85 && val < 95) || (val > 105 && val <= 110)) finalBg = '#f59e0b'; // Amber
-                                            
-                                            return (
-                                                <td className="p-2 sticky right-0 z-[185] text-center shadow-[-10px_0_20px_rgba(0,0,0,0.2)]" 
-                                                    style={{ width: '120px', minWidth: '120px', background: finalBg, color: '#ffffff', fontWeight: '900' }}>
-                                                    <span className="text-[11.5px]">{val.toFixed(1)}%</span>
-                                                </td>
-                                            );
-                                        })()}
+                                        <td className="p-2 sticky right-0 z-[185] text-center" 
+                                            style={{ width: '120px', minWidth: '120px', background: (() => {
+                                                const val = weeklyGlobalTotals.eff || 0;
+                                                if (val < 85 || val > 110) return '#ef4444';
+                                                if ((val >= 85 && val < 95) || (val > 105 && val <= 110)) return '#f59e0b';
+                                                return '#10b981';
+                                            })(), color: '#ffffff', fontWeight: '900', display: 'table-cell' }}>
+                                            <span className="text-[11.5px]">{(weeklyGlobalTotals.eff || 0).toFixed(1)}%</span>
+                                        </td>
                                     </tr>
                                 </tfoot>
                             </table>
