@@ -2728,10 +2728,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 </tbody>
                                 <tfoot className="sticky bottom-0 z-[200] shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
                                     <style>{`
-                                        .cell-blue-forced { background-color: #4f46e5 !important; color: white !important; }
-                                        .cell-eff-red { background-color: #ef4444 !important; color: white !important; }
-                                        .cell-eff-amber { background-color: #f59e0b !important; color: white !important; }
-                                        .cell-eff-green { background-color: #10b981 !important; color: white !important; }
+                                        /* SELECTORES DE MÁXIMA PRIORIDAD PARA LOS TOTALES SEMANALES */
+                                        tfoot tr:nth-child(1) td:last-child { background-color: #4f46e5 !important; color: white !important; font-weight: 900 !important; }
+                                        tfoot tr:nth-child(2) td:last-child { background-color: #4f46e5 !important; color: white !important; font-weight: 900 !important; }
+                                        
+                                        .cell-eff-red-final { background-color: #ef4444 !important; color: white !important; font-weight: 900 !important; }
+                                        .cell-eff-amber-final { background-color: #f59e0b !important; color: white !important; font-weight: 900 !important; }
+                                        .cell-eff-green-final { background-color: #10b981 !important; color: white !important; font-weight: 900 !important; }
                                     `}</style>
 
                                     {/* FILA PROGRAMADO */}
@@ -2749,10 +2752,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </span>
                                             </td>
                                         ))}
-                                        <td className="p-0 sticky right-0 z-[210] text-center cell-blue-forced" style={{ width: '120px', minWidth: '120px' }}>
-                                            <div className="w-full h-full p-2 flex items-center justify-center font-[900] text-[11px] uppercase">
-                                                {formatHours(weeklyGlobalTotals.prog || 0)}
-                                            </div>
+                                        <td className="p-2 sticky right-0 z-[210] text-center" style={{ width: '120px', minWidth: '120px' }}>
+                                            <span style={{ fontSize: '11px' }}>{formatHours(weeklyGlobalTotals.prog || 0)}</span>
                                         </td>
                                     </tr>
 
@@ -2771,10 +2772,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </span>
                                             </td>
                                         ))}
-                                        <td className="p-0 sticky right-0 z-[210] text-center cell-blue-forced" style={{ width: '120px', minWidth: '120px' }}>
-                                            <div className="w-full h-full p-2 flex items-center justify-center font-[900] text-[11px] uppercase">
-                                                {formatHours(weeklyGlobalTotals.real || 0)}
-                                            </div>
+                                        <td className="p-2 sticky right-0 z-[210] text-center" style={{ width: '120px', minWidth: '120px' }}>
+                                            <span style={{ fontSize: '11px' }}>{formatHours(weeklyGlobalTotals.real || 0)}</span>
                                         </td>
                                     </tr>
 
@@ -2805,15 +2804,13 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         })}
                                         {(() => {
                                             const val = weeklyGlobalTotals.eff || 0;
-                                            let effClass = 'cell-eff-green';
-                                            if (val < 85 || val > 110) effClass = 'cell-eff-red';
-                                            else if ((val >= 85 && val < 95) || (val > 105 && val <= 110)) effClass = 'cell-eff-amber';
+                                            let effClass = 'cell-eff-green-final';
+                                            if (val < 85 || val > 110) effClass = 'cell-eff-red-final';
+                                            else if ((val >= 85 && val < 95) || (val > 105 && val <= 110)) effClass = 'cell-eff-amber-final';
                                             
                                             return (
-                                                <td className={`p-0 sticky right-0 z-[210] text-center ${effClass}`} style={{ width: '120px', minWidth: '120px' }}>
-                                                    <div className="w-full h-full p-2 flex items-center justify-center font-[900] text-[11.5px]">
-                                                        {val.toFixed(1)}%
-                                                    </div>
+                                                <td className={`p-2 sticky right-0 z-[210] text-center ${effClass}`} style={{ width: '120px', minWidth: '120px' }}>
+                                                    <span style={{ fontSize: '11.5px' }}>{val.toFixed(1)}%</span>
                                                 </td>
                                             );
                                         })()}
