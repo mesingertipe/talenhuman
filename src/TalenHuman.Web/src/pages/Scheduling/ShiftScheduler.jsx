@@ -140,54 +140,6 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
     const [syncPhase, setSyncPhase] = useState(0); // 0: Init, 1: Validating, 2: Syncing, 3: Notifying, 4: Done
     const [dataLoaded, setDataLoaded] = useState(false);
     
-    // V13.5: CALCULO DE TOTALES DIARIOS Y EFECTIVIDAD
-    const dailyTotals = useMemo(() => {
-        if (!days || days.length === 0) return [];
-        
-        const helperGetShiftHours = (s) => {
-            if (!s || s.isDescanso) return 0;
-            const start = new Date(s.startTime); const end = new Date(s.endTime);
-            let diff = (end - start) / (1000 * 60 * 60);
-            if (diff < 0) diff += 24; return diff;
-        };
-
-        const helperGetAttendanceHours = (att) => {
-            if (!att || !att.clockIn || !att.clockOut) return 0;
-            const start = new Date(att.clockIn); const end = new Date(att.clockOut);
-            if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
-            let diff = (end - start) / (1000 * 60 * 60);
-            if (diff < 0) diff += 24; return diff;
-        };
-
-        return days.map(day => {
-            const dayStr = day.toDateString();
-            let prog = 0;
-            let real = 0;
-
-            filteredEmployees.forEach(emp => {
-                // Programado
-                const empShifts = shifts.filter(s => String(s.employeeId) === String(emp.id));
-                const shift = empShifts.find(s => new Date(s.startTime).toDateString() === dayStr);
-                if (shift) prog += helperGetShiftHours(shift);
-
-                // Real
-                const empAtts = (attendances || []).filter(a => String(a.employeeId) === String(emp.id));
-                const att = empAtts.find(a => a.clockIn && new Date(a.clockIn).toDateString() === dayStr);
-                if (att) real += helperGetAttendanceHours(att);
-            });
-
-            const eff = prog > 0 ? (real / prog) * 100 : 0;
-            return { prog, real, eff };
-        });
-    }, [days, filteredEmployees, shifts, attendances]);
-
-    const weeklyGlobalTotals = useMemo(() => {
-        const prog = dailyTotals.reduce((acc, d) => acc + d.prog, 0);
-        const real = dailyTotals.reduce((acc, d) => acc + d.real, 0);
-        const eff = prog > 0 ? (real / prog) * 100 : 0;
-        return { prog, real, eff };
-    }, [dailyTotals]);
-    
     // V13.0 PREDICTIVE INTELLIGENCE STATES
     const [predictiveRules, setPredictiveRules] = useState([]);
     const [historicalAverages, setHistoricalAverages] = useState({}); // { 'ISO_DATE': [ { time, value } ] }
@@ -1012,6 +964,54 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
         if (!selectedProfiles || selectedProfiles.length === 0) return employees;
         return employees.filter(e => selectedProfiles.includes(e.profileId));
     }, [employees, selectedProfiles]);
+
+    // V13.5: CALCULO DE TOTALES DIARIOS Y EFECTIVIDAD (MOVILIZADO POR ORDEN DE INICIALIZACION)
+    const dailyTotals = useMemo(() => {
+        if (!days || days.length === 0) return [];
+        
+        const helperGetShiftHours = (s) => {
+            if (!s || s.isDescanso) return 0;
+            const start = new Date(s.startTime); const end = new Date(s.endTime);
+            let diff = (end - start) / (1000 * 60 * 60);
+            if (diff < 0) diff += 24; return diff;
+        };
+
+        const helperGetAttendanceHours = (att) => {
+            if (!att || !att.clockIn || !att.clockOut) return 0;
+            const start = new Date(att.clockIn); const end = new Date(att.clockOut);
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+            let diff = (end - start) / (1000 * 60 * 60);
+            if (diff < 0) diff += 24; return diff;
+        };
+
+        return days.map(day => {
+            const dayStr = day.toDateString();
+            let prog = 0;
+            let real = 0;
+
+            filteredEmployees.forEach(emp => {
+                // Programado
+                const empShifts = shifts.filter(s => String(s.employeeId) === String(emp.id));
+                const shift = empShifts.find(s => new Date(s.startTime).toDateString() === dayStr);
+                if (shift) prog += helperGetShiftHours(shift);
+
+                // Real
+                const empAtts = (attendances || []).filter(a => String(a.employeeId) === String(emp.id));
+                const att = empAtts.find(a => a.clockIn && new Date(a.clockIn).toDateString() === dayStr);
+                if (att) real += helperGetAttendanceHours(att);
+            });
+
+            const eff = prog > 0 ? (real / prog) * 100 : 0;
+            return { prog, real, eff };
+        });
+    }, [days, filteredEmployees, shifts, attendances]);
+
+    const weeklyGlobalTotals = useMemo(() => {
+        const prog = (dailyTotals || []).reduce((acc, d) => acc + d.prog, 0);
+        const real = (dailyTotals || []).reduce((acc, d) => acc + d.real, 0);
+        const eff = prog > 0 ? (real / prog) * 100 : 0;
+        return { prog, real, eff };
+    }, [dailyTotals]);
 
     const handleSelectEmployee = (id) => {
         setSelectedEmployees(prev => 
