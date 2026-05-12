@@ -2726,7 +2726,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                         );
                                     })}
                                 </tbody>
-                                <tfoot className="sticky bottom-0 z-[170] shadow-[0_-10px_30px_rgba(0,0,0,0.15)]">
+                                <tfoot className="sticky bottom-0 z-[170] shadow-[0_-10px_30px_rgba(0,0,0,0.2)]">
                                     {/* FILA PROGRAMADO */}
                                     <tr className="bg-slate-50 dark:bg-slate-900/80 border-t-2 border-slate-200 dark:border-slate-800">
                                         <th className="p-3 text-left sticky left-0 z-[175] bg-slate-50 dark:bg-slate-900" style={{ width: '230px' }}>
@@ -2742,8 +2742,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </span>
                                             </td>
                                         ))}
-                                        <td className="p-2 sticky right-0 z-[175] bg-indigo-600 text-center shadow-[-5px_0_15px_rgba(0,0,0,0.2)]" style={{ width: '120px', minWidth: '120px' }}>
-                                            <span className="text-[11px] font-black text-white">{formatHours(weeklyGlobalTotals.prog)}</span>
+                                        <td className="p-2 sticky right-0 z-[175] text-center shadow-[-5px_0_15px_rgba(0,0,0,0.3)]" 
+                                            style={{ width: '120px', minWidth: '120px', backgroundColor: '#4f46e5', color: '#ffffff' }}>
+                                            <span className="text-[11px] font-[1000] uppercase tracking-tighter">{formatHours(weeklyGlobalTotals.prog)}</span>
                                         </td>
                                     </tr>
                                     {/* FILA REAL */}
@@ -2761,8 +2762,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </span>
                                             </td>
                                         ))}
-                                        <td className="p-2 sticky right-0 z-[175] bg-emerald-600 text-center shadow-[-5px_0_15px_rgba(0,0,0,0.2)]" style={{ width: '120px', minWidth: '120px' }}>
-                                            <span className="text-[11px] font-black text-white">{formatHours(weeklyGlobalTotals.real)}</span>
+                                        <td className="p-2 sticky right-0 z-[175] text-center shadow-[-5px_0_15px_rgba(0,0,0,0.3)]" 
+                                            style={{ width: '120px', minWidth: '120px', backgroundColor: '#059669', color: '#ffffff' }}>
+                                            <span className="text-[11px] font-[1000] uppercase tracking-tighter">{formatHours(weeklyGlobalTotals.real)}</span>
                                         </td>
                                     </tr>
                                     {/* FILA EFECTIVIDAD */}
@@ -2780,8 +2782,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                                 </div>
                                             </td>
                                         ))}
-                                        <td className="p-2 sticky right-0 z-[175] bg-slate-800 text-center shadow-[-5px_0_15px_rgba(0,0,0,0.2)]" style={{ width: '120px', minWidth: '120px' }}>
-                                            <span className="text-[11px] font-black text-white">{weeklyGlobalTotals.eff.toFixed(1)}%</span>
+                                        <td className="p-2 sticky right-0 z-[175] text-center shadow-[-5px_0_15px_rgba(0,0,0,0.3)]" 
+                                            style={{ width: '120px', minWidth: '120px', backgroundColor: '#1e293b', color: '#ffffff' }}>
+                                            <span className="text-[11.5px] font-[1000]">{weeklyGlobalTotals.eff.toFixed(1)}%</span>
                                         </td>
                                     </tr>
                                 </tfoot>
