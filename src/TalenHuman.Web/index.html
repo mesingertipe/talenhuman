@@ -3,27 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <script>
-    // 🚀 V46 SECURITY PATCH: FORCE REGENERATION
-    (function() {
-      const RECOVERY_KEY = 'v46_pwa_stabilization';
-      if (!localStorage.getItem(RECOVERY_KEY)) {
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(regs => {
-            for(let reg of regs) reg.unregister();
-            caches.keys().then(names => {
-              for (let name of names) caches.delete(name);
-              localStorage.setItem(RECOVERY_KEY, 'true');
-              window.location.reload(true);
-            });
-          });
-        } else {
-          localStorage.setItem(RECOVERY_KEY, 'true');
-        }
-      }
-    })();
-  </script>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=46" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#4f46e5" />
