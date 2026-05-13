@@ -8,8 +8,8 @@ export default defineConfig({
     react(),
     VitePWA({
       disable: false,
-      registerType: 'prompt', 
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      registerType: 'autoUpdate', 
+      includeAssets: ['favicon.svg', 'icon-192-v21.png', 'icon-512-v21.png'],
       manifest: {
         name: 'TalenHuman',
         short_name: 'TalenHuman',
@@ -17,20 +17,21 @@ export default defineConfig({
         theme_color: '#4f46e5',
         background_color: '#f8fafc',
         display: 'standalone',
+        orientation: 'portrait',
         scope: '/',
-        start_url: '/',
+        start_url: '/?v=46',
         icons: [
           {
             src: 'icon-192-v21.png',
             sizes: '192x192',
             type: 'image/png',
-            purpose: 'any'
+            purpose: 'any maskable'
           },
           {
             src: 'icon-512-v21.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any'
+            purpose: 'any maskable'
           }
         ]
       },
@@ -38,7 +39,7 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
-        maximumFileSizeToCacheInBytes: 5242880, // 🚀 AUMENTADO A 5MB para permitir el bundle de 2.51MB
+        maximumFileSizeToCacheInBytes: 7340032, // 7MB
       }
     })
   ],
