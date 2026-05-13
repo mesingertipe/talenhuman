@@ -9,7 +9,7 @@ export default defineConfig({
     VitePWA({
       disable: false,
       registerType: 'prompt', 
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      includeAssets: ['favicon.svg'],
       manifest: {
         name: 'TalenHuman',
         short_name: 'TalenHuman',
@@ -24,13 +24,13 @@ export default defineConfig({
             src: 'icon-192-v21.png',
             sizes: '192x192',
             type: 'image/png',
-            purpose: 'any'
+            purpose: 'any maskable'
           },
           {
             src: 'icon-512-v21.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any'
+            purpose: 'any maskable'
           }
         ]
       },
