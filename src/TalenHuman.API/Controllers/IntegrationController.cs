@@ -180,19 +180,33 @@ public class IntegrationController : ControllerBase
                 continue;
             }
 
-            var attendance = new Attendance
-            {
-                EmployeeId = employee.Id,
-                StoreId = employee.StoreId,
-                ClockIn = dto.ClockIn,
-                ClockOut = dto.ClockOut,
-                DeviceId = dto.DeviceId,
-                Location = dto.Location,
-                CompanyId = tenantId
-            };
+            var existing = await _context.Attendances
+                .FirstOrDefaultAsync(a => a.CompanyId == tenantId && 
+                                          a.EmployeeId == employee.Id && 
+                                          a.ClockIn == dto.ClockIn);
 
-            _context.Attendances.Add(attendance);
-            results.Created++;
+            if (existing == null)
+            {
+                var attendance = new Attendance
+                {
+                    EmployeeId = employee.Id,
+                    StoreId = employee.StoreId,
+                    ClockIn = dto.ClockIn,
+                    ClockOut = dto.ClockOut,
+                    DeviceId = dto.DeviceId,
+                    Location = dto.Location,
+                    CompanyId = tenantId
+                };
+                _context.Attendances.Add(attendance);
+                results.Created++;
+            }
+            else
+            {
+                existing.ClockOut = dto.ClockOut;
+                existing.Location = dto.Location;
+                existing.DeviceId = dto.DeviceId;
+                results.Updated++;
+            }
         }
 
         await _context.SaveChangesAsync();
@@ -207,21 +221,36 @@ public class IntegrationController : ControllerBase
 
         foreach (var dto in records)
         {
-            var record = new BiometricRecord
-            {
-                DeviceId = dto.DeviceId,
-                DeviceUser = dto.DeviceUser,
-                RecordDate = dto.Marcacion,
-                CreationDate = dto.CreationDate ?? DateTime.UtcNow,
-                RecordDay = DateOnly.FromDateTime(dto.Marcacion),
-                RecordTime = TimeOnly.FromDateTime(dto.Marcacion),
-                AttendanceStatusId = dto.AttendanceStatusId,
-                VerificationModeId = dto.VerificationModeId,
-                CompanyId = tenantId
-            };
+            var existing = await _context.BiometricRecords
+                .FirstOrDefaultAsync(r => r.CompanyId == tenantId && 
+                                          r.DeviceId == dto.DeviceId && 
+                                          r.DeviceUser == dto.DeviceUser && 
+                                          r.RecordDate == dto.Marcacion);
 
-            _context.BiometricRecords.Add(record);
-            results.Created++;
+            if (existing == null)
+            {
+                var record = new BiometricRecord
+                {
+                    DeviceId = dto.DeviceId,
+                    DeviceUser = dto.DeviceUser,
+                    RecordDate = dto.Marcacion,
+                    CreationDate = dto.CreationDate ?? DateTime.UtcNow,
+                    RecordDay = DateOnly.FromDateTime(dto.Marcacion),
+                    RecordTime = TimeOnly.FromDateTime(dto.Marcacion),
+                    AttendanceStatusId = dto.AttendanceStatusId,
+                    VerificationModeId = dto.VerificationModeId,
+                    CompanyId = tenantId
+                };
+                _context.BiometricRecords.Add(record);
+                results.Created++;
+            }
+            else
+            {
+                existing.CreationDate = dto.CreationDate ?? DateTime.UtcNow;
+                existing.AttendanceStatusId = dto.AttendanceStatusId;
+                existing.VerificationModeId = dto.VerificationModeId;
+                results.Updated++;
+            }
         }
 
         await _context.SaveChangesAsync();
