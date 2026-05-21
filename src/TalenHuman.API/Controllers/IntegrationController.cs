@@ -256,6 +256,71 @@ public class IntegrationController : ControllerBase
         await _context.SaveChangesAsync();
         return Ok(results);
     }
+
+    [HttpGet("shifts")]
+    public async Task<IActionResult> GetShifts(
+        [FromQuery] DateTime? startDate,
+        [FromQuery] DateTime? endDate,
+        [FromQuery] string? storeCode,
+        [FromQuery] string? employeeIdNo)
+    {
+        if (!startDate.HasValue || !endDate.HasValue)
+        {
+            return BadRequest(new { Message = "Los parámetros startDate y endDate son obligatorios." });
+        }
+
+        if (endDate.Value < startDate.Value)
+        {
+            return BadRequest(new { Message = "La fecha final (endDate) no puede ser menor a la fecha inicial (startDate)." });
+        }
+
+        if ((endDate.Value - startDate.Value).TotalDays > 31)
+        {
+            return BadRequest(new { Message = "El rango máximo de consulta permitido es de 31 días." });
+        }
+
+        var query = _context.Shifts
+            .AsNoTracking()
+            .Where(s => s.StartTime >= startDate.Value && s.StartTime <= endDate.Value);
+
+        if (!string.IsNullOrEmpty(storeCode))
+        {
+            query = query.Where(s => s.Store.Code == storeCode || s.Store.ExternalId == storeCode);
+        }
+
+        if (!string.IsNullOrEmpty(employeeIdNo))
+        {
+            query = query.Where(s => s.Employee.IdentificationNumber == employeeIdNo);
+        }
+
+        var shifts = await query
+            .Select(s => new ShiftExportDto
+            {
+                ShiftId = s.Id,
+                StartTime = s.StartTime,
+                EndTime = s.EndTime,
+                Status = s.Status.ToString(),
+                IsDescanso = s.IsDescanso,
+                IsFuera = s.IsFuera,
+                Observation = s.Observation,
+                Employee = new ShiftEmployeeDto
+                {
+                    IdentificationNumber = s.Employee.IdentificationNumber,
+                    FirstName = s.Employee.FirstName,
+                    LastName = s.Employee.LastName,
+                    Profile = s.Employee.Profile != null ? s.Employee.Profile.Name : string.Empty
+                },
+                Store = new ShiftStoreDto
+                {
+                    Code = s.Store.Code,
+                    ExternalId = s.Store.ExternalId,
+                    Name = s.Store.Name
+                }
+            })
+            .ToListAsync();
+
+        return Ok(shifts);
+    }
 }
 
 public class StoreSyncDto
@@ -312,3 +377,32 @@ public class SyncResult
     public int Updated { get; set; }
     public List<object> Failed { get; set; } = new List<object>();
 }
+
+public class ShiftExportDto
+{
+    public Guid ShiftId { get; set; }
+    public DateTime StartTime { get; set; }
+    public DateTime EndTime { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public bool IsDescanso { get; set; }
+    public bool IsFuera { get; set; }
+    public string? Observation { get; set; }
+    public ShiftEmployeeDto Employee { get; set; } = null!;
+    public ShiftStoreDto Store { get; set; } = null!;
+}
+
+public class ShiftEmployeeDto
+{
+    public string IdentificationNumber { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string Profile { get; set; } = string.Empty;
+}
+
+public class ShiftStoreDto
+{
+    public string? Code { get; set; }
+    public string? ExternalId { get; set; }
+    public string Name { get; set; } = string.Empty;
+}
+
