@@ -262,7 +262,8 @@ public class IntegrationController : ControllerBase
         [FromQuery] DateTime? startDate,
         [FromQuery] DateTime? endDate,
         [FromQuery] string? storeCode,
-        [FromQuery] string? employeeIdNo)
+        [FromQuery] string? employeeIdNo,
+        [FromQuery] bool? isDescanso)
     {
         if (!startDate.HasValue || !endDate.HasValue)
         {
@@ -291,6 +292,11 @@ public class IntegrationController : ControllerBase
         if (!string.IsNullOrEmpty(employeeIdNo))
         {
             query = query.Where(s => s.Employee.IdentificationNumber == employeeIdNo);
+        }
+
+        if (isDescanso.HasValue)
+        {
+            query = query.Where(s => s.IsDescanso == isDescanso.Value);
         }
 
         var shifts = await query
