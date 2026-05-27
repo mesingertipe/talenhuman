@@ -308,6 +308,25 @@ public class ShiftsController : ControllerBase
         var userId = Guid.Parse(userIdString);
         var employee = await _context.Employees.FirstOrDefaultAsync(e => e.UserId == userId);
         
+        if (employee == null)
+        {
+            var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
+            if (user != null)
+            {
+                var companyId = user.CompanyId;
+                employee = await _context.Employees
+                    .FirstOrDefaultAsync(e => e.CompanyId == companyId && 
+                                              (e.Email == user.Email || e.IdentificationNumber == user.UserName || e.IdentificationNumber == user.Email));
+                
+                if (employee != null)
+                {
+                    employee.UserId = userId;
+                    user.EmployeeId = employee.Id;
+                    await _context.SaveChangesAsync(default);
+                }
+            }
+        }
+
         if (employee == null) return Ok(new List<ShiftDto>());
 
         var query = _context.Shifts.Where(s => s.EmployeeId == employee.Id);

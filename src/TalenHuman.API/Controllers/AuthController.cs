@@ -134,6 +134,23 @@ public class AuthController : ControllerBase
             .Include(e => e.Profile)
             .FirstOrDefaultAsync(e => e.Id == user.EmployeeId);
 
+        if (employee == null)
+        {
+            employee = await _context.Employees
+                .IgnoreQueryFilters()
+                .Include(e => e.Store)
+                .Include(e => e.Profile)
+                .FirstOrDefaultAsync(e => e.CompanyId == user.CompanyId && 
+                                          (e.Email == user.Email || e.IdentificationNumber == user.UserName || e.IdentificationNumber == user.Email));
+            
+            if (employee != null)
+            {
+                employee.UserId = user.Id;
+                user.EmployeeId = employee.Id;
+                await _context.SaveChangesAsync();
+            }
+        }
+
         if (employee?.Store != null)
         {
             storeId = employee.StoreId;
