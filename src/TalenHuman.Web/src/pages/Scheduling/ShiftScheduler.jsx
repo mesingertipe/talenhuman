@@ -1771,6 +1771,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             worksheet.columns = [
                 { header: 'ID/CÉDULA', key: 'id', width: 18 },
                 { header: 'COLABORADOR', key: 'name', width: 35 },
+                { header: 'CARGO', key: 'jobTitle', width: 25 },
                 ...days.map((day, i) => ({ 
                     header: day.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric' }).toUpperCase(), 
                     key: `day_${i}`, 
@@ -1780,7 +1781,7 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             ];
 
             // 1. Título TalenHuman
-            worksheet.mergeCells('A1:J1');
+            worksheet.mergeCells('A1:K1');
             const titleRow = worksheet.getRow(1);
             titleRow.getCell(1).value = 'PROGRAMACION DE TURNOS TALENHUMAN';
             titleRow.getCell(1).font = { name: 'Segoe UI', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
@@ -1791,17 +1792,17 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             // 2. Metadatos
             worksheet.addRow([]);
             const sedeRow = worksheet.addRow([`SEDE: ${storeNameOrg.toUpperCase()}`]);
-            worksheet.mergeCells(`A3:J3`);
+            worksheet.mergeCells(`A3:K3`);
             sedeRow.getCell(1).font = { bold: true };
             sedeRow.getCell(1).alignment = { horizontal: 'center' };
 
             const periodRow = worksheet.addRow([`PERIODO: ${dateRange}`]);
-            worksheet.mergeCells(`A4:J4`);
+            worksheet.mergeCells(`A4:K4`);
             periodRow.getCell(1).alignment = { horizontal: 'center' };
             worksheet.addRow([]);
 
             // 3. Encabezados
-            const headerRow = worksheet.addRow(['ID/CÉDULA', 'COLABORADOR', ...days.map(d => d.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric' }).toUpperCase()), 'TOTAL HRS']);
+            const headerRow = worksheet.addRow(['ID/CÉDULA', 'COLABORADOR', 'CARGO', ...days.map(d => d.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric' }).toUpperCase()), 'TOTAL HRS']);
             headerRow.eachCell((cell) => {
                 cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
                 cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
@@ -1832,7 +1833,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 // Total hours: use ONLY programmed shift hours for the calendar/programmed column
                 let totalHours = empShifts.reduce((acc, s) => acc + getShiftHours(s), 0);
 
-                const rowValues = [emp.documento || '---', `${emp.firstName} ${emp.lastName}`.toUpperCase()];
+                const cargoName = profiles.find(p => p.id === emp.profileId)?.name || emp.profileName || '---';
+                const rowValues = [emp.documento || '---', `${emp.firstName} ${emp.lastName}`.toUpperCase(), cargoName.toUpperCase()];
                 days.forEach(day => {
                     const shift = empShifts.find(s => new Date(s.startTime).toDateString() === day.toDateString());
                     const orphan = empAtts.find(a => !a.shiftId && new Date(a.clockIn).toDateString() === day.toDateString());
@@ -1857,9 +1859,9 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
             // 5. FILAS DE TOTALES (V13.5)
             worksheet.addRow([]);
-            const progRow = worksheet.addRow(['', 'TOTAL PROGRAMADO', ...dailyTotals.map(td => formatHours(td.prog)), formatHours(weeklyGlobalTotals.prog)]);
-            const realRow = worksheet.addRow(['', 'TOTAL REAL', ...dailyTotals.map(td => formatHours(td.real)), formatHours(weeklyGlobalTotals.real)]);
-            const effRow = worksheet.addRow(['', '% EFECTIVIDAD', ...dailyTotals.map(td => `${td.eff.toFixed(1)}%`), `${weeklyGlobalTotals.eff.toFixed(1)}%`]);
+            const progRow = worksheet.addRow(['', 'TOTAL PROGRAMADO', '', ...dailyTotals.map(td => formatHours(td.prog)), formatHours(weeklyGlobalTotals.prog)]);
+            const realRow = worksheet.addRow(['', 'TOTAL REAL', '', ...dailyTotals.map(td => formatHours(td.real)), formatHours(weeklyGlobalTotals.real)]);
+            const effRow = worksheet.addRow(['', '% EFECTIVIDAD', '', ...dailyTotals.map(td => `${td.eff.toFixed(1)}%`), `${weeklyGlobalTotals.eff.toFixed(1)}%`]);
 
             [progRow, realRow, effRow].forEach((row, rIdx) => {
                 row.eachCell((cell, cIdx) => {
@@ -1877,8 +1879,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
             // 6. Firma y Descarga
             worksheet.addRow([]); worksheet.addRow([]);
-            const signRow = worksheet.addRow(['', '_______________________', '', '', '', '', '', '', '_______________________']);
-            const signText = worksheet.addRow(['', 'FIRMA JEFE DE SEDE', '', '', '', '', '', '', 'FIRMA TALENTO HUMANO']);
+            const signRow = worksheet.addRow(['', '_______________________', '', '', '', '', '', '', '', '_______________________']);
+            const signText = worksheet.addRow(['', 'FIRMA JEFE DE SEDE', '', '', '', '', '', '', '', 'FIRMA TALENTO HUMANO']);
             signText.eachCell(c => { c.font = { bold: true }; c.alignment = { horizontal: 'center' }; });
 
             const buffer = await workbook.xlsx.writeBuffer();
