@@ -11,10 +11,12 @@ namespace TalenHuman.API.Controllers;
 public class IntegrationController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
+    private readonly IIdentityService _identityService;
 
-    public IntegrationController(ApplicationDbContext context)
+    public IntegrationController(ApplicationDbContext context, IIdentityService identityService)
     {
         _context = context;
+        _identityService = identityService;
     }
 
     [HttpPost("sync-stores")]
@@ -127,6 +129,30 @@ public class IntegrationController : ControllerBase
                 };
                 _context.Employees.Add(employee);
                 results.Created++;
+                
+                // Save immediately to generate employee.Id and avoid foreign key constraint issues
+                await _context.SaveChangesAsync();
+
+                if (employee.IsActive)
+                {
+                    var generatedEmail = string.IsNullOrEmpty(employee.Email) ? $"{employee.IdentificationNumber}@talenhuman.local" : employee.Email;
+                    
+                    // Create User through IdentityService
+                    var (succeeded, userId) = await _identityService.CreateUserAsync(
+                        employee.IdentificationNumber,
+                        generatedEmail,
+                        employee.IdentificationNumber, // Initial password is Identification Number
+                        $"{employee.FirstName} {employee.LastName}",
+                        tenantId,
+                        "Empleado",
+                        employee.Id);
+
+                    if (succeeded)
+                    {
+                        employee.UserId = userId;
+                        await _context.SaveChangesAsync();
+                    }
+                }
             }
             else
             {
@@ -156,6 +182,30 @@ public class IntegrationController : ControllerBase
                 }
 
                 results.Updated++;
+
+                // Save changes
+                await _context.SaveChangesAsync();
+
+                // Proactive user creation: if active but doesn't have a UserId, create it!
+                if (employee.IsActive && !employee.UserId.HasValue)
+                {
+                    var generatedEmail = string.IsNullOrEmpty(employee.Email) ? $"{employee.IdentificationNumber}@talenhuman.local" : employee.Email;
+                    
+                    var (succeeded, userId) = await _identityService.CreateUserAsync(
+                        employee.IdentificationNumber,
+                        generatedEmail,
+                        employee.IdentificationNumber,
+                        $"{employee.FirstName} {employee.LastName}",
+                        tenantId,
+                        "Empleado",
+                        employee.Id);
+
+                    if (succeeded)
+                    {
+                        employee.UserId = userId;
+                        await _context.SaveChangesAsync();
+                    }
+                }
             }
         }
 
