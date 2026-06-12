@@ -23,6 +23,12 @@ public class OperationalSetting : BaseEntity, IMultitenant
     public bool EnablePushNotifications { get; set; } = true;
     public bool EnableEmailNotifications { get; set; } = true;
 
+    // Configurable Attendance Tolerances (Minutes)
+    public bool CheckInEarlyInfinite { get; set; } = true; // If true, early check-in is always considered Correct
+    public int CheckInEarlyTolerance { get; set; } = 15;
+    public int CheckInLateTolerance { get; set; } = 15;
+    public int CheckOutTolerance { get; set; } = 15;
+
     public Guid CompanyId { get; set; }
     public Company Company { get; set; } = null!;
 }

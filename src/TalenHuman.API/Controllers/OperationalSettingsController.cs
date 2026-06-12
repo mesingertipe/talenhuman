@@ -52,7 +52,11 @@ public class OperationalSettingsController : ControllerBase
                 AttendanceMode = dto.AttendanceMode,
                 ShiftApprovalMode = dto.ShiftApprovalMode,
                 EnablePushNotifications = dto.EnablePushNotifications,
-                EnableEmailNotifications = dto.EnableEmailNotifications
+                EnableEmailNotifications = dto.EnableEmailNotifications,
+                CheckInEarlyInfinite = dto.CheckInEarlyInfinite,
+                CheckInEarlyTolerance = dto.CheckInEarlyTolerance,
+                CheckInLateTolerance = dto.CheckInLateTolerance,
+                CheckOutTolerance = dto.CheckOutTolerance
             };
             _context.OperationalSettings.Add(existing);
         }
@@ -63,13 +67,21 @@ public class OperationalSettingsController : ControllerBase
                 existing.AttendanceMode,
                 existing.ShiftApprovalMode,
                 existing.EnableEmailNotifications,
-                existing.EnablePushNotifications
+                existing.EnablePushNotifications,
+                existing.CheckInEarlyInfinite,
+                existing.CheckInEarlyTolerance,
+                existing.CheckInLateTolerance,
+                existing.CheckOutTolerance
             });
 
             existing.AttendanceMode = dto.AttendanceMode;
             existing.ShiftApprovalMode = dto.ShiftApprovalMode;
             existing.EnablePushNotifications = dto.EnablePushNotifications;
             existing.EnableEmailNotifications = dto.EnableEmailNotifications;
+            existing.CheckInEarlyInfinite = dto.CheckInEarlyInfinite;
+            existing.CheckInEarlyTolerance = dto.CheckInEarlyTolerance;
+            existing.CheckInLateTolerance = dto.CheckInLateTolerance;
+            existing.CheckOutTolerance = dto.CheckOutTolerance;
             _context.OperationalSettings.Update(existing);
 
             // Audit Log implementation
@@ -96,4 +108,8 @@ public class UpdateOperationalSettingsDto
     public ShiftApprovalMode ShiftApprovalMode { get; set; }
     public bool EnablePushNotifications { get; set; }
     public bool EnableEmailNotifications { get; set; }
+    public bool CheckInEarlyInfinite { get; set; }
+    public int CheckInEarlyTolerance { get; set; }
+    public int CheckInLateTolerance { get; set; }
+    public int CheckOutTolerance { get; set; }
 }

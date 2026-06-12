@@ -108,15 +108,15 @@ public class AttendanceService
                 
                 if (mode == AttendanceMode.MinMax)
                 {
-                    await ProcessMinMaxPairingAsync(employee, store, shifts, filteredRecords, companyId);
+                    await ProcessMinMaxPairingAsync(employee, store, shifts, filteredRecords, companyId, opSetting);
                 }
                 else if (mode == AttendanceMode.Sequential)
                 {
-                    await ProcessSequentialPairingAsync(employee, store, shifts, filteredRecords, companyId);
+                    await ProcessSequentialPairingAsync(employee, store, shifts, filteredRecords, companyId, opSetting);
                 }
                 else
                 {
-                    await ProcessStandardPairingAsync(employee, store, shifts, filteredRecords, companyId);
+                    await ProcessStandardPairingAsync(employee, store, shifts, filteredRecords, companyId, opSetting);
                 }
                 currentStep = $"[{store.Name}] Finalizando emparejamiento para {employee.FirstName} {employee.LastName}. Preparando guardado.";
             }
@@ -163,8 +163,13 @@ public class AttendanceService
         return filtered;
     }
 
-    private async Task ProcessSequentialPairingAsync(Employee emp, Store store, List<Shift> shifts, List<BiometricRecord> records, Guid companyId)
+    private async Task ProcessSequentialPairingAsync(Employee emp, Store store, List<Shift> shifts, List<BiometricRecord> records, Guid companyId, OperationalSetting? opSetting)
     {
+        bool checkInEarlyInfinite = opSetting?.CheckInEarlyInfinite ?? true;
+        int checkInEarlyTolerance = opSetting?.CheckInEarlyTolerance ?? 15;
+        int checkInLateTolerance = opSetting?.CheckInLateTolerance ?? 15;
+        int checkOutTolerance = opSetting?.CheckOutTolerance ?? 15;
+
         // 1. Generate Pairs sequentially
         for (int i = 0; i < records.Count; i += 2)
         {
@@ -227,10 +232,17 @@ public class AttendanceService
             {
                 if (clockOut.HasValue)
                 {
+                    bool isEarlyCheckIn = clockIn < refStart.Value;
                     var diffStart = Math.Abs((clockIn - refStart.Value).TotalMinutes);
                     var diffEnd = Math.Abs((clockOut.Value - refEnd.Value).TotalMinutes);
                     
-                    if (diffStart <= 15 && diffEnd <= 15)
+                    bool isCheckInCorrect = isEarlyCheckIn 
+                        ? (checkInEarlyInfinite || diffStart <= checkInEarlyTolerance)
+                        : (diffStart <= checkInLateTolerance);
+
+                    bool isCheckOutCorrect = diffEnd <= checkOutTolerance;
+
+                    if (isCheckInCorrect && isCheckOutCorrect)
                     {
                         attendance.Status = AttendanceStatus.Correcto;
                         attendance.StatusObservation += "Cruce correcto.";
@@ -275,8 +287,13 @@ public class AttendanceService
         }
     }
 
-    private async Task ProcessMinMaxPairingAsync(Employee emp, Store store, List<Shift> shifts, List<BiometricRecord> records, Guid companyId)
+    private async Task ProcessMinMaxPairingAsync(Employee emp, Store store, List<Shift> shifts, List<BiometricRecord> records, Guid companyId, OperationalSetting? opSetting)
     {
+        bool checkInEarlyInfinite = opSetting?.CheckInEarlyInfinite ?? true;
+        int checkInEarlyTolerance = opSetting?.CheckInEarlyTolerance ?? 15;
+        int checkInLateTolerance = opSetting?.CheckInLateTolerance ?? 15;
+        int checkOutTolerance = opSetting?.CheckOutTolerance ?? 15;
+
         if (records.Count == 0)
         {
             // Handle shifts with no markings (Mark all as Absent)
@@ -315,12 +332,20 @@ public class AttendanceService
         if (mainShift != null)
         {
             attendance.Shift = mainShift;
+            bool isEarlyCheckIn = attendance.ClockIn.Value < mainShift.StartTime;
             var diffStart = Math.Abs((attendance.ClockIn.Value - mainShift.StartTime).TotalMinutes);
             
             if (attendance.ClockOut.HasValue)
             {
                 var diffEnd = Math.Abs((attendance.ClockOut.Value - mainShift.EndTime).TotalMinutes);
-                attendance.Status = (diffStart <= 15 && diffEnd <= 15) ? AttendanceStatus.Correcto : AttendanceStatus.Desfasado;
+
+                bool isCheckInCorrect = isEarlyCheckIn 
+                    ? (checkInEarlyInfinite || diffStart <= checkInEarlyTolerance)
+                    : (diffStart <= checkInLateTolerance);
+
+                bool isCheckOutCorrect = diffEnd <= checkOutTolerance;
+
+                attendance.Status = (isCheckInCorrect && isCheckOutCorrect) ? AttendanceStatus.Correcto : AttendanceStatus.Desfasado;
                 if (attendance.Status == AttendanceStatus.Desfasado)
                     attendance.StatusObservation += $"Desfase E:{diffStart:F0}m, S:{diffEnd:F0}m.";
             }
@@ -339,8 +364,13 @@ public class AttendanceService
         _context.Attendances.Add(attendance);
     }
 
-    private async Task ProcessStandardPairingAsync(Employee emp, Store store, List<Shift> shifts, List<BiometricRecord> records, Guid companyId)
+    private async Task ProcessStandardPairingAsync(Employee emp, Store store, List<Shift> shifts, List<BiometricRecord> records, Guid companyId, OperationalSetting? opSetting)
     {
+        bool checkInEarlyInfinite = opSetting?.CheckInEarlyInfinite ?? true;
+        int checkInEarlyTolerance = opSetting?.CheckInEarlyTolerance ?? 15;
+        int checkInLateTolerance = opSetting?.CheckInLateTolerance ?? 15;
+        int checkOutTolerance = opSetting?.CheckOutTolerance ?? 15;
+
         var availableRecords = new List<BiometricRecord>(records);
 
         // If no shifts are assigned, but we have records, try using store defaults
@@ -403,10 +433,17 @@ public class AttendanceService
                 attendance.ClockIn = first.RecordDate;
                 attendance.ClockOut = last.RecordDate;
 
+                bool isEarlyCheckIn = first.RecordDate < shift.StartTime;
                 var diffStart = Math.Abs((first.RecordDate - shift.StartTime).TotalMinutes);
                 var diffEnd = Math.Abs((last.RecordDate - shift.EndTime).TotalMinutes);
 
-                if (diffStart <= 15 && diffEnd <= 15)
+                bool isCheckInCorrect = isEarlyCheckIn 
+                    ? (checkInEarlyInfinite || diffStart <= checkInEarlyTolerance)
+                    : (diffStart <= checkInLateTolerance);
+
+                bool isCheckOutCorrect = diffEnd <= checkOutTolerance;
+
+                if (isCheckInCorrect && isCheckOutCorrect)
                 {
                     attendance.Status = AttendanceStatus.Correcto;
                 }

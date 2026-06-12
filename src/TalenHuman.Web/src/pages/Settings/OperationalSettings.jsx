@@ -18,7 +18,11 @@ const OperationalSettings = () => {
         attendanceMode: 0, 
         shiftApprovalMode: 0, 
         enablePushNotifications: true,
-        enableEmailNotifications: true
+        enableEmailNotifications: true,
+        checkInEarlyInfinite: true,
+        checkInEarlyTolerance: 15,
+        checkInLateTolerance: 15,
+        checkOutTolerance: 15
     });
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
@@ -63,7 +67,11 @@ const OperationalSettings = () => {
                 attendanceMode: parseInt(settings.attendanceMode),
                 shiftApprovalMode: parseInt(settings.shiftApprovalMode),
                 enablePushNotifications: !!settings.enablePushNotifications,
-                enableEmailNotifications: !!settings.enableEmailNotifications
+                enableEmailNotifications: !!settings.enableEmailNotifications,
+                checkInEarlyInfinite: !!settings.checkInEarlyInfinite,
+                checkInEarlyTolerance: parseInt(settings.checkInEarlyTolerance ?? 15),
+                checkInLateTolerance: parseInt(settings.checkInLateTolerance ?? 15),
+                checkOutTolerance: parseInt(settings.checkOutTolerance ?? 15)
             };
             
             const res = await api.post('/OperationalSettings', payload);
@@ -146,7 +154,7 @@ const OperationalSettings = () => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                         <div>
                             <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: '900', textTransform: 'uppercase', color: activeColors.textMuted, marginBottom: '0.75rem', letterSpacing: '0.05em' }}>Protocolo de cálculo</label>
-                            <div style={{ display: 'grid', gap: '10px' }}>
+                            <div style={{ display: 'grid', gap: '10px', marginBottom: '1.5rem' }}>
                                 <SelectionBlock 
                                     active={settings.attendanceMode === 0}
                                     onClick={() => setSettings({...settings, attendanceMode: 0})}
@@ -163,6 +171,116 @@ const OperationalSettings = () => {
                                     icon={<ListOrdered size={18} />}
                                     colors={activeColors}
                                 />
+                            </div>
+                        </div>
+
+                        <div style={{ paddingTop: '1.5rem', borderTop: `1px solid ${activeColors.border}` }}>
+                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '900', textTransform: 'uppercase', color: activeColors.textMuted, marginBottom: '1.25rem', letterSpacing: '0.05em' }}>Tolerancia de marcación</label>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                
+                                {/* Entrada Anticipada (Check-In Early) */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div>
+                                            <div style={{ fontSize: '0.9rem', fontWeight: '800', color: activeColors.textMain }}>Entrada Anticipada (Check-In temprano)</div>
+                                            <div style={{ fontSize: '0.75rem', fontWeight: '600', color: activeColors.textMuted }}>Considerar correcto al marcar antes del turno</div>
+                                        </div>
+                                        <div 
+                                            onClick={() => setSettings({...settings, checkInEarlyInfinite: !settings.checkInEarlyInfinite})}
+                                            style={{ 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                gap: '8px', 
+                                                cursor: 'pointer',
+                                                background: settings.checkInEarlyInfinite ? activeColors.accent + '15' : activeColors.border,
+                                                padding: '6px 14px',
+                                                borderRadius: '12px',
+                                                border: `1px solid ${settings.checkInEarlyInfinite ? activeColors.accent : activeColors.border}`,
+                                                color: settings.checkInEarlyInfinite ? activeColors.accent : activeColors.textMuted,
+                                                transition: 'all 0.2s',
+                                                fontSize: '0.75rem',
+                                                fontWeight: '800'
+                                            }}
+                                        >
+                                            {settings.checkInEarlyInfinite ? 'PERMITIDO SIEMPRE' : 'LIMITADO'}
+                                        </div>
+                                    </div>
+                                    {!settings.checkInEarlyInfinite && (
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', background: activeColors.bg, borderRadius: '14px', border: `1px solid ${activeColors.border}`, marginTop: '4px' }}>
+                                            <span style={{ fontSize: '0.8rem', fontWeight: '700', color: activeColors.textMuted }}>Minutos de tolerancia anticipada:</span>
+                                            <input 
+                                                type="number"
+                                                min="0"
+                                                max="240"
+                                                value={settings.checkInEarlyTolerance ?? 15}
+                                                onChange={(e) => setSettings({...settings, checkInEarlyTolerance: Math.max(0, parseInt(e.target.value) || 0)})}
+                                                style={{ 
+                                                    width: '70px', 
+                                                    padding: '6px', 
+                                                    borderRadius: '8px', 
+                                                    border: `1px solid ${activeColors.border}`, 
+                                                    background: isDarkMode ? '#1e293b' : '#ffffff',
+                                                    color: activeColors.textMain,
+                                                    fontWeight: '800',
+                                                    textAlign: 'center',
+                                                    outline: 'none'
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Entrada Tardía (Check-In Late) */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div>
+                                        <div style={{ fontSize: '0.9rem', fontWeight: '800', color: activeColors.textMain }}>Entrada Tardía (Check-In tarde)</div>
+                                        <div style={{ fontSize: '0.75rem', fontWeight: '600', color: activeColors.textMuted }}>Minutos permitidos de retraso</div>
+                                    </div>
+                                    <input 
+                                        type="number"
+                                        min="0"
+                                        max="120"
+                                        value={settings.checkInLateTolerance ?? 15}
+                                        onChange={(e) => setSettings({...settings, checkInLateTolerance: Math.max(0, parseInt(e.target.value) || 0)})}
+                                        style={{ 
+                                            width: '70px', 
+                                            padding: '8px', 
+                                            borderRadius: '10px', 
+                                            border: `1px solid ${activeColors.border}`, 
+                                            background: isDarkMode ? '#1e293b' : '#ffffff',
+                                            color: activeColors.textMain,
+                                            fontWeight: '800',
+                                            textAlign: 'center',
+                                            outline: 'none'
+                                        }}
+                                    />
+                                </div>
+
+                                {/* Salida (Check-Out) */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div>
+                                        <div style={{ fontSize: '0.9rem', fontWeight: '800', color: activeColors.textMain }}>Tolerancia de Salida (Check-Out)</div>
+                                        <div style={{ fontSize: '0.75rem', fontWeight: '600', color: activeColors.textMuted }}>Minutos permitidos de desfase al salir</div>
+                                    </div>
+                                    <input 
+                                        type="number"
+                                        min="0"
+                                        max="120"
+                                        value={settings.checkOutTolerance ?? 15}
+                                        onChange={(e) => setSettings({...settings, checkOutTolerance: Math.max(0, parseInt(e.target.value) || 0)})}
+                                        style={{ 
+                                            width: '70px', 
+                                            padding: '8px', 
+                                            borderRadius: '10px', 
+                                            border: `1px solid ${activeColors.border}`, 
+                                            background: isDarkMode ? '#1e293b' : '#ffffff',
+                                            color: activeColors.textMain,
+                                            fontWeight: '800',
+                                            textAlign: 'center',
+                                            outline: 'none'
+                                        }}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
