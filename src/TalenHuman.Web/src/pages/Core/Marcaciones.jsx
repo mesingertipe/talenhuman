@@ -123,6 +123,7 @@ const Marcaciones = ({ user, tenantSettings }) => {
 
     const handleExport = () => {
         const data = marcaciones.map(m => ({
+            Fecha: m.date || 'N/A',
             Colaborador: m.employeeName,
             Número: m.employeeId,
             Cargo: m.employeeJobTitle || 'N/A', // V13.0 Requirement

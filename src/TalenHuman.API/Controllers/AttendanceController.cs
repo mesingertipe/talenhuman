@@ -467,7 +467,8 @@ public class AttendanceController : ControllerBase
                 Status = (int)a.Status,
                 a.StatusObservation,
                 StatusText = statusText,
-                EmployeeJobTitle = a.Employee?.Profile?.Name ?? "N/A"
+                EmployeeJobTitle = a.Employee?.Profile?.Name ?? "N/A",
+                Date = (a.ClockIn ?? a.Shift?.StartTime)?.ToString("yyyy-MM-dd")
             };
         }));
 
