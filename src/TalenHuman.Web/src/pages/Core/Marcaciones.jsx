@@ -217,14 +217,16 @@ const Marcaciones = ({ user, tenantSettings }) => {
                     >
                         <FileText size={18} className="text-indigo-500" /> <span className="hidden lg:inline">Resumen estadístico</span>
                     </button>
-                    <button 
-                        onClick={handleSendReport}
-                        disabled={isSendingReport}
-                        style={{ background: activeColors.card, color: isSendingReport ? activeColors.textMuted : activeColors.textMain, padding: '14px 24px', borderRadius: '20px', border: `1px solid ${activeColors.border}`, fontWeight: '800', fontSize: '0.75rem', cursor: isSendingReport ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.2s' }}
-                        className="hover:scale-[1.02] active:scale-95 border-indigo-100"
-                    >
-                        <Send size={18} className={isSendingReport ? "animate-spin" : "text-indigo-500"} /> <span className="hidden lg:inline">{isSendingReport ? "Enviando..." : "Enviar reporte PDF"}</span>
-                    </button>
+                    {user?.roles?.includes('SuperAdmin') && (
+                        <button 
+                            onClick={handleSendReport}
+                            disabled={isSendingReport}
+                            style={{ background: activeColors.card, color: isSendingReport ? activeColors.textMuted : activeColors.textMain, padding: '14px 24px', borderRadius: '20px', border: `1px solid ${activeColors.border}`, fontWeight: '800', fontSize: '0.75rem', cursor: isSendingReport ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.2s' }}
+                            className="hover:scale-[1.02] active:scale-95 border-indigo-100"
+                        >
+                            <Send size={18} className={isSendingReport ? "animate-spin" : "text-indigo-500"} /> <span className="hidden lg:inline">{isSendingReport ? "Enviando..." : "Enviar reporte PDF"}</span>
+                        </button>
+                    )}
                 </div>
             </div>
 

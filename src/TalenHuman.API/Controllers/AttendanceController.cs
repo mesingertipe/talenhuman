@@ -266,6 +266,7 @@ public class AttendanceController : ControllerBase
     }
 
     [HttpPost("send-report")]
+    [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> SendReport([FromBody] ConsolidateRequest request)
     {
          var companyId = _tenantProvider.GetTenantId();
