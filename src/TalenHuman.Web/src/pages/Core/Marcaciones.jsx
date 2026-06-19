@@ -60,7 +60,7 @@ const Marcaciones = ({ user, tenantSettings }) => {
                         end: res.data.today
                     });
                 }
-            } catch (err) {
+            } catch {
                 const localToday = new Date().toLocaleDateString('en-CA');
                 setDateRange({ start: localToday, end: localToday });
             }
@@ -114,7 +114,7 @@ const Marcaciones = ({ user, tenantSettings }) => {
             // Actually, fetchMarcaciones is inside the effect, so we can't call it directly anymore. 
             // Let's add a refresh toggle.
             setRefreshKey(prev => prev + 1);
-        } catch (err) {
+        } catch {
             showToast("Error en el proceso de consolidación", "error");
         } finally {
             setIsSyncing(false);
@@ -167,7 +167,7 @@ const Marcaciones = ({ user, tenantSettings }) => {
             setIsSendingReport(true);
             await api.post('/attendance/send-report', { date: dateRange.start });
             showToast("Solicitud de reporte PDF enviada correctamente");
-        } catch (err) {
+        } catch {
             showToast("Error al solicitar el reporte", "error");
         } finally {
             setIsSendingReport(false);

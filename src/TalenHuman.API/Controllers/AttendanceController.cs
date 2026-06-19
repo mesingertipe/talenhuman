@@ -333,12 +333,21 @@ public class AttendanceController : ControllerBase
         var endFilter = end?.Date ?? tenantDateNow;
 
         // 1. Fetch Raw Biometric Records in the requested range
+        var startFilterDateOnly = DateOnly.FromDateTime(startFilter);
+        var endFilterDateOnly = DateOnly.FromDateTime(endFilter);
+
         IQueryable<TalenHuman.Domain.Entities.BiometricRecord> rawQuery = _context.BiometricRecords
-            .Where(r => r.CompanyId == companyId && r.RecordDate >= startFilter && r.RecordDate <= endFilter.AddDays(1).AddTicks(-1));
+            .Where(r => r.CompanyId == companyId && 
+                       (r.RecordDay != null 
+                           ? (r.RecordDay >= startFilterDateOnly && r.RecordDay <= endFilterDateOnly) 
+                           : (r.RecordDate >= startFilter && r.RecordDate <= endFilter.AddDays(1).AddTicks(-1))));
 
         if (roles.Contains("SuperAdmin"))
         {
-            rawQuery = _context.BiometricRecords.Where(r => r.RecordDate >= startFilter && r.RecordDate <= endFilter.AddDays(1).AddTicks(-1));
+            rawQuery = _context.BiometricRecords.Where(r => 
+                       (r.RecordDay != null 
+                           ? (r.RecordDay >= startFilterDateOnly && r.RecordDay <= endFilterDateOnly) 
+                           : (r.RecordDate >= startFilter && r.RecordDate <= endFilter.AddDays(1).AddTicks(-1))));
         }
 
         var rawRecords = await rawQuery.OrderBy(r => r.RecordDate).ToListAsync();
@@ -397,13 +406,13 @@ public class AttendanceController : ControllerBase
             .ToListAsync();
 
         // Match Raw Marks first (IDs that don't match employees or entries not yet consolidated)
-        var groupedRaw = rawRecords.GroupBy(r => new { r.DeviceUser, Date = r.RecordDate.Date });
+        var groupedRaw = rawRecords.GroupBy(r => new { r.DeviceUser, Date = r.RecordDay ?? DateOnly.FromDateTime(r.RecordDate) });
         foreach (var group in groupedRaw)
         {
             var deviceUser = group.Key.DeviceUser?.TrimStart('0');
             var hasConsolidated = consolidated.Any(a => 
                 (a.Employee?.IdentificationNumber?.TrimStart('0') == deviceUser || a.EmployeeId.ToString().ToLower() == deviceUser?.ToLower()) && 
-                (a.ClockIn ?? (a.Shift != null ? a.Shift.StartTime : DateTime.MinValue)).Date == group.Key.Date);
+                DateOnly.FromDateTime(a.ClockIn ?? (a.Shift != null ? a.Shift.StartTime : DateTime.MinValue)) == group.Key.Date);
                 
             if (!hasConsolidated)
             {
@@ -417,6 +426,8 @@ public class AttendanceController : ControllerBase
                 var store = employee != null ? await _context.Stores.FindAsync(employee.StoreId) : null;
                 var allMarks = string.Join(", ", group.OrderBy(r => r.RecordDate).Select(r => r.RecordDate.ToString("HH:mm")));
                 
+                var groupDateAsDateTime = new DateTime(group.Key.Date.Year, group.Key.Date.Month, group.Key.Date.Day);
+
                 consolidated.Add(new Attendance {
                     Id = Guid.Empty, 
                     Employee = employee, 
@@ -429,7 +440,7 @@ public class AttendanceController : ControllerBase
                     Status = (AttendanceStatus)(-1), 
                     StatusObservation = (employee == null 
                         ? $"[ALERTA] ID {group.Key.DeviceUser} no existe." 
-                        : (group.Key.Date < tenantDateNow ? "No Consolidado (Pendiente)" : "Tiempo Real (En curso)")) + $" [Marcaciones: {allMarks}]"
+                        : (groupDateAsDateTime < tenantDateNow ? "No Consolidado (Pendiente)" : "Tiempo Real (En curso)")) + $" [Marcaciones: {allMarks}]"
                 });
             }
         }
