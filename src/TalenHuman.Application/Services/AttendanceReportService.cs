@@ -2,6 +2,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using TalenHuman.Application.Common.Interfaces;
 using TalenHuman.Domain.Entities;
 
@@ -24,34 +25,62 @@ public class AttendanceReportService
         var settings = await _context.OperationalSettings.FirstOrDefaultAsync(s => s.CompanyId == companyId);
         var approvalMode = settings?.ShiftApprovalMode ?? ShiftApprovalMode.HR;
 
-        // 2. Fetch all potential administrative recipients
-        // We look for users who are either Admins, Distritales (DistrictId), or Gerentes (SupervisorStores)
+        // 2. Fetch target administrative and manager roles
+        var targetRoles = await _context.Roles
+            .Where(r => r.Name == "Admin" || r.Name == "SuperAdmin" || r.Name == "RH" || r.Name == "Gerente" || r.Name == "Distrital")
+            .ToListAsync();
+
+        var targetRoleIds = targetRoles.Select(r => r.Id).ToList();
+
+        // 3. Query User-Role mappings
+        var userRolesMapping = await _context.Set<IdentityUserRole<Guid>>()
+            .Where(ur => targetRoleIds.Contains(ur.RoleId))
+            .ToListAsync();
+
+        var adminOrRhUserIds = userRolesMapping
+            .Where(ur => targetRoles.Any(r => (r.Name == "Admin" || r.Name == "RH") && r.Id == ur.RoleId))
+            .Select(ur => ur.UserId)
+            .ToHashSet();
+
+        var gerenteUserIds = userRolesMapping
+            .Where(ur => targetRoles.Any(r => r.Name == "Gerente" && r.Id == ur.RoleId))
+            .Select(ur => ur.UserId)
+            .ToHashSet();
+
+        var superAdminUserIds = userRolesMapping
+            .Where(ur => targetRoles.Any(r => r.Name == "SuperAdmin" && r.Id == ur.RoleId))
+            .Select(ur => ur.UserId)
+            .ToHashSet();
+
+        // 4. Fetch all potential administrative/managerial recipients (excluding SuperAdmins)
         var users = await _context.Users
             .Include(u => u.Employee)
                 .ThenInclude(e => e.Profile)
-            .Where(u => u.CompanyId == companyId && u.IsActive)
+            .Where(u => u.CompanyId == companyId && u.IsActive && !superAdminUserIds.Contains(u.Id))
             .Where(u => 
-                // Level 1: Admins / RH
-                (u.Employee != null && u.Employee.Profile != null && u.Employee.Profile.Name.ToUpper().Contains("RH")) ||
-                (u.Email != null && (u.Email.ToLower().Contains("admin") || u.Email.ToLower().Contains("gerencia"))) ||
-                // Level 2: Distritales
+                adminOrRhUserIds.Contains(u.Id) ||
+                gerenteUserIds.Contains(u.Id) ||
                 u.DistrictId != null ||
-                // Level 3: Gerentes (Checked via navigation or subquery if needed, but here we fetch all and filter in loop or use Any)
-                _context.SupervisorStores.Any(ss => ss.UserId == u.Id)
+                _context.SupervisorStores.Any(ss => ss.UserId == u.Id) ||
+                (u.Employee != null && u.Employee.Profile != null && u.Employee.Profile.Name.ToUpper().Contains("RH")) ||
+                (u.Email != null && (u.Email.ToLower().Contains("admin") || u.Email.ToLower().Contains("gerencia")))
             )
             .ToListAsync();
+
+        var culture = new System.Globalization.CultureInfo("es-ES");
 
         foreach (var user in users)
         {
             byte[]? pdfContent = null;
             string subject = $"Reporte de Asistencia TalenHuman - {date:dd/MM/yyyy}";
+            bool isWeekly = false;
 
-            // 1. Identify District Level -> District Report
+            // 1. Identify District Level -> Daily District Report
             if (user.DistrictId != null)
             {
                 pdfContent = await GeneratePdfReportAsync(companyId, date, districtId: user.DistrictId);
             }
-            // 2. Identify Store Level (Gerente) -> Assigned Stores Report
+            // 2. Identify Store Level (Gerente) -> Weekly Accumulated Report
             else
             {
                 var managedStores = await _context.SupervisorStores
@@ -61,29 +90,40 @@ public class AttendanceReportService
 
                 if (managedStores.Any())
                 {
-                    pdfContent = await GeneratePdfReportAsync(companyId, date, storeIds: managedStores);
+                    isWeekly = true;
+                    // Calculate week start (Monday) for the range [monday, date]
+                    int diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
+                    DateTime monday = date.AddDays(-1 * diff).Date;
+                    
+                    string dayNameStr = culture.TextInfo.ToTitleCase(date.ToString("dddd", culture));
+                    subject = $"Reporte de Asistencia Semanal TalenHuman - Al {dayNameStr} {date:dd/MM/yyyy}";
+                    pdfContent = await GenerateWeeklyPdfReportAsync(companyId, date, managedStores);
                 }
                 else
                 {
-                    // 3. Fallback only for Global Admins
-                    // In V13, if they have no District AND no Managed Stores, we only send
-                    // if they are Top-Level Admins/RH. To prevent leaks to employees,
-                    // we assume that employees are already filtered or we skip if no management role is found.
-                    // (For this stable release, we allow it ONLY if it's explicitly a global role context)
+                    // 3. Fallback only for Global Admins -> Daily Global Report
                     pdfContent = await GeneratePdfReportAsync(companyId, date);
                 }
             }
 
             if (pdfContent != null)
             {
+                string message = isWeekly
+                    ? $"Hola {user.FullName}, adjunto enviamos el consolidado semanal de asistencia acumulado de lunes a {date.ToString("dddd", culture).ToLower()} {date:dd/MM/yyyy}.<br/><br/>Saludos,<br/>Equipo TalenHuman."
+                    : $"Hola {user.FullName}, adjunto enviamos el consolidado de asistencia correspondiente al día {date:dd/MM/yyyy}.<br/><br/>Saludos,<br/>Equipo TalenHuman.";
+
+                string filename = isWeekly
+                    ? $"Asistencia_Semanal_{date:yyyyMMdd}.pdf"
+                    : $"Asistencia_{date:yyyyMMdd}.pdf";
+
                 await _notificationService.SendNotificationAsync(new NotificationRequest
                 {
                     To = user.Email!,
                     Subject = subject,
-                    Message = $"Hola {user.FullName}, adjunto enviamos el consolidado de asistencia correspondiente al día {date:dd/MM/yyyy}.<br/><br/>Saludos,<br/>Equipo TalenHuman.",
+                    Message = message,
                     Attachments = new List<AttachmentDto>
                     {
-                        new AttachmentDto { Filename = $"Asistencia_{date:yyyyMMdd}.pdf", Content = pdfContent, ContentType = "application/pdf" }
+                        new AttachmentDto { Filename = filename, Content = pdfContent, ContentType = "application/pdf" }
                     }
                 });
             }
@@ -259,5 +299,215 @@ public class AttendanceReportService
         });
 
         return document.GeneratePdf();
+    }
+
+    public async Task<byte[]> GenerateWeeklyPdfReportAsync(Guid companyId, DateTime endDate, List<Guid> storeIds)
+    {
+        QuestPDF.Settings.License = LicenseType.Community;
+
+        // 1. Calculate Monday of the week containing endDate
+        int diff = (7 + (endDate.DayOfWeek - DayOfWeek.Monday)) % 7;
+        DateTime startDate = endDate.AddDays(-1 * diff).Date;
+
+        // 2. Get Master List of Supervised Active Stores
+        var allContextStores = await _context.Stores
+            .Where(s => s.CompanyId == companyId && s.IsActive && storeIds.Contains(s.Id))
+            .ToListAsync();
+
+        var storeNamesStr = string.Join(", ", allContextStores.Select(s => s.Name));
+
+        // 3. Fetch employee counts per store for Plantilla
+        var employeeCounts = await _context.Employees
+            .Where(e => e.CompanyId == companyId && e.IsActive && storeIds.Contains(e.StoreId))
+            .GroupBy(e => e.StoreId)
+            .Select(g => new { StoreId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.StoreId, x => x.Count);
+
+        var totalPlantilla = allContextStores.Sum(s => employeeCounts.GetValueOrDefault(s.Id, 0));
+
+        // 4. Fetch Master Data for the range [startDate, endDate] (Only Active Employees)
+        var allShifts = await _context.Shifts
+            .Include(s => s.Store)
+            .Include(s => s.Employee)
+            .Where(s => s.CompanyId == companyId 
+                     && s.StartTime.Date >= startDate.Date 
+                     && s.StartTime.Date <= endDate.Date 
+                     && s.Employee.IsActive 
+                     && !s.IsDescanso
+                     && storeIds.Contains(s.StoreId))
+            .ToListAsync();
+
+        var allAttendances = await _context.Attendances
+            .Include(a => a.Store)
+            .Include(a => a.Employee)
+            .Include(a => a.Shift)
+            .Where(a => a.CompanyId == companyId 
+                     && a.Employee.IsActive 
+                     && storeIds.Contains(a.StoreId) 
+                     && (
+                         (a.ClockIn.HasValue && a.ClockIn.Value.Date >= startDate.Date && a.ClockIn.Value.Date <= endDate.Date) ||
+                         (a.Shift != null && a.Shift.StartTime.Date >= startDate.Date && a.Shift.StartTime.Date <= endDate.Date)
+                     ))
+            .ToListAsync();
+
+        // 5. Group data by date
+        var shiftsByDay = allShifts
+            .GroupBy(s => s.StartTime.Date)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var attendancesByDay = allAttendances
+            .GroupBy(a => a.ClockIn?.Date ?? a.Shift?.StartTime.Date ?? DateTime.MinValue)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        // 6. Project weekly statistics (Option A: Combined summary per day)
+        var statsList = new List<WeeklyDayStats>();
+        var culture = new System.Globalization.CultureInfo("es-ES");
+
+        for (var d = endDate.Date; d >= startDate.Date; d = d.AddDays(-1))
+        {
+            var dayShifts = shiftsByDay.GetValueOrDefault(d, new List<Shift>());
+            var dayAttendances = attendancesByDay.GetValueOrDefault(d, new List<Attendance>());
+
+            statsList.Add(new WeeklyDayStats
+            {
+                Date = d,
+                DayName = culture.TextInfo.ToTitleCase(d.ToString("dddd", culture)),
+                Plantilla = totalPlantilla,
+                TotalTurnos = dayShifts.Count,
+                Correcto = dayAttendances.Count(a => a.Status == AttendanceStatus.Correcto),
+                Errada = dayAttendances.Count(a => a.Status == AttendanceStatus.MarcacionErrada),
+                Desfase = dayAttendances.Count(a => a.Status == AttendanceStatus.Desfasado),
+                Ausente = dayAttendances.Count(a => a.Status == AttendanceStatus.SinMarcacion),
+                Marcaciones = dayAttendances.Count(a => a.Status != AttendanceStatus.SinMarcacion)
+            });
+        }
+
+        var document = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(1, Unit.Centimetre);
+                page.PageColor(Colors.White);
+                page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial));
+
+                page.Header().Row(row =>
+                {
+                    row.RelativeItem().Column(col =>
+                    {
+                        col.Item().Text("Talenhuman").FontSize(20).SemiBold().FontColor(Colors.Indigo.Medium);
+                        col.Item().Text("Consolidado Semanal de Asistencia").FontSize(12).FontColor(Colors.Grey.Medium);
+                        col.Item().Text($"Sedes: {storeNamesStr}").FontSize(9).Italic().FontColor(Colors.Grey.Darken1);
+                    });
+
+                    row.RelativeItem().AlignRight().Column(col =>
+                    {
+                        col.Item().Text($"Período: {startDate:dd/MM/yyyy} al {endDate:dd/MM/yyyy}").FontSize(10).SemiBold();
+                        col.Item().Text($"Generado: {DateTime.Now:HH:mm}").FontSize(10);
+                    });
+                });
+
+                page.Content().PaddingVertical(20).Column(col =>
+                {
+                    col.Item().PaddingBottom(10).Text("RESUMEN DIARIO ACUMULADO").FontSize(14).SemiBold().FontColor(Colors.Indigo.Darken2);
+
+                    col.Item().Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn(3); // Día / Fecha
+                            columns.RelativeColumn(1); // Plantilla
+                            columns.RelativeColumn(1); // Marcaciones
+                            columns.RelativeColumn(1); // Turnos
+                            columns.RelativeColumn(1); // Correcto
+                            columns.RelativeColumn(1); // Errada
+                            columns.RelativeColumn(1); // Desfase
+                            columns.RelativeColumn(1); // Ausente
+                        });
+
+                        table.Header(header =>
+                        {
+                            header.Cell().Element(HeaderStyle).Text("Día / Fecha");
+                            header.Cell().Element(HeaderStyle).AlignCenter().Text("Plantilla");
+                            header.Cell().Element(HeaderStyle).AlignCenter().Text("Marcaciones");
+                            header.Cell().Element(HeaderStyle).AlignCenter().Text("Turnos");
+                            header.Cell().Element(HeaderStyle).AlignCenter().Text("Correcto");
+                            header.Cell().Element(HeaderStyle).AlignCenter().Text("Errada");
+                            header.Cell().Element(HeaderStyle).AlignCenter().Text("Desfase");
+                            header.Cell().Element(HeaderStyle).AlignCenter().Text("Ausente");
+
+                            static IContainer HeaderStyle(IContainer headerContainer) => headerContainer.DefaultTextStyle(x => x.SemiBold()).PaddingVertical(5).BorderBottom(1).BorderColor(Colors.Black);
+                        });
+
+                        foreach (var item in statsList)
+                        {
+                            bool isLastDay = item.Date == endDate.Date;
+
+                            var cell1 = table.Cell().Element(CellStyle).Text($"{item.DayName} {item.Date:dd/MM/yyyy}");
+                            if (isLastDay) cell1.SemiBold();
+
+                            var cell2 = table.Cell().Element(CellStyle).AlignCenter().Text(item.Plantilla.ToString());
+                            if (isLastDay) cell2.SemiBold();
+
+                            var cell3 = table.Cell().Element(CellStyle).AlignCenter().Text(item.Marcaciones.ToString());
+                            if (isLastDay) cell3.SemiBold();
+
+                            var cell4 = table.Cell().Element(CellStyle).AlignCenter().Text(item.TotalTurnos.ToString());
+                            if (isLastDay) cell4.SemiBold();
+
+                            var cell5 = table.Cell().Element(CellStyle).AlignCenter().Text(item.Correcto.ToString()).FontColor(Colors.Green.Darken2);
+                            if (isLastDay) cell5.SemiBold();
+
+                            var cell6 = table.Cell().Element(CellStyle).AlignCenter().Text(item.Errada.ToString()).FontColor(Colors.Amber.Darken2);
+                            if (isLastDay) cell6.SemiBold();
+
+                            var cell7 = table.Cell().Element(CellStyle).AlignCenter().Text(item.Desfase.ToString()).FontColor(Colors.Blue.Darken2);
+                            if (isLastDay) cell7.SemiBold();
+
+                            var cell8 = table.Cell().Element(CellStyle).AlignCenter().Text(item.Ausente.ToString()).FontColor(Colors.Red.Darken2);
+                            if (isLastDay) cell8.SemiBold();
+
+                            IContainer CellStyle(IContainer cellContainer)
+                            {
+                                var padded = cellContainer.PaddingVertical(5).BorderBottom(1).BorderColor(Colors.Grey.Lighten3);
+                                if (isLastDay)
+                                {
+                                    padded = padded.Background(Colors.Indigo.Lighten5);
+                                }
+                                return padded;
+                            }
+                        }
+                    });
+
+                    if (!allAttendances.Any())
+                    {
+                        col.Item().PaddingTop(20).AlignCenter().Text("No se encontraron registros de marcación para el período seleccionado.").Italic().FontColor(Colors.Grey.Medium);
+                    }
+                });
+
+                page.Footer().AlignCenter().Text(x =>
+                {
+                    x.Span("Página ");
+                    x.CurrentPageNumber();
+                    x.Span(" de ");
+                    x.TotalPages();
+                });
+            });
+        });
+
+        return document.GeneratePdf();
+    }
+
+    private class WeeklyDayStats
+    {
+        public DateTime Date { get; set; }
+        public string DayName { get; set; } = string.Empty;
+        public int Plantilla { get; set; }
+        public int Marcaciones { get; set; }
+        public int TotalTurnos { get; set; }
+        public int Correcto { get; set; }
+        public int Errada { get; set; }
+        public int Desfase { get; set; }
+        public int Ausente { get; set; }
     }
 }
