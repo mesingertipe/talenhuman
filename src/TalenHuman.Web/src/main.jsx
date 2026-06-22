@@ -7,8 +7,8 @@ import { registerSW } from 'virtual:pwa-register'
 
 const updateSW = registerSW({
   onNeedRefresh() {
-    console.log('Nueva versión disponible. Por favor, reinicie la aplicación.');
-    // No forzamos recarga automática para evitar bucles de flasheo
+    console.log('Nueva versión disponible. Recargando automáticamente para actualizar...');
+    updateSW(true);
   },
   onOfflineReady() {
     console.log('La aplicación está lista para usarse sin conexión.')

@@ -36,9 +36,15 @@ const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploadedFile, setUploadedFile] = useState(null);
-    const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     const [attachments, setAttachments] = useState([]); // List of { url, fileName }
     const { isDarkMode } = useTheme();
+    const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Unified Premium Colors
     const activeColors = {
@@ -252,19 +258,19 @@ const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false
         }
 
         return (
-            <div style={{ background: isDarkMode ? '#1e293b' : '#f8fafc', padding: '25px 35px', borderRadius: '32px', border: `1px solid ${activeColors.border}`, marginBottom: '35px', display: 'flex', alignItems: 'center', gap: '25px', animation: 'fadeIn 0.5s ease-out' }}>
-                <div style={{ width: '60px', height: '60px', background: activeColors.accent, color: 'white', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 20px rgba(79, 70, 229, 0.2)' }}>
-                    {icon}
+            <div style={{ background: isDarkMode ? '#1e293b' : '#f8fafc', padding: isMobile ? '15px 20px' : '25px 35px', borderRadius: isMobile ? '24px' : '32px', border: `1px solid ${activeColors.border}`, marginBottom: '25px', display: 'flex', alignItems: 'center', gap: isMobile ? '15px' : '25px', animation: 'fadeIn 0.5s ease-out' }}>
+                <div style={{ width: isMobile ? '48px' : '60px', height: isMobile ? '48px' : '60px', background: activeColors.accent, color: 'white', borderRadius: isMobile ? '14px' : '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 20px rgba(79, 70, 229, 0.2)', flexShrink: 0 }}>
+                    {React.cloneElement(icon, { size: isMobile ? 20 : 24 })}
                 </div>
-                <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <h4 style={{ fontSize: '1.25rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.02em' }}>{title}</h4>
-                        <span style={{ fontSize: '8px', padding: '3px 10px', background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#ffffff', border: `1px solid ${activeColors.border}`, borderRadius: '6px', fontWeight: '900', color: activeColors.accent, textTransform: 'uppercase' }}>Validado</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <h4 style={{ fontSize: isMobile ? '1.1rem' : '1.25rem', fontWeight: '950', color: activeColors.textMain, margin: 0, letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</h4>
+                        <span style={{ fontSize: '7px', padding: '2px 8px', background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#ffffff', border: `1px solid ${activeColors.border}`, borderRadius: '6px', fontWeight: '900', color: activeColors.accent, textTransform: 'uppercase' }}>Validado</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
-                        <p style={{ fontSize: '0.85rem', fontWeight: '800', color: activeColors.textMuted, margin: 0 }}>{subtitle}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
+                        <p style={{ fontSize: '0.75rem', fontWeight: '800', color: activeColors.textMuted, margin: 0 }}>{subtitle}</p>
                         <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#cbd5e1' }}></div>
-                        <p style={{ fontSize: '0.8rem', fontWeight: '900', color: activeColors.accent, margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{detail}</p>
+                        <p style={{ fontSize: '0.75rem', fontWeight: '900', color: activeColors.accent, margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{detail}</p>
                     </div>
                 </div>
             </div>
@@ -272,53 +278,57 @@ const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'row', background: activeColors.card, borderRadius: '48px', overflow: 'hidden', minHeight: '650px', width: '100%', border: isDarkMode ? `1px solid ${activeColors.border}` : 'none' }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', background: activeColors.card, borderRadius: isMobile ? '24px' : '48px', overflow: 'hidden', minHeight: isMobile ? 'auto' : '650px', width: '100%', border: isDarkMode ? `1px solid ${activeColors.border}` : 'none' }}>
             {/* Sidebar Flow (Premium Elite) */}
-            <div style={{ width: '320px', background: 'linear-gradient(180deg, #4f46e5 0%, #312e81 100%)', padding: '50px 40px', display: 'flex', flexDirection: 'column', color: 'white' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '60px' }}>
-                    <div style={{ padding: '12px', background: 'rgba(255,255,255,0.1)', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.2)' }}><Plus size={24} /></div>
+            <div style={{ width: isMobile ? '100%' : '320px', background: 'linear-gradient(180deg, #4f46e5 0%, #312e81 100%)', padding: isMobile ? '25px 20px' : '50px 40px', display: 'flex', flexDirection: isMobile ? 'row' : 'column', alignItems: isMobile ? 'center' : 'stretch', justifyContent: isMobile ? 'space-between' : 'flex-start', color: 'white', boxSizing: 'border-box' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '10px' : '15px', marginBottom: isMobile ? '0' : '60px' }}>
+                    <div style={{ padding: isMobile ? '8px' : '12px', background: 'rgba(255,255,255,0.1)', borderRadius: isMobile ? '12px' : '18px', border: '1px solid rgba(255,255,255,0.2)' }}><Plus size={isMobile ? 18 : 24} /></div>
                     <div>
-                        <h2 style={{ fontSize: '1.4rem', fontWeight: '950', margin: 0, letterSpacing: '-0.02em' }}>Nueva solicitud</h2>
-                        <p style={{ fontSize: '9px', fontWeight: '800', opacity: 0.6, textTransform: 'uppercase', margin: '4px 0 0', letterSpacing: '0.15em' }}>Proceso Guiado V12</p>
+                        <h2 style={{ fontSize: isMobile ? '1.1rem' : '1.4rem', fontWeight: '950', margin: 0, letterSpacing: '-0.02em' }}>Nueva solicitud</h2>
+                        {!isMobile && <p style={{ fontSize: '9px', fontWeight: '800', opacity: 0.6, textTransform: 'uppercase', margin: '4px 0 0', letterSpacing: '0.15em' }}>Proceso Guiado V12</p>}
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '35px' }}>
+                <div style={{ display: 'flex', flexDirection: 'row', gap: isMobile ? '12px' : '35px', alignItems: 'center' }}>
                     {(isEmployeeSelfService 
                         ? [ { stepId: 1, label: 'Concepto' }, { stepId: 3, label: 'Datos' }, { stepId: 4, label: 'Finalizar' } ]
                         : [ { stepId: 1, label: 'Concepto' }, { stepId: 2, label: 'Entidad' }, { stepId: 3, label: 'Datos' }, { stepId: 4, label: 'Finalizar' } ]
                     ).map((ws, index) => (
-                        <div key={ws.stepId} style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                            <div style={{ width: '40px', height: '40px', borderRadius: '15px', background: step === ws.stepId ? 'white' : step > ws.stepId ? '#10b981' : 'rgba(255,255,255,0.1)', color: step === ws.stepId ? '#4f46e5' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '950', fontSize: '14px', transition: 'all 0.3s' }}>
-                                {step > ws.stepId ? <CheckCircle size={20} /> : index + 1}
+                        <div key={ws.stepId} style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '20px' }}>
+                            <div style={{ width: isMobile ? '28px' : '40px', height: isMobile ? '28px' : '40px', borderRadius: isMobile ? '10px' : '15px', background: step === ws.stepId ? 'white' : step > ws.stepId ? '#10b981' : 'rgba(255,255,255,0.1)', color: step === ws.stepId ? '#4f46e5' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '950', fontSize: isMobile ? '11px' : '14px', transition: 'all 0.3s', flexShrink: 0 }}>
+                                {step > ws.stepId ? <CheckCircle size={isMobile ? 14 : 20} /> : index + 1}
                             </div>
-                            <div>
-                                <p style={{ fontSize: '8px', fontWeight: '900', opacity: 0.4, textTransform: 'uppercase', margin: 0 }}>Paso 0{index + 1}</p>
-                                <p style={{ fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', margin: '2px 0 0', color: step === ws.stepId ? 'white' : 'rgba(255,255,255,0.3)' }}>
-                                    {ws.label}
-                                </p>
-                            </div>
+                            {!isMobile && (
+                                <div>
+                                    <p style={{ fontSize: '8px', fontWeight: '900', opacity: 0.4, textTransform: 'uppercase', margin: 0 }}>Paso 0{index + 1}</p>
+                                    <p style={{ fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', margin: '2px 0 0', color: step === ws.stepId ? 'white' : 'rgba(255,255,255,0.3)' }}>
+                                        {ws.label}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>
 
-                <div style={{ marginTop: 'auto', padding: '25px', background: 'rgba(255,255,255,0.05)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)', fontWeight: '600', lineHeight: '1.6', margin: 0, fontStyle: 'italic' }}>
-                        "Recuerde validar los datos antes de confirmar para asegurar un proceso de auditoría ágil."
-                    </p>
-                </div>
+                {!isMobile && (
+                    <div style={{ marginTop: 'auto', padding: '25px', background: 'rgba(255,255,255,0.05)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)', fontWeight: '600', lineHeight: '1.6', margin: 0, fontStyle: 'italic' }}>
+                            "Recuerde validar los datos antes de confirmar para asegurar un proceso de auditoría ágil."
+                        </p>
+                    </div>
+                )}
             </div>
 
             {/* Content Area (Robust V12) */}
-            <div style={{ flex: 1, padding: '60px', overflowY: 'auto', maxHeight: '90vh', background: activeColors.bg, position: 'relative' }}>
-                <button onClick={onCancel} style={{ position: 'absolute', right: '40px', top: '40px', background: activeColors.card, border: `1px solid ${activeColors.border}`, width: '44px', height: '44px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.textMuted }}>
-                    <X size={24} />
+            <div style={{ flex: 1, padding: isMobile ? '30px 16px' : '60px', overflowY: 'auto', maxHeight: isMobile ? 'none' : '90vh', background: activeColors.bg, position: 'relative', boxSizing: 'border-box' }}>
+                <button onClick={onCancel} style={{ position: 'absolute', right: isMobile ? '16px' : '40px', top: isMobile ? '20px' : '40px', background: activeColors.card, border: `1px solid ${activeColors.border}`, width: isMobile ? '36px' : '44px', height: isMobile ? '36px' : '44px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.textMuted, zIndex: 10 }}>
+                    <X size={isMobile ? 18 : 24} />
                 </button>
 
                 {step === 1 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', marginTop: isMobile ? '15px' : '0' }}>
                         <div>
-                            <h3 style={{ fontSize: '2rem', fontWeight: '950', color: activeColors.textMain, margin: 0 }}>Concepto operativo</h3>
+                            <h3 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '950', color: activeColors.textMain, margin: 0 }}>Concepto operativo</h3>
                             <p style={{ color: activeColors.textMuted, fontSize: '0.85rem', fontWeight: '700', marginTop: '8px' }}>Categorice la naturaleza de su requerimiento</p>
                         </div>
 
@@ -335,17 +345,17 @@ const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                             {newsTypes.filter(t => t.nombre.toLowerCase().includes(searchTerm.toLowerCase())).map(type => (
-                                <button key={type.id} onClick={() => handleTypeSelection(type.id)} style={{ display: 'flex', alignItems: 'center', padding: '25px', borderRadius: '28px', border: `1px solid ${activeColors.border}`, background: activeColors.card, textAlign: 'left', cursor: 'pointer', transition: 'all 0.3s' }} className="hover:border-indigo-500 hover:shadow-xl group">
-                                    <div style={{ flex: 1 }}>
+                                <button key={type.id} onClick={() => handleTypeSelection(type.id)} style={{ display: 'flex', alignItems: 'center', padding: isMobile ? '16px' : '25px', borderRadius: '28px', border: `1px solid ${activeColors.border}`, background: activeColors.card, textAlign: 'left', cursor: 'pointer', transition: 'all 0.3s' }} className="hover:border-indigo-500 hover:shadow-xl group">
+                                    <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
                                             <span style={{ fontSize: '8px', padding: '4px 10px', borderRadius: '6px', background: '#eef2ff', color: '#4f46e5', fontWeight: '950', textTransform: 'uppercase' }}>
                                                 {type.categoria === 0 ? 'Empleado' : type.categoria === 1 ? 'Tienda' : 'Marca'}
                                             </span>
                                         </div>
-                                        <h4 style={{ fontSize: '1.2rem', fontWeight: '950', color: activeColors.textMain, textTransform: 'uppercase', margin: 0 }} className="group-hover:text-indigo-600 transition-colors">{type.nombre}</h4>
-                                        <p style={{ fontSize: '0.75rem', fontWeight: '600', color: activeColors.textMuted, marginTop: '5px' }}>{type.descripcion || 'Registro estándar operativo.'}</p>
+                                        <h4 style={{ fontSize: isMobile ? '1rem' : '1.2rem', fontWeight: '950', color: activeColors.textMain, textTransform: 'uppercase', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} className="group-hover:text-indigo-600 transition-colors">{type.nombre}</h4>
+                                        <p style={{ fontSize: '0.75rem', fontWeight: '600', color: activeColors.textMuted, marginTop: '5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{type.descripcion || 'Registro estándar operativo.'}</p>
                                     </div>
-                                    <div style={{ width: '44px', height: '44px', background: isDarkMode ? '#1e293b' : '#f8fafc', borderRadius: '14px', border: `1px solid ${activeColors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1' }} className="group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                                    <div style={{ width: '44px', height: '44px', background: isDarkMode ? '#1e293b' : '#f8fafc', borderRadius: '14px', border: `1px solid ${activeColors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1', flexShrink: 0 }} className="group-hover:bg-indigo-600 group-hover:text-white transition-all">
                                         <ChevronRight size={20} />
                                     </div>
                                 </button>
@@ -355,13 +365,13 @@ const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false
                 )}
 
                 {step === 2 && selectedType && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '40px', marginTop: isMobile ? '15px' : '0' }}>
                         <div>
-                            <h3 style={{ fontSize: '2rem', fontWeight: '950', color: activeColors.textMain, margin: 0 }}>Identificación</h3>
+                            <h3 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '950', color: activeColors.textMain, margin: 0 }}>Identificación</h3>
                             <p style={{ color: activeColors.textMuted, fontSize: '0.85rem', fontWeight: '700', marginTop: '8px' }}>Identifique el {selectedType.categoria === 0 ? 'colaborador' : 'entorno'} afectado</p>
                         </div>
 
-                        <div style={{ background: activeColors.card, padding: '40px', borderRadius: '32px', border: `1px solid ${activeColors.border}` }}>
+                        <div style={{ background: activeColors.card, padding: isMobile ? '20px' : '40px', borderRadius: isMobile ? '20px' : '32px', border: `1px solid ${activeColors.border}` }}>
                             {selectedType.categoria === 0 ? (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                     <label style={{ fontSize: '10px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Número de Cédula *</label>
@@ -409,16 +419,16 @@ const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false
                 )}
 
                 {step === 3 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', marginTop: isMobile ? '15px' : '0' }}>
                         <div>
-                            <h3 style={{ fontSize: '2rem', fontWeight: '950', color: activeColors.textMain, margin: 0 }}>Vigencia y detalles</h3>
+                            <h3 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '950', color: activeColors.textMain, margin: 0 }}>Vigencia y detalles</h3>
                             <p style={{ color: activeColors.textMuted, fontSize: '0.85rem', fontWeight: '700', marginTop: '8px' }}>Especifique los parámetros técnicos de la novedad</p>
                         </div>
 
                         {renderContextHeader()}
 
-                        <div style={{ background: activeColors.card, padding: '30px', borderRadius: '32px', border: `1px solid ${activeColors.border}` }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
+                        <div style={{ background: activeColors.card, padding: isMobile ? '20px' : '30px', borderRadius: isMobile ? '20px' : '32px', border: `1px solid ${activeColors.border}` }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                                 <div>
                                     <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '10px' }}>Desde *</label>
                                     <TalenHumanDatePicker 
@@ -440,7 +450,7 @@ const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false
                             </div>
 
                             {dynamicFields.length > 0 && (
-                                <div style={{ borderTop: `1px solid ${activeColors.border}`, paddingTop: '30px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+                                <div style={{ borderTop: `1px solid ${activeColors.border}`, paddingTop: '30px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
                                     {dynamicFields.map((f, i) => (
                                         <div key={i} style={{ gridColumn: f.type === 'check' ? 'span 2' : 'span 1' }}>
                                             {f.type === 'list' || f.type === 'select' ? (
@@ -511,27 +521,27 @@ const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false
                 )}
 
                 {step === 4 && (
-                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '30px', marginTop: isMobile ? '15px' : '0' }}>
                         <div>
-                            <h3 style={{ fontSize: '2rem', fontWeight: '950', color: activeColors.textMain, margin: 0 }}>Finalización</h3>
+                            <h3 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '950', color: activeColors.textMain, margin: 0 }}>Finalización</h3>
                             <p style={{ color: activeColors.textMuted, fontSize: '0.85rem', fontWeight: '700', marginTop: '8px' }}>Exposición de motivos y carga de archivos</p>
                         </div>
 
                         {renderContextHeader()}
 
-                        <div style={{ background: activeColors.card, padding: '40px', borderRadius: '40px', border: `1px solid ${activeColors.border}` }}>
+                        <div style={{ background: activeColors.card, padding: isMobile ? '20px' : '40px', borderRadius: isMobile ? '24px' : '40px', border: `1px solid ${activeColors.border}` }}>
                             <label style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '15px' }}>Comentarios Administrativos *</label>
                             <textarea 
                                 required 
                                 value={formData.observaciones} 
                                 onChange={(e) => setFormData({...formData, observaciones: e.target.value})} 
                                 placeholder="Especifique los detalles de la solicitud..." 
-                                style={{ width: '100%', minHeight: '150px', padding: '20px', borderRadius: '24px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontSize: '1rem', fontWeight: '600', lineHeight: '1.6', boxSizing: 'border-box' }}
+                                style={{ width: '100%', minHeight: isMobile ? '100px' : '150px', padding: '20px', borderRadius: '24px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontSize: '1rem', fontWeight: '600', lineHeight: '1.6', boxSizing: 'border-box' }}
                             />
                         </div>
 
                         {selectedType?.requiereAdjunto && (
-                            <div style={{ background: isDarkMode ? '#1e293b50' : '#f8fafc', padding: '40px', borderRadius: '32px', border: `2px dashed ${activeColors.border}`, textAlign: 'center', transition: 'all 0.3s' }} className="hover:border-indigo-400">
+                            <div style={{ background: isDarkMode ? '#1e293b50' : '#f8fafc', padding: isMobile ? '20px' : '40px', borderRadius: isMobile ? '24px' : '32px', border: `2px dashed ${activeColors.border}`, textAlign: 'center', transition: 'all 0.3s' }} className="hover:border-indigo-400">
                                 <div style={{ width: '60px', height: '60px', background: activeColors.accent, color: 'white', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 10px 20px rgba(79, 70, 229, 0.2)' }}>
                                     {isUploading ? <RefreshCw className="animate-spin" size={28} /> : <Paperclip size={28} />}
                                 </div>

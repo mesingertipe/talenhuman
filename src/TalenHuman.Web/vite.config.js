@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       disable: false,
-      registerType: 'prompt', 
+      registerType: 'autoUpdate', 
       includeAssets: ['favicon.svg'],
       manifest: {
         name: 'TalenHuman',

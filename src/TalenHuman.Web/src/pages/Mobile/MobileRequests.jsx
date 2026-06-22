@@ -336,8 +336,8 @@ const MobileRequests = ({ user, theme }) => {
 
       {/* 📝 NEW REQUEST FULL SCREEN MODAL */}
       {showCreate && (
-        <div style={{ position: 'fixed', inset: 0, background: isDark ? '#0f172a' : '#f8fafc', zIndex: 10000, overflowY: 'auto', padding: '20px' }}>
-          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+        <div style={{ position: 'fixed', inset: 0, background: isDark ? '#0f172a' : '#f8fafc', zIndex: 10000, overflowY: 'auto', padding: '0', boxSizing: 'border-box' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto', minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
             <NewsRequest 
               user={user}
               isEmployeeSelfService={true}

@@ -6,6 +6,7 @@ const MobileBottomNav = ({ activePage, setPage, theme, isBranded = false }) => {
   const tabs = [
     { id: 'Dashboard', icon: Home, label: 'Inicio' },
     { id: 'Turnos', icon: Calendar, label: 'Mis Turnos' },
+    { id: 'Comunicados', icon: MessageSquare, label: 'Noticias' },
     { id: 'Solicitudes', icon: FileText, label: 'Solicitudes' },
     { id: 'Perfil', icon: User, label: 'Perfil' },
   ];
