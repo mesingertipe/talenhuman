@@ -181,6 +181,38 @@ public class AttendanceReportService
         var shiftGroups = allShifts.GroupBy(s => s.StoreId).ToDictionary(g => g.Key, g => g.ToList());
         var attendanceGroups = allAttendances.GroupBy(a => a.StoreId).ToDictionary(g => g.Key, g => g.ToList());
 
+        // 2b. Fetch Weekly Failures (MarcacionErrada and SinMarcacion) from Monday to date
+        int diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
+        DateTime startDate = date.AddDays(-1 * diff).Date;
+
+        var weeklyFailuresQuery = _context.Attendances
+            .Include(a => a.Store)
+            .Include(a => a.Employee)
+            .Include(a => a.Shift)
+            .Where(a => a.CompanyId == companyId && a.Employee.IsActive && (
+                a.Status == AttendanceStatus.MarcacionErrada || a.Status == AttendanceStatus.SinMarcacion
+            ) && (
+                (a.ClockIn.HasValue && a.ClockIn.Value.Date >= startDate && a.ClockIn.Value.Date <= date.Date) ||
+                (a.Shift != null && a.Shift.StartTime.Date >= startDate && a.Shift.StartTime.Date <= date.Date)
+            ));
+
+        if (districtId.HasValue)
+        {
+            weeklyFailuresQuery = weeklyFailuresQuery.Where(a => a.Store.DistrictId == districtId.Value);
+        }
+        else if (storeIds != null && storeIds.Any())
+        {
+            weeklyFailuresQuery = weeklyFailuresQuery.Where(a => storeIds.Contains(a.StoreId));
+        }
+
+        var weeklyFailures = await weeklyFailuresQuery.ToListAsync();
+        var sortedFailures = weeklyFailures
+            .OrderByDescending(a => a.ClockIn?.Date ?? a.Shift?.StartTime.Date ?? DateTime.MinValue)
+            .ThenBy(a => a.Store.Name)
+            .ThenBy(a => a.Employee.FirstName)
+            .ThenBy(a => a.Employee.LastName)
+            .ToList();
+
         // 3. Fetch Employee counts per store for "Plantilla"
         var employeeCounts = await _context.Employees
             .Where(e => e.CompanyId == companyId && e.IsActive)
@@ -286,6 +318,7 @@ public class AttendanceReportService
                         col.Item().PaddingTop(20).AlignCenter().Text("No se encontraron registros de marcación para la fecha seleccionada.").Italic().FontColor(Colors.Grey.Medium);
                     }
 
+                    RenderWeeklyFailuresTable(col, sortedFailures, date);
                 });
 
                 page.Footer().AlignCenter().Text(x =>
@@ -349,6 +382,15 @@ public class AttendanceReportService
                          (a.Shift != null && a.Shift.StartTime.Date >= startDate.Date && a.Shift.StartTime.Date <= endDate.Date)
                      ))
             .ToListAsync();
+
+        // 4b. Filter in-memory for Weekly Failures (MarcacionErrada and SinMarcacion) for the weekly report
+        var weeklyFailures = allAttendances
+            .Where(a => a.Status == AttendanceStatus.MarcacionErrada || a.Status == AttendanceStatus.SinMarcacion)
+            .OrderByDescending(a => a.ClockIn?.Date ?? a.Shift?.StartTime.Date ?? DateTime.MinValue)
+            .ThenBy(a => a.Store.Name)
+            .ThenBy(a => a.Employee.FirstName)
+            .ThenBy(a => a.Employee.LastName)
+            .ToList();
 
         // 5. Group data by date
         var shiftsByDay = allShifts
@@ -483,6 +525,8 @@ public class AttendanceReportService
                     {
                         col.Item().PaddingTop(20).AlignCenter().Text("No se encontraron registros de marcación para el período seleccionado.").Italic().FontColor(Colors.Grey.Medium);
                     }
+
+                    RenderWeeklyFailuresTable(col, weeklyFailures, endDate);
                 });
 
                 page.Footer().AlignCenter().Text(x =>
@@ -496,6 +540,100 @@ public class AttendanceReportService
         });
 
         return document.GeneratePdf();
+    }
+
+    private void RenderWeeklyFailuresTable(ColumnDescriptor col, List<Attendance> failures, DateTime highlightDate)
+    {
+        if (failures == null || !failures.Any())
+            return;
+
+        var culture = new System.Globalization.CultureInfo("es-ES");
+
+        col.Item().PaddingTop(20).PaddingBottom(10).Text("INCIDENCIAS ACUMULADAS DE LA SEMANA").FontSize(14).SemiBold().FontColor(Colors.Red.Darken3);
+
+        col.Item().Table(table =>
+        {
+            table.ColumnsDefinition(columns =>
+            {
+                columns.RelativeColumn(2); // Fecha
+                columns.RelativeColumn(3.5f); // Colaborador
+                columns.RelativeColumn(2.5f); // Sede
+                columns.RelativeColumn(1); // Entrada
+                columns.RelativeColumn(1); // Salida
+                columns.RelativeColumn(2); // Incidencia
+            });
+
+            table.Header(header =>
+            {
+                header.Cell().Element(HeaderStyle).Text("Fecha");
+                header.Cell().Element(HeaderStyle).Text("Colaborador");
+                header.Cell().Element(HeaderStyle).Text("Sede");
+                header.Cell().Element(HeaderStyle).AlignCenter().Text("Entrada");
+                header.Cell().Element(HeaderStyle).AlignCenter().Text("Salida");
+                header.Cell().Element(HeaderStyle).Text("Incidencia");
+
+                static IContainer HeaderStyle(IContainer container) => container.DefaultTextStyle(x => x.SemiBold()).PaddingVertical(5).BorderBottom(1).BorderColor(Colors.Black);
+            });
+
+            foreach (var item in failures)
+            {
+                DateTime recordDate = item.ClockIn?.Date ?? item.Shift?.StartTime.Date ?? DateTime.MinValue;
+                bool isHighlight = recordDate.Date == highlightDate.Date;
+
+                table.Cell().Element(CellStyle).Text(t =>
+                {
+                    var span = t.Span($"{culture.TextInfo.ToTitleCase(recordDate.ToString("dddd", culture))} {recordDate:dd/MM}");
+                    if (isHighlight) span.SemiBold();
+                });
+
+                table.Cell().Element(CellStyle).Text(t =>
+                {
+                    var spanName = t.Span($"{item.Employee.FirstName} {item.Employee.LastName}");
+                    if (isHighlight) spanName.SemiBold();
+                    t.Span($" ({item.Employee.IdentificationNumber})").FontSize(8).FontColor(Colors.Grey.Medium);
+                });
+
+                table.Cell().Element(CellStyle).Text(t =>
+                {
+                    var span = t.Span(item.Store.Name);
+                    if (isHighlight) span.SemiBold();
+                });
+
+                table.Cell().Element(CellStyle).AlignCenter().Text(t =>
+                {
+                    var span = t.Span(item.ClockIn.HasValue ? item.ClockIn.Value.ToString("HH:mm") : "--:--");
+                    if (isHighlight) span.SemiBold();
+                });
+
+                table.Cell().Element(CellStyle).AlignCenter().Text(t =>
+                {
+                    var span = t.Span(item.ClockOut.HasValue ? item.ClockOut.Value.ToString("HH:mm") : "--:--");
+                    if (isHighlight) span.SemiBold();
+                });
+
+                string statusStr = item.Status switch
+                {
+                    AttendanceStatus.MarcacionErrada => "Marcación Incompleta",
+                    AttendanceStatus.SinMarcacion => "Ausente",
+                    _ => item.Status.ToString()
+                };
+                table.Cell().Element(CellStyle).Text(t =>
+                {
+                    var span = t.Span(statusStr).FontColor(item.Status == AttendanceStatus.SinMarcacion ? Colors.Red.Darken2 : Colors.Amber.Darken3);
+                    if (isHighlight) span.SemiBold();
+                });
+
+                IContainer CellStyle(IContainer container)
+                {
+                    var padded = container.PaddingVertical(5).BorderBottom(1).BorderColor(Colors.Grey.Lighten3);
+                    if (isHighlight)
+                    {
+                        padded = padded.Background(Colors.Red.Lighten5);
+                    }
+                    return padded;
+                }
+            }
+        });
     }
 
     private class WeeklyDayStats
