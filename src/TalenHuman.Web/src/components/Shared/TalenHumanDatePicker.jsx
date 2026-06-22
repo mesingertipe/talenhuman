@@ -54,6 +54,21 @@ const TalenHumanDatePicker = ({
         }
     };
 
+    const [isMobile, setIsMobile] = React.useState(false);
+
+    React.useEffect(() => {
+        const checkMobile = () => {
+            const mobile = typeof window !== 'undefined' && (
+                /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || 
+                window.innerWidth < 768
+            );
+            setIsMobile(mobile);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     const colors = {
         bg: isDarkMode ? 'rgba(255,255,255,0.02)' : '#f8fafc',
         border: isDarkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0',
@@ -69,25 +84,6 @@ const TalenHumanDatePicker = ({
 
     return (
         <div style={{ position: 'relative', width: '100%', ...style }} className={className}>
-            {/* Hidden native input to trigger calendar */}
-            <input 
-                ref={dateInputRef}
-                type="date"
-                value={value ? value.split('T')[0] : ''}
-                onChange={(e) => onChange(e.target.value)}
-                style={{
-                    position: 'absolute',
-                    opacity: 0,
-                    width: '1px',
-                    height: '1px',
-                    right: '10px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    zIndex: -1,
-                    pointerEvents: 'none'
-                }}
-            />
-
             {/* Visible Text Input Group */}
             <div 
                 style={{ 
@@ -97,7 +93,8 @@ const TalenHumanDatePicker = ({
                     borderRadius: '16px',
                     border: `2px solid ${colors.border}`,
                     transition: 'all 0.2s',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    pointerEvents: isMobile ? 'none' : 'auto'
                 }}
                 className="talenhuman-datepicker-container"
             >
@@ -147,6 +144,25 @@ const TalenHumanDatePicker = ({
                     </div>
                 </button>
             </div>
+
+            {/* Hidden native input to trigger calendar */}
+            <input 
+                ref={dateInputRef}
+                type="date"
+                value={value ? value.split('T')[0] : ''}
+                onChange={(e) => onChange(e.target.value)}
+                style={{
+                    position: 'absolute',
+                    opacity: 0,
+                    width: isMobile ? '100%' : '0',
+                    height: isMobile ? '100%' : '0',
+                    left: 0,
+                    top: 0,
+                    zIndex: isMobile ? 10 : -1,
+                    cursor: 'pointer',
+                    pointerEvents: isMobile ? 'auto' : 'none'
+                }}
+            />
         </div>
     );
 };

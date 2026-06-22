@@ -34,10 +34,15 @@ const SearchableSelect = ({
     if (isOpen && containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
         const winHeight = window.innerHeight;
-        const menuHeight = Math.min(300, options.length * 50 + 100); // Rough estimate
+        const margin = 16;
         
-        // Show above if not enough space below
-        const showAbove = (rect.bottom + menuHeight > winHeight) && (rect.top > menuHeight);
+        // Calculate available space below and above
+        const spaceBelow = winHeight - rect.bottom - margin;
+        const spaceAbove = rect.top - margin;
+        
+        // Decide direction: show above if there's less space below and more space above
+        const showAbove = (spaceBelow < 200) && (spaceAbove > spaceBelow);
+        const maxH = showAbove ? spaceAbove : spaceBelow;
         
         setMenuStyle({
             position: 'fixed',
@@ -45,8 +50,11 @@ const SearchableSelect = ({
             bottom: showAbove ? `${winHeight - rect.top + 8}px` : 'auto',
             left: `${rect.left}px`,
             width: `${rect.width}px`,
+            maxHeight: `${Math.min(300, maxH)}px`,
             zIndex: 20000000,
-            pointerEvents: 'auto'
+            pointerEvents: 'auto',
+            display: 'flex',
+            flexDirection: 'column'
         });
     }
   }, [isOpen, options.length]);
@@ -61,8 +69,13 @@ const SearchableSelect = ({
       }
     };
     
-    // Close on scroll to prevent detached menus
-    const handleScroll = () => { if(isOpen) setIsOpen(false); };
+    // Close on scroll to prevent detached menus, but ignore scroll events inside the dropdown menu itself
+    const handleScroll = (event) => { 
+      if (!isOpen) return;
+      const menu = document.getElementById('searchable-select-portal-menu');
+      if (menu && menu.contains(event.target)) return;
+      setIsOpen(false); 
+    };
 
     document.addEventListener("mousedown", handleClickOutside);
     window.addEventListener("scroll", handleScroll, true);
@@ -122,7 +135,7 @@ const SearchableSelect = ({
             </div>
           </div>
           
-          <div className="max-h-64 overflow-y-auto p-2 bespoke-scrollbar">
+          <div className="flex-1 overflow-y-auto p-2 bespoke-scrollbar" style={{ minHeight: 0 }}>
             {multiple && Array.isArray(value) && value.length > 0 && (
                 <button 
                     onClick={(e) => { e.stopPropagation(); onChange([]); }}

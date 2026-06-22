@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Clock, CheckCircle, XCircle, ArrowLeft, Plus, Search, 
   Calendar, Info, Paperclip, FileText, ChevronRight, Inbox, 
@@ -13,6 +14,22 @@ import TalenHumanDatePicker from '../../components/Shared/TalenHumanDatePicker';
 const MobileRequests = ({ user, theme }) => {
   const { isDarkMode } = useTheme();
   const isDark = theme === 'dark' || isDarkMode;
+
+  const formatDateTime = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return '';
+        const day = d.getDate().toString().padStart(2, '0');
+        const month = (d.getMonth() + 1).toString().padStart(2, '0');
+        const year = d.getFullYear();
+        const hours = d.getHours().toString().padStart(2, '0');
+        const minutes = d.getMinutes().toString().padStart(2, '0');
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
+    } catch {
+        return '';
+    }
+  };
   const [loading, setLoading] = useState(true);
   const [requests, setRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -335,7 +352,7 @@ const MobileRequests = ({ user, theme }) => {
       </button>
 
       {/* 📝 NEW REQUEST FULL SCREEN MODAL */}
-      {showCreate && (
+      {showCreate && createPortal(
         <div style={{ position: 'fixed', inset: 0, background: isDark ? '#0f172a' : '#f8fafc', zIndex: 10000, overflowY: 'auto', padding: '0', boxSizing: 'border-box' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto', minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
             <NewsRequest 
@@ -345,11 +362,12 @@ const MobileRequests = ({ user, theme }) => {
               onCancel={() => setShowCreate(false)}
             />
           </div>
-        </div>
+        </div>,
+        document.getElementById('modal-root')
       )}
 
       {/* 🔍 DETAIL & TRACKING OVERLAY */}
-      {showDetail && selectedRequest && (
+      {showDetail && selectedRequest && createPortal(
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(10px)', zIndex: 10000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div style={{ 
             background: isDark ? '#1e293b' : '#ffffff', width: '100%', maxWidth: '500px', 
@@ -417,7 +435,7 @@ const MobileRequests = ({ user, theme }) => {
                     {selectedRequest.adjuntos.map((file) => (
                       <div key={file.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: isDark ? '#2e3a4e' : '#f1f5f9', borderRadius: '12px', border: `1px solid ${cardBorder}` }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden', flex: 1 }}>
-                          <FileText size={16} color={accentColor} style={{ flexShrink: 0 }} />
+                          <FileText size={16} color="#4f46e5" style={{ flexShrink: 0 }} />
                           <span style={{ fontSize: '11px', fontWeight: '800', color: primaryText, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.fileName}</span>
                         </div>
                         <button 
@@ -445,15 +463,23 @@ const MobileRequests = ({ user, theme }) => {
                 <div style={{ position: 'absolute', left: '11px', top: '12px', bottom: '12px', width: '2px', background: isDark ? '#334155' : '#e2e8f0', zIndex: 1 }}></div>
 
                 {/* Step 1: Creación */}
-                <div style={{ display: 'flex', gap: '16px', position: 'relative', zIndex: 2 }}>
-                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', flexShrink: 0 }}>
-                    <CheckCircle size={14} />
-                  </div>
-                  <div>
-                    <h5 style={{ fontSize: '12px', fontWeight: '900', color: primaryText, margin: 0 }}>Creado</h5>
-                    <p style={{ fontSize: '10px', color: mutedText, margin: '2px 0 0' }}>Solicitud registrada inicialmente por el empleado.</p>
-                  </div>
-                </div>
+                {(() => {
+                  const creationLog = selectedRequest.logs?.find(l => l.accion === "Creó" || l.accion === "Creado");
+                  const createdByText = creationLog 
+                    ? `Registrado por ${creationLog.usuario} el ${formatDateTime(creationLog.fechaHoraColombia)}.`
+                    : "Solicitud registrada inicialmente por el empleado.";
+                  return (
+                    <div style={{ display: 'flex', gap: '16px', position: 'relative', zIndex: 2 }}>
+                      <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', flexShrink: 0 }}>
+                        <CheckCircle size={14} />
+                      </div>
+                      <div>
+                        <h5 style={{ fontSize: '12px', fontWeight: '900', color: primaryText, margin: 0 }}>Creado</h5>
+                        <p style={{ fontSize: '10px', color: mutedText, margin: '2px 0 0' }}>{createdByText}</p>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Step 2: Gerente Approval */}
                 {(() => {
@@ -470,12 +496,12 @@ const MobileRequests = ({ user, theme }) => {
                     circleBg = '#10b981';
                     icon = <CheckCircle size={14} color="white" />;
                     stepTitle = "Aprobado por Gerente";
-                    stepDesc = `Aprobado por ${gerApproveLog.usuario}. Comentario: "${gerApproveLog.comentario}"`;
+                    stepDesc = `Aprobado por ${gerApproveLog.usuario} el ${formatDateTime(gerApproveLog.fechaHoraColombia)}. Comentario: "${gerApproveLog.comentario}"`;
                   } else if (gerRejectLog) {
                     circleBg = '#ef4444';
                     icon = <XCircle size={14} color="white" />;
                     stepTitle = "Rechazado por Gerente";
-                    stepDesc = `Rechazado por ${gerRejectLog.usuario}. Motivo: "${gerRejectLog.comentario}"`;
+                    stepDesc = `Rechazado por ${gerRejectLog.usuario} el ${formatDateTime(gerRejectLog.fechaHoraColombia)}. Motivo: "${gerRejectLog.comentario}"`;
                   } else if (selectedRequest.status === 3) {
                     circleBg = '#4f46e5';
                     icon = <RefreshCw size={12} color="white" className="animate-spin" />;
@@ -516,12 +542,12 @@ const MobileRequests = ({ user, theme }) => {
                     circleBg = '#10b981';
                     icon = <CheckCircle size={14} color="white" />;
                     stepTitle = "Aprobado (Final)";
-                    stepDesc = `Aprobado por ${adminApproveLog.usuario}. Comentario: "${adminApproveLog.comentario}"`;
+                    stepDesc = `Aprobado por ${adminApproveLog.usuario} el ${formatDateTime(adminApproveLog.fechaHoraColombia)}. Comentario: "${adminApproveLog.comentario}"`;
                   } else if (adminRejectLog) {
                     circleBg = '#ef4444';
                     icon = <XCircle size={14} color="white" />;
                     stepTitle = "Rechazado por Admin / RH";
-                    stepDesc = `Rechazado por ${adminRejectLog.usuario}. Motivo: "${adminRejectLog.comentario}"`;
+                    stepDesc = `Rechazado por ${adminRejectLog.usuario} el ${formatDateTime(adminRejectLog.fechaHoraColombia)}. Motivo: "${adminRejectLog.comentario}"`;
                   } else if (selectedRequest.status === 0) {
                     circleBg = '#f59e0b';
                     icon = <RefreshCw size={12} color="white" className="animate-spin" />;
@@ -552,7 +578,8 @@ const MobileRequests = ({ user, theme }) => {
               Cerrar Detalle
             </button>
           </div>
-        </div>
+        </div>,
+        document.getElementById('modal-root')
       )}
 
       {/* Embedded Styles */}
