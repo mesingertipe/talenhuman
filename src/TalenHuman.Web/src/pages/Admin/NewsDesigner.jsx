@@ -36,7 +36,8 @@ const NewsDesigner = () => {
         descripcion: '',
         categoria: 0,
         requiereAdjunto: false,
-        rolAprobador: 'RH'
+        rolAprobador: 'RH',
+        permiteCreacionEmpleado: false
     });
     const [fields, setFields] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -88,12 +89,13 @@ const NewsDesigner = () => {
                 descripcion: type.descripcion || '',
                 categoria: type.categoria || 0,
                 requiereAdjunto: type.requiereAdjunto || false,
-                rolAprobador: type.rolAprobador || 'RH'
+                rolAprobador: type.rolAprobador || 'RH',
+                permiteCreacionEmpleado: type.permiteCreacionEmpleado || false
             });
             setFields(type.camposConfig ? JSON.parse(type.camposConfig) : []);
         } else {
             setCurrentType(null);
-            setFormData({ nombre: '', descripcion: '', categoria: 0, requiereAdjunto: false, rolAprobador: 'RH' });
+            setFormData({ nombre: '', descripcion: '', categoria: 0, requiereAdjunto: false, rolAprobador: 'RH', permiteCreacionEmpleado: false });
             setFields([]);
         }
         setShowModal(true);
@@ -203,18 +205,28 @@ const NewsDesigner = () => {
                         <div style={{ height: '8px', background: `linear-gradient(90deg, ${activeColors.accent} 0%, ${activeColors.accent}cc 100%)` }}></div>
                         
                         <div style={{ padding: '2.5rem', flex: 1 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
                                 <div style={{ width: '56px', height: '56px', background: activeColors.accentSoft, borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.accent }}>
                                     <Layout size={24} />
                                 </div>
-                                {type.requiereAdjunto && (
-                                    <div 
-                                        style={{ fontSize: '9px', fontWeight: '950', padding: '8px 16px', borderRadius: '99px', background: isDarkMode ? 'rgba(16, 185, 129, 0.15)' : '#ecfdf5', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.12em', border: `1px solid ${isDarkMode ? 'rgba(16, 185, 129, 0.3)' : '#d1fae5'}` }}
-                                        data-v12-tooltip="El colaborador deberá adjuntar un soporte documental"
-                                    >
-                                        Adjunto Obligatorio
-                                    </div>
-                                )}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
+                                    {type.requiereAdjunto && (
+                                        <div 
+                                            style={{ fontSize: '9px', fontWeight: '950', padding: '8px 16px', borderRadius: '99px', background: isDarkMode ? 'rgba(16, 185, 129, 0.15)' : '#ecfdf5', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.12em', border: `1px solid ${isDarkMode ? 'rgba(16, 185, 129, 0.3)' : '#d1fae5'}` }}
+                                            data-v12-tooltip="El colaborador deberá adjuntar un soporte documental"
+                                        >
+                                            Adjunto Obligatorio
+                                        </div>
+                                    )}
+                                    {type.permiteCreacionEmpleado && (
+                                        <div 
+                                            style={{ fontSize: '9px', fontWeight: '950', padding: '8px 16px', borderRadius: '99px', background: isDarkMode ? 'rgba(79, 70, 229, 0.15)' : '#eef2ff', color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.12em', border: `1px solid ${isDarkMode ? 'rgba(79, 70, 229, 0.3)' : '#c7d2fe'}` }}
+                                            data-v12-tooltip="El empleado puede auto-solicitar esta novedad"
+                                        >
+                                            Creación Empleado
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             
                             <h3 style={{ fontSize: '1.35rem', fontWeight: '950', color: activeColors.textMain, textTransform: 'uppercase', marginBottom: '10px', letterSpacing: '-0.02em' }}>{type.nombre}</h3>
@@ -322,6 +334,22 @@ const NewsDesigner = () => {
                                             <span className="premium-switch-slider"></span>
                                         </label>
                                     </div>
+                                    {formData.categoria === 0 && (
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', background: activeColors.accentSoft, borderRadius: '18px', border: `1px solid ${isDarkMode ? 'rgba(79, 70, 229, 0.2)' : '#d1daff'}` }}>
+                                            <div>
+                                                <span style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: activeColors.accent, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Creación por Empleado</span>
+                                                <span style={{ fontSize: '0.7rem', color: activeColors.textMuted, fontWeight: '600' }}>Permitir al empleado solicitarla</span>
+                                            </div>
+                                            <label className="premium-switch">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={formData.permiteCreacionEmpleado} 
+                                                    onChange={(e) => setFormData({ ...formData, permiteCreacionEmpleado: e.target.checked })} 
+                                                />
+                                                <span className="premium-switch-slider"></span>
+                                            </label>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Dynamic Fields Modular Block */}

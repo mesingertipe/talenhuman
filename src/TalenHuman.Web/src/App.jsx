@@ -50,6 +50,7 @@ import MobileAttendance from './pages/Mobile/MobileAttendance'
 import MobileProfile from './pages/Mobile/MobileProfile'
 import MobileNews from './pages/Mobile/MobileNews'
 import MobileShifts from './pages/Mobile/MobileShifts'
+import MobileRequests from './pages/Mobile/MobileRequests'
 import { useTheme } from './context/ThemeContext'
 import DebugPortal from './components/Shared/DebugPortal'
 import MobileCommunicationModal from './components/Mobile/MobileCommunicationModal'
@@ -347,7 +348,9 @@ function App() {
         switch(currentPage) {
           case 'Marcaciones': return <MobileAttendance user={user} isMobile theme={theme} />;
           case 'Perfil': return <MobileProfile user={user} setPage={setCurrentPage} onLogout={handleLogout} />;
-          case 'Novedades': return <MobileNews user={user} theme={theme} />;
+          case 'Solicitudes': return <MobileRequests user={user} theme={theme} />;
+          case 'Novedades': return <MobileRequests user={user} theme={theme} />;
+          case 'Comunicados': return <MobileNews user={user} theme={theme} />;
           case 'Turnos': return <MobileShifts user={user} theme={theme} />;
           case 'ResetPassword': return <ResetPassword user={user} theme={theme} setPage={setCurrentPage} />;
           default: return <MobileDashboard user={user} theme={theme} setPage={setCurrentPage} />;

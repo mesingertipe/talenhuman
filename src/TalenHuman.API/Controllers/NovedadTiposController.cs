@@ -41,7 +41,8 @@ public class NovedadTiposController : ControllerBase
                 CamposConfig = n.CamposConfig,
                 Categoria = (int)n.Categoria,
                 RolAprobador = n.RolAprobador,
-                EsPlantilla = n.EsPlantilla
+                EsPlantilla = n.EsPlantilla,
+                PermiteCreacionEmpleado = n.PermiteCreacionEmpleado
             })
             .ToListAsync();
     }
@@ -61,7 +62,8 @@ public class NovedadTiposController : ControllerBase
             CamposConfig = n.CamposConfig,
             Categoria = (int)n.Categoria,
             RolAprobador = n.RolAprobador,
-            EsPlantilla = n.EsPlantilla
+            EsPlantilla = n.EsPlantilla,
+            PermiteCreacionEmpleado = n.PermiteCreacionEmpleado
         };
     }
 
@@ -76,7 +78,8 @@ public class NovedadTiposController : ControllerBase
             CamposConfig = dto.CamposConfig,
             Categoria = (NovedadCategoria)dto.Categoria,
             RolAprobador = dto.RolAprobador,
-            EsPlantilla = User.IsInRole("SuperAdmin") && dto.EsPlantilla
+            EsPlantilla = User.IsInRole("SuperAdmin") && dto.EsPlantilla,
+            PermiteCreacionEmpleado = dto.PermiteCreacionEmpleado
         };
 
         _context.NovedadTipos.Add(n);
@@ -98,6 +101,7 @@ public class NovedadTiposController : ControllerBase
         n.CamposConfig = dto.CamposConfig;
         n.Categoria = (NovedadCategoria)dto.Categoria;
         n.RolAprobador = dto.RolAprobador;
+        n.PermiteCreacionEmpleado = dto.PermiteCreacionEmpleado;
         
         if (User.IsInRole("SuperAdmin"))
         {
@@ -141,7 +145,8 @@ public class NovedadTiposController : ControllerBase
             CamposConfig = template.CamposConfig,
             Categoria = template.Categoria,
             RolAprobador = template.RolAprobador,
-            EsPlantilla = false // Imported version is NOT a template
+            EsPlantilla = false, // Imported version is NOT a template
+            PermiteCreacionEmpleado = template.PermiteCreacionEmpleado
         };
 
         _context.NovedadTipos.Add(newType);
@@ -156,7 +161,8 @@ public class NovedadTiposController : ControllerBase
             CamposConfig = newType.CamposConfig,
             Categoria = (int)newType.Categoria,
             RolAprobador = newType.RolAprobador,
-            EsPlantilla = false
+            EsPlantilla = false,
+            PermiteCreacionEmpleado = newType.PermiteCreacionEmpleado
         });
     }
 }
@@ -171,4 +177,5 @@ public class NovedadTipoDto
     public int Categoria { get; set; }
     public string RolAprobador { get; set; } = "Admin";
     public bool EsPlantilla { get; set; }
+    public bool PermiteCreacionEmpleado { get; set; }
 }

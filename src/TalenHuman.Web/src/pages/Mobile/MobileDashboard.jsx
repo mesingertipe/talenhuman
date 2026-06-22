@@ -4,7 +4,7 @@ import {
   Calendar, Clock, MapPin, 
   ChevronRight, ArrowRight, Bell, 
   Search, Filter, Plus, Fingerprint, CalendarDays,
-  CheckCircle2, AlertCircle, Sparkles, MessageSquare, MessageCircle
+  CheckCircle2, AlertCircle, Sparkles, MessageSquare, MessageCircle, FileText
 } from 'lucide-react';
 import BiometricEnrollModal from '../../components/Biometrics/BiometricEnrollModal';
 
@@ -226,10 +226,10 @@ const MobileDashboard = ({ user, theme, setPage }) => {
           </div>
        )}
 
-       {/* 🧩 QUICK ACTIONS GRID */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+       {/* 🧩 QUICK ACTIONS GRID (3 Columns) */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
            <ActionCard 
-              icon={<CheckCircle2 size={24} />} 
+              icon={<CheckCircle2 size={22} />} 
               label="Asistencia" 
               color="#10b981" 
               isDark={isDark} 
@@ -239,14 +239,24 @@ const MobileDashboard = ({ user, theme, setPage }) => {
               onClick={() => setPage('Marcaciones')}
            />
            <ActionCard 
-              icon={<MessageSquare size={24} />} 
+              icon={<MessageSquare size={22} />} 
               label="Comunicados" 
               color="#f59e0b" 
               isDark={isDark} 
               cardBg={cardBg}
               glassEffect={glassEffect}
               shadow={shadow}
-              onClick={() => setPage('Novedades')}
+              onClick={() => setPage('Comunicados')}
+           />
+           <ActionCard 
+              icon={<FileText size={22} />} 
+              label="Solicitudes" 
+              color="#6366f1" 
+              isDark={isDark} 
+              cardBg={cardBg}
+              glassEffect={glassEffect}
+              shadow={shadow}
+              onClick={() => setPage('Solicitudes')}
            />
         </div>
 
@@ -274,18 +284,18 @@ const ActionCard = ({ icon, label, color, isDark, onClick, cardBg, glassEffect, 
         onClick={onClick}
         style={{ 
             background: cardBg,
-            borderRadius: '32px', padding: '36px 24px', 
+            borderRadius: '24px', padding: '24px 12px', 
             ...glassEffect,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px',
             boxShadow: shadow,
             cursor: 'pointer',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
         }}
     >
-        <div style={{ width: '56px', height: '56px', borderRadius: '18px', background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: color }}>
+        <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: color }}>
             {icon}
         </div>
-        <span style={{ fontSize: '13px', fontWeight: '900', color: isDark ? '#ffffff' : '#1e293b', letterSpacing: '0.05em' }}>{label}</span>
+        <span style={{ fontSize: '11px', fontWeight: '900', color: isDark ? '#ffffff' : '#1e293b', letterSpacing: '0.02em', textAlign: 'center' }}>{label}</span>
     </div>
 );
 

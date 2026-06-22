@@ -30,7 +30,8 @@ const NewsTemplateDesigner = () => {
         categoria: 0,
         requiereAdjunto: false,
         rolAprobador: 'RH',
-        esPlantilla: true // Default for this view
+        esPlantilla: true, // Default for this view
+        permiteCreacionEmpleado: false
     });
     const [fields, setFields] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -78,12 +79,13 @@ const NewsTemplateDesigner = () => {
                 categoria: type.categoria || 0,
                 requiereAdjunto: type.requiereAdjunto || false,
                 rolAprobador: type.rolAprobador || 'RH',
-                esPlantilla: true
+                esPlantilla: true,
+                permiteCreacionEmpleado: type.permiteCreacionEmpleado || false
             });
             setFields(type.camposConfig ? JSON.parse(type.camposConfig) : []);
         } else {
             setCurrentType(null);
-            setFormData({ nombre: '', descripcion: '', categoria: 0, requiereAdjunto: false, rolAprobador: 'RH', esPlantilla: true });
+            setFormData({ nombre: '', descripcion: '', categoria: 0, requiereAdjunto: false, rolAprobador: 'RH', esPlantilla: true, permiteCreacionEmpleado: false });
             setFields([]);
         }
         setShowModal(true);
@@ -174,12 +176,19 @@ const NewsTemplateDesigner = () => {
                         <div style={{ height: '8px', background: `linear-gradient(90deg, #6366f1 0%, #a855f7 100%)` }}></div>
                         
                         <div style={{ padding: '2.5rem', flex: 1 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
                                 <div style={{ width: '56px', height: '56px', background: activeColors.accentSoft, borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeColors.accent }}>
                                     <Globe size={24} />
                                 </div>
-                                <div style={{ fontSize: '9px', fontWeight: '950', padding: '8px 16px', borderRadius: '99px', background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.12em', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-                                    Plantilla Global
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
+                                    <div style={{ fontSize: '9px', fontWeight: '950', padding: '8px 16px', borderRadius: '99px', background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.12em', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                                        Plantilla Global
+                                    </div>
+                                    {type.permiteCreacionEmpleado && (
+                                        <div style={{ fontSize: '9px', fontWeight: '950', padding: '8px 16px', borderRadius: '99px', background: isDarkMode ? 'rgba(16, 185, 129, 0.15)' : '#ecfdf5', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.12em', border: `1px solid ${isDarkMode ? 'rgba(16, 185, 129, 0.3)' : '#d1fae5'}` }}>
+                                            Creación Empleado
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             
@@ -275,6 +284,19 @@ const NewsTemplateDesigner = () => {
                                                 onChange={(e) => setFormData({ ...formData, requiereAdjunto: e.target.checked })} 
                                             />
                                         </div>
+                                        {formData.categoria === 0 && (
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', background: activeColors.accentSoft, borderRadius: '18px', border: `1px solid ${isDarkMode ? 'rgba(99, 102, 241, 0.2)' : '#d1daff'}` }}>
+                                                <div>
+                                                    <span style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: activeColors.accent, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Creación por Empleado</span>
+                                                    <span style={{ fontSize: '0.7rem', color: activeColors.textMuted, fontWeight: '600' }}>Permitir al empleado solicitarla</span>
+                                                </div>
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={formData.permiteCreacionEmpleado} 
+                                                    onChange={(e) => setFormData({ ...formData, permiteCreacionEmpleado: e.target.checked })} 
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 

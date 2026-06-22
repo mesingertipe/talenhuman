@@ -9,7 +9,7 @@ import { useTheme } from '../../context/ThemeContext';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
 import TalenHumanDatePicker from '../../components/Shared/TalenHumanDatePicker';
 
-const NewsRequest = ({ onComplete, onCancel, user }) => {
+const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false }) => {
     const [step, setStep] = useState(1); 
     const [loading, setLoading] = useState(false);
     const [cedula, setCedula] = useState('');
@@ -58,7 +58,11 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
             api.get('/stores'),
             api.get('/brands')
         ]).then(([resTypes, resStores, resBrands]) => {
-            setNewsTypes(resTypes.data);
+            let types = resTypes.data;
+            if (isEmployeeSelfService) {
+                types = types.filter(t => t.permiteCreacionEmpleado);
+            }
+            setNewsTypes(types);
             
             const isManager = user?.roles?.includes('Gerente');
             const isDistrital = user?.roles?.includes('Distrital');
@@ -77,7 +81,13 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
                 setFormData(prev => ({ ...prev, storeId: filteredStores[0].id }));
             }
         }).catch(() => {
-            api.get('/novedadtipos?includeTemplates=false').then(res => setNewsTypes(res.data));
+            api.get('/novedadtipos?includeTemplates=false').then(res => {
+                let types = res.data;
+                if (isEmployeeSelfService) {
+                    types = types.filter(t => t.permiteCreacionEmpleado);
+                }
+                setNewsTypes(types);
+            });
         }).finally(() => setLoading(false));
     }, []);
 
@@ -89,7 +99,14 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
     const handleTypeSelection = (typeId) => {
         const type = newsTypes.find(t => t.id === typeId);
         setSelectedType(type);
-        setFormData(prev => ({ ...prev, novedadTipoId: typeId, empleadoId: '', storeId: '', brandId: '', datosDinamicos: {} }));
+        setFormData(prev => ({ 
+            ...prev, 
+            novedadTipoId: typeId, 
+            empleadoId: isEmployeeSelfService ? (user?.employeeId || '') : '', 
+            storeId: isEmployeeSelfService ? (user?.storeId || '') : '', 
+            brandId: '', 
+            datosDinamicos: {} 
+        }));
         setFoundEmployee(null);
         setCedula('');
 
@@ -102,7 +119,7 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
                 setFormData(prev => ({ ...prev, datosDinamicos: initialValues }));
             } catch (e) { setDynamicFields([]); }
         } else { setDynamicFields([]); }
-        setStep(2);
+        setStep(isEmployeeSelfService ? 3 : 2);
     };
 
     const handleSearchEmployee = async () => {
@@ -208,7 +225,12 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
         let detail = "";
         let icon = null;
 
-        if (selectedType.categoria === 0 && foundEmployee) {
+        if (isEmployeeSelfService) {
+            title = user?.fullName || 'Mi Solicitud';
+            subtitle = 'Empleado / Colaborador';
+            detail = user?.storeName ? `Sede: ${user.storeName}` : 'Solicitud Personal';
+            icon = <UserIcon size={24} />;
+        } else if (selectedType.categoria === 0 && foundEmployee) {
             title = `${foundEmployee.firstName} ${foundEmployee.lastName}`;
             subtitle = foundEmployee.profileName || 'Colaborador';
             detail = `CC: ${foundEmployee.identificationNumber} • ${foundEmployee.storeName || ''}`;
@@ -262,15 +284,18 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '35px' }}>
-                    {[1, 2, 3, 4].map(s => (
-                        <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                            <div style={{ width: '40px', height: '40px', borderRadius: '15px', background: step === s ? 'white' : step > s ? '#10b981' : 'rgba(255,255,255,0.1)', color: step === s ? '#4f46e5' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '950', fontSize: '14px', transition: 'all 0.3s' }}>
-                                {step > s ? <CheckCircle size={20} /> : s}
+                    {(isEmployeeSelfService 
+                        ? [ { stepId: 1, label: 'Concepto' }, { stepId: 3, label: 'Datos' }, { stepId: 4, label: 'Finalizar' } ]
+                        : [ { stepId: 1, label: 'Concepto' }, { stepId: 2, label: 'Entidad' }, { stepId: 3, label: 'Datos' }, { stepId: 4, label: 'Finalizar' } ]
+                    ).map((ws, index) => (
+                        <div key={ws.stepId} style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '15px', background: step === ws.stepId ? 'white' : step > ws.stepId ? '#10b981' : 'rgba(255,255,255,0.1)', color: step === ws.stepId ? '#4f46e5' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '950', fontSize: '14px', transition: 'all 0.3s' }}>
+                                {step > ws.stepId ? <CheckCircle size={20} /> : index + 1}
                             </div>
                             <div>
-                                <p style={{ fontSize: '8px', fontWeight: '900', opacity: 0.4, textTransform: 'uppercase', margin: 0 }}>Paso 0{s}</p>
-                                <p style={{ fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', margin: '2px 0 0', color: step === s ? 'white' : 'rgba(255,255,255,0.3)' }}>
-                                    {s === 1 ? 'Concepto' : s === 2 ? 'Entidad' : s === 3 ? 'Datos' : 'Finalizar'}
+                                <p style={{ fontSize: '8px', fontWeight: '900', opacity: 0.4, textTransform: 'uppercase', margin: 0 }}>Paso 0{index + 1}</p>
+                                <p style={{ fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', margin: '2px 0 0', color: step === ws.stepId ? 'white' : 'rgba(255,255,255,0.3)' }}>
+                                    {ws.label}
                                 </p>
                             </div>
                         </div>
@@ -479,7 +504,7 @@ const NewsRequest = ({ onComplete, onCancel, user }) => {
                         </div>
 
                         <div style={{ display: 'flex', gap: '15px' }}>
-                            <button onClick={() => setStep(2)} style={{ padding: '16px 30px', borderRadius: '16px', background: 'transparent', border: `1px solid ${activeColors.border}`, color: activeColors.textMuted, fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}>Atrás</button>
+                            <button onClick={() => setStep(isEmployeeSelfService ? 1 : 2)} style={{ padding: '16px 30px', borderRadius: '16px', background: 'transparent', border: `1px solid ${activeColors.border}`, color: activeColors.textMuted, fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}>Atrás</button>
                             <button onClick={() => setStep(4)} disabled={!formData.fechaInicio || !formData.fechaFin} style={{ flex: 1, padding: '16px', borderRadius: '16px', background: activeColors.accent, color: 'white', border: 'none', fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 10px 15px rgba(79, 70, 229, 0.2)' }}>Continuar</button>
                         </div>
                     </div>

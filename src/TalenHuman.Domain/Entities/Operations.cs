@@ -185,6 +185,7 @@ public class NovedadTipo : BaseEntity, IMultitenant
     public string RolAprobador { get; set; } = "Admin"; // Default to Admin
     
     public bool EsPlantilla { get; set; } = false; // Flag for Global Templates
+    public bool PermiteCreacionEmpleado { get; set; } = false;
     
     public Guid CompanyId { get; set; }
     [JsonIgnore]
@@ -246,9 +247,10 @@ public class NovedadAdjunto : BaseEntity, IMultitenant
 
 public enum NovedadStatus
 {
-    Pendiente, // Orange
-    Aprobado,  // Green
-    Rechazado  // Red
+    Pendiente,        // Orange
+    Aprobado,         // Green
+    Rechazado,        // Red
+    PendienteGerente  // Blue
 }
 
 public class NovedadLog : BaseEntity, IMultitenant

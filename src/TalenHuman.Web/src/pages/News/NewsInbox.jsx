@@ -18,7 +18,11 @@ const NewsInbox = ({ user, tenantSettings }) => {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('Todos');
+    const [statusFilter, setStatusFilter] = useState(
+        (user?.roles?.includes('Gerente') || user?.roles?.includes('Distrital')) && !user?.roles?.includes('Admin') && !user?.roles?.includes('SuperAdmin') && !user?.roles?.includes('RH')
+            ? 'PendienteGerente'
+            : 'Todos'
+    );
     const [selectedNews, setSelectedNews] = useState(null);
     const [showDetail, setShowDetail] = useState(false);
     const [showRequest, setShowRequest] = useState(false);
@@ -118,7 +122,8 @@ const NewsInbox = ({ user, tenantSettings }) => {
         const matchesStatus = statusFilter === 'Todos' || 
                              (statusFilter === 'Pendiente' && n.status === 0) ||
                              (statusFilter === 'Aprobado' && n.status === 1) ||
-                             (statusFilter === 'Rechazado' && n.status === 2);
+                             (statusFilter === 'Rechazado' && n.status === 2) ||
+                             (statusFilter === 'PendienteGerente' && n.status === 3);
         
         return matchesSearch && matchesStatus;
     });
@@ -128,6 +133,7 @@ const NewsInbox = ({ user, tenantSettings }) => {
             case 0: return { label: 'Pendiente', color: '#f59e0b', icon: <Clock size={12} />, bg: '#fffbeb' };
             case 1: return { label: 'Aprobado', color: '#10b981', icon: <CheckCircle size={12} />, bg: '#f0fdf4' };
             case 2: return { label: 'Rechazado', color: '#ef4444', icon: <XCircle size={12} />, bg: '#fef2f2' };
+            case 3: return { label: 'Pendiente Gerente', color: '#4f46e5', icon: <Clock size={12} />, bg: '#eef2ff' };
             default: return { label: 'Desconocido', color: '#64748b', icon: <Clock size={12} />, bg: '#f8fafc' };
         }
     };
@@ -172,6 +178,7 @@ const NewsInbox = ({ user, tenantSettings }) => {
                         options={[
                             { id: 'Todos', name: 'Todos los Estados' },
                             { id: 'Pendiente', name: 'Pendientes' },
+                            { id: 'PendienteGerente', name: 'Pendientes Gerente' },
                             { id: 'Aprobado', name: 'Aprobados' },
                             { id: 'Rechazado', name: 'Rechazados' }
                         ]}
@@ -383,7 +390,7 @@ const NewsInbox = ({ user, tenantSettings }) => {
 
                         {/* Modal Footer Actions */}
                         <div style={{ padding: '25px 40px', background: activeColors.card, borderTop: `1px solid ${activeColors.border}`, display: 'flex', gap: '15px' }}>
-                            {selectedNews.status === 0 ? (
+                            {selectedNews.status === 0 || selectedNews.status === 3 ? (
                                 <>
                                     <button onClick={() => { setActionType('Reject'); setActionComment(''); setShowActionModal(true); }} style={{ flex: 1, padding: '16px', borderRadius: '16px', background: 'transparent', border: '2px solid #ef4444', color: '#ef4444', fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}>Rechazar</button>
                                     <button onClick={() => { setActionType('Approve'); setActionComment(''); setShowActionModal(true); }} style={{ flex: 2, padding: '16px', borderRadius: '16px', background: '#10b981', color: 'white', border: 'none', fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 10px 15px rgba(16, 185, 129, 0.2)' }}>Aprobar Requerimiento</button>
