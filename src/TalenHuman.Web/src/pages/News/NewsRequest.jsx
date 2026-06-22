@@ -36,6 +36,7 @@ const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploadedFile, setUploadedFile] = useState(null);
+    const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     const [attachments, setAttachments] = useState([]); // List of { url, fileName }
     const { isDarkMode } = useTheme();
     const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
