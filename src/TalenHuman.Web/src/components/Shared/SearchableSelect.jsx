@@ -19,6 +19,26 @@ const SearchableSelect = ({
   const containerRef = useRef(null);
   const inputRef = useRef(null);
   const [menuStyle, setMenuStyle] = useState({});
+  const [isMobile, setIsMobile] = useState(false);
+  const openTimeRef = useRef(0);
+
+  useEffect(() => {
+    const checkMobile = () => {
+        setIsMobile(typeof window !== 'undefined' && (
+            /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || 
+            window.innerWidth < 768
+        ));
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      openTimeRef.current = Date.now();
+    }
+  }, [isOpen]);
 
   const getLabel = () => {
     if (multiple) {
@@ -70,8 +90,20 @@ const SearchableSelect = ({
     };
     
     // Close on scroll to prevent detached menus, but ignore scroll events inside the dropdown menu itself
+    // Also ignore scroll events that happen immediately after opening or when focusing/typing in the search input
     const handleScroll = (event) => { 
       if (!isOpen) return;
+      
+      // If user is currently focusing/typing in the search input, do NOT close
+      if (document.activeElement === inputRef.current) {
+        return;
+      }
+      
+      // Ignore layout/keyboard scroll adjustments within 800ms of opening
+      if (Date.now() - openTimeRef.current < 800) {
+        return;
+      }
+      
       const menu = document.getElementById('searchable-select-portal-menu');
       if (menu && menu.contains(event.target)) return;
       setIsOpen(false); 
@@ -125,7 +157,7 @@ const SearchableSelect = ({
               <Search size={14} className="absolute left-3 top-3 text-slate-400 dark:text-slate-500" />
               <input
                 ref={inputRef}
-                autoFocus
+                autoFocus={!isMobile}
                 type="text"
                 placeholder="Filtrar opciones..."
                 value={searchTerm}
