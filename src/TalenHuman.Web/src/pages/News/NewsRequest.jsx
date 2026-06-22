@@ -260,7 +260,7 @@ const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false
         return (
             <div style={{ background: isDarkMode ? '#1e293b' : '#f8fafc', padding: isMobile ? '15px 20px' : '25px 35px', borderRadius: isMobile ? '24px' : '32px', border: `1px solid ${activeColors.border}`, marginBottom: '25px', display: 'flex', alignItems: 'center', gap: isMobile ? '15px' : '25px', animation: 'fadeIn 0.5s ease-out' }}>
                 <div style={{ width: isMobile ? '48px' : '60px', height: isMobile ? '48px' : '60px', background: activeColors.accent, color: 'white', borderRadius: isMobile ? '14px' : '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 20px rgba(79, 70, 229, 0.2)', flexShrink: 0 }}>
-                    {React.cloneElement(icon, { size: isMobile ? 20 : 24 })}
+                    {icon}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>

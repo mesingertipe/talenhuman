@@ -6,23 +6,14 @@ import { ThemeProvider } from './context/ThemeContext'
 import { registerSW } from 'virtual:pwa-register'
 
 const updateSW = registerSW({
+  onNeedRefresh() {
+    console.log('Nueva versión disponible. Por favor, reinicie la aplicación.');
+    // No forzamos recarga automática para evitar bucles de flasheo
+  },
   onOfflineReady() {
     console.log('La aplicación está lista para usarse sin conexión.')
   },
 })
-
-// Recarga automática segura cuando un nuevo service worker toma el control (evita loops)
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-  let refreshing = false;
-  const hasController = !!navigator.serviceWorker.controller;
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (hasController && !refreshing) {
-      refreshing = true;
-      console.log('🔄 Nueva versión activada. Recargando aplicación...');
-      window.location.reload();
-    }
-  });
-}
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
