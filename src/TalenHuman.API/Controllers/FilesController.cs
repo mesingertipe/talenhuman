@@ -30,7 +30,18 @@ public class FilesController : ControllerBase
 
         try
         {
-            (Stream stream, string contentType, string fileName) = await _storageService.GetFileStreamAsync(adjunto.Url);
+            var fileKey = adjunto.Url;
+            var prefix = "/api/Files/raw/";
+            if (fileKey.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                fileKey = fileKey.Substring(prefix.Length);
+            }
+            else if (fileKey.StartsWith("api/Files/raw/", StringComparison.OrdinalIgnoreCase))
+            {
+                fileKey = fileKey.Substring("api/Files/raw/".Length);
+            }
+
+            (Stream stream, string contentType, string fileName) = await _storageService.GetFileStreamAsync(fileKey);
             return File(stream, contentType, fileName);
         }
         catch (Exception ex)
