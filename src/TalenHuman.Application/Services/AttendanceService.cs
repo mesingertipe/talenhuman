@@ -116,7 +116,7 @@ public class AttendanceService
                 }
                 else
                 {
-                    await ProcessStandardPairingAsync(employee, store, shifts, filteredRecords, companyId, opSetting);
+                    await ProcessStandardPairingAsync(employee, store, shifts, filteredRecords, companyId, opSetting, windowEnd);
                 }
                 currentStep = $"[{store.Name}] Finalizando emparejamiento para {employee.FirstName} {employee.LastName}. Preparando guardado.";
             }
@@ -364,7 +364,7 @@ public class AttendanceService
         _context.Attendances.Add(attendance);
     }
 
-    private async Task ProcessStandardPairingAsync(Employee emp, Store store, List<Shift> shifts, List<BiometricRecord> records, Guid companyId, OperationalSetting? opSetting)
+    private async Task ProcessStandardPairingAsync(Employee emp, Store store, List<Shift> shifts, List<BiometricRecord> records, Guid companyId, OperationalSetting? opSetting, DateTime windowEnd)
     {
         bool checkInEarlyInfinite = opSetting?.CheckInEarlyInfinite ?? true;
         int checkInEarlyTolerance = opSetting?.CheckInEarlyTolerance ?? 15;
@@ -397,8 +397,9 @@ public class AttendanceService
             });
         }
 
-        foreach (var shift in shifts)
+        for (int i = 0; i < shifts.Count; i++)
         {
+            var shift = shifts[i];
             var attendance = new Attendance
             {
                 EmployeeId = emp.Id,
@@ -408,9 +409,14 @@ public class AttendanceService
                 ClockIn = null
             };
 
+            var nextShift = (i + 1 < shifts.Count) ? shifts[i + 1] : null;
+            var maxAllowedTime = nextShift != null
+                ? (nextShift.StartTime < shift.EndTime.AddHours(2) ? nextShift.StartTime : shift.EndTime.AddHours(2))
+                : windowEnd;
+
             var shiftRecords = availableRecords
                 .Where(r => r.RecordDate >= shift.StartTime.AddHours(-2) && 
-                            r.RecordDate <= shift.EndTime.AddHours(2))
+                            r.RecordDate <= maxAllowedTime)
                 .OrderBy(r => r.RecordDate)
                 .ToList();
 
