@@ -9,6 +9,58 @@ import { useTheme } from '../../context/ThemeContext';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
 import TalenHumanDatePicker from '../../components/Shared/TalenHumanDatePicker';
 
+const compressImage = (file, maxWidth = 1600, maxHeight = 1600, quality = 0.75) => {
+    return new Promise((resolve) => {
+        if (!file || !file.type || !file.type.startsWith('image/') || file.type.includes('gif') || file.type.includes('svg')) {
+            resolve(file);
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth || height > maxHeight) {
+                    if (width > height) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    } else {
+                        width = Math.round((width * maxHeight) / height);
+                        height = maxHeight;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        resolve(file);
+                        return;
+                    }
+                    const nameWithoutExt = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                    const compressedFile = new File([blob], `${nameWithoutExt}.jpg`, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+                    resolve(compressedFile);
+                }, 'image/jpeg', quality);
+            };
+            img.onerror = () => resolve(file);
+            img.src = event.target.result;
+        };
+        reader.onerror = () => resolve(file);
+        reader.readAsDataURL(file);
+    });
+};
+
 const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false }) => {
     const [step, setStep] = useState(1); 
     const [loading, setLoading] = useState(false);
@@ -155,8 +207,10 @@ const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false
             setIsUploading(true);
             setUploadProgress(10);
             
+            const processedFile = await compressImage(file);
+            
             const formDataUpload = new FormData();
-            formDataUpload.append('file', file);
+            formDataUpload.append('file', processedFile);
             
             // Simulating initial progress
             const progressInterval = setInterval(() => {

@@ -110,11 +110,15 @@ public class DigitalOceanSpacesService : IFileStorageService
             Key = fileKey
         };
 
-        var response = await client.GetObjectAsync(request);
+        using var response = await client.GetObjectAsync(request);
         
         var fileName = response.Metadata["x-amz-meta-original-name"] ?? Path.GetFileName(fileKey);
         
-        return (response.ResponseStream, response.Headers.ContentType, fileName);
+        var memoryStream = new MemoryStream();
+        await response.ResponseStream.CopyToAsync(memoryStream);
+        memoryStream.Position = 0;
+        
+        return (memoryStream, response.Headers.ContentType, fileName);
     }
 
     public async Task DeleteFileAsync(string fileUrl)
