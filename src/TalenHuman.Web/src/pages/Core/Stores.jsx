@@ -45,7 +45,10 @@ const Stores = ({ user }) => {
     isActive: true,
     operationalDayStart: '05:00',
     defaultStartTime: '08:00',
-    defaultEndTime: '17:00'
+    defaultEndTime: '17:00',
+    latitude: '',
+    longitude: '',
+    geofenceRadius: ''
   });
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -113,7 +116,10 @@ const Stores = ({ user }) => {
         brandId: formData.brandId === '' ? null : formData.brandId,
         cityId: formData.cityId === '' ? null : formData.cityId,
         districtId: formData.districtId === '' ? null : formData.districtId,
-        storeTypeId: formData.storeTypeId === '' ? null : formData.storeTypeId
+        storeTypeId: formData.storeTypeId === '' ? null : formData.storeTypeId,
+        latitude: formData.latitude === '' ? null : parseFloat(formData.latitude),
+        longitude: formData.longitude === '' ? null : parseFloat(formData.longitude),
+        geofenceRadius: formData.geofenceRadius === '' ? null : parseFloat(formData.geofenceRadius)
       };
 
       if (currentStore) {
@@ -222,7 +228,10 @@ const Stores = ({ user }) => {
                     isActive: true,
                     operationalDayStart: '05:00',
                     defaultStartTime: '08:00',
-                    defaultEndTime: '17:00'
+                    defaultEndTime: '17:00',
+                    latitude: '',
+                    longitude: '',
+                    geofenceRadius: ''
                   }); 
                   setFormTab('general');
                   setShowModal(true); 
@@ -324,7 +333,10 @@ const Stores = ({ user }) => {
                             isActive: store.isActive !== false,
                             operationalDayStart: store.operationalDayStart || '05:00',
                             defaultStartTime: store.defaultStartTime || '08:00',
-                            defaultEndTime: store.defaultEndTime || '17:00'
+                            defaultEndTime: store.defaultEndTime || '17:00',
+                            latitude: store.latitude !== null && store.latitude !== undefined ? store.latitude : '',
+                            longitude: store.longitude !== null && store.longitude !== undefined ? store.longitude : '',
+                            geofenceRadius: store.geofenceRadius !== null && store.geofenceRadius !== undefined ? store.geofenceRadius : ''
                           }); 
                           setFormTab('general');
                           setShowModal(true); 
@@ -511,6 +523,36 @@ const Stores = ({ user }) => {
                             className="focus:border-indigo-500 focus:shadow-xl"
                           />
                         </div>
+                      </div>
+                      <div className="group">
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em' }}>Latitud GPS</label>
+                        <input 
+                          type="number" step="any" value={formData.latitude}
+                          onChange={(e) => setFormData({...formData, latitude: e.target.value})}
+                          placeholder="Ej. 4.609712" 
+                          style={{ width: '100%', padding: '22px 24px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', fontSize: '0.95rem', outline: 'none' }}
+                        />
+                      </div>
+                      <div className="group">
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em' }}>Longitud GPS</label>
+                        <input 
+                          type="number" step="any" value={formData.longitude}
+                          onChange={(e) => setFormData({...formData, longitude: e.target.value})}
+                          placeholder="Ej. -74.081754" 
+                          style={{ width: '100%', padding: '22px 24px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', fontSize: '0.95rem', outline: 'none' }}
+                        />
+                      </div>
+                      <div className="md:col-span-2 group">
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em' }}>Radio de Geocerca (Metros)</label>
+                        <input 
+                          type="number" value={formData.geofenceRadius}
+                          onChange={(e) => setFormData({...formData, geofenceRadius: e.target.value})}
+                          placeholder="Radio en metros (ej. 25, sin valor por defecto)" 
+                          style={{ width: '100%', padding: '22px 24px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', fontSize: '0.95rem', outline: 'none' }}
+                        />
+                        <span style={{ display: 'block', fontSize: '10.5px', color: activeColors.textMuted, marginTop: '8px', fontWeight: '600' }}>
+                          * Si se deja en blanco, la asistencia móvil geocercada estará deshabilitada para esta sede.
+                        </span>
                       </div>
                     </div>
                   </div>

@@ -581,6 +581,132 @@ public class AttendanceController : ControllerBase
         return Ok(new { Message = "Remoción de registros biométricos antiguos completada con éxito." });
     }
 
+    [HttpGet("my-store-settings")]
+    public async Task<IActionResult> GetMyStoreSettings()
+    {
+        var companyId = _tenantProvider.GetTenantId();
+        var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
+
+        var userId = Guid.Parse(userIdString);
+        var employee = await _context.Employees.Include(e => e.Store).FirstOrDefaultAsync(e => e.UserId == userId);
+        
+        if (employee == null)
+        {
+            var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
+            if (user != null)
+            {
+                employee = await _context.Employees
+                    .Include(e => e.Store)
+                    .FirstOrDefaultAsync(e => e.CompanyId == companyId && 
+                                              (e.Email == user.Email || e.IdentificationNumber == user.UserName || e.IdentificationNumber == user.Email));
+            }
+        }
+
+        if (employee == null || employee.Store == null)
+        {
+            return Ok(new { MobileClockEnabled = false });
+        }
+
+        var store = employee.Store;
+        return Ok(new {
+            MobileClockEnabled = store.Latitude.HasValue && store.Longitude.HasValue && store.GeofenceRadius.HasValue,
+            Latitude = store.Latitude,
+            Longitude = store.Longitude,
+            GeofenceRadius = store.GeofenceRadius,
+            StoreName = store.Name
+        });
+    }
+
+    [HttpPost("mobile-clock")]
+    public async Task<IActionResult> RegisterMobileClock([FromBody] MobileClockDto dto)
+    {
+        var companyId = _tenantProvider.GetTenantId();
+        var userIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdString)) return Unauthorized();
+
+        var userId = Guid.Parse(userIdString);
+        var employee = await _context.Employees.Include(e => e.Store).FirstOrDefaultAsync(e => e.UserId == userId);
+        
+        if (employee == null)
+        {
+            var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
+            if (user != null)
+            {
+                employee = await _context.Employees
+                    .Include(e => e.Store)
+                    .FirstOrDefaultAsync(e => e.CompanyId == companyId && 
+                                              (e.Email == user.Email || e.IdentificationNumber == user.UserName || e.IdentificationNumber == user.Email));
+                if (employee != null)
+                {
+                    employee.UserId = userId;
+                    user.EmployeeId = employee.Id;
+                    await _context.SaveChangesAsync(default);
+                }
+            }
+        }
+
+        if (employee == null) return BadRequest("No se encontró información de empleado para su usuario.");
+        
+        var store = employee.Store;
+        if (store == null) return BadRequest("El empleado no tiene una sede asignada.");
+
+        if (!store.Latitude.HasValue || !store.Longitude.HasValue || !store.GeofenceRadius.HasValue)
+        {
+            return BadRequest("El registro móvil de asistencia no está habilitado para tu sede.");
+        }
+
+        // Haversine formula to check distance
+        double R = 6371e3; // Earth radius in metres
+        double lat1 = store.Latitude.Value * Math.PI / 180;
+        double lat2 = dto.Latitude * Math.PI / 180;
+        double deltaLat = (dto.Latitude - store.Latitude.Value) * Math.PI / 180;
+        double deltaLon = (dto.Longitude - store.Longitude.Value) * Math.PI / 180;
+
+        double a = Math.Sin(deltaLat / 2) * Math.Sin(deltaLat / 2) +
+                   Math.Cos(lat1) * Math.Cos(lat2) *
+                   Math.Sin(deltaLon / 2) * Math.Sin(deltaLon / 2);
+        double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+        double distance = R * c; // distance in metres
+
+        if (distance > store.GeofenceRadius.Value)
+        {
+            return BadRequest(new { Message = $"No puedes registrar tu asistencia fuera de la sede. Distancia actual: {distance:F1}m (Sede: {store.Name}). Permitido: {store.GeofenceRadius.Value}m." });
+        }
+
+        var now = _tenantTimeProvider.Now;
+
+        var record = new BiometricRecord
+        {
+            DeviceId = "Celular",
+            DeviceUser = employee.IdentificationNumber,
+            RecordDate = now,
+            CreationDate = DateTime.UtcNow,
+            RecordDay = DateOnly.FromDateTime(now),
+            RecordTime = TimeOnly.FromDateTime(now),
+            VerificationModeId = "AppMovil",
+            AttendanceStatusId = "1",
+            CompanyId = companyId
+        };
+
+        _context.BiometricRecords.Add(record);
+        await _context.SaveChangesAsync(default);
+
+        return Ok(new { 
+            Message = "Marcación registrada con éxito.", 
+            RecordDate = now,
+            Distance = distance,
+            StoreName = store.Name
+        });
+    }
+
+    public class MobileClockDto
+    {
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+    }
+
     public class ConsolidateRequest
     {
         public DateTime? Date { get; set; }

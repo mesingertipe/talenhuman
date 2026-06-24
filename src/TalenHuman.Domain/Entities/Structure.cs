@@ -62,6 +62,11 @@ public class Store : BaseEntity, IMultitenant
     public string DefaultStartTime { get; set; } = "08:00"; // Store standard start
     public string DefaultEndTime { get; set; } = "17:00"; // Store standard end
     
+    // Geofencing settings for Mobile Attendance
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
+    public double? GeofenceRadius { get; set; }
+    
     public Guid? CityId { get; set; }
     [System.Text.Json.Serialization.JsonIgnore]
     public City? City { get; set; }

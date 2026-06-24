@@ -120,6 +120,11 @@ public class StoresController : ControllerBase
         existing.DefaultEndTime = store.DefaultEndTime;
         existing.StoreTypeId = store.StoreTypeId;
         
+        // Geofencing Settings
+        existing.Latitude = store.Latitude;
+        existing.Longitude = store.Longitude;
+        existing.GeofenceRadius = store.GeofenceRadius;
+        
         await _context.SaveChangesAsync();
 
         await _auditService.LogAsync("UPDATE", "Store", existing.Id.ToString(), $"Actualizada tienda: {store.Name}");
