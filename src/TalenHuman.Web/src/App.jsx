@@ -10,6 +10,7 @@ import Users from './pages/SuperAdmin/Users'
 import Companies from './pages/SuperAdmin/Companies'
 import ResetPassword from './pages/ResetPassword'
 import Login from './pages/Login'
+import Landing from './pages/Landing'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetForgottenPassword from './pages/ResetForgottenPassword'
 import SelfServiceReset from './pages/SelfServiceReset';
@@ -84,7 +85,7 @@ function App() {
      return true;
   }); 
   const fcmSyncRef = useRef(false);
-  const [authView, setAuthView] = useState('login'); // 'login', 'forgot', 'self-service', 'reset-forgotten'
+  const [authView, setAuthView] = useState('landing'); // 'landing', 'login', 'forgot', 'self-service', 'reset-forgotten'
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const { isDarkMode, toggleTheme } = useTheme();
   const theme = isDarkMode ? 'dark' : 'light';
@@ -291,6 +292,9 @@ function App() {
     );
 
     if (!token) {
+        if (authView === 'landing') {
+            return <Landing onLoginClick={() => setAuthView('login')} />;
+        }
         if (authView === 'forgot') {
             return <ForgotPassword 
                 onBack={() => setAuthView('login')} 
@@ -316,6 +320,7 @@ function App() {
                 theme={theme} 
                 onForgotPassword={() => setAuthView('forgot')} 
                 onSelfServiceReset={() => setAuthView('self-service')} 
+                onBackToLanding={() => setAuthView('landing')}
             />
         );
     }

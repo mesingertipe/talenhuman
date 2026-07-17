@@ -4,7 +4,7 @@ import api from '../services/api';
 import TalenHumanLogo from '../components/Shared/TalenHumanLogo';
 import './Login.css';
 
-const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
+const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, onBackToLanding, version }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
@@ -54,7 +54,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
             {/* 🏔️ SIDEBAR LANDING (Hidden on Mobile) */}
             <div className="login-sidebar">
               <div className="login-sidebar-content">
-                <div className="login-brand mb-12">
+                <div className="login-brand mb-12" onClick={onBackToLanding} style={{ cursor: onBackToLanding ? 'pointer' : 'default' }}>
                   <TalenHumanLogo size={48} white={true} />
                 </div>
                 <h1 className="login-hero-title">
@@ -86,11 +86,32 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, version }) => {
             <div className="login-form-side">
                 <div className="login-form-container">
                   {/* 🏠 Mobile Brand Header (Purple Gradient background in CSS) */}
-                  <div className="login-mobile-brand">
+                  <div className="login-mobile-brand" onClick={onBackToLanding} style={{ cursor: onBackToLanding ? 'pointer' : 'default' }}>
                     <TalenHumanLogo size={36} white={true} />
                     <span className="login-mobile-brand-name">TalenHuman</span>
                   </div>
 
+                  {onBackToLanding && (
+                    <button 
+                      type="button" 
+                      onClick={onBackToLanding}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#4f46e5',
+                        fontWeight: '700',
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.25rem',
+                        marginBottom: '1rem',
+                        padding: 0
+                      }}
+                    >
+                      &larr; Volver al inicio
+                    </button>
+                  )}
                   <div className="login-header">
                     <h2 className="login-title">¡Bienvenido!</h2>
                     <p className="login-subtitle">Ingresa tus credenciales para acceder.</p>
