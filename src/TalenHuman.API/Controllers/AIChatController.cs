@@ -40,7 +40,9 @@ public class AIChatController : ControllerBase
             return Unauthorized();
             
         var userForName = await _context.Users.FindAsync(userId);
-        var userName = userForName?.FullName ?? User.FindFirst("FirstName")?.Value ?? User.Identity?.Name ?? "Usuario";
+        var userName = !string.IsNullOrWhiteSpace(userForName?.FullName) ? userForName.FullName : 
+                       (!string.IsNullOrWhiteSpace(User.FindFirst("FirstName")?.Value) ? User.FindFirst("FirstName")?.Value : 
+                       (!string.IsNullOrWhiteSpace(User.Identity?.Name) ? User.Identity?.Name : "Usuario"));
 
         var roles = User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value).ToList();
         
@@ -113,7 +115,9 @@ public class AIChatController : ControllerBase
             }
             
             var userForName = await _context.Users.FindAsync(userId);
-            var userName = userForName?.FullName ?? User.FindFirst("FirstName")?.Value ?? User.Identity?.Name ?? "Usuario";
+            var userName = !string.IsNullOrWhiteSpace(userForName?.FullName) ? userForName.FullName : 
+                           (!string.IsNullOrWhiteSpace(User.FindFirst("FirstName")?.Value) ? User.FindFirst("FirstName")?.Value : 
+                           (!string.IsNullOrWhiteSpace(User.Identity?.Name) ? User.Identity?.Name : "Usuario"));
             var roles = rolesStr;
             
             string activeRole = "Usuario";
