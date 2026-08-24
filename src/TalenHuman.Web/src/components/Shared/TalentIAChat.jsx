@@ -60,7 +60,8 @@ const TalentIAChat = () => {
       const res = await api.post('/aichat/send', { message: text });
       setMessages(prev => [...prev, { role: 'assistant', text: res.data.response }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'assistant', text: 'Disculpa, tuve un problema procesando tu solicitud.' }]);
+      const errorMsg = error.response?.data?.error || 'Disculpa, tuve un problema procesando tu solicitud.';
+      setMessages(prev => [...prev, { role: 'assistant', text: errorMsg }]);
     } finally {
       setIsLoading(false);
     }

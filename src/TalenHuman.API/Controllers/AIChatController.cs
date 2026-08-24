@@ -172,7 +172,7 @@ public class AIChatController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = $"Error interno: {ex.Message}" });
+            return StatusCode(500, new { error = $"Error interno: {ex.Message} | StackTrace: {ex.StackTrace}" });
         }
     }
     
