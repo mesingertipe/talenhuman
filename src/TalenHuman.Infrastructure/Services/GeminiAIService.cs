@@ -102,14 +102,22 @@ Si el usuario hace una pregunta de soporte técnico o cómo usar la plataforma, 
         };
 
         var currentContents = new List<object>();
-        if (history != null)
+        
+        string chatHistoryContext = "";
+        if (history != null && history.Any())
         {
+            chatHistoryContext = "HISTORIAL DE CONVERSACIÓN PREVIA (Solo para tu contexto, NO respondas a esto nuevamente):\n";
             foreach (var msg in history.OrderBy(h => h.CreatedAt))
             {
-                currentContents.Add(new { role = msg.Role, parts = new[] { new { text = msg.Content } } });
+                string roleName = msg.Role == "user" ? "Usuario" : "TalentIA";
+                chatHistoryContext += $"[{roleName}]: {msg.Content}\n";
             }
+            chatHistoryContext += "--- FIN DEL HISTORIAL ---\n\n";
         }
-        currentContents.Add(new { role = "user", parts = new[] { new { text = prompt } } });
+
+        string finalUserPrompt = $"{chatHistoryContext}PREGUNTA ACTUAL DEL USUARIO (Responde SOLO a esto):\n{prompt}";
+
+        currentContents.Add(new { role = "user", parts = new[] { new { text = finalUserPrompt } } });
 
         int maxIterations = 5;
         for (int i = 0; i < maxIterations; i++)
