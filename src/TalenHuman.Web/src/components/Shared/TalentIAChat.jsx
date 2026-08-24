@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { MessageSquare, X, Send, Loader2, Sparkles } from 'lucide-react';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
@@ -88,7 +89,7 @@ const TalentIAChat = () => {
     ));
   };
 
-  return (
+  const chatWidget = (
     <>
       {/* Botón flotante */}
       <button
@@ -173,13 +174,14 @@ const TalentIAChat = () => {
           
           {isLoading && (
             <div className="flex justify-start">
-              <div className={`p-4 rounded-2xl rounded-tl-sm flex items-center gap-2 ${
-                isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-100'
+              <div className={`px-4 py-3 rounded-2xl rounded-tl-sm flex items-center gap-1 ${
+                isDarkMode ? 'bg-slate-800 border border-slate-700' : 'bg-slate-100 border border-slate-200'
               }`}>
-                <Loader2 className="animate-spin text-indigo-500" size={16} />
-                <span className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Analizando datos...
-                </span>
+                <div className="flex gap-1 items-center h-4">
+                  <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
               </div>
             </div>
           )}
@@ -240,6 +242,8 @@ const TalentIAChat = () => {
       </div>
     </>
   );
+
+  return createPortal(chatWidget, document.body);
 };
 
 export default TalentIAChat;
