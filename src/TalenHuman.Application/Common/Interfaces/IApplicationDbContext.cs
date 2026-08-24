@@ -46,6 +46,8 @@ public interface IApplicationDbContext
     DbSet<PredictiveShiftRuleProfile> PredictiveShiftRuleProfiles { get; }
     DbSet<PredictiveShiftRuleChannel> PredictiveShiftRuleChannels { get; }
     DbSet<PredictiveSpecialDate> PredictiveSpecialDates { get; }
+    DbSet<AIChatSession> AIChatSessions { get; }
+    DbSet<AIChatMessage> AIChatMessages { get; }
 
     DbSet<TEntity> Set<TEntity>() where TEntity : class;
 
