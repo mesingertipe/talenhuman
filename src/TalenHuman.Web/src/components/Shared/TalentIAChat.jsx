@@ -94,59 +94,90 @@ const TalentIAChat = () => {
       {/* Botón flotante */}
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 z-[9000] ${
-          isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'
-        }`}
+        className="z-50"
         style={{
-          background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          width: '60px',
+          height: '60px',
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #0066FF 0%, #4f46e5 100%)',
           color: 'white',
           border: 'none',
           cursor: 'pointer',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          boxShadow: '0 10px 25px rgba(0, 102, 255, 0.4)',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          transform: isOpen ? 'scale(0)' : 'scale(1)',
+          opacity: isOpen ? 0 : 1,
+          zIndex: 99999
         }}
+        onMouseEnter={(e) => e.currentTarget.style.transform = isOpen ? 'scale(0)' : 'scale(1.1)'}
+        onMouseLeave={(e) => e.currentTarget.style.transform = isOpen ? 'scale(0)' : 'scale(1)'}
       >
         <Sparkles size={28} />
       </button>
 
       {/* Ventana de Chat */}
       <div
-        className={`fixed bottom-6 right-6 flex flex-col shadow-2xl transition-all duration-300 z-[9000] overflow-hidden ${
-          isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'
-        } ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}
+        className={isDarkMode ? 'dark' : ''}
         style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
           width: '380px',
           height: '600px',
-          maxHeight: '80vh',
+          maxHeight: '85vh',
+          backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
           borderRadius: '24px',
-          borderWidth: '1px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+          zIndex: 99999,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
           transformOrigin: 'bottom right',
+          transform: isOpen ? 'scale(1) translateY(0)' : 'scale(0.8) translateY(20px)',
+          opacity: isOpen ? 1 : 0,
+          pointerEvents: isOpen ? 'auto' : 'none',
+          border: isDarkMode ? '1px solid #334155' : '1px solid #e2e8f0',
         }}
       >
         {/* Cabecera */}
         <div 
-          className="flex justify-between items-center p-4 text-white"
-          style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)' }}
+          style={{ 
+            background: 'linear-gradient(135deg, #0066FF 0%, #4f46e5 100%)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '1rem',
+            color: 'white'
+          }}
         >
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 p-2 rounded-full backdrop-blur-sm">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ background: 'rgba(255,255,255,0.2)', padding: '0.5rem', borderRadius: '50%', backdropFilter: 'blur(4px)' }}>
               <Sparkles size={20} />
             </div>
             <div>
-              <h3 className="font-bold text-lg leading-tight">TalentIA</h3>
-              <p className="text-xs opacity-80 font-medium">Tu Asistente Operativo</p>
+              <h3 style={{ margin: 0, fontWeight: 'bold', fontSize: '1.125rem', lineHeight: '1.2' }}>TalentIA</h3>
+              <p style={{ margin: 0, fontSize: '0.75rem', opacity: 0.8, fontWeight: 500 }}>Tu Asistente Operativo</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button 
                 onClick={clearChat} 
                 disabled={isClearing}
-                className="hover:bg-white/20 p-2 rounded-full transition-colors border-none bg-transparent text-white cursor-pointer"
+                style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%', display: 'flex' }}
                 title="Limpiar chat"
             >
                 <MessageSquare size={20} />
             </button>
             <button 
               onClick={() => setIsOpen(false)} 
-              className="hover:bg-white/20 p-2 rounded-full transition-colors border-none bg-transparent text-white cursor-pointer"
+              style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%', display: 'flex' }}
             >
               <X size={20} />
             </button>
@@ -154,18 +185,30 @@ const TalentIAChat = () => {
         </div>
 
         {/* Mensajes */}
-        <div className={`flex-1 overflow-y-auto p-4 flex flex-col gap-4 ${isDarkMode ? 'custom-scrollbar' : ''}`}>
+        <div 
+          className={isDarkMode ? 'custom-scrollbar' : ''}
+          style={{ 
+            flex: 1, 
+            overflowY: 'auto', 
+            padding: '1rem', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '1rem' 
+          }}
+        >
           {messages.map((msg, i) => (
-            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
               <div 
-                className={`max-w-[85%] p-3 rounded-2xl text-sm ${
-                  msg.role === 'user' 
-                    ? 'bg-indigo-600 text-white rounded-tr-sm' 
-                    : isDarkMode 
-                      ? 'bg-slate-800 text-white rounded-tl-sm border border-slate-700' 
-                      : 'bg-slate-100 text-slate-800 rounded-tl-sm border border-slate-200'
-                }`}
-                style={{ lineHeight: '1.5' }}
+                style={{ 
+                  maxWidth: '85%', 
+                  padding: '0.75rem', 
+                  fontSize: '0.875rem',
+                  lineHeight: '1.5',
+                  backgroundColor: msg.role === 'user' ? '#0066FF' : (isDarkMode ? '#0f172a' : '#f1f5f9'),
+                  color: msg.role === 'user' ? 'white' : (isDarkMode ? 'white' : '#1e293b'),
+                  border: msg.role === 'user' ? 'none' : (isDarkMode ? '1px solid #334155' : '1px solid #e2e8f0'),
+                  borderRadius: msg.role === 'user' ? '16px 16px 0px 16px' : '16px 16px 16px 0px'
+                }}
               >
                 {formatText(msg.text)}
               </div>
@@ -173,14 +216,20 @@ const TalentIAChat = () => {
           ))}
           
           {isLoading && (
-            <div className="flex justify-start">
-              <div className={`px-4 py-3 rounded-2xl rounded-tl-sm flex items-center gap-1 ${
-                isDarkMode ? 'bg-slate-800 border border-slate-700' : 'bg-slate-100 border border-slate-200'
-              }`}>
-                <div className="flex gap-1 items-center h-4">
-                  <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                  <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                  <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+              <div style={{ 
+                padding: '0.75rem 1rem', 
+                backgroundColor: isDarkMode ? '#0f172a' : '#f1f5f9',
+                border: isDarkMode ? '1px solid #334155' : '1px solid #e2e8f0',
+                borderRadius: '16px 16px 16px 0px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                <div style={{ display: 'flex', gap: '4px', alignItems: 'center', height: '16px' }}>
+                  <div style={{ width: '6px', height: '6px', backgroundColor: '#0066FF', borderRadius: '50%', animation: 'bounce 1s infinite 0ms' }}></div>
+                  <div style={{ width: '6px', height: '6px', backgroundColor: '#0066FF', borderRadius: '50%', animation: 'bounce 1s infinite 150ms' }}></div>
+                  <div style={{ width: '6px', height: '6px', backgroundColor: '#0066FF', borderRadius: '50%', animation: 'bounce 1s infinite 300ms' }}></div>
                 </div>
               </div>
             </div>
@@ -190,16 +239,31 @@ const TalentIAChat = () => {
 
         {/* Sugerencias */}
         {suggestions.length > 0 && !isLoading && (
-          <div className={`px-4 pb-2 flex gap-2 overflow-x-auto custom-scrollbar ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
+          <div 
+            className="custom-scrollbar"
+            style={{ 
+              padding: '0 1rem 0.5rem 1rem', 
+              display: 'flex', 
+              gap: '0.5rem', 
+              overflowX: 'auto',
+              whiteSpace: 'nowrap'
+            }}
+          >
             {suggestions.map((sug, i) => (
               <button
                 key={i}
                 onClick={() => sendMessage(sug)}
-                className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer border transition-colors flex-shrink-0 ${
-                  isDarkMode 
-                    ? 'bg-slate-800 border-indigo-500/30 text-indigo-300 hover:bg-slate-700' 
-                    : 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'
-                }`}
+                style={{
+                  padding: '0.375rem 0.75rem',
+                  borderRadius: '9999px',
+                  fontSize: '0.75rem',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  border: isDarkMode ? '1px solid rgba(0, 102, 255, 0.3)' : '1px solid #bfdbfe',
+                  backgroundColor: isDarkMode ? '#0f172a' : '#eff6ff',
+                  color: isDarkMode ? '#60a5fa' : '#1d4ed8',
+                  flexShrink: 0
+                }}
               >
                 {sug}
               </button>
@@ -208,10 +272,14 @@ const TalentIAChat = () => {
         )}
 
         {/* Input */}
-        <div className={`p-3 border-t ${isDarkMode ? 'border-slate-800 bg-slate-900' : 'border-slate-200 bg-white'}`}>
+        <div style={{ 
+          padding: '0.75rem', 
+          borderTop: isDarkMode ? '1px solid #334155' : '1px solid #e2e8f0',
+          backgroundColor: isDarkMode ? '#0f172a' : 'white' 
+        }}>
           <form 
             onSubmit={(e) => { e.preventDefault(); sendMessage(input); }}
-            className="flex gap-2"
+            style={{ display: 'flex', gap: '0.5rem' }}
           >
             <input
               type="text"
@@ -219,27 +287,49 @@ const TalentIAChat = () => {
               onChange={(e) => setInput(e.target.value)}
               placeholder="Pregúntale a TalentIA..."
               disabled={isLoading}
-              className={`flex-1 px-4 py-2 rounded-xl text-sm outline-none border focus:border-indigo-500 transition-colors ${
-                isDarkMode 
-                  ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-400' 
-                  : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400'
-              }`}
+              style={{
+                flex: 1,
+                padding: '0.5rem 1rem',
+                borderRadius: '12px',
+                fontSize: '0.875rem',
+                outline: 'none',
+                border: isDarkMode ? '1px solid #475569' : '1px solid #e2e8f0',
+                backgroundColor: isDarkMode ? '#1e293b' : '#f8fafc',
+                color: isDarkMode ? 'white' : '#1e293b',
+                marginTop: 0
+              }}
             />
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
-              className={`p-2 rounded-xl border-none cursor-pointer flex items-center justify-center transition-colors ${
-                !input.trim() || isLoading
-                  ? isDarkMode ? 'bg-slate-800 text-slate-600' : 'bg-slate-100 text-slate-400'
-                  : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-500/20'
-              }`}
-              style={{ width: '42px', height: '42px' }}
+              style={{
+                padding: '0.5rem',
+                borderRadius: '12px',
+                border: 'none',
+                cursor: (!input.trim() || isLoading) ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '42px',
+                height: '42px',
+                backgroundColor: (!input.trim() || isLoading) ? (isDarkMode ? '#334155' : '#f1f5f9') : '#0066FF',
+                color: (!input.trim() || isLoading) ? (isDarkMode ? '#94a3b8' : '#94a3b8') : 'white',
+                boxShadow: (!input.trim() || isLoading) ? 'none' : '0 4px 12px rgba(0, 102, 255, 0.3)'
+              }}
             >
               <Send size={18} />
             </button>
           </form>
         </div>
       </div>
+      <style>
+        {`
+          @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+          }
+        `}
+      </style>
     </>
   );
 
