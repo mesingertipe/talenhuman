@@ -240,13 +240,11 @@ const TalentIAChat = () => {
         {/* Sugerencias */}
         {suggestions.length > 0 && !isLoading && (
           <div 
-            className="custom-scrollbar"
             style={{ 
               padding: '0 1rem 0.5rem 1rem', 
               display: 'flex', 
-              gap: '0.5rem', 
-              overflowX: 'auto',
-              whiteSpace: 'nowrap'
+              flexDirection: 'column',
+              gap: '0.5rem'
             }}
           >
             {suggestions.map((sug, i) => (
@@ -254,15 +252,17 @@ const TalentIAChat = () => {
                 key={i}
                 onClick={() => sendMessage(sug)}
                 style={{
-                  padding: '0.375rem 0.75rem',
-                  borderRadius: '9999px',
+                  padding: '0.6rem 0.8rem',
+                  borderRadius: '12px',
                   fontSize: '0.75rem',
                   fontWeight: 500,
+                  textAlign: 'left',
                   cursor: 'pointer',
                   border: isDarkMode ? '1px solid rgba(0, 102, 255, 0.3)' : '1px solid #bfdbfe',
                   backgroundColor: isDarkMode ? '#0f172a' : '#eff6ff',
                   color: isDarkMode ? '#60a5fa' : '#1d4ed8',
-                  flexShrink: 0
+                  width: '100%',
+                  lineHeight: '1.4'
                 }}
               >
                 {sug}
