@@ -11,7 +11,8 @@ namespace TalenHuman.Infrastructure.Persistence.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql(@"
-CREATE OR REPLACE VIEW ""vw_TalenHumanAI_Operativo"" AS
+DROP VIEW IF EXISTS ""vw_TalenHumanAI_Operativo"";
+CREATE VIEW ""vw_TalenHumanAI_Operativo"" AS
 SELECT 
     e.""Id"" as ""EmpleadoId"",
     e.""FirstName"" || ' ' || e.""LastName"" AS ""NombreEmpleado"",
@@ -43,7 +44,6 @@ LEFT JOIN ""Novedades"" n ON e.""Id"" = n.""EmpleadoId"" AND n.""Status"" = 0;
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            // We cannot drop it if we just want to rollback, we should revert to the previous definition.
             migrationBuilder.Sql(@"
 CREATE OR REPLACE VIEW ""vw_TalenHumanAI_Operativo"" AS
 SELECT 
