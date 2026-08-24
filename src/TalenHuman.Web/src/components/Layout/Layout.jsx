@@ -9,6 +9,7 @@ import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 import SearchableSelect from '../Shared/SearchableSelect';
 import TalenHumanLogo from '../Shared/TalenHumanLogo';
+import TalentIAChat from '../Shared/TalentIAChat';
 
 const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePage, setPage, onLogout, user, companies, selectedTenant, onTenantChange, tenantSettings }) => {
   const isSuperAdmin = user?.roles?.includes('SuperAdmin');
@@ -441,6 +442,13 @@ const Layout = ({ children, activePage, setPage, user, onLogout }) => {
     timeZoneId: user.timeZoneId || 'America/Bogota' 
   } : null;
 
+  const isAiEnabledForCompany = user?.isAiEnabled;
+  const aiAllowedRoles = user?.aiAllowedRoles?.split(',') || [];
+  const userHasAiAccess = isAiEnabledForCompany && (
+      aiAllowedRoles.includes('ALL') || 
+      user?.roles?.some(r => aiAllowedRoles.map(x => x.trim()).includes(r))
+  );
+
   return (
     <div className="app-container">
       <Sidebar 
@@ -494,6 +502,7 @@ const Layout = ({ children, activePage, setPage, user, onLogout }) => {
                 </div>
             )}
         </footer>
+        {userHasAiAccess && <TalentIAChat />}
       </div>
     </div>
   );

@@ -62,6 +62,9 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<PredictiveShiftRuleProfile> PredictiveShiftRuleProfiles => Set<PredictiveShiftRuleProfile>();
     public DbSet<PredictiveShiftRuleChannel> PredictiveShiftRuleChannels => Set<PredictiveShiftRuleChannel>();
     public DbSet<PredictiveSpecialDate> PredictiveSpecialDates => Set<PredictiveSpecialDate>();
+    
+    public DbSet<AIChatSession> AIChatSessions => Set<AIChatSession>();
+    public DbSet<AIChatMessage> AIChatMessages => Set<AIChatMessage>();
     public Guid TenantId => _tenantProvider.GetTenantId();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -106,6 +109,8 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<PredictiveShiftRuleChannel>().HasQueryFilter(rc => rc.CompanyId == TenantId || TenantId == Guid.Empty);
 
         builder.Entity<PredictiveSpecialDate>().HasQueryFilter(sd => (sd.CompanyId == TenantId || sd.CompanyId == null) || TenantId == Guid.Empty);
+
+        builder.Entity<AIChatSession>().HasQueryFilter(c => c.CompanyId == TenantId || TenantId == Guid.Empty);
 
         // Many-to-Many: Supervisor -> Stores
         builder.Entity<SupervisorStore>()
@@ -217,6 +222,15 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<User>().HasIndex(u => u.CompanyId);
         builder.Entity<UserCredential>().HasIndex(u => u.UserId);
         builder.Entity<SalesTimeBand>().HasIndex(s => new { s.CompanyId, s.Name }).IsUnique();
+
+        builder.Entity<AIChatSession>()
+            .HasMany(s => s.Messages)
+            .WithOne(m => m.Session)
+            .HasForeignKey(m => m.SessionId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        builder.Entity<AIChatSession>().HasIndex(s => new { s.CompanyId, s.UserId, s.IsActive });
+        builder.Entity<AIChatMessage>().HasIndex(m => new { m.SessionId, m.CreatedAt });
 
         // Predictive Rules Many-to-Many
         builder.Entity<PredictiveShiftRuleProfile>()

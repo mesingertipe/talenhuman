@@ -236,6 +236,9 @@ public class AuthController : ControllerBase
                 jobTitle = employee?.Profile?.Name,
                 activeModules,
                 permissions,
+                // AI Feature Flags
+                isAiEnabled = roles.Contains("SuperAdmin") ? true : user.Company?.IsAiEnabled,
+                aiAllowedRoles = roles.Contains("SuperAdmin") ? "ALL" : user.Company?.AiAllowedRoles,
                 // Global Config
                 firebaseApiKey = firebaseConfig.ContainsKey("FIREBASE_API_KEY") ? firebaseConfig["FIREBASE_API_KEY"] : null,
                 firebaseAuthDomain = firebaseConfig.ContainsKey("FIREBASE_AUTH_DOMAIN") ? firebaseConfig["FIREBASE_AUTH_DOMAIN"] : null,

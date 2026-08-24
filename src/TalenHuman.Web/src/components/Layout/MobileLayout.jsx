@@ -6,6 +6,7 @@ import { onMessageListener } from '../../firebase';
 import TalenHumanToast from '../Shared/ElitePremiumToast';
 import DebugPortal from '../Shared/DebugPortal';
 import api from '../../services/api';
+import TalentIAChat from '../Shared/TalentIAChat';
 
 const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, theme, toggleTheme }) => {
   const isDark = theme === 'dark';
@@ -15,6 +16,13 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
   const [notifCount, setNotifCount] = useState(0);
   const [toast, setToast] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
+
+  const isAiEnabledForCompany = user?.isAiEnabled;
+  const aiAllowedRoles = user?.aiAllowedRoles?.split(',') || [];
+  const userHasAiAccess = isAiEnabledForCompany && (
+      aiAllowedRoles.includes('ALL') || 
+      user?.roles?.some(r => aiAllowedRoles.map(x => x.trim()).includes(r))
+  );
 
   // 📥 FETCH HISTORY FROM SERVER (V65.1.28)
   const fetchHistory = async () => {
@@ -454,6 +462,7 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
          <MobileBottomNav activePage={activePage} setPage={setPage} theme={theme} isBranded={true} />
       </footer>
 
+      {userHasAiAccess && <TalentIAChat />}
       <DebugPortal isOpen={showDebug} onClose={() => setShowDebug(false)} />
 
       <style>{`

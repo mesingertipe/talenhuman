@@ -38,6 +38,7 @@ public static class DependencyInjection
         services.AddScoped<IEmailService, Services.ResendEmailService>();
         services.AddScoped<IIdentityService, Identity.IdentityService>();
         services.AddScoped<IAuditService, AuditService>();
+        services.AddScoped<IGeminiAIService, Services.GeminiAIService>();
         services.AddHostedService<Services.AttendanceSchedulerService>();
         services.AddHostedService<Services.PredictiveHolidaysWorker>();
         services.AddHttpClient();

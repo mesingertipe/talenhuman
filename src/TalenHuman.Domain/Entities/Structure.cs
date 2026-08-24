@@ -26,6 +26,10 @@ public class Company : BaseEntity
     public string TimeZoneId { get; set; } = "SA Pacific Standard Time"; // Default UTC-5
     
     public string? PrivacyPolicyText { get; set; }
+    
+    // AI Feature Flags
+    public bool IsAiEnabled { get; set; } = true;
+    public string? AiAllowedRoles { get; set; } = "SuperAdmin,Admin,RH,Distrital,Gerente"; // Default roles
 
     // Relationships
     [System.Text.Json.Serialization.JsonIgnore]
