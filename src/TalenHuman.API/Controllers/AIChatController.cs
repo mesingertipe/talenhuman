@@ -165,7 +165,7 @@ public class AIChatController : ControllerBase
             
             var modelMsg = new AIChatMessage { Role = "model", Content = responseText };
             activeSession.Messages.Add(modelMsg);
-            activeSession.LastUpdatedAt = DateTime.UtcNow;
+            activeSession.LastUpdatedAt = TalenHuman.Domain.Common.ColombiaTime.Now;
             await _context.SaveChangesAsync();
 
             return Ok(new { response = responseText });
