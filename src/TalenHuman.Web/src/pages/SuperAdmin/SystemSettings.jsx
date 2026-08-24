@@ -3,7 +3,7 @@ import {
     Settings, Save, Shield, HardDrive, Mail, 
     RefreshCw, CheckCircle, AlertCircle, Info,
     Key, Globe, Database, Cpu, Layout, ChevronRight,
-    Lock, Terminal, Server, Bell, Activity, UserCircle2
+    Lock, Terminal, Server, Bell, Activity, UserCircle2, Sparkles
 } from 'lucide-react';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
@@ -122,6 +122,7 @@ const SystemSettings = () => {
         { id: 'email', label: 'Email & Notificaciones', icon: Mail, color: 'text-emerald-500', bg: 'bg-emerald-50' },
         { id: 'firebase', label: 'Firebase / PWA', icon: Activity, color: 'text-orange-500', bg: 'bg-orange-50' },
         { id: 'security', label: 'Seguridad & Auditoría', icon: Shield, color: 'text-rose-500', bg: 'bg-rose-50' },
+        { id: 'ai', label: 'Inteligencia Artificial', icon: Sparkles, color: 'text-purple-500', bg: 'bg-purple-50' },
         { id: 'integrations', label: 'Integraciones Externas', icon: Globe, color: 'text-indigo-500', bg: 'bg-indigo-50' }
     ];
 
@@ -407,6 +408,52 @@ const SystemSettings = () => {
                                             <span className="text-[10px] font-black text-indigo-600 uppercase">PRÓXIMA VERSIÓN V13</span>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'ai' && (
+                            <div className="p-10 flex-1 animate-in slide-in-from-right-8 duration-500">
+                                <div className="flex items-center justify-between mb-12">
+                                    <div className="flex items-center gap-5">
+                                        <div className="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center shadow-inner">
+                                            <Sparkles size={28} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-2xl font-black text-slate-800 tracking-tight uppercase">Google Gemini AI</h3>
+                                            <p className="text-xs text-slate-400 font-bold">Configuración del motor de Inteligencia Artificial</p>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={() => handleSave('AI')}
+                                        disabled={saving}
+                                        className="flex items-center gap-3 px-8 py-3.5 bg-indigo-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-100 disabled:opacity-50"
+                                    >
+                                        {saving ? <RefreshCw className="animate-spin" size={16} /> : <><Save size={16} /> Guardar Cambios</>}
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+                                    {settings.filter(s => s.group === 'AI').length > 0 ? (
+                                        settings.filter(s => s.group === 'AI').map(renderSettingInput)
+                                    ) : (
+                                        <div className="col-span-2">
+                                            <button 
+                                                onClick={async () => {
+                                                    const defaults = [
+                                                        { key: 'GeminiApiKey', value: '', group: 'AI', description: 'API Key de Google Gemini' },
+                                                        { key: 'GeminiModel', value: 'gemini-1.5-flash', group: 'AI', description: 'Modelo de IA (ej. gemini-1.5-flash)' }
+                                                    ];
+                                                    await api.post('/SystemSettings/batch', defaults);
+                                                    fetchSettings();
+                                                }}
+                                                className="w-full p-12 border-2 border-dashed border-slate-200 rounded-[32px] text-slate-400 font-bold text-sm hover:border-purple-400 hover:text-purple-400 hover:bg-purple-50/30 transition-all group"
+                                            >
+                                                <Sparkles size={40} className="mx-auto mb-4 opacity-30 group-hover:scale-110 transition-transform" />
+                                                + Inicializar parámetros de Inteligencia Artificial
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
