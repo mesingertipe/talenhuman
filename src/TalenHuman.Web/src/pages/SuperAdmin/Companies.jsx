@@ -356,7 +356,7 @@ const Companies = () => {
                       </div>
                     </div>
                   </>
-                ) : (
+                ) : activeTab === 'legal' ? (
                   <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
                     <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl flex gap-3 text-indigo-700">
                       <Shield size={20} className="shrink-0" />
