@@ -41,6 +41,7 @@ public static class DependencyInjection
         services.AddScoped<IGeminiAIService, Services.GeminiAIService>();
         services.AddHostedService<Services.AttendanceSchedulerService>();
         services.AddHostedService<Services.PredictiveHolidaysWorker>();
+        services.AddHostedService<Services.AIChatCleanupWorker>();
         services.AddHttpClient();
         services.AddHttpContextAccessor();
 
