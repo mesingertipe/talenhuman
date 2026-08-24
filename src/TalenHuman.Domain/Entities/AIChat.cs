@@ -12,8 +12,8 @@ public class AIChatSession : BaseEntity, IMultitenant
     public Guid CompanyId { get; set; }
     public Company? Company { get; set; }
     
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime LastUpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = ColombiaTime.Now;
+    public DateTime LastUpdatedAt { get; set; } = ColombiaTime.Now;
 
     public bool IsActive { get; set; } = true;
     
@@ -28,5 +28,5 @@ public class AIChatMessage : BaseEntity
     public string Role { get; set; } = string.Empty; // "user" or "model"
     public string Content { get; set; } = string.Empty;
     
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = ColombiaTime.Now;
 }
