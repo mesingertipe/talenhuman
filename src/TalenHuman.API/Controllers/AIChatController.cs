@@ -148,14 +148,8 @@ public class AIChatController : ControllerBase
             }
             
             var userMsg = new AIChatMessage { Role = "user", Content = request.Message };
+            _context.AIChatMessages.Add(userMsg);
             activeSession.Messages.Add(userMsg);
-            
-            var states = _context.ChangeTracker.Entries().Select(e => $"{e.Entity.GetType().Name}: {e.State}").ToList();
-            if (states.Any(s => s.Contains("Modified") || s.Contains("Deleted")))
-            {
-                return StatusCode(500, new { error = "Debug State: " + string.Join(", ", states) });
-            }
-
             await _context.SaveChangesAsync();
             
             var history = activeSession.Messages.Where(m => m.Id != userMsg.Id).ToList();
@@ -171,6 +165,7 @@ public class AIChatController : ControllerBase
             );
             
             var modelMsg = new AIChatMessage { Role = "model", Content = responseText };
+            _context.AIChatMessages.Add(modelMsg);
             activeSession.Messages.Add(modelMsg);
             activeSession.LastUpdatedAt = TalenHuman.Domain.Common.ColombiaTime.Now;
             await _context.SaveChangesAsync();
