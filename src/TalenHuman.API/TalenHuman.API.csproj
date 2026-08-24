@@ -28,4 +28,10 @@
     <ProjectReference Include="..\TalenHuman.Infrastructure\TalenHuman.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="SupportKnowledgeBase.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -35,9 +35,12 @@ public class AIChatController : ControllerBase
     [HttpGet("init")]
     public async Task<IActionResult> InitChat()
     {
-        var userName = User.Identity?.Name ?? "Usuario";
-        var firstNameClaim = User.FindFirst("FirstName")?.Value;
-        if (!string.IsNullOrEmpty(firstNameClaim)) userName = firstNameClaim;
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out Guid userId))
+            return Unauthorized();
+            
+        var userForName = await _context.Users.FindAsync(userId);
+        var userName = userForName?.FullName ?? User.FindFirst("FirstName")?.Value ?? User.Identity?.Name ?? "Usuario";
 
         var roles = User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value).ToList();
         
@@ -65,9 +68,6 @@ public class AIChatController : ControllerBase
         }
 
         var companyId = _tenantProvider.GetTenantId();
-        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out Guid userId))
-            return Unauthorized();
             
         var activeSession = await _context.AIChatSessions
             .Include(s => s.Messages)
@@ -112,7 +112,8 @@ public class AIChatController : ControllerBase
                     return StatusCode(403, new { error = "No tienes permisos para acceder al asistente virtual." });
             }
             
-            var userName = User.FindFirst("FirstName")?.Value ?? User.Identity?.Name ?? "Usuario";
+            var userForName = await _context.Users.FindAsync(userId);
+            var userName = userForName?.FullName ?? User.FindFirst("FirstName")?.Value ?? User.Identity?.Name ?? "Usuario";
             var roles = rolesStr;
             
             string activeRole = "Usuario";

@@ -55,13 +55,31 @@ public class GeminiAIService : IGeminiAIService
             return "Rol no soportado o contexto de datos insuficiente para el asistente IA.";
         }
 
+        string supportKnowledge = "";
+        string knowledgeFilePath = Path.Combine(AppContext.BaseDirectory, "SupportKnowledgeBase.md");
+        if (System.IO.File.Exists(knowledgeFilePath))
+        {
+            supportKnowledge = "\nBASE DE CONOCIMIENTO DE SOPORTE:\n" + await System.IO.File.ReadAllTextAsync(knowledgeFilePath);
+        }
+        else
+        {
+            // Fallback for development/source path
+            string srcPath = Path.Combine(Directory.GetCurrentDirectory(), "SupportKnowledgeBase.md");
+            if (System.IO.File.Exists(srcPath))
+            {
+                supportKnowledge = "\nBASE DE CONOCIMIENTO DE SOPORTE:\n" + await System.IO.File.ReadAllTextAsync(srcPath);
+            }
+        }
+
         string systemInstruction = $@"Eres TalentIA, un asistente experto en RRHH para TalenHuman. 
 Rol del usuario: {userRole}. Nombre del usuario: {userName}.
 {scopeRule}
 Esquema disponible: {dbSchema}
 Si te hacen una pregunta que requiere datos, usa la herramienta ConsultarBaseDatosSQL enviando una consulta SQL válida (PostgreSQL). Haz un SELECT simple (ej. SELECT * FROM ""vw_TalenHumanAI_Operativo"").
 REGLA DE RESPUESTA: Dirígete al usuario por su nombre. NUNCA menciones IDs internos, ni lenguaje técnico como ""base de datos"", ""SQL"", ""tablas"" o ""vistas"". Responde de forma natural.
-REGLA DE CONTEXTO: Tu único propósito es ayudar con temas de TalenHuman, Recursos Humanos, empleados, turnos, novedades y operaciones. Si el usuario hace preguntas fuera de este contexto (ej. temas generales, películas, otras áreas), debes responder amablemente diciendo que eres TalentIA y tu conocimiento está enfocado exclusivamente en la gestión de RRHH de TalenHuman.";
+REGLA DE CONTEXTO: Tu único propósito es ayudar con temas de TalenHuman, Recursos Humanos, empleados, turnos, novedades y operaciones. Si el usuario hace preguntas fuera de este contexto (ej. temas generales, películas, otras áreas), debes responder amablemente diciendo que eres TalentIA y tu conocimiento está enfocado exclusivamente en la gestión de RRHH de TalenHuman.
+Si el usuario hace una pregunta de soporte técnico o cómo usar la plataforma, responde usando la información de la Base de Conocimiento a continuación.
+{supportKnowledge}";
 
         var toolsDecl = new[]
         {
