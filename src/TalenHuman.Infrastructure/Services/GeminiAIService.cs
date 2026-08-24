@@ -162,12 +162,24 @@ Si el usuario hace una pregunta de soporte técnico o cómo usar la plataforma, 
             // WRAP QUERY FOR SECURITY
             if (!isSuperAdmin)
             {
-                if (isGerente && storeId.HasValue) {
-                    sqlQuery = $"SELECT * FROM ({sqlQuery}) AS sub WHERE \"StoreId\" = '{storeId}'";
-                } else if (isSupervisor && districtId.HasValue) {
-                    sqlQuery = $"SELECT * FROM ({sqlQuery}) AS sub WHERE \"DistrictId\" = '{districtId}'";
-                } else if (isAdmin && companyId.HasValue) {
-                    sqlQuery = $"SELECT * FROM ({sqlQuery}) AS sub WHERE \"CompanyId\" = '{companyId}'";
+                string securityFilter = "";
+                if (isGerente && storeId.HasValue) securityFilter = $"\"StoreId\" = '{storeId}'";
+                else if (isSupervisor && districtId.HasValue) securityFilter = $"\"DistrictId\" = '{districtId}'";
+                else if (isAdmin && companyId.HasValue) securityFilter = $"\"CompanyId\" = '{companyId}'";
+
+                if (!string.IsNullOrEmpty(securityFilter))
+                {
+                    string viewName = "\"vw_TalenHumanAI_Operativo\"";
+                    string secureView = $"(SELECT * FROM {viewName} WHERE {securityFilter}) AS {viewName}";
+                    
+                    if (sqlQuery.Contains(viewName))
+                    {
+                        sqlQuery = sqlQuery.Replace(viewName, secureView);
+                    }
+                    else if (sqlQuery.Contains("vw_TalenHumanAI_Operativo"))
+                    {
+                        sqlQuery = sqlQuery.Replace("vw_TalenHumanAI_Operativo", secureView);
+                    }
                 }
             }
 
