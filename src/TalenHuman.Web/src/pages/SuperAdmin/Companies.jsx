@@ -34,7 +34,10 @@ const Companies = () => {
     // Firebase fields
     firebaseMeasurementId: '',
     firebaseVapidKey: '',
-    privacyPolicyText: ''
+    privacyPolicyText: '',
+    // AI fields
+    isAiEnabled: false,
+    aiAllowedRoles: ''
   });
 
   const countries = [
@@ -115,7 +118,8 @@ const Companies = () => {
               id: '', name: '', taxId: '', isActive: true, countryCode: 'CO', timeZoneId: 'SA Pacific Standard Time',
               firebaseApiKey: '', firebaseAuthDomain: '', firebaseProjectId: '', firebaseStorageBucket: '',
               firebaseMeasurementId: '', firebaseVapidKey: '',
-              privacyPolicyText: ''
+              privacyPolicyText: '',
+              isAiEnabled: false, aiAllowedRoles: ''
             }); 
             setActiveTab('general');
             setShowModal(true); 
@@ -201,7 +205,9 @@ const Companies = () => {
                           id: c.id, name: c.name, taxId: c.taxId, isActive: c.isActive, countryCode: c.countryCode || 'CO', timeZoneId: c.timeZoneId || 'SA Pacific Standard Time',
                           firebaseMeasurementId: c.firebaseMeasurementId || '', 
                           firebaseVapidKey: c.firebaseVapidKey || '',
-                          privacyPolicyText: c.privacyPolicyText || ''
+                          privacyPolicyText: c.privacyPolicyText || '',
+                          isAiEnabled: c.isAiEnabled || false,
+                          aiAllowedRoles: c.aiAllowedRoles || ''
                         }); 
                         setActiveTab('general');
                         setShowModal(true); 
@@ -258,6 +264,12 @@ const Companies = () => {
                 className={`py-3 px-4 text-xs font-bold uppercase tracking-widest transition-all border-b-2 ${activeTab === 'legal' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-400'}`}
               >
                 Legal / Privacidad
+              </button>
+              <button 
+                onClick={() => setActiveTab('ai')}
+                className={`py-3 px-4 text-xs font-bold uppercase tracking-widest transition-all border-b-2 flex items-center gap-2 ${activeTab === 'ai' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-400'}`}
+              >
+                Inteligencia Artificial
               </button>
             </div>
             
@@ -362,7 +374,49 @@ const Companies = () => {
                       />
                     </div>
                   </div>
-                )}
+                ) : activeTab === 'ai' ? (
+                  <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
+                    <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl flex gap-3 text-indigo-700">
+                      <Shield size={20} className="shrink-0" />
+                      <p className="text-[10px] font-medium leading-relaxed">
+                        Configura el acceso al Asistente TalentIA para esta empresa. Recuerda que el SuperAdmin siempre tiene acceso por defecto.
+                      </p>
+                    </div>
+                    
+                    <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100/50">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-bold text-slate-800 text-sm">Habilitar Inteligencia Artificial</p>
+                          <p className="text-xs text-slate-500 mt-1">Permite el uso de TalentIA en esta empresa.</p>
+                        </div>
+                        <label className="premium-switch">
+                          <input 
+                            type="checkbox" 
+                            checked={formData.isAiEnabled}
+                            onChange={(e) => setFormData({ ...formData, isAiEnabled: e.target.checked })}
+                          />
+                          <span className="premium-switch-slider"></span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {formData.isAiEnabled && (
+                      <div className="mt-4">
+                        <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">Roles permitidos (separados por coma)</label>
+                        <input 
+                          type="text"
+                          value={formData.aiAllowedRoles} 
+                          onChange={(e) => setFormData({ ...formData, aiAllowedRoles: e.target.value })} 
+                          className="w-full p-3 rounded-xl border-slate-200 bg-slate-50 text-sm font-medium focus:ring-2 focus:ring-indigo-500 transition-all" 
+                          placeholder="Ej. Admin, RH, Supervisor"
+                        />
+                        <p className="text-[10px] text-slate-500 mt-2">
+                          Deja vacío si nadie más que el SuperAdministrador debe tener acceso, o especifica qué perfiles podrán ver el icono de la IA.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
               </div>
 
               <div className="modal-footer">

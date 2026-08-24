@@ -66,6 +66,8 @@ public class CompaniesController : ControllerBase
         existing.CountryCode = company.CountryCode;
         existing.TimeZoneId = company.TimeZoneId;
         existing.PrivacyPolicyText = company.PrivacyPolicyText;
+        existing.IsAiEnabled = company.IsAiEnabled;
+        existing.AiAllowedRoles = company.AiAllowedRoles;
 
         await _context.SaveChangesAsync();
         return NoContent();
