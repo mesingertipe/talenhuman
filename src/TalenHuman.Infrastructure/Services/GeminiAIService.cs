@@ -36,7 +36,7 @@ public class GeminiAIService : IGeminiAIService
 
         // Reglas de Scope
         string scopeRule = "";
-        string dbSchema = @"Vistas Operativas: ""vw_TalenHumanAI_Operativo"" (""EmpleadoId"", ""NombreEmpleado"", ""Cedula"", ""DateOfEntry"", ""EmpleadoActivo"", ""TiendaNombre"", ""StoreId"", ""DistrictId"", ""MarcaNombre"", ""CompanyId"", ""CompanyNombre"", ""EstadoAsistencia"", ""EstadoNovedad"", ""NovedadInicio"", ""NovedadFin""). IMPORTANTE: Envuelve los nombres de vistas y columnas en comillas dobles.";
+        string dbSchema = @"Vistas Operativas: ""vw_TalenHumanAI_Operativo"". Columnas: ""EmpleadoId"", ""NombreEmpleado"", ""Cedula"", ""DateOfEntry"" (FECHA DE CONTRATACIÓN, NO es entrada al turno), ""EmpleadoActivo"", ""TiendaNombre"", ""StoreId"", ""DistrictId"", ""MarcaNombre"", ""CompanyId"", ""CompanyNombre"", ""EstadoAsistencia"" (Si es -1 NO ha entrado hoy. Si es >= 0 SÍ entró hoy), ""EstadoNovedad"", ""NovedadInicio"", ""NovedadFin"". IMPORTANTE: Envuelve los nombres de vistas y columnas en comillas dobles.";
         
         bool isSuperAdmin = userRole.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase);
         bool isAdmin = userRole.Equals("Admin", StringComparison.OrdinalIgnoreCase) || userRole.Equals("Recursos Humanos", StringComparison.OrdinalIgnoreCase);
