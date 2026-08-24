@@ -21,7 +21,7 @@ const MobileLayout = ({ children, activePage, setPage, user, onLogout, version, 
   const aiAllowedRoles = user?.aiAllowedRoles?.split(',') || [];
   const userHasAiAccess = isAiEnabledForCompany && (
       aiAllowedRoles.includes('ALL') || 
-      user?.roles?.some(r => aiAllowedRoles.map(x => x.trim()).includes(r))
+      user?.roles?.some(r => aiAllowedRoles.map(x => x.trim().toLowerCase()).includes(r.toLowerCase()))
   );
 
   // 📥 FETCH HISTORY FROM SERVER (V65.1.28)
