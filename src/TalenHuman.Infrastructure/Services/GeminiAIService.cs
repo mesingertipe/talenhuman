@@ -34,10 +34,11 @@ public class GeminiAIService : IGeminiAIService
         if (string.IsNullOrEmpty(apiKey))
             return "La configuración de IA (GeminiApiKey) no está activa en SystemSettings.";
 
-        // Reglas de Scope
-        string scopeRule = "";
-        string dbSchema = @"Vistas Operativas: ""vw_TalenHumanAI_Operativo"". Columnas: ""EmpleadoId"", ""NombreEmpleado"", ""Cedula"", ""DateOfEntry"" (FECHA DE CONTRATACIÓN, NO es entrada al turno), ""EmpleadoActivo"", ""TiendaNombre"", ""StoreId"", ""DistrictId"", ""MarcaNombre"", ""CompanyId"", ""CompanyNombre"", ""EstadoAsistencia"" (Si es -1 NO ha entrado hoy. Si es >= 0 SÍ entró hoy), ""ClockIn"" (Hora de entrada real de hoy), ""ClockOut"" (Hora de salida real de hoy), ""ObservacionAsistencia"" (Razón de la tardanza, ej. trafico), ""EstadoNovedad"", ""NovedadInicio"", ""NovedadFin"". IMPORTANTE: Envuelve los nombres de vistas y columnas en comillas dobles.";
+        string dbSchema = @"Vistas Operativas: ""vw_TalenHumanAI_Operativo"". Columnas: ""EmpleadoId"", ""NombreEmpleado"", ""Cedula"", ""DateOfEntry"" (FECHA DE CONTRATACIÓN, NO es entrada al turno), ""EmpleadoActivo"", ""TiendaNombre"", ""StoreId"", ""DistrictId"", ""MarcaNombre"", ""CompanyId"", ""CompanyNombre"", ""EstadoAsistencia"" (Si es -1 NO ha entrado hoy. Si es >= 0 SÍ entró hoy), ""ClockIn"" (Hora de entrada real de hoy), ""ClockOut"" (Hora de salida real de hoy), ""ObservacionAsistencia"" (Razón de la tardanza, ej. trafico), ""EstadoNovedad"", ""NovedadInicio"", ""NovedadFin"". 
+Vista Histórica de Asistencias Pasadas: ""vw_TalenHumanAI_HistoricoAsistencia"". Columnas: ""AsistenciaId"", ""EmpleadoId"", ""NombreEmpleado"", ""Cedula"", ""TiendaNombre"", ""StoreId"", ""DistrictId"", ""MarcaNombre"", ""CompanyId"", ""CompanyNombre"", ""EstadoAsistencia"", ""ClockIn"" (Fecha/Hora exacta), ""ClockOut"", ""ObservacionAsistencia"". ÚSALA SÓLO CUANDO PREGUNTEN POR ASISTENCIAS DEL PASADO (AYER, LA SEMANA PASADA, HISTÓRICO, QUIEN ASISTE MÁS, ETC).
+IMPORTANTE: Envuelve los nombres de vistas y columnas en comillas dobles.";
         
+        string scopeRule = "";
         bool isSuperAdmin = userRole.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase);
         bool isAdmin = userRole.Equals("Admin", StringComparison.OrdinalIgnoreCase) || userRole.Equals("Recursos Humanos", StringComparison.OrdinalIgnoreCase);
         bool isSupervisor = userRole.Equals("Supervisor", StringComparison.OrdinalIgnoreCase);
@@ -169,16 +170,19 @@ Si el usuario hace una pregunta de soporte técnico o cómo usar la plataforma, 
 
                 if (!string.IsNullOrEmpty(securityFilter))
                 {
-                    string viewName = "\"vw_TalenHumanAI_Operativo\"";
-                    string secureView = $"(SELECT * FROM {viewName} WHERE {securityFilter}) AS {viewName}";
-                    
-                    if (sqlQuery.Contains(viewName))
+                    string[] viewsToSecure = { "\"vw_TalenHumanAI_Operativo\"", "\"vw_TalenHumanAI_HistoricoAsistencia\"" };
+                    foreach (var viewName in viewsToSecure)
                     {
-                        sqlQuery = sqlQuery.Replace(viewName, secureView);
-                    }
-                    else if (sqlQuery.Contains("vw_TalenHumanAI_Operativo"))
-                    {
-                        sqlQuery = sqlQuery.Replace("vw_TalenHumanAI_Operativo", secureView);
+                        string secureView = $"(SELECT * FROM {viewName} WHERE {securityFilter}) AS {viewName}";
+                        
+                        if (sqlQuery.Contains(viewName))
+                        {
+                            sqlQuery = sqlQuery.Replace(viewName, secureView);
+                        }
+                        else if (sqlQuery.Contains(viewName.Replace("\"", "")))
+                        {
+                            sqlQuery = sqlQuery.Replace(viewName.Replace("\"", ""), secureView);
+                        }
                     }
                 }
             }
