@@ -74,7 +74,7 @@ const HelpDesk = ({ user }) => {
   const fetchTickets = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/Tickets');
+      const response = await api.get('/Tickets');
       setTickets(response.data);
     } catch (error) {
       console.error('Error fetching tickets:', error);
@@ -85,7 +85,7 @@ const HelpDesk = ({ user }) => {
 
   const fetchMessages = async (ticketId) => {
     try {
-      const response = await api.get(`/api/Tickets/${ticketId}`);
+      const response = await api.get(`/Tickets/${ticketId}`);
       setMessages(response.data.messages || []);
       setSelectedTicket(prev => ({ ...prev, ...response.data, messages: undefined }));
     } catch (error) {
@@ -103,7 +103,7 @@ const HelpDesk = ({ user }) => {
     };
 
     try {
-      await api.post('/api/Tickets', data);
+      await api.post('/Tickets', data);
       setIsModalOpen(false);
       fetchTickets();
     } catch (error) {
@@ -116,7 +116,7 @@ const HelpDesk = ({ user }) => {
     if (!newMessage.trim() || !selectedTicket) return;
 
     try {
-      await api.post(`/api/Tickets/${selectedTicket.id}/messages`, { message: newMessage });
+      await api.post(`/Tickets/${selectedTicket.id}/messages`, { message: newMessage });
       setNewMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
@@ -125,7 +125,7 @@ const HelpDesk = ({ user }) => {
 
   const handleStatusChange = async (newStatus) => {
     try {
-      await api.put(`/api/Tickets/${selectedTicket.id}/status`, newStatus, {
+      await api.put(`/Tickets/${selectedTicket.id}/status`, newStatus, {
         headers: { 'Content-Type': 'application/json' }
       });
       setSelectedTicket(prev => ({ ...prev, status: newStatus }));

@@ -30,7 +30,7 @@ const HelpCenter = ({ user }) => {
   const fetchFaqs = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/Faqs');
+      const response = await api.get('/Faqs');
       setFaqs(response.data);
     } catch (error) {
       console.error('Error fetching FAQs:', error);
@@ -53,9 +53,9 @@ const HelpCenter = ({ user }) => {
 
     try {
       if (editingFaq) {
-        await api.put(`/api/Faqs/${editingFaq.id}`, { ...data, id: editingFaq.id });
+        await api.put(`/Faqs/${editingFaq.id}`, { ...data, id: editingFaq.id });
       } else {
-        await api.post('/api/Faqs', data);
+        await api.post('/Faqs', data);
       }
       setIsModalOpen(false);
       fetchFaqs();
@@ -67,7 +67,7 @@ const HelpCenter = ({ user }) => {
   const handleDelete = async (id) => {
     if (!window.confirm('¿Está seguro de eliminar esta pregunta frecuente?')) return;
     try {
-      await api.delete(`/api/Faqs/${id}`);
+      await api.delete(`/Faqs/${id}`);
       fetchFaqs();
     } catch (error) {
       alert('Error al eliminar FAQ. Puede que sea del sistema.');

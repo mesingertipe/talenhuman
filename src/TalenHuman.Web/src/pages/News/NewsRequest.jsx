@@ -616,7 +616,7 @@ const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false
                                     </h4>
                                     
                                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '20px' }}>
-                                        {tenantSettings?.vacationAllowMoneyDays && (
+                                        {foundEmployee?.vacationAllowMoneyDays && (
                                             <div>
                                                 <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '10px' }}>Días en Dinero</label>
                                                 <input 
