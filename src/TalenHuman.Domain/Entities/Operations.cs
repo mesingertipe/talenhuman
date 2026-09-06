@@ -548,7 +548,6 @@ public class SupportTicket : BaseEntity, IMultitenant
     public Guid CompanyId { get; set; }
     public Company? Company { get; set; }
 
-    [JsonIgnore]
     public ICollection<TicketMessage> Messages { get; set; } = new List<TicketMessage>();
 }
 

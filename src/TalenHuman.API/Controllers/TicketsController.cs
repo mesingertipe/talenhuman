@@ -52,6 +52,14 @@ public class TicketsController : ControllerBase
         return await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
     }
 
+    [AllowAnonymous]
+    [HttpGet("debug-messages")]
+    public async Task<IActionResult> DebugMessages()
+    {
+        var messages = await _context.TicketMessages.IgnoreQueryFilters().Select(m => new { m.Id, m.Message, m.UserId, m.CompanyId, m.SupportTicketId }).ToListAsync();
+        return Ok(messages);
+    }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<SupportTicket>> GetTicket(Guid id)
     {
@@ -61,9 +69,6 @@ public class TicketsController : ControllerBase
         var userId = Guid.Parse(User.Claims.First(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value);
 
         var query = _context.SupportTickets
-            .Include(t => t.CreatedByUser)
-                .ThenInclude(u => u.Employee)
-                    .ThenInclude(e => e.Store)
             .Include(t => t.CreatedByUser)
                 .ThenInclude(u => u.District)
             .Include(t => t.AssignedToUser)
@@ -75,6 +80,15 @@ public class TicketsController : ControllerBase
 
         var ticket = await query.FirstOrDefaultAsync(t => t.Id == id);
         if (ticket == null) return NotFound();
+
+        // Workaround for Employee relationship
+        if (ticket.CreatedByUser != null && ticket.CreatedByUser.EmployeeId.HasValue)
+        {
+            var emp = await _context.Employees.IgnoreQueryFilters()
+                .Include(e => e.Store)
+                .FirstOrDefaultAsync(e => e.Id == ticket.CreatedByUser.EmployeeId);
+            ticket.CreatedByUser.Employee = emp;
+        }
 
         // Normal user can only see their own tickets
         if (role != "SuperAdmin" && role != "Soporte" && ticket.CreatedByUserId != userId)
