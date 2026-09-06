@@ -520,8 +520,15 @@ const HelpDesk = ({ user }) => {
 
                 {/* Messages */}
                 {messages.map((msg, idx) => {
-                  const isMine = msg.userId === user.id;
+                  const isMine = msg.userId?.toLowerCase() === user?.id?.toLowerCase();
                   
+                  let senderName = msg.user?.fullName || 'Usuario';
+                  if (!isSupport && msg.isFromSupport) {
+                    senderName = 'Soporte Técnico';
+                  } else if (msg.isFromSupport && !msg.user?.fullName) {
+                    senderName = 'Soporte V12';
+                  }
+
                   if (msg.isSystemMessage) {
                     return (
                       <div key={idx} style={{ display: 'flex', justifyContent: 'center', margin: '10px 0' }}>
@@ -536,7 +543,7 @@ const HelpDesk = ({ user }) => {
                     <div key={idx} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', animation: 'fadeInUp 0.3s ease-out' }}>
                       <div style={{ maxWidth: '85%', background: isMine ? activeColors.accent : (isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc'), border: isMine ? 'none' : `1px solid ${activeColors.border}`, borderRadius: '24px', padding: '20px', borderTopRightRadius: isMine ? '4px' : '24px', borderTopLeftRadius: isMine ? '24px' : '4px', color: isMine ? 'white' : activeColors.textMuted, boxShadow: isMine ? '0 10px 20px rgba(79, 70, 229, 0.2)' : 'none' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', gap: '20px' }}>
-                          <span style={{ fontSize: '0.85rem', fontWeight: '900' }}>{msg.user?.fullName || (msg.isFromSupport ? 'Soporte V12' : 'Usuario')}</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: '900' }}>{isMine ? 'Tú' : senderName}</span>
                           <span style={{ fontSize: '10px', fontWeight: '700', opacity: 0.7 }}>{new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                         </div>
                         <div style={{ fontSize: '0.95rem', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{msg.message}</div>

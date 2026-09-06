@@ -27,6 +27,32 @@ public class UsersController : ControllerBase
         _auditService = auditService;
     }
 
+    [HttpGet("support")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<object>>> GetSupportUsers()
+    {
+        try
+        {
+            var supportUsers = await _userManager.GetUsersInRoleAsync("Soporte");
+            var superAdmins = await _userManager.GetUsersInRoleAsync("SuperAdmin");
+            
+            var combined = supportUsers.Concat(superAdmins)
+                .GroupBy(u => u.Id)
+                .Select(g => g.First())
+                .Select(u => new {
+                    u.Id,
+                    u.FullName,
+                    u.Email
+                });
+
+            return Ok(combined);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = $"Error al obtener usuarios de soporte: {ex.Message}" });
+        }
+    }
+
     [HttpGet]
     [Authorize(Roles = "SuperAdmin,Admin")]
     public async Task<ActionResult<IEnumerable<object>>> GetUsers()
