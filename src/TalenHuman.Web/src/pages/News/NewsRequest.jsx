@@ -7,6 +7,7 @@ import {
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import HelpIcon from '../../components/Shared/HelpIcon';
+import TalenHumanDatePicker from '../../components/Shared/TalenHumanDatePicker';
 
 const calculateVacationDays = (start, end, mode) => {
     if (!start || !end) return 0;
@@ -367,8 +368,8 @@ const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false
     };
 
     const isVacations = selectedType?.isSystem && selectedType?.nombre?.toLowerCase() === 'vacaciones';
-    const vacationDaysTime = isVacations ? calculateVacationDays(formData.fechaInicio, formData.fechaFin, tenantSettings?.vacationCalculationMode || 'Calendar') : 0;
-    const vacationDaysMoney = isVacations && tenantSettings?.vacationAllowMoneyDays ? parseInt(formData.datosDinamicos['DiasDinero'] || 0) : 0;
+    const vacationDaysTime = isVacations ? calculateVacationDays(formData.fechaInicio, formData.fechaFin, foundEmployee?.vacationCalculationMode || 'Calendar') : 0;
+    const vacationDaysMoney = isVacations && foundEmployee?.vacationAllowMoneyDays ? parseInt(formData.datosDinamicos['DiasDinero'] || 0) : 0;
     const totalVacationDays = vacationDaysTime + vacationDaysMoney;
     const pendingVacationDays = foundEmployee?.pendingVacationDays || 0;
     const isExceedingVacationBalance = isVacations && totalVacationDays > pendingVacationDays;

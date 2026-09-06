@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, Send, Plus, Search, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { MessageSquare, Send, Plus, Search, CheckCircle, Clock, AlertCircle, Activity, Filter, Ticket as TicketIcon } from 'lucide-react';
 import api from '../../services/api';
 import Modal from '../../components/Shared/Modal';
 import * as signalR from '@microsoft/signalr';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 const HelpDesk = ({ user }) => {
   const [tickets, setTickets] = useState([]);
@@ -12,8 +14,12 @@ const HelpDesk = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [hubConnection, setHubConnection] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
   
   const messagesEndRef = useRef(null);
+  const { isDarkMode, activeColors } = useTheme();
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  
   const isSupport = user?.roles?.includes('SuperAdmin') || user?.roles?.includes('Soporte');
 
   useEffect(() => {
@@ -62,6 +68,7 @@ const HelpDesk = ({ user }) => {
 
   const fetchTickets = async () => {
     try {
+      setLoading(true);
       const response = await api.get('/api/Tickets');
       setTickets(response.data);
     } catch (error) {
@@ -75,7 +82,6 @@ const HelpDesk = ({ user }) => {
     try {
       const response = await api.get(`/api/Tickets/${ticketId}`);
       setMessages(response.data.messages || []);
-      // Also update selected ticket details in case status changed
       setSelectedTicket(prev => ({ ...prev, ...response.data, messages: undefined }));
     } catch (error) {
       console.error('Error fetching ticket details:', error);
@@ -107,7 +113,6 @@ const HelpDesk = ({ user }) => {
     try {
       await api.post(`/api/Tickets/${selectedTicket.id}/messages`, { message: newMessage });
       setNewMessage('');
-      // SignalR will broadcast the message to this client and append it
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -119,95 +124,160 @@ const HelpDesk = ({ user }) => {
         headers: { 'Content-Type': 'application/json' }
       });
       setSelectedTicket(prev => ({ ...prev, status: newStatus }));
-      fetchTickets(); // Refresh list to reflect new status
+      fetchTickets();
     } catch (error) {
       console.error('Error updating status:', error);
     }
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusConfig = (status) => {
     switch (status) {
-      case 0: return <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded text-xs flex items-center gap-1"><Clock size={12} /> Abierto</span>;
-      case 1: return <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs flex items-center gap-1"><Activity size={12} /> En Progreso</span>;
-      case 2: return <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs flex items-center gap-1"><CheckCircle size={12} /> Resuelto</span>;
-      case 3: return <span className="px-2 py-1 bg-slate-500/20 text-slate-400 rounded text-xs flex items-center gap-1"><AlertCircle size={12} /> Cerrado</span>;
-      default: return null;
+      case 0: return { label: 'Abierto', color: '#eab308', bg: 'rgba(234, 179, 8, 0.1)', icon: Clock };
+      case 1: return { label: 'En Progreso', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)', icon: Activity };
+      case 2: return { label: 'Resuelto', color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', icon: CheckCircle };
+      case 3: return { label: 'Cerrado', color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.1)', icon: AlertCircle };
+      default: return { label: 'Desconocido', color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.1)', icon: AlertCircle };
     }
   };
 
-  const getPriorityBadge = (priority) => {
+  const getPriorityConfig = (priority) => {
     switch (priority) {
-      case 0: return <span className="text-slate-400 text-xs">Baja</span>;
-      case 1: return <span className="text-blue-400 text-xs">Media</span>;
-      case 2: return <span className="text-orange-400 text-xs">Alta</span>;
-      case 3: return <span className="text-red-400 text-xs font-bold">Crítica</span>;
-      default: return null;
+      case 0: return { label: 'Baja', color: '#94a3b8' };
+      case 1: return { label: 'Media', color: '#3b82f6' };
+      case 2: return { label: 'Alta', color: '#f97316' };
+      case 3: return { label: 'Crítica', color: '#ef4444' };
+      default: return { label: 'N/A', color: '#94a3b8' };
     }
   };
 
-  if (loading) return <div className="text-slate-400">Cargando tickets...</div>;
+  const filteredTickets = statusFilter === 'all' 
+    ? tickets 
+    : tickets.filter(t => t.status.toString() === statusFilter);
+
+  if (loading && tickets.length === 0) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+        <div style={{ width: '40px', height: '40px', border: `3px solid ${activeColors.border}`, borderTopColor: activeColors.accent, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <p style={{ marginTop: '15px', color: activeColors.textMuted, fontWeight: '800', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Cargando Mesa de Ayuda...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] gap-6">
+    <div style={{ display: 'flex', height: 'calc(100vh - 120px)', gap: '25px', animation: 'fadeIn 0.4s ease-out', maxWidth: '1400px', margin: '0 auto', flexDirection: isMobile ? 'column' : 'row' }}>
+      
       {/* Sidebar: Ticket List */}
-      <div className="w-1/3 bg-slate-800/50 rounded-xl border border-slate-700/50 flex flex-col overflow-hidden">
-        <div className="p-4 border-b border-slate-700/50 flex justify-between items-center bg-slate-800">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <MessageSquare className="text-indigo-400" /> Mesa de Ayuda
-          </h2>
-          {!isSupport && (
-            <button 
-              onClick={() => setIsModalOpen(true)}
-              className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-              title="Nuevo Ticket"
-            >
-              <Plus size={16} />
-            </button>
-          )}
+      <div style={{ width: isMobile ? '100%' : '400px', background: activeColors.card, borderRadius: '32px', border: `1px solid ${activeColors.border}`, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: isDarkMode ? '0 20px 40px rgba(0,0,0,0.1)' : '0 10px 30px rgba(0,0,0,0.03)', flexShrink: 0, height: isMobile ? (selectedTicket ? '250px' : '100%') : '100%' }}>
+        
+        {/* Header */}
+        <div style={{ padding: '25px', borderBottom: `1px solid ${activeColors.border}`, background: isDarkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: '950', color: activeColors.textMain, margin: 0, display: 'flex', alignItems: 'center', gap: '10px', letterSpacing: '-0.02em' }}>
+              <div style={{ width: '36px', height: '36px', background: activeColors.accent, color: 'white', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 16px rgba(79, 70, 229, 0.25)' }}>
+                <TicketIcon size={18} />
+              </div>
+              Tickets
+            </h2>
+            {!isSupport && (
+              <button 
+                onClick={() => setIsModalOpen(true)}
+                style={{ width: '36px', height: '36px', background: activeColors.accent, color: 'white', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', boxShadow: '0 8px 16px rgba(79, 70, 229, 0.25)', transition: 'transform 0.1s' }}
+                onMouseDown={e => e.currentTarget.style.transform = 'scale(0.9)'}
+                onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                title="Nuevo Ticket"
+              >
+                <Plus size={18} />
+              </button>
+            )}
+          </div>
+          
+          {/* Filters */}
+          <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '5px' }} className="scrollbar-hide">
+            {[
+              { id: 'all', label: 'Todos' },
+              { id: '0', label: 'Abiertos' },
+              { id: '1', label: 'En Progreso' },
+              { id: '2', label: 'Resueltos' }
+            ].map(f => (
+              <button
+                key={f.id}
+                onClick={() => setStatusFilter(f.id)}
+                style={{ padding: '8px 16px', borderRadius: '100px', border: `1px solid ${statusFilter === f.id ? activeColors.accent : activeColors.border}`, background: statusFilter === f.id ? activeColors.accent : 'transparent', color: statusFilter === f.id ? 'white' : activeColors.textMuted, fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap' }}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-3 space-y-2">
-          {tickets.map(ticket => (
-            <div 
-              key={ticket.id} 
-              onClick={() => setSelectedTicket(ticket)}
-              className={`p-3 rounded-lg border cursor-pointer transition-colors ${selectedTicket?.id === ticket.id ? 'bg-indigo-500/10 border-indigo-500/50' : 'bg-slate-900/50 border-slate-700/50 hover:bg-slate-800'}`}
-            >
-              <div className="flex justify-between items-start mb-2">
-                <span className="font-mono text-xs text-indigo-400">{ticket.ticketNumber}</span>
-                {getStatusBadge(ticket.status)}
+
+        {/* List */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '15px' }} className="custom-scrollbar">
+          {filteredTickets.map(ticket => {
+            const isSelected = selectedTicket?.id === ticket.id;
+            const statusConfig = getStatusConfig(ticket.status);
+            const priorityConfig = getPriorityConfig(ticket.priority);
+            const StatusIcon = statusConfig.icon;
+
+            return (
+              <div 
+                key={ticket.id} 
+                onClick={() => setSelectedTicket(ticket)}
+                style={{ padding: '20px', borderRadius: '20px', border: `1px solid ${isSelected ? activeColors.accent : activeColors.border}`, background: isSelected ? (isDarkMode ? 'rgba(79, 70, 229, 0.1)' : 'rgba(79, 70, 229, 0.05)') : 'transparent', cursor: 'pointer', marginBottom: '12px', transition: 'all 0.2s', transform: isSelected ? 'scale(1.02)' : 'scale(1)', position: 'relative', overflow: 'hidden' }}
+              >
+                {isSelected && <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: activeColors.accent }} />}
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: '950', color: activeColors.accent, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{ticket.ticketNumber}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', background: statusConfig.bg, color: statusConfig.color, borderRadius: '8px', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>
+                    <StatusIcon size={10} /> {statusConfig.label}
+                  </div>
+                </div>
+                
+                <h4 style={{ margin: '0 0 12px 0', fontSize: '0.95rem', fontWeight: '800', color: isSelected ? activeColors.textMain : activeColors.textMuted, lineHeight: 1.4 }}>{ticket.subject}</h4>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '700', color: activeColors.textMuted }}>{new Date(ticket.createdAt).toLocaleDateString()}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: priorityConfig.color }} />
+                    <span style={{ fontSize: '10px', fontWeight: '900', color: priorityConfig.color, textTransform: 'uppercase' }}>{priorityConfig.label}</span>
+                  </div>
+                </div>
               </div>
-              <h4 className="font-medium text-slate-200 text-sm mb-1 truncate">{ticket.subject}</h4>
-              <div className="flex justify-between items-center text-xs text-slate-500">
-                <span>{new Date(ticket.createdAt).toLocaleDateString()}</span>
-                {getPriorityBadge(ticket.priority)}
+            );
+          })}
+          {filteredTickets.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: activeColors.textMuted }}>
+              <div style={{ width: '48px', height: '48px', margin: '0 auto 15px', borderRadius: '50%', border: `1px dashed ${activeColors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.5 }}>
+                <TicketIcon size={20} />
               </div>
+              <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800' }}>No hay tickets en esta vista</p>
             </div>
-          ))}
-          {tickets.length === 0 && (
-            <div className="text-center text-slate-500 mt-10">No hay tickets activos</div>
           )}
         </div>
       </div>
 
       {/* Main Area: Chat/Messages */}
-      <div className="flex-1 bg-slate-800/50 rounded-xl border border-slate-700/50 flex flex-col overflow-hidden">
+      <div style={{ flex: 1, background: activeColors.card, borderRadius: '32px', border: `1px solid ${activeColors.border}`, display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: isDarkMode ? '0 20px 40px rgba(0,0,0,0.1)' : '0 10px 30px rgba(0,0,0,0.03)' }}>
         {selectedTicket ? (
           <>
-            <div className="p-4 border-b border-slate-700/50 bg-slate-800 flex justify-between items-center">
+            {/* Chat Header */}
+            <div style={{ padding: '25px', borderBottom: `1px solid ${activeColors.border}`, background: isDarkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
               <div>
-                <h3 className="font-bold text-white text-lg">{selectedTicket.subject}</h3>
-                <div className="flex items-center gap-3 text-sm text-slate-400 mt-1">
-                  <span>{selectedTicket.ticketNumber}</span>
-                  <span>•</span>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: '950', color: activeColors.textMain, margin: '0 0 8px 0', letterSpacing: '-0.02em' }}>{selectedTicket.subject}</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, textTransform: 'uppercase' }}>
+                  <span style={{ color: activeColors.accent }}>{selectedTicket.ticketNumber}</span>
+                  <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: activeColors.border }} />
                   <span>Creado por: {selectedTicket.createdByUser?.fullName || 'Usuario'}</span>
                 </div>
               </div>
+              
               {isSupport && (
-                <div className="flex gap-2">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase' }}>Estado:</span>
                   <select 
                     value={selectedTicket.status}
                     onChange={(e) => handleStatusChange(parseInt(e.target.value))}
-                    className="bg-slate-900 border border-slate-700 text-white text-sm rounded-lg px-3 py-1.5 focus:border-indigo-500 outline-none"
+                    style={{ background: isDarkMode ? 'rgba(15, 23, 42, 0.6)' : '#f8fafc', border: `1px solid ${activeColors.border}`, color: activeColors.textMain, fontSize: '0.85rem', fontWeight: '800', borderRadius: '12px', padding: '10px 16px', outline: 'none', cursor: 'pointer' }}
                   >
                     <option value={0}>Abierto</option>
                     <option value={1}>En Progreso</option>
@@ -218,22 +288,38 @@ const HelpDesk = ({ user }) => {
               )}
             </div>
             
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              <div className="bg-slate-900/40 p-4 rounded-lg border border-slate-700/30 text-slate-300 text-sm">
-                <strong>Descripción original:</strong>
-                <p className="mt-2 whitespace-pre-wrap">{selectedTicket.description}</p>
+            {/* Chat Body */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '25px', display: 'flex', flexDirection: 'column', gap: '20px' }} className="custom-scrollbar">
+              
+              {/* Original Description */}
+              <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '10px' }}>
+                <div style={{ maxWidth: '85%', background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc', border: `1px solid ${activeColors.border}`, borderRadius: '24px', padding: '20px', borderTopLeftRadius: '4px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: activeColors.border, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '900', color: activeColors.textMain }}>
+                      {(selectedTicket.createdByUser?.fullName || 'US').substring(0,2).toUpperCase()}
+                    </div>
+                    <div>
+                      <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: '900', color: activeColors.textMain }}>{selectedTicket.createdByUser?.fullName || 'Usuario'}</p>
+                      <p style={{ margin: 0, fontSize: '10px', fontWeight: '700', color: activeColors.textMuted }}>{new Date(selectedTicket.createdAt).toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.95rem', color: activeColors.textMuted, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                    {selectedTicket.description}
+                  </p>
+                </div>
               </div>
 
+              {/* Messages */}
               {messages.map((msg, idx) => {
                 const isMine = msg.userId === user.id;
                 return (
-                  <div key={idx} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[70%] p-3 rounded-lg ${isMine ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-200'}`}>
-                      <div className="text-xs opacity-70 mb-1 flex justify-between">
-                        <span>{msg.user?.fullName || (msg.isFromSupport ? 'Soporte' : 'Usuario')}</span>
-                        <span className="ml-4">{new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                  <div key={idx} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', animation: 'fadeInUp 0.3s ease-out' }}>
+                    <div style={{ maxWidth: '85%', background: isMine ? activeColors.accent : (isDarkMode ? 'rgba(255,255,255,0.03)' : '#f8fafc'), border: isMine ? 'none' : `1px solid ${activeColors.border}`, borderRadius: '24px', padding: '20px', borderTopRightRadius: isMine ? '4px' : '24px', borderTopLeftRadius: isMine ? '24px' : '4px', color: isMine ? 'white' : activeColors.textMuted, boxShadow: isMine ? '0 10px 20px rgba(79, 70, 229, 0.2)' : 'none' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', gap: '20px' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: '900' }}>{msg.user?.fullName || (msg.isFromSupport ? 'Soporte V12' : 'Usuario')}</span>
+                        <span style={{ fontSize: '10px', fontWeight: '700', opacity: 0.7 }}>{new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                       </div>
-                      <div className="whitespace-pre-wrap text-sm">{msg.message}</div>
+                      <div style={{ fontSize: '0.95rem', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{msg.message}</div>
                     </div>
                   </div>
                 );
@@ -241,45 +327,54 @@ const HelpDesk = ({ user }) => {
               <div ref={messagesEndRef} />
             </div>
 
-            {selectedTicket.status !== 3 && (
-              <div className="p-4 border-t border-slate-700/50 bg-slate-800">
-                <form onSubmit={handleSendMessage} className="flex gap-3">
+            {/* Chat Input */}
+            {selectedTicket.status !== 3 ? (
+              <div style={{ padding: '25px', borderTop: `1px solid ${activeColors.border}`, background: isDarkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}>
+                <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '15px' }}>
                   <input 
                     type="text" 
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Escribe un mensaje..."
-                    className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500"
+                    placeholder="Escribe una respuesta aquí..."
+                    style={{ flex: 1, background: isDarkMode ? 'rgba(15, 23, 42, 0.6)' : 'white', border: `1px solid ${activeColors.border}`, borderRadius: '20px', padding: '0 25px', color: activeColors.textMain, fontSize: '0.95rem', fontWeight: '600', outline: 'none', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}
                   />
-                  <button type="submit" disabled={!newMessage.trim()} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-                    <Send size={16} /> Enviar
+                  <button 
+                    type="submit" 
+                    disabled={!newMessage.trim()} 
+                    style={{ padding: '16px 30px', background: activeColors.accent, color: 'white', border: 'none', borderRadius: '20px', fontWeight: '900', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: newMessage.trim() ? 'pointer' : 'not-allowed', opacity: newMessage.trim() ? 1 : 0.5, display: 'flex', alignItems: 'center', gap: '10px', boxShadow: newMessage.trim() ? '0 10px 20px rgba(79, 70, 229, 0.3)' : 'none', transition: 'all 0.2s' }}
+                  >
+                    <Send size={18} /> Enviar
                   </button>
                 </form>
               </div>
-            )}
-            {selectedTicket.status === 3 && (
-              <div className="p-4 border-t border-slate-700/50 bg-slate-900/50 text-center text-slate-400 text-sm">
-                Este ticket está cerrado y no admite más respuestas.
+            ) : (
+              <div style={{ padding: '25px', borderTop: `1px solid ${activeColors.border}`, background: isDarkMode ? 'rgba(239, 68, 68, 0.05)' : 'rgba(239, 68, 68, 0.02)', textAlign: 'center' }}>
+                <p style={{ margin: 0, color: '#ef4444', fontSize: '0.85rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                  <AlertCircle size={16} /> Este ticket se encuentra cerrado.
+                </p>
               </div>
             )}
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-slate-500">
-            <MessageSquare size={48} className="opacity-20 mb-4" />
-            <p>Selecciona un ticket para ver los detalles</p>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: activeColors.textMuted, padding: '40px', textAlign: 'center' }}>
+            <div style={{ width: '80px', height: '80px', borderRadius: '24px', background: isDarkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '25px', border: `1px dashed ${activeColors.border}` }}>
+              <MessageSquare size={32} style={{ opacity: 0.5 }} />
+            </div>
+            <h3 style={{ fontSize: '1.4rem', fontWeight: '950', color: activeColors.textMain, margin: '0 0 10px 0' }}>Soporte Elite V12</h3>
+            <p style={{ margin: 0, fontSize: '0.95rem', fontWeight: '600', maxWidth: '300px' }}>Selecciona un ticket en el panel lateral para ver los detalles y conversar con el equipo.</p>
           </div>
         )}
       </div>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Crear Ticket de Soporte">
-        <form onSubmit={handleCreateTicket} className="space-y-4">
+        <form onSubmit={handleCreateTicket} style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '10px 0' }}>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Asunto</label>
-            <input name="subject" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white" required placeholder="Ej: Problema con marcación" />
+            <label style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.05em' }}>Asunto *</label>
+            <input name="subject" required placeholder="Ej: Problema con marcación..." style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? 'rgba(15, 23, 42, 0.6)' : '#f8fafc', color: activeColors.textMain, fontSize: '0.95rem', fontWeight: '600', outline: 'none' }} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Prioridad</label>
-            <select name="priority" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white">
+            <label style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.05em' }}>Prioridad *</label>
+            <select name="priority" required style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? 'rgba(15, 23, 42, 0.6)' : '#f8fafc', color: activeColors.textMain, fontSize: '0.95rem', fontWeight: '600', outline: 'none', cursor: 'pointer' }}>
               <option value="0">Baja (Consultas generales)</option>
               <option value="1">Media (Problemas no bloqueantes)</option>
               <option value="2">Alta (Funcionalidad principal afectada)</option>
@@ -287,17 +382,46 @@ const HelpDesk = ({ user }) => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Descripción</label>
-            <textarea name="description" rows={5} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white" required placeholder="Detalla tu problema o consulta..." />
+            <label style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.05em' }}>Descripción Detallada *</label>
+            <textarea name="description" rows={5} required placeholder="Explícanos tu situación con el mayor detalle posible..." style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? 'rgba(15, 23, 42, 0.6)' : '#f8fafc', color: activeColors.textMain, fontSize: '0.95rem', fontWeight: '600', outline: 'none', resize: 'vertical' }} />
           </div>
-          <div className="flex justify-end gap-3 mt-6">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-slate-400 hover:text-white">Cancelar</button>
-            <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2">
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '15px', marginTop: '10px', paddingTop: '20px', borderTop: `1px solid ${activeColors.border}` }}>
+            <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: '12px 24px', borderRadius: '12px', background: 'transparent', color: activeColors.textMuted, border: 'none', fontWeight: '900', fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s' }} onMouseOver={(e) => e.currentTarget.style.color = activeColors.textMain} onMouseOut={(e) => e.currentTarget.style.color = activeColors.textMuted}>
+              Cancelar
+            </button>
+            <button type="submit" style={{ padding: '12px 24px', borderRadius: '12px', background: activeColors.accent, color: 'white', border: 'none', fontWeight: '900', fontSize: '0.85rem', boxShadow: '0 8px 15px rgba(79, 70, 229, 0.3)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', transition: 'transform 0.1s' }} onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'} onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}>
               <Send size={16} /> Enviar Ticket
             </button>
           </div>
         </form>
       </Modal>
+
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: ${activeColors.border};
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: ${activeColors.textMuted};
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 };

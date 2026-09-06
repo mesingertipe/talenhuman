@@ -31,6 +31,35 @@ public class FaqsController : ControllerBase
 
         var faqs = await query.ToListAsync();
         
+        // AUTO-SEED: If this company has no FAQs, clone the system ones
+        if (faqs.Count == 0 && role != "SuperAdmin" && role != "Soporte")
+        {
+            var systemFaqs = await _context.FaqArticles
+                .IgnoreQueryFilters()
+                .Where(f => f.IsSystem)
+                .GroupBy(f => f.Question)
+                .Select(g => g.First())
+                .ToListAsync();
+
+            if (systemFaqs.Count > 0)
+            {
+                var newFaqs = systemFaqs.Select(sf => new FaqArticle
+                {
+                    Question = sf.Question,
+                    Answer = sf.Answer,
+                    TargetRoles = sf.TargetRoles,
+                    Category = sf.Category,
+                    IsSystem = true,
+                    IsActive = true
+                }).ToList();
+
+                _context.FaqArticles.AddRange(newFaqs);
+                await _context.SaveChangesAsync();
+                
+                faqs = newFaqs;
+            }
+        }
+
         if (role == "SuperAdmin" || role == "Admin" || role == "Soporte")
             return faqs;
 

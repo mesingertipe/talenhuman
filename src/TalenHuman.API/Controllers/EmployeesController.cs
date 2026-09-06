@@ -180,6 +180,32 @@ public class EmployeesController : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("{id}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<object>> GetById(Guid id)
+    {
+        var employee = await _context.Employees
+            .Include(e => e.Store)
+            .Include(e => e.Profile)
+            .Include(e => e.Company)
+            .FirstOrDefaultAsync(e => e.Id == id && e.IsActive);
+
+        if (employee == null) return NotFound(new { message = "Empleado no encontrado o inactivo" });
+
+        return Ok(new
+        {
+            employee.Id,
+            employee.FirstName,
+            employee.LastName,
+            employee.IdentificationNumber,
+            employee.PendingVacationDays,
+            StoreName = employee.Store?.Name,
+            ProfileName = employee.Profile?.Name,
+            VacationAllowMoneyDays = employee.Company?.VacationAllowMoneyDays ?? false,
+            VacationCalculationMode = employee.Company?.VacationCalculationMode ?? "BusinessDaysMonSat"
+        });
+    }
+
     [HttpGet("by-cedula/{cedula}")]
     [AllowAnonymous]
     public async Task<ActionResult<object>> GetByCedula(string cedula)
@@ -187,6 +213,7 @@ public class EmployeesController : ControllerBase
         var employee = await _context.Employees
             .Include(e => e.Store)
             .Include(e => e.Profile)
+            .Include(e => e.Company)
             .FirstOrDefaultAsync(e => e.IdentificationNumber == cedula && e.IsActive);
 
         if (employee == null)
@@ -202,7 +229,9 @@ public class EmployeesController : ControllerBase
             employee.IdentificationNumber,
             employee.PendingVacationDays,
             StoreName = employee.Store?.Name,
-            ProfileName = employee.Profile?.Name
+            ProfileName = employee.Profile?.Name,
+            VacationAllowMoneyDays = employee.Company?.VacationAllowMoneyDays ?? false,
+            VacationCalculationMode = employee.Company?.VacationCalculationMode ?? "BusinessDaysMonSat"
         });
     }
 }
