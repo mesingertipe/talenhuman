@@ -89,7 +89,6 @@ public class TicketsController : ControllerBase
         if (role == "Empleado") return Forbid();
 
         var userId = Guid.Parse(User.Claims.First(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value);
-        var userId = Guid.Parse(User.Claims.First(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value);
         ticket.CreatedByUserId = userId;
         ticket.TicketNumber = "TK-" + DateTime.UtcNow.ToString("yyyyMM") + "-" + new Random().Next(1000, 9999);
         
@@ -99,7 +98,9 @@ public class TicketsController : ControllerBase
         // Notify Support and SuperAdmin
         var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
         try {
-            var supportUsers = await _context.Users.IgnoreQueryFilters().Where(u => u.Role == "Soporte" || u.Role == "SuperAdmin").ToListAsync();
+            var supportRoleIds = await _context.Roles.Where(r => r.Name == "Soporte" || r.Name == "SuperAdmin").Select(r => r.Id).ToListAsync();
+            var supportUserIds = await _context.UserRoles.Where(ur => supportRoleIds.Contains(ur.RoleId)).Select(ur => ur.UserId).ToListAsync();
+            var supportUsers = await _context.Users.IgnoreQueryFilters().Where(u => supportUserIds.Contains(u.Id)).ToListAsync();
             foreach (var su in supportUsers)
             {
                 if (!string.IsNullOrEmpty(su.Email))
@@ -171,7 +172,9 @@ public class TicketsController : ControllerBase
             }
             else
             {
-                var supportUsers = await _context.Users.IgnoreQueryFilters().Where(u => u.Role == "Soporte" || u.Role == "SuperAdmin").ToListAsync();
+                var supportRoleIds = await _context.Roles.Where(r => r.Name == "Soporte" || r.Name == "SuperAdmin").Select(r => r.Id).ToListAsync();
+                var supportUserIds = await _context.UserRoles.Where(ur => supportRoleIds.Contains(ur.RoleId)).Select(ur => ur.UserId).ToListAsync();
+                var supportUsers = await _context.Users.IgnoreQueryFilters().Where(u => supportUserIds.Contains(u.Id)).ToListAsync();
                 foreach (var su in supportUsers)
                 {
                     if (!string.IsNullOrEmpty(su.Email))
