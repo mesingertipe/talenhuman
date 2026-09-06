@@ -18,6 +18,7 @@ const HelpDesk = ({ user }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isUserInfoModalOpen, setIsUserInfoModalOpen] = useState(false);
   const [hubConnection, setHubConnection] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
   
@@ -324,7 +325,17 @@ const HelpDesk = ({ user }) => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, textTransform: 'uppercase', flexWrap: 'wrap' }}>
                   <span style={{ color: activeColors.accent }}>{selectedTicket.ticketNumber}</span>
                   <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: activeColors.border }} />
-                  <span>Creado por: {selectedTicket.createdByUser?.fullName || 'Usuario'}</span>
+                  {isSupport ? (
+                    <span 
+                      onClick={() => setIsUserInfoModalOpen(true)}
+                      style={{ cursor: 'pointer', color: activeColors.accent, textDecoration: 'underline' }}
+                      title="Ver detalles del usuario"
+                    >
+                      Creado por: {selectedTicket.createdByUser?.fullName || 'Usuario'}
+                    </span>
+                  ) : (
+                    <span>Creado por: {selectedTicket.createdByUser?.fullName || 'Usuario'}</span>
+                  )}
                   {selectedTicket.createdByUser?.employee?.store?.name && (
                     <>
                       <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: activeColors.border }} />
@@ -505,6 +516,36 @@ const HelpDesk = ({ user }) => {
           </div>
         </form>
       </Modal>
+
+      {isSupport && selectedTicket?.createdByUser && (
+        <Modal isOpen={isUserInfoModalOpen} onClose={() => setIsUserInfoModalOpen(false)} title="Información del Usuario">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', padding: '10px 0' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+              <div>
+                <label style={{ fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Nombre</label>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: activeColors.textMain }}>{selectedTicket.createdByUser.fullName || 'No disponible'}</div>
+              </div>
+              <div>
+                <label style={{ fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Email</label>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: activeColors.textMain }}>{selectedTicket.createdByUser.email || 'No disponible'}</div>
+              </div>
+              <div>
+                <label style={{ fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Empresa / Tenant</label>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: activeColors.textMain }}>{selectedTicket.company?.name || 'No disponible'}</div>
+              </div>
+              <div>
+                <label style={{ fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Tienda / Sede</label>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: activeColors.textMain }}>{selectedTicket.createdByUser?.employee?.store?.name || selectedTicket.createdByUser?.district?.name || 'No aplica / No disponible'}</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px', paddingTop: '15px', borderTop: `1px solid ${activeColors.border}` }}>
+              <button type="button" onClick={() => setIsUserInfoModalOpen(false)} style={{ padding: '10px 20px', borderRadius: '12px', background: activeColors.accent, color: 'white', border: 'none', fontWeight: '800', fontSize: '0.85rem', cursor: 'pointer' }}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       <style>{`
         @keyframes fadeInUp {
