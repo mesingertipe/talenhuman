@@ -35,7 +35,12 @@ public class TicketsController : ControllerBase
 
         var query = _context.SupportTickets
             .Include(t => t.CreatedByUser)
+                .ThenInclude(u => u.Employee)
+                    .ThenInclude(e => e.Store)
+            .Include(t => t.CreatedByUser)
+                .ThenInclude(u => u.District)
             .Include(t => t.AssignedToUser)
+            .Include(t => t.Company)
             .AsQueryable();
 
         if (role == "SuperAdmin" || role == "Soporte")
@@ -60,7 +65,12 @@ public class TicketsController : ControllerBase
 
         var query = _context.SupportTickets
             .Include(t => t.CreatedByUser)
+                .ThenInclude(u => u.Employee)
+                    .ThenInclude(e => e.Store)
+            .Include(t => t.CreatedByUser)
+                .ThenInclude(u => u.District)
             .Include(t => t.AssignedToUser)
+            .Include(t => t.Company)
             .Include(t => t.Messages)
             .ThenInclude(m => m.User)
             .AsQueryable();

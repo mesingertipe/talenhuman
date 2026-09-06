@@ -321,10 +321,22 @@ const HelpDesk = ({ user }) => {
             <div style={{ padding: '25px', borderBottom: `1px solid ${activeColors.border}`, background: isDarkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
               <div>
                 <h3 style={{ fontSize: '1.4rem', fontWeight: '950', color: activeColors.textMain, margin: '0 0 8px 0', letterSpacing: '-0.02em' }}>{selectedTicket.subject}</h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, textTransform: 'uppercase' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, textTransform: 'uppercase', flexWrap: 'wrap' }}>
                   <span style={{ color: activeColors.accent }}>{selectedTicket.ticketNumber}</span>
                   <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: activeColors.border }} />
                   <span>Creado por: {selectedTicket.createdByUser?.fullName || 'Usuario'}</span>
+                  {selectedTicket.createdByUser?.employee?.store?.name && (
+                    <>
+                      <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: activeColors.border }} />
+                      <span>Tienda: {selectedTicket.createdByUser.employee.store.name}</span>
+                    </>
+                  )}
+                  {selectedTicket.company?.name && (
+                    <>
+                      <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: activeColors.border }} />
+                      <span>Empresa: {selectedTicket.company.name}</span>
+                    </>
+                  )}
                 </div>
               </div>
               

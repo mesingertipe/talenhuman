@@ -541,15 +541,12 @@ public class SupportTicket : BaseEntity, IMultitenant
     public SupportTicketPriority Priority { get; set; } = SupportTicketPriority.Medium;
 
     public Guid CreatedByUserId { get; set; }
-    [JsonIgnore]
     public User? CreatedByUser { get; set; }
 
     public Guid? AssignedToUserId { get; set; }
-    [JsonIgnore]
     public User? AssignedToUser { get; set; }
 
     public Guid CompanyId { get; set; }
-    [JsonIgnore]
     public Company? Company { get; set; }
 
     [JsonIgnore]
@@ -567,7 +564,6 @@ public class TicketMessage : BaseEntity, IMultitenant
     public bool IsFromSupport { get; set; } = false;
 
     public Guid UserId { get; set; }
-    [JsonIgnore]
     public User? User { get; set; }
 
     public Guid CompanyId { get; set; }
