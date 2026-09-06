@@ -3,7 +3,7 @@ import { MessageSquare, Send, Plus, Search, CheckCircle, Clock, AlertCircle, Act
 import api from '../../services/api';
 import Modal from '../../components/Shared/Modal';
 import * as signalR from '@microsoft/signalr';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../../context/ThemeContext';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 const HelpDesk = ({ user }) => {

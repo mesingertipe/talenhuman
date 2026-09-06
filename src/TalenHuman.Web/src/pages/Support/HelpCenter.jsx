@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { HelpCircle, ChevronDown, ChevronUp, Plus, Edit2, Trash2, Search, BookOpen, Layers } from 'lucide-react';
 import api from '../../services/api';
 import Modal from '../../components/Shared/Modal';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../../context/ThemeContext';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 const HelpCenter = ({ user }) => {
