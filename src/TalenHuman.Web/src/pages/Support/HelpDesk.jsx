@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, Send, Plus, Search, CheckCircle, Clock, AlertCircle, Activity, Filter, Ticket as TicketIcon } from 'lucide-react';
+import { MessageSquare, Send, Plus, Search, CheckCircle, Clock, AlertCircle, Activity, Filter, Ticket as TicketIcon, Paperclip } from 'lucide-react';
 import api from '../../services/api';
 import Modal from '../../components/Shared/Modal';
 import * as signalR from '@microsoft/signalr';
@@ -10,6 +10,9 @@ const HelpDesk = ({ user }) => {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [attachment, setAttachment] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [hubConnection, setHubConnection] = useState(null);
@@ -113,13 +116,30 @@ const HelpDesk = ({ user }) => {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !selectedTicket) return;
+    if ((!newMessage.trim() && !attachment) || !selectedTicket || uploading) return;
 
     try {
-      await api.post(`/Tickets/${selectedTicket.id}/messages`, { message: newMessage });
+      setUploading(true);
+      let attachmentUrl = null;
+      if (attachment) {
+        const formData = new FormData();
+        formData.append('file', attachment);
+        const res = await api.post('/Files/upload?folder=tickets', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        attachmentUrl = res.data.url;
+      }
+
+      await api.post(`/Tickets/${selectedTicket.id}/messages`, { 
+        message: newMessage,
+        attachmentUrl: attachmentUrl 
+      });
       setNewMessage('');
+      setAttachment(null);
     } catch (error) {
       console.error('Error sending message:', error);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -325,6 +345,13 @@ const HelpDesk = ({ user }) => {
                         <span style={{ fontSize: '10px', fontWeight: '700', opacity: 0.7 }}>{new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                       </div>
                       <div style={{ fontSize: '0.95rem', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{msg.message}</div>
+                      {msg.attachmentUrl && (
+                        <div style={{ marginTop: '10px' }}>
+                          <a href={msg.attachmentUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: isMine ? 'rgba(255,255,255,0.2)' : (isDarkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9'), borderRadius: '12px', color: isMine ? 'white' : activeColors.textMain, textDecoration: 'none', fontSize: '0.85rem', fontWeight: '700' }}>
+                            <Paperclip size={14} /> Ver Archivo Adjunto
+                          </a>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -335,20 +362,33 @@ const HelpDesk = ({ user }) => {
             {/* Chat Input */}
             {selectedTicket.status !== 3 ? (
               <div style={{ padding: '25px', borderTop: `1px solid ${activeColors.border}`, background: isDarkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}>
-                <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '15px' }}>
+                <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    style={{ display: 'none' }} 
+                    onChange={(e) => setAttachment(e.target.files[0])}
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{ padding: '16px', background: attachment ? activeColors.accent : 'transparent', color: attachment ? 'white' : activeColors.textMuted, border: `1px solid ${activeColors.border}`, borderRadius: '20px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <Paperclip size={18} />
+                  </button>
                   <input 
                     type="text" 
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Escribe una respuesta aquí..."
+                    placeholder={attachment ? `Archivo: ${attachment.name}` : "Escribe una respuesta aquí..."}
                     style={{ flex: 1, background: isDarkMode ? 'rgba(15, 23, 42, 0.6)' : 'white', border: `1px solid ${activeColors.border}`, borderRadius: '20px', padding: '0 25px', color: activeColors.textMain, fontSize: '0.95rem', fontWeight: '600', outline: 'none', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}
                   />
                   <button 
                     type="submit" 
-                    disabled={!newMessage.trim()} 
-                    style={{ padding: '16px 30px', background: activeColors.accent, color: 'white', border: 'none', borderRadius: '20px', fontWeight: '900', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: newMessage.trim() ? 'pointer' : 'not-allowed', opacity: newMessage.trim() ? 1 : 0.5, display: 'flex', alignItems: 'center', gap: '10px', boxShadow: newMessage.trim() ? '0 10px 20px rgba(79, 70, 229, 0.3)' : 'none', transition: 'all 0.2s' }}
+                    disabled={(!newMessage.trim() && !attachment) || uploading} 
+                    style={{ padding: '16px 30px', background: activeColors.accent, color: 'white', border: 'none', borderRadius: '20px', fontWeight: '900', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: ((newMessage.trim() || attachment) && !uploading) ? 'pointer' : 'not-allowed', opacity: ((newMessage.trim() || attachment) && !uploading) ? 1 : 0.5, display: 'flex', alignItems: 'center', gap: '10px', boxShadow: (newMessage.trim() || attachment) ? '0 10px 20px rgba(79, 70, 229, 0.3)' : 'none', transition: 'all 0.2s' }}
                   >
-                    <Send size={18} /> Enviar
+                    <Send size={18} /> {uploading ? 'Enviando...' : 'Enviar'}
                   </button>
                 </form>
               </div>
