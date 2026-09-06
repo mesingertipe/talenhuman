@@ -38,14 +38,36 @@ const HelpDesk = ({ user }) => {
   }, []);
 
   useEffect(() => {
+    let newConnection = null;
+
+    const setupSignalR = async (ticketId) => {
+      newConnection = new signalR.HubConnectionBuilder()
+        .withUrl((import.meta.env.VITE_API_URL || '') + '/hubs/ticket')
+        .withAutomaticReconnect()
+        .build();
+
+      newConnection.on('ReceiveMessage', (message) => {
+        setMessages(prev => [...prev, message]);
+      });
+
+      try {
+        await newConnection.start();
+        await newConnection.invoke('JoinTicketRoom', ticketId);
+        setHubConnection(newConnection);
+      } catch (e) {
+        console.error('SignalR Connection Error: ', e);
+      }
+    };
+
     if (selectedTicket) {
       fetchMessages(selectedTicket.id);
       setupSignalR(selectedTicket.id);
     }
+    
     return () => {
-      if (hubConnection) {
-        hubConnection.invoke('LeaveTicketRoom', selectedTicket?.id).catch(console.error);
-        hubConnection.stop();
+      if (newConnection) {
+        newConnection.invoke('LeaveTicketRoom', selectedTicket?.id).catch(console.error);
+        newConnection.stop();
       }
     };
   }, [selectedTicket]);
@@ -53,29 +75,6 @@ const HelpDesk = ({ user }) => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  const setupSignalR = async (ticketId) => {
-    if (hubConnection) {
-      await hubConnection.stop();
-    }
-
-      const newConnection = new signalR.HubConnectionBuilder()
-        .withUrl((import.meta.env.VITE_API_URL || '') + '/hubs/ticket')
-      .withAutomaticReconnect()
-      .build();
-
-    newConnection.on('ReceiveMessage', (message) => {
-      setMessages(prev => [...prev, message]);
-    });
-
-    try {
-      await newConnection.start();
-      await newConnection.invoke('JoinTicketRoom', ticketId);
-      setHubConnection(newConnection);
-    } catch (e) {
-      console.error('SignalR Connection Error: ', e);
-    }
-  };
 
   const fetchTickets = async () => {
     try {
