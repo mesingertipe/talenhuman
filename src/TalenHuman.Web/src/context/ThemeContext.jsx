@@ -22,8 +22,18 @@ export const ThemeProvider = ({ children }) => {
 
   const toggleTheme = () => setIsDarkMode(prev => !prev);
 
+  // Unified Premium Colors
+  const activeColors = {
+      bg: isDarkMode ? '#0f172a' : '#f8fafc',
+      card: isDarkMode ? '#1e293b' : '#ffffff',
+      border: isDarkMode ? '#334155' : '#f1f5f9',
+      textMain: isDarkMode ? '#f1f5f9' : '#1e293b',
+      textMuted: isDarkMode ? '#94a3b8' : '#64748b',
+      accent: '#4f46e5'
+  };
+
   return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
+    <ThemeContext.Provider value={{ isDarkMode, toggleTheme, activeColors }}>
       {children}
     </ThemeContext.Provider>
   );

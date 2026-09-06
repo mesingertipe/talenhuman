@@ -87,7 +87,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<Attendance>().HasQueryFilter(a => a.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<Absence>().HasQueryFilter(a => a.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<Jornada>().HasQueryFilter(j => j.CompanyId == TenantId || TenantId == Guid.Empty);
-        builder.Entity<NovedadTipo>().HasQueryFilter(n => n.CompanyId == TenantId || TenantId == Guid.Empty || n.EsPlantilla);
+        builder.Entity<NovedadTipo>().HasQueryFilter(n => n.CompanyId == TenantId || TenantId == Guid.Empty || n.CompanyId == null || n.CompanyId == Guid.Empty || n.EsPlantilla);
         builder.Entity<Novedad>().HasQueryFilter(n => n.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<NovedadLog>().HasQueryFilter(n => n.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<SupervisorStore>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);

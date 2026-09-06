@@ -367,7 +367,7 @@ const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false
         );
     };
 
-    const isVacations = selectedType?.isSystem && selectedType?.nombre?.toLowerCase() === 'vacaciones';
+    const isVacations = selectedType?.nombre?.toLowerCase().includes('vacaciones');
     const vacationDaysTime = isVacations ? calculateVacationDays(formData.fechaInicio, formData.fechaFin, foundEmployee?.vacationCalculationMode || 'Calendar') : 0;
     const vacationDaysMoney = isVacations && foundEmployee?.vacationAllowMoneyDays ? parseInt(formData.datosDinamicos['DiasDinero'] || 0) : 0;
     const totalVacationDays = vacationDaysTime + vacationDaysMoney;
