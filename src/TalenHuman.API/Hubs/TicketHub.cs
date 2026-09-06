@@ -5,16 +5,23 @@ namespace TalenHuman.API.Hubs
 {
     public class TicketHub : Hub
     {
-        // Clients can call this to join a specific ticket room
-        public async Task JoinTicketRoom(string ticketId)
+        public async Task JoinTicketRoom(string ticketId, string userId)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, ticketId);
+            // Notify others in the room that this user joined
+            await Clients.Group(ticketId).SendAsync("UserJoinedRoom", userId);
         }
 
-        // Clients can call this to leave a ticket room
-        public async Task LeaveTicketRoom(string ticketId)
+        public async Task LeaveTicketRoom(string ticketId, string userId)
         {
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, ticketId);
+            await Clients.Group(ticketId).SendAsync("UserLeftRoom", userId);
+        }
+
+        // Broadcast typing status to others in the room
+        public async Task Typing(string ticketId, string userId, bool isTyping)
+        {
+            await Clients.OthersInGroup(ticketId).SendAsync("OnTyping", userId, isTyping);
         }
     }
 }

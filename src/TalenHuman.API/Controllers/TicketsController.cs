@@ -71,6 +71,9 @@ public class TicketsController : ControllerBase
         var query = _context.SupportTickets
             .Include(t => t.CreatedByUser)
                 .ThenInclude(u => u.District)
+            .Include(t => t.CreatedByUser)
+                .ThenInclude(u => u.SupervisorStores)
+                    .ThenInclude(ss => ss.Store)
             .Include(t => t.AssignedToUser)
             .Include(t => t.Company)
             .Include(t => t.Messages.OrderBy(m => m.CreatedAt))
@@ -82,12 +85,16 @@ public class TicketsController : ControllerBase
         if (ticket == null) return NotFound();
 
         // Workaround for Employee relationship
-        if (ticket.CreatedByUser != null && ticket.CreatedByUser.EmployeeId.HasValue)
+        if (ticket.CreatedByUser != null)
         {
             var emp = await _context.Employees.IgnoreQueryFilters()
                 .Include(e => e.Store)
-                .FirstOrDefaultAsync(e => e.Id == ticket.CreatedByUser.EmployeeId);
-            ticket.CreatedByUser.Employee = emp;
+                .FirstOrDefaultAsync(e => e.UserId == ticket.CreatedByUserId || (ticket.CreatedByUser.EmployeeId.HasValue && e.Id == ticket.CreatedByUser.EmployeeId));
+            
+            if (emp != null)
+            {
+                ticket.CreatedByUser.Employee = emp;
+            }
         }
 
         // Normal user can only see their own tickets

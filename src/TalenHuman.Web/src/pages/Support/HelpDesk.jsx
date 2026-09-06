@@ -21,6 +21,9 @@ const HelpDesk = ({ user }) => {
   const [isUserInfoModalOpen, setIsUserInfoModalOpen] = useState(false);
   const [hubConnection, setHubConnection] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
+  const [typingUsers, setTypingUsers] = useState(new Set());
+  const typingTimeoutRef = useRef(null);
   
   const messagesEndRef = useRef(null);
   const { isDarkMode, activeColors } = useTheme();
@@ -52,10 +55,41 @@ const HelpDesk = ({ user }) => {
         setMessages(prev => [...prev, message]);
       });
 
+      newConnection.on('UserJoinedRoom', (joinedUserId) => {
+        if (joinedUserId !== user?.id) {
+          setOnlineUsers(prev => new Set(prev).add(joinedUserId));
+          // Ping back so the new user knows we are here
+          newConnection.invoke('UserJoinedRoom', ticketId, user?.id).catch(() => {});
+        }
+      });
+
+      newConnection.on('UserLeftRoom', (leftUserId) => {
+        setOnlineUsers(prev => {
+          const next = new Set(prev);
+          next.delete(leftUserId);
+          return next;
+        });
+        setTypingUsers(prev => {
+          const next = new Set(prev);
+          next.delete(leftUserId);
+          return next;
+        });
+      });
+
+      newConnection.on('OnTyping', (typingUserId, isTyping) => {
+        if (typingUserId === user?.id) return;
+        setTypingUsers(prev => {
+          const next = new Set(prev);
+          if (isTyping) next.add(typingUserId);
+          else next.delete(typingUserId);
+          return next;
+        });
+      });
+
       try {
         await newConnection.start();
         if (!isCancelled) {
-          await newConnection.invoke('JoinTicketRoom', ticketId);
+          await newConnection.invoke('JoinTicketRoom', ticketId, user?.id || 'Unknown');
           setHubConnection(newConnection);
         } else {
           await newConnection.stop();
@@ -74,7 +108,7 @@ const HelpDesk = ({ user }) => {
       isCancelled = true;
       if (newConnection) {
         if (newConnection.state === signalR.HubConnectionState.Connected) {
-          newConnection.invoke('LeaveTicketRoom', selectedTicket?.id).catch(console.error);
+          newConnection.invoke('LeaveTicketRoom', selectedTicket?.id, user?.id || 'Unknown').catch(console.error);
         }
         newConnection.stop();
       }
@@ -328,18 +362,22 @@ const HelpDesk = ({ user }) => {
                   {isSupport ? (
                     <span 
                       onClick={() => setIsUserInfoModalOpen(true)}
-                      style={{ cursor: 'pointer', color: activeColors.accent, textDecoration: 'underline' }}
+                      style={{ cursor: 'pointer', color: activeColors.accent, textDecoration: 'underline', display: 'flex', alignItems: 'center', gap: '5px' }}
                       title="Ver detalles del usuario"
                     >
                       Creado por: {selectedTicket.createdByUser?.fullName || 'Usuario'}
+                      {onlineUsers.size > 0 && <span style={{display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#10b981'}} title="Usuario en línea"></span>}
                     </span>
                   ) : (
-                    <span>Creado por: {selectedTicket.createdByUser?.fullName || 'Usuario'}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      Atendido por: Soporte
+                      {onlineUsers.size > 0 && <span style={{display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: '#10b981'}} title="Soporte en línea"></span>}
+                    </span>
                   )}
-                  {selectedTicket.createdByUser?.employee?.store?.name && (
+                  {(selectedTicket.createdByUser?.employee?.store?.name || selectedTicket.createdByUser?.supervisorStores?.[0]?.store?.name) && (
                     <>
                       <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: activeColors.border }} />
-                      <span>Tienda: {selectedTicket.createdByUser.employee.store.name}</span>
+                      <span>Tienda: {selectedTicket.createdByUser.employee?.store?.name || selectedTicket.createdByUser.supervisorStores?.[0]?.store?.name}</span>
                     </>
                   )}
                   {selectedTicket.company?.name && (
@@ -414,6 +452,16 @@ const HelpDesk = ({ user }) => {
               <div ref={messagesEndRef} />
             </div>
 
+            {/* Typing Indicator */}
+            {typingUsers.size > 0 && (
+              <div style={{ padding: '0 25px 15px 25px', display: 'flex', alignItems: 'center', gap: '5px', color: activeColors.textMuted, fontSize: '0.75rem', fontWeight: '800', fontStyle: 'italic' }}>
+                <div className="typing-dot" style={{width: '5px', height: '5px', background: activeColors.textMuted, borderRadius: '50%'}}></div>
+                <div className="typing-dot" style={{width: '5px', height: '5px', background: activeColors.textMuted, borderRadius: '50%', animationDelay: '0.2s'}}></div>
+                <div className="typing-dot" style={{width: '5px', height: '5px', background: activeColors.textMuted, borderRadius: '50%', animationDelay: '0.4s'}}></div>
+                <span style={{ marginLeft: '5px' }}>Alguien está escribiendo...</span>
+              </div>
+            )}
+
             {/* Chat Input */}
             {selectedTicket.status !== 3 ? (
               <div style={{ padding: '25px', borderTop: `1px solid ${activeColors.border}`, background: isDarkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}>
@@ -434,7 +482,7 @@ const HelpDesk = ({ user }) => {
                   <input 
                     type="text" 
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={(e) => { setNewMessage(e.target.value); if (hubConnection && hubConnection.state === signalR.HubConnectionState.Connected) { hubConnection.invoke('Typing', selectedTicket.id, user?.id || 'Unknown', true).catch(() => {}); if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current); typingTimeoutRef.current = setTimeout(() => { hubConnection.invoke('Typing', selectedTicket.id, user?.id || 'Unknown', false).catch(() => {}); }, 2000); } }}
                     placeholder={attachment ? `Archivo: ${attachment.name}` : "Escribe una respuesta aquí..."}
                     style={{ flex: 1, background: isDarkMode ? 'rgba(15, 23, 42, 0.6)' : 'white', border: `1px solid ${activeColors.border}`, borderRadius: '20px', padding: '0 25px', color: activeColors.textMain, fontSize: '0.95rem', fontWeight: '600', outline: 'none', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}
                   />
@@ -535,7 +583,7 @@ const HelpDesk = ({ user }) => {
               </div>
               <div>
                 <label style={{ fontSize: '10px', fontWeight: '900', color: activeColors.textMuted, textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Tienda / Sede</label>
-                <div style={{ fontSize: '14px', fontWeight: '600', color: activeColors.textMain }}>{selectedTicket.createdByUser?.employee?.store?.name || selectedTicket.createdByUser?.district?.name || 'No aplica / No disponible'}</div>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: activeColors.textMain }}>{selectedTicket.createdByUser?.employee?.store?.name || selectedTicket.createdByUser?.supervisorStores?.[0]?.store?.name || selectedTicket.createdByUser?.district?.name || 'No aplica / No disponible'}</div>
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px', paddingTop: '15px', borderTop: `1px solid ${activeColors.border}` }}>
@@ -551,6 +599,13 @@ const HelpDesk = ({ user }) => {
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
+        }
+        .typing-dot {
+          animation: bounce 1s infinite;
         }
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
@@ -578,3 +633,4 @@ const HelpDesk = ({ user }) => {
 };
 
 export default HelpDesk;
+
