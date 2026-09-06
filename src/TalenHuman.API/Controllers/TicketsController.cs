@@ -181,10 +181,17 @@ public class TicketsController : ControllerBase
 
         _context.TicketMessages.Add(message);
         
-        // Update ticket status
-        if (message.IsFromSupport && ticket.Status == SupportTicketStatus.Open)
+        // Update ticket status and auto-assign
+        if (message.IsFromSupport)
         {
-            ticket.Status = SupportTicketStatus.InProgress;
+            if (ticket.Status == SupportTicketStatus.Open)
+            {
+                ticket.Status = SupportTicketStatus.InProgress;
+            }
+            if (ticket.AssignedToUserId == null)
+            {
+                ticket.AssignedToUserId = userId;
+            }
         }
 
         await _context.SaveChangesAsync();

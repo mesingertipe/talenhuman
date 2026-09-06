@@ -434,7 +434,7 @@ const HelpDesk = ({ user }) => {
                         <td style={{ padding: '16px 20px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', fontWeight: '600', color: activeColors.textMuted }}>
                             <Users size={14} /> 
-                            {ticket.assignedToUser?.fullName || 'Sin Asignar'}
+                            {isSupport ? (ticket.assignedToUser?.fullName || 'Sin Asignar') : (ticket.assignedToUser ? 'Soporte Técnico' : 'En Espera')}
                           </div>
                         </td>
                         <td style={{ padding: '16px 20px', textAlign: 'right' }}>
@@ -683,8 +683,12 @@ const HelpDesk = ({ user }) => {
                   <span style={{ color: activeColors.textMuted, fontWeight: '700' }}>Prioridad:</span>
                   <span style={{ color: activeColors.textMain, fontWeight: '800' }}>{getPriorityConfig(selectedTicket.priority).label}</span>
                   
-                  <span style={{ color: activeColors.textMuted, fontWeight: '700' }}>Asignado a:</span>
-                  <span style={{ color: activeColors.textMain, fontWeight: '800' }}>{selectedTicket.assignedToUser?.fullName || 'Sin Asignar'}</span>
+                  {(isSupport || selectedTicket.assignedToUser) && (
+                    <>
+                      <span style={{ color: activeColors.textMuted, fontWeight: '700' }}>Asignado a:</span>
+                      <span style={{ color: activeColors.textMain, fontWeight: '800' }}>{isSupport ? (selectedTicket.assignedToUser?.fullName || 'Sin Asignar') : 'Soporte Técnico'}</span>
+                    </>
+                  )}
                   
                   <span style={{ color: activeColors.textMuted, fontWeight: '700' }}>Empresa:</span>
                   <span style={{ color: activeColors.textMain, fontWeight: '800' }}>{selectedTicket.company?.name || 'N/A'}</span>
