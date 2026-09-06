@@ -4,7 +4,6 @@ import api from '../../services/api';
 import Modal from '../../components/Shared/Modal';
 import * as signalR from '@microsoft/signalr';
 import { useTheme } from '../../context/ThemeContext';
-import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 const HelpDesk = ({ user }) => {
   const [tickets, setTickets] = useState([]);
@@ -18,9 +17,15 @@ const HelpDesk = ({ user }) => {
   
   const messagesEndRef = useRef(null);
   const { isDarkMode, activeColors } = useTheme();
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   
   const isSupport = user?.roles?.includes('SuperAdmin') || user?.roles?.includes('Soporte');
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetchTickets();
