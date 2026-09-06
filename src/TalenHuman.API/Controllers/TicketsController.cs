@@ -169,33 +169,7 @@ public class TicketsController : ControllerBase
 
         await _hubContext.Clients.Group(id.ToString()).SendAsync("ReceiveMessage", message);
 
-        // Send email notification
-        try {
-            if (message.IsFromSupport)
-            {
-                var creator = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == ticket.CreatedByUserId);
-                if (creator != null) {
-                    await _emailService.SendEmailAsync(creator.Email!, 
-                        $"Nuevo mensaje en tu ticket {ticket.TicketNumber}", 
-                        $"Soporte ha respondido a tu ticket: {ticket.Subject}\n\nMensaje: {message.Message}");
-                }
-            }
-            else
-            {
-                var supportRoleIds = await _context.Roles.Where(r => r.Name == "Soporte" || r.Name == "SuperAdmin").Select(r => r.Id).ToListAsync();
-                var supportUserIds = await _context.UserRoles.Where(ur => supportRoleIds.Contains(ur.RoleId)).Select(ur => ur.UserId).ToListAsync();
-                var supportUsers = await _context.Users.IgnoreQueryFilters().Where(u => supportUserIds.Contains(u.Id)).ToListAsync();
-                foreach (var su in supportUsers)
-                {
-                    if (!string.IsNullOrEmpty(su.Email))
-                    {
-                        await _emailService.SendEmailAsync(su.Email, 
-                            $"Nuevo mensaje de usuario en ticket {ticket.TicketNumber}", 
-                            $"El usuario {user?.FullName} ha respondido al ticket: {ticket.Subject}\n\nMensaje: {message.Message}");
-                    }
-                }
-            }
-        } catch { /* ignore */ }
+
 
         return Ok(message);
     }
@@ -209,6 +183,18 @@ public class TicketsController : ControllerBase
 
         ticket.Status = status;
         await _context.SaveChangesAsync();
+
+        if (status == SupportTicketStatus.Closed || status == SupportTicketStatus.Resolved)
+        {
+            try {
+                var creator = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == ticket.CreatedByUserId);
+                if (creator != null && !string.IsNullOrEmpty(creator.Email)) {
+                    await _emailService.SendEmailAsync(creator.Email, 
+                        $"Tu ticket {ticket.TicketNumber} ha sido {(status == SupportTicketStatus.Resolved ? "resuelto" : "cerrado")}", 
+                        $"Hola {creator.FullName},\n\nTe informamos que tu ticket '{ticket.Subject}' ha sido marcado como {(status == SupportTicketStatus.Resolved ? "resuelto" : "cerrado")} por el equipo de soporte.\n\nGracias por usar nuestra mesa de ayuda.");
+                }
+            } catch { /* ignore */ }
+        }
 
         return NoContent();
     }
