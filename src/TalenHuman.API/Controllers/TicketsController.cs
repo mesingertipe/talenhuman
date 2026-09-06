@@ -41,13 +41,10 @@ public class TicketsController : ControllerBase
                 .ThenInclude(u => u.District)
             .Include(t => t.AssignedToUser)
             .Include(t => t.Company)
+            .IgnoreQueryFilters()
             .AsQueryable();
 
-        if (role == "SuperAdmin" || role == "Soporte")
-        {
-            query = query.IgnoreQueryFilters();
-        }
-        else
+        if (role != "SuperAdmin" && role != "Soporte")
         {
             query = query.Where(t => t.CreatedByUserId == userId);
         }
@@ -73,12 +70,8 @@ public class TicketsController : ControllerBase
             .Include(t => t.Company)
             .Include(t => t.Messages.OrderBy(m => m.CreatedAt))
             .ThenInclude(m => m.User)
+            .IgnoreQueryFilters()
             .AsQueryable();
-
-        if (role == "SuperAdmin" || role == "Soporte")
-        {
-            query = query.IgnoreQueryFilters();
-        }
 
         var ticket = await query.FirstOrDefaultAsync(t => t.Id == id);
         if (ticket == null) return NotFound();
