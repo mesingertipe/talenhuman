@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -10,18 +10,18 @@ namespace TalenHuman.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "AiAllowedRoles",
-                table: "Companies",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<bool>(
-                name: "IsAiEnabled",
-                table: "Companies",
-                type: "boolean",
-                nullable: false,
-                defaultValue: false);
+            migrationBuilder.Sql(@"
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='Companies' AND column_name='AiAllowedRoles') THEN
+                        ALTER TABLE ""Companies"" ADD COLUMN ""AiAllowedRoles"" text;
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='Companies' AND column_name='IsAiEnabled') THEN
+                        ALTER TABLE ""Companies"" ADD COLUMN ""IsAiEnabled"" boolean NOT NULL DEFAULT false;
+                    END IF;
+                END
+                $$;
+            ");
         }
 
         /// <inheritdoc />
