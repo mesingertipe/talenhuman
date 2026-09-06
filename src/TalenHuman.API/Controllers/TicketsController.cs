@@ -71,7 +71,7 @@ public class TicketsController : ControllerBase
                 .ThenInclude(u => u.District)
             .Include(t => t.AssignedToUser)
             .Include(t => t.Company)
-            .Include(t => t.Messages)
+            .Include(t => t.Messages.OrderBy(m => m.CreatedAt))
             .ThenInclude(m => m.User)
             .AsQueryable();
 

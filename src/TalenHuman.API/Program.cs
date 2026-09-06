@@ -24,7 +24,9 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
-builder.Services.AddSignalR();
+builder.Services.AddSignalR().AddJsonProtocol(options => {
+    options.PayloadSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+});
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(x => {
     x.ValueLengthLimit = int.MaxValue;
     x.MultipartBodyLengthLimit = 52428800; // 50MB
