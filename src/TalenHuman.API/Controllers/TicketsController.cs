@@ -71,9 +71,6 @@ public class TicketsController : ControllerBase
         var query = _context.SupportTickets
             .Include(t => t.CreatedByUser)
                 .ThenInclude(u => u.District)
-            .Include(t => t.CreatedByUser)
-                .ThenInclude(u => u.SupervisorStores)
-                    .ThenInclude(ss => ss.Store)
             .Include(t => t.AssignedToUser)
             .Include(t => t.Company)
             .Include(t => t.Messages.OrderBy(m => m.CreatedAt))
@@ -94,6 +91,22 @@ public class TicketsController : ControllerBase
             if (emp != null)
             {
                 ticket.CreatedByUser.Employee = emp;
+            }
+            else
+            {
+                // Fallback to SupervisorStore
+                var supStore = await _context.Set<TalenHuman.Domain.Entities.SupervisorStore>()
+                    .IgnoreQueryFilters()
+                    .Include(ss => ss.Store)
+                    .FirstOrDefaultAsync(ss => ss.UserId == ticket.CreatedByUserId);
+                
+                if (supStore != null)
+                {
+                    ticket.CreatedByUser.Employee = new TalenHuman.Domain.Entities.Employee 
+                    { 
+                        Store = supStore.Store 
+                    };
+                }
             }
         }
 
