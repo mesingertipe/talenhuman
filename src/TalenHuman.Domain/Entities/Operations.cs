@@ -560,6 +560,7 @@ public class TicketMessage : BaseEntity, IMultitenant
     public string Message { get; set; } = string.Empty;
     public string? AttachmentUrl { get; set; }
     public bool IsFromSupport { get; set; } = false;
+    public bool IsSystemMessage { get; set; } = false;
 
     public Guid UserId { get; set; }
     public User? User { get; set; }

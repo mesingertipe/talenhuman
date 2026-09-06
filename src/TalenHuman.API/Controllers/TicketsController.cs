@@ -208,8 +208,30 @@ public class TicketsController : ControllerBase
         var ticket = await _context.SupportTickets.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == id);
         if (ticket == null) return NotFound();
 
+        var oldStatus = ticket.Status;
         ticket.Status = status;
+
+        var sysMsg = new TicketMessage {
+            SupportTicketId = ticket.Id,
+            Message = $"El estado del ticket ha cambiado de {oldStatus} a {status}.",
+            IsSystemMessage = true,
+            IsFromSupport = true,
+            CompanyId = ticket.CompanyId,
+            UserId = Guid.Empty // System
+        };
+        _context.Set<TicketMessage>().Add(sysMsg);
+        
         await _context.SaveChangesAsync();
+
+        var msgObj = new
+        {
+            sysMsg.Id,
+            sysMsg.Message,
+            sysMsg.CreatedAt,
+            sysMsg.IsSystemMessage,
+            sysMsg.IsFromSupport
+        };
+        await _hubContext.Clients.Group(ticket.Id.ToString()).SendAsync("ReceiveMessage", msgObj);
 
         if (status == SupportTicketStatus.Closed || status == SupportTicketStatus.Resolved)
         {
@@ -222,6 +244,67 @@ public class TicketsController : ControllerBase
                 }
             } catch { /* ignore */ }
         }
+
+        return NoContent();
+    }
+
+    [HttpPut("{id}/priority")]
+    [Authorize(Roles = "SuperAdmin,Soporte")]
+    public async Task<IActionResult> UpdatePriority(Guid id, [FromBody] SupportTicketPriority priority)
+    {
+        var ticket = await _context.SupportTickets.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == id);
+        if (ticket == null) return NotFound();
+
+        var oldPriority = ticket.Priority;
+        ticket.Priority = priority;
+
+        var sysMsg = new TicketMessage {
+            SupportTicketId = ticket.Id,
+            Message = $"La prioridad del ticket ha cambiado de {oldPriority} a {priority}.",
+            IsSystemMessage = true,
+            IsFromSupport = true,
+            CompanyId = ticket.CompanyId,
+            UserId = Guid.Empty
+        };
+        _context.Set<TicketMessage>().Add(sysMsg);
+        await _context.SaveChangesAsync();
+        
+        await _hubContext.Clients.Group(ticket.Id.ToString()).SendAsync("ReceiveMessage", new {
+            sysMsg.Id, sysMsg.Message, sysMsg.CreatedAt, sysMsg.IsSystemMessage, sysMsg.IsFromSupport
+        });
+
+        return NoContent();
+    }
+
+    [HttpPut("{id}/assign")]
+    [Authorize(Roles = "SuperAdmin,Soporte")]
+    public async Task<IActionResult> AssignTicket(Guid id, [FromBody] Guid? assignedToUserId)
+    {
+        var ticket = await _context.SupportTickets.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == id);
+        if (ticket == null) return NotFound();
+
+        ticket.AssignedToUserId = assignedToUserId;
+        
+        string assignName = "Sin Asignar";
+        if (assignedToUserId.HasValue) {
+            var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == assignedToUserId.Value);
+            assignName = user?.FullName ?? "Agente";
+        }
+
+        var sysMsg = new TicketMessage {
+            SupportTicketId = ticket.Id,
+            Message = $"El ticket ha sido asignado a: {assignName}.",
+            IsSystemMessage = true,
+            IsFromSupport = true,
+            CompanyId = ticket.CompanyId,
+            UserId = Guid.Empty
+        };
+        _context.Set<TicketMessage>().Add(sysMsg);
+        await _context.SaveChangesAsync();
+
+        await _hubContext.Clients.Group(ticket.Id.ToString()).SendAsync("ReceiveMessage", new {
+            sysMsg.Id, sysMsg.Message, sysMsg.CreatedAt, sysMsg.IsSystemMessage, sysMsg.IsFromSupport
+        });
 
         return NoContent();
     }
