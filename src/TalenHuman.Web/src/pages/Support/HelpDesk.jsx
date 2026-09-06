@@ -13,6 +13,9 @@ const HelpDesk = ({ user }) => {
   const [attachment, setAttachment] = useState(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
+  const createTicketFileInputRef = useRef(null);
+  const [createTicketAttachment, setCreateTicketAttachment] = useState(null);
+  const [isCreating, setIsCreating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [hubConnection, setHubConnection] = useState(null);
@@ -56,8 +59,8 @@ const HelpDesk = ({ user }) => {
       await hubConnection.stop();
     }
 
-    const newConnection = new signalR.HubConnectionBuilder()
-      .withUrl(import.meta.env.VITE_API_URL + '/hubs/ticket')
+      const newConnection = new signalR.HubConnectionBuilder()
+        .withUrl((import.meta.env.VITE_API_URL || '') + '/hubs/ticket')
       .withAutomaticReconnect()
       .build();
 
@@ -98,6 +101,9 @@ const HelpDesk = ({ user }) => {
 
   const handleCreateTicket = async (e) => {
     e.preventDefault();
+    if (isCreating) return;
+
+    setIsCreating(true);
     const formData = new FormData(e.target);
     const data = {
       subject: formData.get('subject'),
@@ -106,11 +112,30 @@ const HelpDesk = ({ user }) => {
     };
 
     try {
-      await api.post('/Tickets', data);
+      const response = await api.post('/Tickets', data);
+      const ticket = response.data;
+      
+      if (createTicketAttachment) {
+        const fileData = new FormData();
+        fileData.append('file', createTicketAttachment);
+        const res = await api.post('/Files/upload?folder=tickets', fileData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        const attachmentUrl = res.data.url;
+        
+        await api.post(`/Tickets/${ticket.id}/messages`, { 
+          message: 'Archivo adjunto inicial',
+          attachmentUrl: attachmentUrl 
+        });
+      }
+
       setIsModalOpen(false);
+      setCreateTicketAttachment(null);
       fetchTickets();
     } catch (error) {
       console.error('Error creating ticket:', error);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -430,12 +455,33 @@ const HelpDesk = ({ user }) => {
             <label style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.05em' }}>Descripción Detallada *</label>
             <textarea name="description" rows={5} required placeholder="Explícanos tu situación con el mayor detalle posible..." style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? 'rgba(15, 23, 42, 0.6)' : '#f8fafc', color: activeColors.textMain, fontSize: '0.95rem', fontWeight: '600', outline: 'none', resize: 'vertical' }} />
           </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.05em' }}>Archivo Adjunto (Opcional)</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <input 
+                  type="file" 
+                  ref={createTicketFileInputRef} 
+                  style={{ display: 'none' }} 
+                  onChange={(e) => setCreateTicketAttachment(e.target.files[0])}
+                />
+                <button 
+                  type="button" 
+                  onClick={() => createTicketFileInputRef.current?.click()}
+                  style={{ padding: '12px 20px', background: createTicketAttachment ? activeColors.accent : 'transparent', color: createTicketAttachment ? 'white' : activeColors.textMuted, border: `1px dashed ${activeColors.border}`, borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', fontWeight: '700' }}
+                >
+                  <Paperclip size={16} /> {createTicketAttachment ? createTicketAttachment.name : 'Subir Archivo'}
+                </button>
+                {createTicketAttachment && (
+                  <button type="button" onClick={() => setCreateTicketAttachment(null)} style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>Quitar</button>
+                )}
+            </div>
+          </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '15px', marginTop: '10px', paddingTop: '20px', borderTop: `1px solid ${activeColors.border}` }}>
             <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: '12px 24px', borderRadius: '12px', background: 'transparent', color: activeColors.textMuted, border: 'none', fontWeight: '900', fontSize: '0.85rem', cursor: 'pointer', transition: 'all 0.2s' }} onMouseOver={(e) => e.currentTarget.style.color = activeColors.textMain} onMouseOut={(e) => e.currentTarget.style.color = activeColors.textMuted}>
               Cancelar
             </button>
-            <button type="submit" style={{ padding: '12px 24px', borderRadius: '12px', background: activeColors.accent, color: 'white', border: 'none', fontWeight: '900', fontSize: '0.85rem', boxShadow: '0 8px 15px rgba(79, 70, 229, 0.3)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', transition: 'transform 0.1s' }} onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'} onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}>
-              <Send size={16} /> Enviar Ticket
+            <button type="submit" disabled={isCreating} style={{ padding: '12px 24px', borderRadius: '12px', background: activeColors.accent, color: 'white', border: 'none', fontWeight: '900', fontSize: '0.85rem', boxShadow: '0 8px 15px rgba(79, 70, 229, 0.3)', cursor: isCreating ? 'not-allowed' : 'pointer', opacity: isCreating ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: '10px', transition: 'transform 0.1s' }} onMouseDown={(e) => { if(!isCreating) e.currentTarget.style.transform = 'scale(0.95)' }} onMouseUp={(e) => { if(!isCreating) e.currentTarget.style.transform = 'scale(1)' }}>
+              <Send size={16} /> {isCreating ? 'Enviando...' : 'Enviar Ticket'}
             </button>
           </div>
         </form>
