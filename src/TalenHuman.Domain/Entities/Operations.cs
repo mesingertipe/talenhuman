@@ -23,7 +23,6 @@ public class Employee : BaseEntity, IMultitenant
     public User? User { get; set; }
     
     public Guid StoreId { get; set; }
-    [JsonIgnore]
     public Store Store { get; set; } = null!;
     
     public Guid ProfileId { get; set; }
