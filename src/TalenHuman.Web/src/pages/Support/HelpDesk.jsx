@@ -520,7 +520,7 @@ const HelpDesk = ({ user }) => {
 
                 {/* Messages */}
                 {messages.map((msg, idx) => {
-                  const isMine = msg.userId?.toLowerCase() === user?.id?.toLowerCase();
+                  const isMine = (user?.id && msg.userId?.toLowerCase() === user.id.toLowerCase()) || (msg.user?.fullName === user?.fullName);
                   
                   let senderName = msg.user?.fullName || 'Usuario';
                   if (!isSupport && msg.isFromSupport) {

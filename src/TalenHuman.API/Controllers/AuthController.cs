@@ -220,6 +220,7 @@ public class AuthController : ControllerBase
         {
             token = new JwtSecurityTokenHandler().WriteToken(token),
             user = new { 
+                id = user.Id,
                 user.Email, 
                 user.FullName, 
                 user.CompanyId, 
