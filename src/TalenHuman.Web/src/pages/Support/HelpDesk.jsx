@@ -39,6 +39,7 @@ const HelpDesk = ({ user }) => {
 
   useEffect(() => {
     let newConnection = null;
+    let isCancelled = false;
 
     const setupSignalR = async (ticketId) => {
       newConnection = new signalR.HubConnectionBuilder()
@@ -52,10 +53,14 @@ const HelpDesk = ({ user }) => {
 
       try {
         await newConnection.start();
-        await newConnection.invoke('JoinTicketRoom', ticketId);
-        setHubConnection(newConnection);
+        if (!isCancelled) {
+          await newConnection.invoke('JoinTicketRoom', ticketId);
+          setHubConnection(newConnection);
+        } else {
+          await newConnection.stop();
+        }
       } catch (e) {
-        console.error('SignalR Connection Error: ', e);
+        if (!isCancelled) console.error('SignalR Connection Error: ', e);
       }
     };
 
@@ -65,8 +70,11 @@ const HelpDesk = ({ user }) => {
     }
     
     return () => {
+      isCancelled = true;
       if (newConnection) {
-        newConnection.invoke('LeaveTicketRoom', selectedTicket?.id).catch(console.error);
+        if (newConnection.state === signalR.HubConnectionState.Connected) {
+          newConnection.invoke('LeaveTicketRoom', selectedTicket?.id).catch(console.error);
+        }
         newConnection.stop();
       }
     };
