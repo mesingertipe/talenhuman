@@ -207,6 +207,113 @@ public class NovedadesController : ControllerBase
             initialStatus = NovedadStatus.PendienteGerente;
         }
 
+        // Validation for Vacaciones
+        if (tipo.IsSystem && tipo.Nombre.Equals("Vacaciones", StringComparison.OrdinalIgnoreCase))
+        {
+            if (targetEmpleadoId == null) return BadRequest("La novedad de vacaciones requiere un empleado válido.");
+
+            var emp = await _context.Employees.Include(e => e.Company).FirstOrDefaultAsync(e => e.Id == targetEmpleadoId);
+            if (emp == null) return BadRequest("Empleado no encontrado.");
+
+            var start = dto.FechaInicio.Date;
+            var end = dto.FechaFin.Date;
+
+            var overlapping = await _context.Novedades
+                .AnyAsync(x => x.EmpleadoId == targetEmpleadoId && 
+                               x.NovedadTipoId == tipo.Id && 
+                               (x.Status == NovedadStatus.Pendiente || x.Status == NovedadStatus.PendienteGerente || x.Status == NovedadStatus.Aprobado) &&
+                               x.FechaInicio.Date <= end && x.FechaFin.Date >= start);
+
+            if (overlapping)
+            {
+                return BadRequest("Ya existe una solicitud de vacaciones que se cruza con las fechas seleccionadas.");
+            }
+
+            int diasEnTiempo = 0;
+            var festivos = await _context.Set<PredictiveSpecialDate>()
+                .Where(f => f.Type == SpecialDateType.Holiday && f.Date >= start && f.Date <= end && (f.CompanyId == null || f.CompanyId == emp.CompanyId))
+                .Select(f => f.Date.Date)
+                .ToListAsync();
+
+            for (var d = start; d <= end; d = d.AddDays(1))
+            {
+                if (emp.Company.VacationCalculationMode == "BusinessDaysMonFri")
+                {
+                    if (d.DayOfWeek == DayOfWeek.Saturday || d.DayOfWeek == DayOfWeek.Sunday) continue;
+                }
+                else if (emp.Company.VacationCalculationMode == "BusinessDaysMonSat")
+                {
+                    if (d.DayOfWeek == DayOfWeek.Sunday) continue;
+                }
+                
+                if (festivos.Contains(d.Date)) continue;
+                diasEnTiempo++;
+            }
+
+            int diasEnDinero = 0;
+            if (emp.Company.VacationAllowMoneyDays && !string.IsNullOrEmpty(dto.DatosDinamicos))
+            {
+                try {
+                    var dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(dto.DatosDinamicos);
+                    if (dict != null && dict.TryGetValue("diasEnDinero", out var dDinero) && int.TryParse(dDinero.ToString(), out int val))
+                    {
+                        diasEnDinero = val;
+                    }
+                } catch { }
+            }
+
+            int totalDias = diasEnTiempo + diasEnDinero;
+
+            var pendingRequests = await _context.Novedades
+                .Where(x => x.EmpleadoId == targetEmpleadoId && x.NovedadTipoId == tipo.Id && (x.Status == NovedadStatus.Pendiente || x.Status == NovedadStatus.PendienteGerente))
+                .ToListAsync();
+
+            int diasReservados = 0;
+            foreach(var pr in pendingRequests)
+            {
+                int reqDias = 0;
+                if (!string.IsNullOrEmpty(pr.DatosDinamicos))
+                {
+                     try {
+                        var dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(pr.DatosDinamicos);
+                        if (dict != null && dict.TryGetValue("totalDias", out var td) && int.TryParse(td.ToString(), out int val))
+                        {
+                            reqDias = val;
+                        }
+                    } catch { }
+                }
+                diasReservados += reqDias;
+            }
+
+            int saldoReal = emp.PendingVacationDays - diasReservados;
+
+            if (totalDias > saldoReal)
+            {
+                return BadRequest($"El empleado solo tiene {saldoReal} días disponibles (restando solicitudes en trámite), pero la solicitud actual suma {totalDias} días (Tiempo: {diasEnTiempo}, Dinero: {diasEnDinero}).");
+            }
+
+            var dynamicData = new Dictionary<string, object>();
+            if (!string.IsNullOrEmpty(dto.DatosDinamicos))
+            {
+                try {
+                    dynamicData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(dto.DatosDinamicos) ?? new Dictionary<string, object>();
+                } catch { }
+            }
+            dynamicData["diasEnTiempo"] = diasEnTiempo;
+            dynamicData["diasEnDinero"] = diasEnDinero;
+            dynamicData["totalDias"] = totalDias;
+            
+            var hasOtherThisMonth = await _context.Novedades
+                .AnyAsync(x => x.EmpleadoId == targetEmpleadoId && x.NovedadTipoId == tipo.Id && x.FechaInicio.Month == start.Month && x.FechaInicio.Year == start.Year);
+
+            if (hasOtherThisMonth)
+            {
+                dynamicData["hasOtherVacationsThisMonthWarning"] = true;
+            }
+
+            dto.DatosDinamicos = System.Text.Json.JsonSerializer.Serialize(dynamicData);
+        }
+
         var n = new Novedad
         {
             EmpleadoId = targetEmpleadoId,
@@ -313,6 +420,37 @@ public class NovedadesController : ControllerBase
 
             n.Status = dto.Status;
             logAction = dto.Status == NovedadStatus.Aprobado ? "Aprobó" : "Rechazó";
+        }
+
+        // Vacations Balance update logic
+        if (n.NovedadTipo.IsSystem && n.NovedadTipo.Nombre.Equals("Vacaciones", StringComparison.OrdinalIgnoreCase) && n.Empleado != null)
+        {
+            var emp = n.Empleado;
+            int totalDias = 0;
+            if (!string.IsNullOrEmpty(n.DatosDinamicos))
+            {
+                 try {
+                    var dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(n.DatosDinamicos);
+                    if (dict != null && dict.TryGetValue("totalDias", out var td) && int.TryParse(td.ToString(), out int val))
+                    {
+                        totalDias = val;
+                    }
+                } catch { }
+            }
+
+            NovedadStatus oldStatus = n.Status;
+            NovedadStatus newStatus = dto.Status;
+
+            // Approving
+            if (newStatus == NovedadStatus.Aprobado && oldStatus != NovedadStatus.Aprobado)
+            {
+                emp.PendingVacationDays -= totalDias;
+            }
+            // Reverting
+            else if (oldStatus == NovedadStatus.Aprobado && (newStatus == NovedadStatus.Rechazado || newStatus == NovedadStatus.Pendiente || newStatus == NovedadStatus.PendienteGerente))
+            {
+                emp.PendingVacationDays += totalDias;
+            }
         }
 
         var log = new NovedadLog

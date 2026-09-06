@@ -36,6 +36,8 @@ import SalesTimeBands from './pages/Core/SalesTimeBands';
 import StoreTypes from './pages/Core/StoreTypes';
 import PredictiveRules from './pages/Core/PredictiveRules';
 import SpecialDates from './pages/Core/SpecialDates';
+import HelpCenter from './pages/Support/HelpCenter';
+import HelpDesk from './pages/Support/HelpDesk';
 import SecurityService from './services/securityService';
 import { initializeFirebase, requestForToken, onMessageListener } from './firebase';
 
@@ -393,6 +395,8 @@ function App() {
         case 'Días Especiales': return <SpecialDates user={user} />;
         case 'Configuración Sistema': return <SystemSettings user={user} />;
         case 'Auditoría': return <AuditLogs user={user} />;
+        case 'Centro de Ayuda': return <HelpCenter user={user} />;
+        case 'Mesa de Ayuda': return <HelpDesk user={user} />;
         case 'Dashboard':
         default:
           return isEmployee ? <EmployeeDashboard user={user} /> : <Dashboard user={user} />;

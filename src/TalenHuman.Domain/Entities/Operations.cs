@@ -36,6 +36,7 @@ public class Employee : BaseEntity, IMultitenant
 
     public bool IsActive { get; set; } = true;
     public DateTime? DateOfTermination { get; set; }
+    public int PendingVacationDays { get; set; } = 0;
 
     // Relationships
     [JsonIgnore]
@@ -186,6 +187,7 @@ public class NovedadTipo : BaseEntity, IMultitenant
     
     public bool EsPlantilla { get; set; } = false; // Flag for Global Templates
     public bool PermiteCreacionEmpleado { get; set; } = false;
+    public bool IsSystem { get; set; } = false; // Prevents deletion or duplication of system-critical types like "Vacaciones"
     
     public Guid CompanyId { get; set; }
     [JsonIgnore]
@@ -491,3 +493,85 @@ public class PredictiveShiftRuleChannel : IMultitenant
     [JsonIgnore]
     public Company Company { get; set; } = null!;
 }
+
+// ==========================================
+// Módulo de Soporte y Preguntas Frecuentes
+// ==========================================
+
+public class FaqArticle : BaseEntity, IMultitenant
+{
+    public string Question { get; set; } = string.Empty;
+    public string Answer { get; set; } = string.Empty;
+    public string TargetRoles { get; set; } = "Empleado,Gerente,Distrital,RH,Admin,SuperAdmin"; // CSV of roles
+    public string Category { get; set; } = "General";
+    public bool IsActive { get; set; } = true;
+    public bool IsSystem { get; set; } = false; // Protected from deletion
+
+    // FaqArticles are global or per company? We'll make them multi-tenant, 
+    // but SuperAdmin can create them globally if CompanyId is seeded, or they can be per company.
+    // To allow global FAQs, we can make CompanyId nullable or just use IMultitenant and seed it for each company.
+    // Since IMultitenant requires Guid CompanyId, we will use it and just duplicate or seed for all.
+    public Guid CompanyId { get; set; }
+    [JsonIgnore]
+    public Company? Company { get; set; }
+}
+
+public enum SupportTicketStatus
+{
+    Open,
+    InProgress,
+    Resolved,
+    Closed
+}
+
+public enum SupportTicketPriority
+{
+    Low,
+    Medium,
+    High,
+    Critical
+}
+
+public class SupportTicket : BaseEntity, IMultitenant
+{
+    public string TicketNumber { get; set; } = string.Empty; // e.g., TK-202609-001
+    public string Subject { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public SupportTicketStatus Status { get; set; } = SupportTicketStatus.Open;
+    public SupportTicketPriority Priority { get; set; } = SupportTicketPriority.Medium;
+
+    public Guid CreatedByUserId { get; set; }
+    [JsonIgnore]
+    public User? CreatedByUser { get; set; }
+
+    public Guid? AssignedToUserId { get; set; }
+    [JsonIgnore]
+    public User? AssignedToUser { get; set; }
+
+    public Guid CompanyId { get; set; }
+    [JsonIgnore]
+    public Company? Company { get; set; }
+
+    [JsonIgnore]
+    public ICollection<TicketMessage> Messages { get; set; } = new List<TicketMessage>();
+}
+
+public class TicketMessage : BaseEntity, IMultitenant
+{
+    public Guid SupportTicketId { get; set; }
+    [JsonIgnore]
+    public SupportTicket? SupportTicket { get; set; }
+
+    public string Message { get; set; } = string.Empty;
+    public string? AttachmentUrl { get; set; }
+    public bool IsFromSupport { get; set; } = false;
+
+    public Guid UserId { get; set; }
+    [JsonIgnore]
+    public User? User { get; set; }
+
+    public Guid CompanyId { get; set; }
+    [JsonIgnore]
+    public Company? Company { get; set; }
+}
+

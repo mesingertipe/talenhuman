@@ -37,7 +37,10 @@ const Companies = () => {
     privacyPolicyText: '',
     // AI fields
     isAiEnabled: false,
-    aiAllowedRoles: ''
+    aiAllowedRoles: '',
+    // Vacation Module Config
+    vacationCalculationMode: 'Calendar',
+    vacationAllowMoneyDays: true
   });
 
   const countries = [
@@ -119,7 +122,8 @@ const Companies = () => {
               firebaseApiKey: '', firebaseAuthDomain: '', firebaseProjectId: '', firebaseStorageBucket: '',
               firebaseMeasurementId: '', firebaseVapidKey: '',
               privacyPolicyText: '',
-              isAiEnabled: false, aiAllowedRoles: ''
+              isAiEnabled: false, aiAllowedRoles: '',
+              vacationCalculationMode: 'Calendar', vacationAllowMoneyDays: true
             }); 
             setActiveTab('general');
             setShowModal(true); 
@@ -207,7 +211,9 @@ const Companies = () => {
                           firebaseVapidKey: c.firebaseVapidKey || '',
                           privacyPolicyText: c.privacyPolicyText || '',
                           isAiEnabled: c.isAiEnabled || false,
-                          aiAllowedRoles: c.aiAllowedRoles || ''
+                          aiAllowedRoles: c.aiAllowedRoles || '',
+                          vacationCalculationMode: c.vacationCalculationMode || 'Calendar',
+                          vacationAllowMoneyDays: c.vacationAllowMoneyDays ?? true
                         }); 
                         setActiveTab('general');
                         setShowModal(true); 
@@ -269,7 +275,13 @@ const Companies = () => {
                 onClick={() => setActiveTab('ai')}
                 className={`py-3 px-4 text-xs font-bold uppercase tracking-widest transition-all border-b-2 flex items-center gap-2 ${activeTab === 'ai' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-400'}`}
               >
-                Inteligencia Artificial
+                IA
+              </button>
+              <button 
+                onClick={() => setActiveTab('vacations')}
+                className={`py-3 px-4 text-xs font-bold uppercase tracking-widest transition-all border-b-2 flex items-center gap-2 ${activeTab === 'vacations' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-400'}`}
+              >
+                Vacaciones
               </button>
             </div>
             
@@ -415,6 +427,45 @@ const Companies = () => {
                         </p>
                       </div>
                     )}
+                  </div>
+                ) : activeTab === 'vacations' ? (
+                  <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
+                    <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl flex gap-3 text-indigo-700">
+                      <Shield size={20} className="shrink-0" />
+                      <p className="text-[10px] font-medium leading-relaxed">
+                        Configura las reglas de cálculo para el módulo de Vacaciones. Esto afectará la manera en que se cuentan los días solicitados por los empleados.
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Modo de Cálculo de Días</label>
+                      <select 
+                        value={formData.vacationCalculationMode} 
+                        onChange={(e) => setFormData({ ...formData, vacationCalculationMode: e.target.value })} 
+                        className="w-full p-3 rounded-xl border-slate-200 bg-slate-50 text-sm font-medium focus:ring-2 focus:ring-indigo-500 transition-all"
+                      >
+                        <option value="Calendar">Días Calendario (Lunes a Domingo)</option>
+                        <option value="BusinessDaysMonFri">Días Hábiles (Lunes a Viernes) - Excluye Festivos</option>
+                        <option value="BusinessDaysMonSat">Días Hábiles (Lunes a Sábado) - Excluye Festivos</option>
+                      </select>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100/50 mt-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-bold text-slate-800 text-sm">Permitir "Días en Dinero"</p>
+                          <p className="text-xs text-slate-500 mt-1">Habilita el campo para pagar vacaciones en dinero junto con el tiempo.</p>
+                        </div>
+                        <label className="premium-switch">
+                          <input 
+                            type="checkbox" 
+                            checked={formData.vacationAllowMoneyDays}
+                            onChange={(e) => setFormData({ ...formData, vacationAllowMoneyDays: e.target.checked })}
+                          />
+                          <span className="premium-switch-slider"></span>
+                        </label>
+                      </div>
+                    </div>
                   </div>
                 ) : null}
               </div>

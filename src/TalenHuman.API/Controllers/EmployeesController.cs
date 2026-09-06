@@ -88,6 +88,7 @@ public class EmployeesController : ControllerBase
                 emp.DateOfEntry,
                 emp.IsActive,
                 emp.DailySalary,
+                emp.PendingVacationDays,
                 StoreName = emp.Store?.Name,
                 ProfileName = emp.Profile?.Name,
                 Role = role
@@ -131,6 +132,7 @@ public class EmployeesController : ControllerBase
         employee.DateOfEntry = dto.DateOfEntry;
         employee.DailySalary = dto.DailySalary;
         employee.IsActive = dto.IsActive;
+        employee.PendingVacationDays = dto.PendingVacationDays;
 
         _context.Entry(employee).State = EntityState.Modified;
         
@@ -198,6 +200,7 @@ public class EmployeesController : ControllerBase
             employee.FirstName,
             employee.LastName,
             employee.IdentificationNumber,
+            employee.PendingVacationDays,
             StoreName = employee.Store?.Name,
             ProfileName = employee.Profile?.Name
         });
@@ -219,4 +222,5 @@ public class UpdateEmployeeDto
     public bool IsActive { get; set; }
     public bool MustChangePassword { get; set; }
     public string Role { get; set; } = "Empleado";
+    public int PendingVacationDays { get; set; } = 0;
 }

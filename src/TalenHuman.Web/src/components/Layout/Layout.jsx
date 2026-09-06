@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Users, Clock, Calendar, FileText, Settings, 
   LogOut, Store, Sun, Moon, Pin, PinOff, ChevronLeft, ChevronRight,
   Briefcase, Boxes, Building, Link, ChevronDown, ChevronUp, User as UserIcon, MapPin, Cpu, Globe, Activity, ShieldAlert, Building2, Shield,
-  Megaphone, CheckCircle, TrendingUp, Filter, BarChart3, Database, Target, Presentation
+  Megaphone, CheckCircle, TrendingUp, Filter, BarChart3, Database, Target, Presentation, LifeBuoy, MessageSquare
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
@@ -85,12 +85,26 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
         { icon: <Cpu size={20} />, label: 'Configuración Sistema', sub: 'SYSTEM_CONFIG' },
       ]
     },
+    {
+      label: 'Soporte y Ayuda',
+      isHeader: true,
+      module: 'SUPPORT',
+      children: [
+        { icon: <LifeBuoy size={20} />, label: 'Centro de Ayuda', sub: 'FAQ' },
+        { icon: <MessageSquare size={20} />, label: 'Mesa de Ayuda', sub: 'TICKETS' }
+      ]
+    }
   ];
 
   const filteredStructure = menuStructure.map(section => ({
     ...section,
     children: section.children.filter(item => {
-      if (isSuperAdmin) return true;
+      if (isSuperAdmin || user?.roles?.includes('Soporte')) return true;
+      
+      if (section.module === 'SUPPORT') {
+        if (item.sub === 'TICKETS' && user?.roles?.includes('Empleado')) return false;
+        return true;
+      }
 
       // 1. Check Module activation
       const isModuleActive = user?.activeModules?.includes(section.module);
@@ -248,6 +262,8 @@ const getPageInfo = (page) => {
     case 'Diseñador de Plantillas': return { title: 'Catálogo de Plantillas', subtitle: 'Diseño de novedades globales para el ecosistema' };
     case 'Centro de Comunicados': return { title: 'Centro de Comunicados', subtitle: 'Difusión estratégica y masiva de cultura corporativa' };
     case 'Gestión de Ventas': return { title: 'Gestión de Ventas', subtitle: 'Consolidación y analítica de ingresos operativos' };
+    case 'Centro de Ayuda': return { title: 'Centro de Ayuda', subtitle: 'Preguntas Frecuentes y Documentación' };
+    case 'Mesa de Ayuda': return { title: 'Mesa de Ayuda', subtitle: 'Gestión de Tickets de Soporte Técnico' };
     case 'Canales de Venta': return { title: 'Canales de Venta', subtitle: 'Administración de orígenes de venta y plataformas' };
     case 'Analítica BI': return { title: 'Analítica de Negocio', subtitle: 'Inteligencia de ventas y comparación histórica de 4 semanas' };
     case 'Franjas Horarias': return { title: 'Parámetros de Tiempo', subtitle: 'Definición de periodos operativos para análisis segmentado' };
@@ -436,10 +452,14 @@ const Layout = ({ children, activePage, setPage, user, onLogout }) => {
   const currentCompanyName = currentCompany?.name || user?.companyName;
   const tenantSettings = currentCompany ? {
     countryCode: currentCompany.countryCode || 'CO',
-    timeZoneId: currentCompany.timeZoneId || 'America/Bogota'
+    timeZoneId: currentCompany.timeZoneId || 'America/Bogota',
+    vacationCalculationMode: currentCompany.vacationCalculationMode || 'Calendar',
+    vacationAllowMoneyDays: currentCompany.vacationAllowMoneyDays || false
   } : user?.companyId ? { 
     countryCode: user.countryCode || 'CO', 
-    timeZoneId: user.timeZoneId || 'America/Bogota' 
+    timeZoneId: user.timeZoneId || 'America/Bogota',
+    vacationCalculationMode: user.vacationCalculationMode || 'Calendar',
+    vacationAllowMoneyDays: user.vacationAllowMoneyDays || false
   } : null;
 
   const isAiEnabledForCompany = user?.isAiEnabled;

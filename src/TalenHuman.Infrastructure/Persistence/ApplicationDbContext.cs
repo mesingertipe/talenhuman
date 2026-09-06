@@ -65,6 +65,11 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     
     public DbSet<AIChatSession> AIChatSessions => Set<AIChatSession>();
     public DbSet<AIChatMessage> AIChatMessages => Set<AIChatMessage>();
+    
+    public DbSet<FaqArticle> FaqArticles => Set<FaqArticle>();
+    public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
+    public DbSet<TicketMessage> TicketMessages => Set<TicketMessage>();
+
     public Guid TenantId => _tenantProvider.GetTenantId();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -111,6 +116,10 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<PredictiveSpecialDate>().HasQueryFilter(sd => (sd.CompanyId == TenantId || sd.CompanyId == null) || TenantId == Guid.Empty);
 
         builder.Entity<AIChatSession>().HasQueryFilter(c => c.CompanyId == TenantId || TenantId == Guid.Empty);
+
+        builder.Entity<FaqArticle>().HasQueryFilter(f => f.CompanyId == TenantId || TenantId == Guid.Empty || f.IsSystem);
+        builder.Entity<SupportTicket>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<TicketMessage>().HasQueryFilter(t => t.CompanyId == TenantId || TenantId == Guid.Empty);
 
         // Many-to-Many: Supervisor -> Stores
         builder.Entity<SupervisorStore>()
@@ -231,6 +240,15 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
             
         builder.Entity<AIChatSession>().HasIndex(s => new { s.CompanyId, s.UserId, s.IsActive });
         builder.Entity<AIChatMessage>().HasIndex(m => new { m.SessionId, m.CreatedAt });
+
+        builder.Entity<SupportTicket>()
+            .HasMany(s => s.Messages)
+            .WithOne(m => m.SupportTicket)
+            .HasForeignKey(m => m.SupportTicketId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<SupportTicket>().HasIndex(s => new { s.CompanyId, s.Status });
+        builder.Entity<TicketMessage>().HasIndex(m => new { m.SupportTicketId, m.CreatedAt });
 
         // Predictive Rules Many-to-Many
         builder.Entity<PredictiveShiftRuleProfile>()

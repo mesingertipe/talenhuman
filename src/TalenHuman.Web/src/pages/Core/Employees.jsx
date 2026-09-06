@@ -52,6 +52,7 @@ const Employees = ({ user }) => {
     jornadaId: '',
     dateOfEntry: new Date().toISOString().split('T')[0],
     dailySalary: 0,
+    pendingVacationDays: 0,
     isActive: true,
     mustChangePassword: false,
     dateOfTermination: ''
@@ -226,7 +227,8 @@ const Employees = ({ user }) => {
                         storeId: stores[0]?.id || '', 
                         profileId: profiles[0]?.id || '',
                         jornadaId: jornadas[0]?.id || '',
-                        email: '', isActive: true, mustChangePassword: false
+                        email: '', isActive: true, mustChangePassword: false,
+                        dailySalary: 0, pendingVacationDays: 0
                     }); 
                     setShowModal(true); 
                 }}
@@ -339,6 +341,7 @@ const Employees = ({ user }) => {
                           setFormData({ 
                             ...emp, 
                             dailySalary: emp.dailySalary || 0,
+                            pendingVacationDays: emp.pendingVacationDays || 0,
                             mustChangePassword: false 
                           }); 
                           setShowModal(true); 
@@ -525,6 +528,22 @@ const Employees = ({ user }) => {
                         required
                       />
                     </div>
+                    
+                    {isAdmin && (
+                      <div className="group">
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', color: activeColors.textMuted, marginBottom: '14px', letterSpacing: '0.05em' }}>Días Vacaciones Pendientes</label>
+                        <div style={{ position: 'relative' }}>
+                          <Calendar size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold" />
+                          <input 
+                            type="number"
+                            value={formData.pendingVacationDays}
+                            onChange={(e) => setFormData({...formData, pendingVacationDays: parseInt(e.target.value) || 0})}
+                            style={{ width: '100%', padding: '22px 24px 22px 60px', borderRadius: '24px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', fontSize: '0.95rem', outline: 'none', transition: 'all 0.3s' }}
+                            className="focus:border-indigo-500 focus:shadow-xl"
+                          />
+                        </div>
+                      </div>
+                    )}
                     
                     <SearchableSelect
                       label="Sede / C. Costos *"

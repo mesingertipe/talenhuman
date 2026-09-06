@@ -252,14 +252,16 @@ const NewsDesigner = () => {
                             >
                                 <Edit3 size={16} /> Configurar
                             </button>
-                            <button 
-                                onClick={() => { setCurrentType(type); setShowConfirm(true); }}
-                                style={{ width: '52px', height: '52px', borderRadius: '18px', border: 'none', background: isDarkMode ? '#451a1a' : '#fef2f2', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
-                                className="hover:bg-red-600 hover:text-white"
-                                data-v12-tooltip="Eliminar esta estructura"
-                            >
-                                <Trash2 size={20} />
-                            </button>
+                            {!type.isSystem && (
+                                <button 
+                                    onClick={() => { setCurrentType(type); setShowConfirm(true); }}
+                                    style={{ width: '52px', height: '52px', borderRadius: '18px', border: 'none', background: isDarkMode ? '#451a1a' : '#fef2f2', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                                    className="hover:bg-red-600 hover:text-white"
+                                    data-v12-tooltip="Eliminar esta estructura"
+                                >
+                                    <Trash2 size={20} />
+                                </button>
+                            )}
                         </div>
                     </div>
                 ))}
@@ -292,8 +294,10 @@ const NewsDesigner = () => {
                                             value={formData.nombre} 
                                             onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} 
                                             placeholder="Ej. Licencia Remunerada..."
-                                            style={{ width: '100%', padding: '18px 24px', borderRadius: '18px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', boxSizing: 'border-box', outline: 'none', transition: 'border-color 0.2s' }}
+                                            disabled={currentType?.isSystem}
+                                            style={{ width: '100%', padding: '18px 24px', borderRadius: '18px', border: `2px solid ${activeColors.border}`, background: currentType?.isSystem ? activeColors.border : activeColors.card, color: activeColors.textMain, fontWeight: '700', boxSizing: 'border-box', outline: 'none', transition: 'border-color 0.2s', opacity: currentType?.isSystem ? 0.7 : 1 }}
                                             className="focus:border-indigo-500"
+                                            title={currentType?.isSystem ? "No se puede cambiar el nombre de una novedad del sistema" : ""}
                                         />
                                     </div>
                                     <div style={{ gridColumn: '1 / -1' }}>

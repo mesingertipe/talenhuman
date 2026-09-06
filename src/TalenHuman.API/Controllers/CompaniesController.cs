@@ -68,6 +68,8 @@ public class CompaniesController : ControllerBase
         existing.PrivacyPolicyText = company.PrivacyPolicyText;
         existing.IsAiEnabled = company.IsAiEnabled;
         existing.AiAllowedRoles = company.AiAllowedRoles;
+        existing.VacationCalculationMode = company.VacationCalculationMode;
+        existing.VacationAllowMoneyDays = company.VacationAllowMoneyDays;
 
         await _context.SaveChangesAsync();
         return NoContent();

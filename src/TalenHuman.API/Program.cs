@@ -23,6 +23,8 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
+
+builder.Services.AddSignalR();
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(x => {
     x.ValueLengthLimit = int.MaxValue;
     x.MultipartBodyLengthLimit = 52428800; // 50MB
@@ -146,6 +148,7 @@ app.UseMiddleware<TalenHuman.Infrastructure.Middleware.TenantApiKeyMiddleware>()
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<TalenHuman.API.Hubs.TicketHub>("/hubs/ticket");
 
 // Seed database (resilient — retries up to 5 times so the container survives a slow DB)
 using (var scope = app.Services.CreateScope())

@@ -6,8 +6,33 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
-import SearchableSelect from '../../components/Shared/SearchableSelect';
-import TalenHumanDatePicker from '../../components/Shared/TalenHumanDatePicker';
+import HelpIcon from '../../components/Shared/HelpIcon';
+
+const calculateVacationDays = (start, end, mode) => {
+    if (!start || !end) return 0;
+    let d1 = new Date(start);
+    let d2 = new Date(end);
+    d1.setHours(0,0,0,0);
+    d2.setHours(0,0,0,0);
+    if (d1 > d2) return 0;
+
+    if (mode === 'Calendar') {
+        return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+    }
+
+    let count = 0;
+    let cur = new Date(d1);
+    while (cur <= d2) {
+        let day = cur.getDay();
+        if (mode === 'BusinessDays') {
+            if (day !== 0) count++;
+        } else if (mode === 'BusinessDaysNoSaturday') {
+            if (day !== 0 && day !== 6) count++;
+        }
+        cur.setDate(cur.getDate() + 1);
+    }
+    return count;
+};
 
 const compressImage = (file, maxWidth = 1600, maxHeight = 1600, quality = 0.75) => {
     return new Promise((resolve) => {
@@ -178,6 +203,15 @@ const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false
                 setFormData(prev => ({ ...prev, datosDinamicos: initialValues }));
             } catch (e) { setDynamicFields([]); }
         } else { setDynamicFields([]); }
+        
+        if (isEmployeeSelfService && type.categoria === 0) {
+            setLoading(true);
+            api.get(`/employees/${user.employeeId}`)
+                .then(res => setFoundEmployee(res.data))
+                .catch(() => {})
+                .finally(() => setLoading(false));
+        }
+
         setStep(isEmployeeSelfService ? 3 : 2);
     };
 
@@ -331,6 +365,13 @@ const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false
             </div>
         );
     };
+
+    const isVacations = selectedType?.isSystem && selectedType?.nombre?.toLowerCase() === 'vacaciones';
+    const vacationDaysTime = isVacations ? calculateVacationDays(formData.fechaInicio, formData.fechaFin, tenantSettings?.vacationCalculationMode || 'Calendar') : 0;
+    const vacationDaysMoney = isVacations && tenantSettings?.vacationAllowMoneyDays ? parseInt(formData.datosDinamicos['DiasDinero'] || 0) : 0;
+    const totalVacationDays = vacationDaysTime + vacationDaysMoney;
+    const pendingVacationDays = foundEmployee?.pendingVacationDays || 0;
+    const isExceedingVacationBalance = isVacations && totalVacationDays > pendingVacationDays;
 
     return (
         <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', background: activeColors.card, borderRadius: isMobile ? '24px' : '48px', overflow: 'hidden', minHeight: isMobile ? 'auto' : '650px', width: '100%', border: isDarkMode ? `1px solid ${activeColors.border}` : 'none' }}>
@@ -566,11 +607,60 @@ const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false
                                     ))}
                                 </div>
                             )}
+
+                            {isVacations && (
+                                <div style={{ borderTop: `1px solid ${activeColors.border}`, paddingTop: '30px', marginTop: '30px' }}>
+                                    <h4 style={{ fontSize: '12px', fontWeight: '950', color: activeColors.accent, textTransform: 'uppercase', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <Briefcase size={16} /> Cálculo de Vacaciones
+                                    </h4>
+                                    
+                                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+                                        {tenantSettings?.vacationAllowMoneyDays && (
+                                            <div>
+                                                <label style={{ display: 'block', fontSize: '9px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '10px' }}>Días en Dinero</label>
+                                                <input 
+                                                    type="number" 
+                                                    min="0"
+                                                    value={formData.datosDinamicos['DiasDinero'] || ''} 
+                                                    onChange={(e) => setFormData({...formData, datosDinamicos: {...formData.datosDinamicos, 'DiasDinero': e.target.value}})} 
+                                                    placeholder="0" 
+                                                    style={{ width: '100%', padding: '14px', borderRadius: '12px', border: `1px solid ${activeColors.border}`, background: isDarkMode ? '#0f172a' : '#fff', color: activeColors.textMain, fontWeight: '800' }} 
+                                                />
+                                            </div>
+                                        )}
+                                        <div style={{ padding: '15px', background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9', borderRadius: '16px', border: `1px solid ${activeColors.border}`, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                            <p style={{ fontSize: '9px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', margin: '0 0 5px' }}>Días en Tiempo</p>
+                                            <p style={{ fontSize: '1.2rem', fontWeight: '900', color: activeColors.textMain, margin: 0 }}>{vacationDaysTime}</p>
+                                        </div>
+                                        <div style={{ padding: '15px', background: isExceedingVacationBalance ? '#fef2f2' : (isDarkMode ? 'rgba(16, 185, 129, 0.1)' : '#f0fdf4'), borderRadius: '16px', border: `1px solid ${isExceedingVacationBalance ? '#ef4444' : '#10b981'}`, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                            <p style={{ fontSize: '9px', fontWeight: '950', color: isExceedingVacationBalance ? '#ef4444' : '#10b981', textTransform: 'uppercase', margin: '0 0 5px' }}>Total a Descontar</p>
+                                            <p style={{ fontSize: '1.2rem', fontWeight: '900', color: isExceedingVacationBalance ? '#ef4444' : '#10b981', margin: 0 }}>{totalVacationDays}</p>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '15px 20px', background: isDarkMode ? '#1e293b' : '#fff', borderRadius: '16px', border: `1px solid ${activeColors.border}` }}>
+                                        <div style={{ flex: 1 }}>
+                                            <p style={{ fontSize: '11px', fontWeight: '900', color: activeColors.textMain, margin: '0 0 4px' }}>Días Pendientes (Saldo actual): <span style={{ color: activeColors.accent }}>{pendingVacationDays}</span></p>
+                                            <p style={{ fontSize: '11px', fontWeight: '900', color: activeColors.textMuted, margin: 0 }}>
+                                                Nuevo Saldo: <span style={{ color: isExceedingVacationBalance ? '#ef4444' : '#10b981' }}>{pendingVacationDays - totalVacationDays}</span>
+                                            </p>
+                                        </div>
+                                        {isExceedingVacationBalance && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ef4444', fontSize: '10px', fontWeight: '950', textTransform: 'uppercase' }}>
+                                                <AlertCircle size={14} /> Saldo Insuficiente
+                                            </div>
+                                        )}
+                                    </div>
+                                    <p style={{ fontSize: '10px', color: activeColors.textMuted, marginTop: '10px', fontStyle: 'italic' }}>* Nota: Los días festivos serán validados y descontados automáticamente por el sistema al procesar la solicitud.</p>
+                                </div>
+                            )}
                         </div>
 
                         <div style={{ display: 'flex', gap: '15px' }}>
                             <button onClick={() => setStep(isEmployeeSelfService ? 1 : 2)} style={{ padding: '16px 30px', borderRadius: '16px', background: 'transparent', border: `1px solid ${activeColors.border}`, color: activeColors.textMuted, fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}>Atrás</button>
-                            <button onClick={() => setStep(4)} disabled={!formData.fechaInicio || !formData.fechaFin} style={{ flex: 1, padding: '16px', borderRadius: '16px', background: activeColors.accent, color: 'white', border: 'none', fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 10px 15px rgba(79, 70, 229, 0.2)' }}>Continuar</button>
+                            <button onClick={() => setStep(4)} disabled={!formData.fechaInicio || !formData.fechaFin || isExceedingVacationBalance} style={{ flex: 1, padding: '16px', borderRadius: '16px', background: activeColors.accent, color: 'white', border: 'none', fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 10px 15px rgba(79, 70, 229, 0.2)' }}>
+                                {isExceedingVacationBalance ? 'Saldo insuficiente' : 'Continuar'}
+                            </button>
                         </div>
                     </div>
                 )}

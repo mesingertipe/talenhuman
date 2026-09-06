@@ -9,7 +9,7 @@ public static class DbInitializer
     public static async Task SeedAsync(ApplicationDbContext context, UserManager<User> userManager, RoleManager<Role> roleManager)
     {
         // 1. Seed / Migrate Roles
-        string[] roles = { "SuperAdmin", "Admin", "Gerente", "Distrital", "RH", "Empleado" };
+        string[] roles = { "SuperAdmin", "Admin", "Gerente", "Distrital", "RH", "Empleado", "Soporte" };
         
         foreach (var role in roles)
         {
@@ -116,6 +116,139 @@ public static class DbInitializer
 
             await userManager.CreateAsync(superAdmin, "Admin123!");
             await userManager.AddToRoleAsync(superAdmin, "SuperAdmin");
+        }
+
+        // 6. Seed Initial Support User if not exists
+        var supportEmail = "soporte@talenhuman.com";
+        var existingSupport = await userManager.FindByEmailAsync(supportEmail);
+        if (existingSupport == null)
+        {
+            var supportUser = new User
+            {
+                UserName = supportEmail,
+                Email = supportEmail,
+                FullName = "Agente de Soporte",
+                CompanyId = company1Id,
+                EmailConfirmed = true
+            };
+
+            await userManager.CreateAsync(supportUser, "Soporte123!");
+            await userManager.AddToRoleAsync(supportUser, "Soporte");
+        }
+
+        // 7. Seed Initial FAQs
+        if (!await context.FaqArticles.AnyAsync())
+        {
+            var faqs = new List<FaqArticle>
+            {
+                // GENERAL / ACCESO
+                new FaqArticle {
+                    Question = "¿Cómo recupero mi contraseña de acceso?",
+                    Answer = "En la pantalla de inicio de sesión, haga clic en 'Olvidé mi contraseña'. Ingrese su correo corporativo y recibirá un código o enlace para restablecerla.",
+                    TargetRoles = "Empleado,Gerente,Distrital,RH,Admin,SuperAdmin",
+                    Category = "Acceso y Cuenta",
+                    CompanyId = company1Id,
+                    IsSystem = true
+                },
+                new FaqArticle {
+                    Question = "¿Cómo instalo la aplicación en mi celular (PWA)?",
+                    Answer = "Si ingresa desde su dispositivo móvil, verá un botón para 'Instalar App' en la pantalla principal o menú. En iOS (Safari), toque el botón 'Compartir' y luego 'Agregar a Inicio'. En Android, use la opción 'Instalar aplicación' del menú de su navegador.",
+                    TargetRoles = "Empleado,Gerente,Distrital",
+                    Category = "Acceso y Cuenta",
+                    CompanyId = company1Id,
+                    IsSystem = true
+                },
+                
+                // NOVEDADES Y VACACIONES
+                new FaqArticle {
+                    Question = "¿Cómo solicito vacaciones y cómo se calculan los días?",
+                    Answer = "Diríjase al menú 'Novedades' y cree una nueva solicitud seleccionando 'Vacaciones'. El sistema descontará automáticamente los días festivos que estén configurados y calculará los días efectivos según si su empresa contabiliza días hábiles o calendario. También puede solicitar días pagados en dinero si está habilitado por su empresa.",
+                    TargetRoles = "Empleado,Gerente,Distrital,RH",
+                    Category = "Novedades y Permisos",
+                    CompanyId = company1Id,
+                    IsSystem = true
+                },
+                new FaqArticle {
+                    Question = "¿Por qué no me deja crear una solicitud de Novedad?",
+                    Answer = "Verifique que: 1) Tenga los días suficientes si es una novedad con cupo (ej. Vacaciones). 2) Las fechas no se superpongan con otra novedad previamente aprobada. 3) Haya adjuntado los soportes obligatorios, como incapacidades médicas.",
+                    TargetRoles = "Empleado,Gerente",
+                    Category = "Novedades y Permisos",
+                    CompanyId = company1Id,
+                    IsSystem = true
+                },
+
+                // HORARIOS Y ASISTENCIA
+                new FaqArticle {
+                    Question = "¿Qué significan los colores en la programación de Turnos?",
+                    Answer = "El sistema utiliza indicadores visuales: Verde (Turno completado y a tiempo), Amarillo (Llegada tarde o salida anticipada), Rojo (Falta o turno sin marcación alguna) y Azul (Turno programado pendiente por ejecutar).",
+                    TargetRoles = "Gerente,Distrital,RH,Admin",
+                    Category = "Horarios y Marcaciones",
+                    CompanyId = company1Id,
+                    IsSystem = true
+                },
+                new FaqArticle {
+                    Question = "¿Cómo se realiza la Aprobación Semanal Operativa?",
+                    Answer = "El Gerente debe ir a 'Operaciones' > 'Aprobación de Turnos'. Se listarán las semanas cerradas. Una vez que se verifique que todas las marcaciones (llegadas y salidas) de los empleados cuadran con los turnos, debe hacer clic en 'Aprobar Semana', lo cual enviará el corte de nómina a Recursos Humanos.",
+                    TargetRoles = "Gerente,Distrital,RH,Admin",
+                    Category = "Horarios y Marcaciones",
+                    CompanyId = company1Id,
+                    IsSystem = true
+                },
+                new FaqArticle {
+                    Question = "¿Qué hacer si un empleado olvidó marcar entrada o salida?",
+                    Answer = "El gerente de la tienda puede ingresar al módulo 'Marcaciones' para ajustar manualmente el registro y dejar un comentario de auditoría que explique el motivo (ej. 'Falla biométrica' o 'Olvido de marcación').",
+                    TargetRoles = "Gerente,Distrital,RH",
+                    Category = "Horarios y Marcaciones",
+                    CompanyId = company1Id,
+                    IsSystem = true
+                },
+
+                // VENTAS Y PREDICTIVOS
+                new FaqArticle {
+                    Question = "¿Para qué sirven las Reglas Predictivas de Horarios?",
+                    Answer = "Las reglas predictivas vinculan el tráfico de ventas con la necesidad de personal. Al configurarlas, el 'ShiftScheduler' (Programador) le sugerirá de manera automática la cobertura de empleados recomendada basándose en el historial de ventas y las 'Franjas Horarias' de mayor demanda.",
+                    TargetRoles = "Gerente,Distrital,Admin",
+                    Category = "Ventas y Analítica",
+                    CompanyId = company1Id,
+                    IsSystem = true
+                },
+                new FaqArticle {
+                    Question = "¿Cómo se registran las metas o ventas diarias?",
+                    Answer = "En la sección 'Ventas Maestras' > 'Gestión de Ventas', seleccione su Tienda, Canal de Venta (ej. Físico, Domicilios) y la fecha, para registrar el valor de 'Venta Neta', número de transacciones y Ticket Promedio. Esto alimenta el panel de Analítica BI.",
+                    TargetRoles = "Gerente,Distrital,Admin",
+                    Category = "Ventas y Analítica",
+                    CompanyId = company1Id,
+                    IsSystem = true
+                },
+
+                // SOPORTE Y SISTEMA
+                new FaqArticle {
+                    Question = "¿Dónde encuentro las políticas y comunicados de la empresa?",
+                    Answer = "Diríjase a 'Gestión del Modelo' > 'Centro de Comunicados' o revise las alertas que emergen en el inicio de su sesión. Allí RH o Gerencia General publica boletines, manuales operativos y reglamentos.",
+                    TargetRoles = "Empleado,Gerente,Distrital,RH,Admin,SuperAdmin",
+                    Category = "General y Comunicados",
+                    CompanyId = company1Id,
+                    IsSystem = true
+                },
+                new FaqArticle {
+                    Question = "¿Cómo usar la Mesa de Ayuda de Soporte Técnico?",
+                    Answer = "Si encuentra una falla técnica en la plataforma o tiene un bloqueo, vaya a 'Soporte y Ayuda' > 'Mesa de Ayuda'. Cree un nuevo Ticket seleccionando la severidad de su incidente (Baja, Media, Alta, Crítica) y chatee en vivo con nuestro equipo de Soporte.",
+                    TargetRoles = "Gerente,Distrital,RH,Admin",
+                    Category = "Soporte Técnico",
+                    CompanyId = company1Id,
+                    IsSystem = true
+                },
+                new FaqArticle {
+                    Question = "¿Cómo habilito días en dinero para vacaciones o cambio la base de cálculo?",
+                    Answer = "(Solo para Administradores): Vaya a 'Panel de Sistema' > 'Empresas'. Edite la configuración de su compañía, y en la pestaña 'Configuración Vacacional' marque la casilla de 'Permitir Días en Dinero'. Allí también puede definir si descuentan en Días Hábiles o Calendario.",
+                    TargetRoles = "Admin,SuperAdmin",
+                    Category = "Administración del Sistema",
+                    CompanyId = company1Id,
+                    IsSystem = true
+                }
+            };
+            context.FaqArticles.AddRange(faqs);
+            await context.SaveChangesAsync();
         }
     }
 

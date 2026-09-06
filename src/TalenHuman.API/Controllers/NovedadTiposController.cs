@@ -42,7 +42,8 @@ public class NovedadTiposController : ControllerBase
                 Categoria = (int)n.Categoria,
                 RolAprobador = n.RolAprobador,
                 EsPlantilla = n.EsPlantilla,
-                PermiteCreacionEmpleado = n.PermiteCreacionEmpleado
+                PermiteCreacionEmpleado = n.PermiteCreacionEmpleado,
+                IsSystem = n.IsSystem
             })
             .ToListAsync();
     }
@@ -63,13 +64,19 @@ public class NovedadTiposController : ControllerBase
             Categoria = (int)n.Categoria,
             RolAprobador = n.RolAprobador,
             EsPlantilla = n.EsPlantilla,
-            PermiteCreacionEmpleado = n.PermiteCreacionEmpleado
+            PermiteCreacionEmpleado = n.PermiteCreacionEmpleado,
+            IsSystem = n.IsSystem
         };
     }
 
     [HttpPost]
     public async Task<ActionResult<NovedadTipoDto>> CreateNovedadTipo(NovedadTipoDto dto)
     {
+        if (dto.Nombre.Trim().Equals("Vacaciones", StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(new { message = "No se puede crear un tipo de novedad con el nombre 'Vacaciones' porque es un módulo del sistema." });
+        }
+
         var n = new NovedadTipo
         {
             Nombre = dto.Nombre,
@@ -79,7 +86,8 @@ public class NovedadTiposController : ControllerBase
             Categoria = (NovedadCategoria)dto.Categoria,
             RolAprobador = dto.RolAprobador,
             EsPlantilla = User.IsInRole("SuperAdmin") && dto.EsPlantilla,
-            PermiteCreacionEmpleado = dto.PermiteCreacionEmpleado
+            PermiteCreacionEmpleado = dto.PermiteCreacionEmpleado,
+            IsSystem = false
         };
 
         _context.NovedadTipos.Add(n);
@@ -94,6 +102,11 @@ public class NovedadTiposController : ControllerBase
     {
         var n = await _context.NovedadTipos.FindAsync(id);
         if (n == null) return NotFound();
+
+        if (n.IsSystem && !n.Nombre.Equals(dto.Nombre, StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(new { message = "No se puede cambiar el nombre de un tipo de novedad del sistema." });
+        }
 
         n.Nombre = dto.Nombre;
         n.Descripcion = dto.Descripcion;
@@ -117,6 +130,11 @@ public class NovedadTiposController : ControllerBase
     {
         var n = await _context.NovedadTipos.FindAsync(id);
         if (n == null) return NotFound();
+
+        if (n.IsSystem)
+        {
+            return BadRequest("No se puede eliminar un tipo de novedad nativo del sistema.");
+        }
 
         // Check if there are news records using this type
         var hasNews = await _context.Novedades.AnyAsync(x => x.NovedadTipoId == id);
@@ -146,7 +164,8 @@ public class NovedadTiposController : ControllerBase
             Categoria = template.Categoria,
             RolAprobador = template.RolAprobador,
             EsPlantilla = false, // Imported version is NOT a template
-            PermiteCreacionEmpleado = template.PermiteCreacionEmpleado
+            PermiteCreacionEmpleado = template.PermiteCreacionEmpleado,
+            IsSystem = false
         };
 
         _context.NovedadTipos.Add(newType);
@@ -162,7 +181,8 @@ public class NovedadTiposController : ControllerBase
             Categoria = (int)newType.Categoria,
             RolAprobador = newType.RolAprobador,
             EsPlantilla = false,
-            PermiteCreacionEmpleado = newType.PermiteCreacionEmpleado
+            PermiteCreacionEmpleado = newType.PermiteCreacionEmpleado,
+            IsSystem = false
         });
     }
 }
@@ -178,4 +198,5 @@ public class NovedadTipoDto
     public string RolAprobador { get; set; } = "Admin";
     public bool EsPlantilla { get; set; }
     public bool PermiteCreacionEmpleado { get; set; }
+    public bool IsSystem { get; set; }
 }

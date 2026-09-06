@@ -31,6 +31,10 @@ public class Company : BaseEntity
     public bool IsAiEnabled { get; set; } = true;
     public string? AiAllowedRoles { get; set; } = "SuperAdmin,Admin,RH,Distrital,Gerente"; // Default roles
 
+    // Vacation Module Config
+    public string VacationCalculationMode { get; set; } = "Calendar"; // "Calendar", "BusinessDaysMonFri", "BusinessDaysMonSat"
+    public bool VacationAllowMoneyDays { get; set; } = true;
+
     // Relationships
     [System.Text.Json.Serialization.JsonIgnore]
     public ICollection<Brand> Brands { get; set; } = new List<Brand>();

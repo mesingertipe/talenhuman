@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TalenHuman.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace TalenHuman.Infrastructure.Migrations
+namespace TalenHuman.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260906030438_AddVacationsModule")]
+    partial class AddVacationsModule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -790,50 +793,6 @@ namespace TalenHuman.Infrastructure.Migrations
                     b.HasIndex("CompanyId");
 
                     b.ToTable("ExternalApiConfigs");
-                });
-
-            modelBuilder.Entity("TalenHuman.Domain.Entities.FaqArticle", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Answer")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("CompanyId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsSystem")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Question")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("TargetRoles")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CompanyId");
-
-                    b.ToTable("FaqArticles");
                 });
 
             modelBuilder.Entity("TalenHuman.Domain.Entities.Jornada", b =>
@@ -1804,56 +1763,6 @@ namespace TalenHuman.Infrastructure.Migrations
                     b.ToTable("SupervisorStores");
                 });
 
-            modelBuilder.Entity("TalenHuman.Domain.Entities.SupportTicket", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("AssignedToUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CompanyId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("Priority")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Subject")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("TicketNumber")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AssignedToUserId");
-
-                    b.HasIndex("CreatedByUserId");
-
-                    b.HasIndex("CompanyId", "Status");
-
-                    b.ToTable("SupportTickets");
-                });
-
             modelBuilder.Entity("TalenHuman.Domain.Entities.SyncLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1928,48 +1837,6 @@ namespace TalenHuman.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SystemSettings");
-                });
-
-            modelBuilder.Entity("TalenHuman.Domain.Entities.TicketMessage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AttachmentUrl")
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("CompanyId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<bool>("IsFromSupport")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("SupportTicketId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CompanyId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("SupportTicketId", "CreatedAt");
-
-                    b.ToTable("TicketMessages");
                 });
 
             modelBuilder.Entity("TalenHuman.Domain.Entities.User", b =>
@@ -2500,17 +2367,6 @@ namespace TalenHuman.Infrastructure.Migrations
                     b.Navigation("Company");
                 });
 
-            modelBuilder.Entity("TalenHuman.Domain.Entities.FaqArticle", b =>
-                {
-                    b.HasOne("TalenHuman.Domain.Entities.Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Company");
-                });
-
             modelBuilder.Entity("TalenHuman.Domain.Entities.Jornada", b =>
                 {
                     b.HasOne("TalenHuman.Domain.Entities.Company", "Company")
@@ -2936,58 +2792,6 @@ namespace TalenHuman.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("TalenHuman.Domain.Entities.SupportTicket", b =>
-                {
-                    b.HasOne("TalenHuman.Domain.Entities.User", "AssignedToUser")
-                        .WithMany()
-                        .HasForeignKey("AssignedToUserId");
-
-                    b.HasOne("TalenHuman.Domain.Entities.Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("TalenHuman.Domain.Entities.User", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AssignedToUser");
-
-                    b.Navigation("Company");
-
-                    b.Navigation("CreatedByUser");
-                });
-
-            modelBuilder.Entity("TalenHuman.Domain.Entities.TicketMessage", b =>
-                {
-                    b.HasOne("TalenHuman.Domain.Entities.Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("TalenHuman.Domain.Entities.SupportTicket", "SupportTicket")
-                        .WithMany("Messages")
-                        .HasForeignKey("SupportTicketId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("TalenHuman.Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Company");
-
-                    b.Navigation("SupportTicket");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("TalenHuman.Domain.Entities.User", b =>
                 {
                     b.HasOne("TalenHuman.Domain.Entities.Company", "Company")
@@ -3140,11 +2944,6 @@ namespace TalenHuman.Infrastructure.Migrations
                     b.Navigation("DailyHours");
 
                     b.Navigation("Stores");
-                });
-
-            modelBuilder.Entity("TalenHuman.Domain.Entities.SupportTicket", b =>
-                {
-                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("TalenHuman.Domain.Entities.User", b =>

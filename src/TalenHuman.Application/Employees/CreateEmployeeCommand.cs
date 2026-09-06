@@ -19,6 +19,7 @@ public record CreateEmployeeCommand : IRequest<Guid>
     public decimal DailySalary { get; init; }
     public bool IsActive { get; init; } = true;
     public string Role { get; init; } = "Empleado";
+    public int PendingVacationDays { get; init; } = 0;
 }
 
 public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeCommand, Guid>
@@ -67,7 +68,8 @@ public class CreateEmployeeCommandHandler : IRequestHandler<CreateEmployeeComman
             CompanyId = companyId,
             DateOfEntry = request.DateOfEntry,
             DailySalary = request.DailySalary,
-            IsActive = request.IsActive
+            IsActive = request.IsActive,
+            PendingVacationDays = request.PendingVacationDays
         };
 
         _context.Employees.Add(employee);
