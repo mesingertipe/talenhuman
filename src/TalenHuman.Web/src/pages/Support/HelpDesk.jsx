@@ -78,7 +78,7 @@ const HelpDesk = ({ user }) => {
         newConnection.stop();
       }
     };
-  }, [selectedTicket]);
+  }, [selectedTicket?.id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
