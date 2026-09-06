@@ -31,7 +31,7 @@ public class TicketsController : ControllerBase
         var role = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value;
         if (role == "Empleado") return Forbid();
 
-        var userId = Guid.Parse(User.Claims.First(c => c.Type == "id").Value);
+        var userId = Guid.Parse(User.Claims.First(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value);
 
         var query = _context.SupportTickets
             .Include(t => t.CreatedByUser)
@@ -56,7 +56,7 @@ public class TicketsController : ControllerBase
         var role = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value;
         if (role == "Empleado") return Forbid();
 
-        var userId = Guid.Parse(User.Claims.First(c => c.Type == "id").Value);
+        var userId = Guid.Parse(User.Claims.First(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value);
 
         var query = _context.SupportTickets
             .Include(t => t.CreatedByUser)
@@ -88,19 +88,27 @@ public class TicketsController : ControllerBase
         var role = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value;
         if (role == "Empleado") return Forbid();
 
-        var userId = Guid.Parse(User.Claims.First(c => c.Type == "id").Value);
+        var userId = Guid.Parse(User.Claims.First(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value);
+        var userId = Guid.Parse(User.Claims.First(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value);
         ticket.CreatedByUserId = userId;
         ticket.TicketNumber = "TK-" + DateTime.UtcNow.ToString("yyyyMM") + "-" + new Random().Next(1000, 9999);
         
         _context.SupportTickets.Add(ticket);
         await _context.SaveChangesAsync();
         
-        // Notify Support
+        // Notify Support and SuperAdmin
         var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
         try {
-            await _emailService.SendEmailAsync("soporte@talenhuman.com", 
-                $"Nuevo Ticket: {ticket.TicketNumber}", 
-                $"El usuario {user?.FullName} ha creado un nuevo ticket.\nAsunto: {ticket.Subject}\nDescripción: {ticket.Description}");
+            var supportUsers = await _context.Users.IgnoreQueryFilters().Where(u => u.Role == "Soporte" || u.Role == "SuperAdmin").ToListAsync();
+            foreach (var su in supportUsers)
+            {
+                if (!string.IsNullOrEmpty(su.Email))
+                {
+                    await _emailService.SendEmailAsync(su.Email, 
+                        $"Nuevo Ticket: {ticket.TicketNumber}", 
+                        $"El usuario {user?.FullName} ha creado un nuevo ticket.\nAsunto: {ticket.Subject}\nDescripción: {ticket.Description}");
+                }
+            }
         } catch { /* Ignore email errors */ }
         
         return CreatedAtAction(nameof(GetTicket), new { id = ticket.Id }, ticket);
@@ -112,7 +120,7 @@ public class TicketsController : ControllerBase
         var role = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value;
         if (role == "Empleado") return Forbid();
 
-        var userId = Guid.Parse(User.Claims.First(c => c.Type == "id").Value);
+        var userId = Guid.Parse(User.Claims.First(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier).Value);
 
         var query = _context.SupportTickets.AsQueryable();
         if (role == "SuperAdmin" || role == "Soporte")
@@ -163,9 +171,16 @@ public class TicketsController : ControllerBase
             }
             else
             {
-                await _emailService.SendEmailAsync("soporte@talenhuman.com", 
-                    $"Nuevo mensaje de usuario en ticket {ticket.TicketNumber}", 
-                    $"El usuario {user?.FullName} ha respondido al ticket: {ticket.Subject}\n\nMensaje: {message.Message}");
+                var supportUsers = await _context.Users.IgnoreQueryFilters().Where(u => u.Role == "Soporte" || u.Role == "SuperAdmin").ToListAsync();
+                foreach (var su in supportUsers)
+                {
+                    if (!string.IsNullOrEmpty(su.Email))
+                    {
+                        await _emailService.SendEmailAsync(su.Email, 
+                            $"Nuevo mensaje de usuario en ticket {ticket.TicketNumber}", 
+                            $"El usuario {user?.FullName} ha respondido al ticket: {ticket.Subject}\n\nMensaje: {message.Message}");
+                    }
+                }
             }
         } catch { /* ignore */ }
 
