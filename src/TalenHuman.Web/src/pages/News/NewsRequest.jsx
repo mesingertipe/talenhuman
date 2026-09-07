@@ -287,6 +287,7 @@ const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (isSubmitting) return; // Extra check to prevent multiple rapid clicks
         if (!formData.observaciones) { showToast("Las observaciones son obligatorias", "error"); return; }
         try {
             setIsSubmitting(true);
@@ -301,8 +302,10 @@ const NewsRequest = ({ onComplete, onCancel, user, isEmployeeSelfService = false
             await api.post('/novedades', payload);
             showToast("Solicitud registrada");
             setTimeout(() => { if (onComplete) onComplete(); }, 2000);
-        } catch (err) { showToast("Error al registrar", "error"); }
-        finally { setIsSubmitting(false); }
+        } catch (err) { 
+            showToast("Error al registrar", "error"); 
+            setIsSubmitting(false);
+        }
     };
 
     const getEntityName = () => {
