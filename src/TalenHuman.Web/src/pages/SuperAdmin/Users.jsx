@@ -49,7 +49,7 @@ const Users = ({ user: sessionUser }) => {
     districtId: ''
   });
 
-  const availableRoles = ["Admin", "Gerente", "Distrital", "RH", "SuperAdmin"];
+  const availableRoles = ["Admin", "Gerente", "Distrital", "RH", "Soporte", "SuperAdmin"];
   
   const currentUserRole = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).roles : [];
   const isSuperAdminUser = currentUserRole.includes('SuperAdmin');
