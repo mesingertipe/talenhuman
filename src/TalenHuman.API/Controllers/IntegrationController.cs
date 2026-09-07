@@ -377,6 +377,77 @@ public class IntegrationController : ControllerBase
 
         return Ok(shifts);
     }
+    [HttpGet("novedades")]
+    public async Task<IActionResult> GetNovedades(
+        [FromQuery] DateTime? startDate,
+        [FromQuery] DateTime? endDate,
+        [FromQuery] string? storeCode,
+        [FromQuery] string? employeeIdNo)
+    {
+        if (!startDate.HasValue || !endDate.HasValue)
+        {
+            return BadRequest(new { Message = "Los parámetros startDate y endDate son obligatorios." });
+        }
+
+        if (endDate.Value < startDate.Value)
+        {
+            return BadRequest(new { Message = "La fecha final (endDate) no puede ser menor a la fecha inicial (startDate)." });
+        }
+
+        if ((endDate.Value - startDate.Value).TotalDays > 31)
+        {
+            return BadRequest(new { Message = "El rango máximo de consulta permitido es de 31 días." });
+        }
+
+        var tenantId = _context.TenantId;
+        
+        var query = _context.Novedades
+            .Include(n => n.Empleado)
+            .Include(n => n.Store)
+            .Include(n => n.NovedadTipo)
+            .AsNoTracking()
+            .Where(n => n.CompanyId == tenantId && 
+                        ((n.FechaInicio >= startDate.Value && n.FechaInicio <= endDate.Value) || 
+                         (n.FechaFin >= startDate.Value && n.FechaFin <= endDate.Value)));
+
+        if (!string.IsNullOrEmpty(storeCode))
+        {
+            query = query.Where(n => n.Store != null && (n.Store.Code == storeCode || n.Store.ExternalId == storeCode));
+        }
+
+        if (!string.IsNullOrEmpty(employeeIdNo))
+        {
+            query = query.Where(n => n.Empleado != null && n.Empleado.IdentificationNumber == employeeIdNo);
+        }
+
+        var novedades = await query
+            .Select(n => new NovedadExportDto
+            {
+                NovedadId = n.Id,
+                IdSolicitud = n.IdSolicitud,
+                TipoNovedad = n.NovedadTipo != null ? n.NovedadTipo.Nombre : string.Empty,
+                Categoria = n.NovedadTipo != null ? n.NovedadTipo.Categoria.ToString() : string.Empty,
+                FechaInicio = n.FechaInicio,
+                FechaFin = n.FechaFin,
+                Status = n.Status.ToString(),
+                Employee = n.Empleado != null ? new ShiftEmployeeDto
+                {
+                    IdentificationNumber = n.Empleado.IdentificationNumber,
+                    FirstName = n.Empleado.FirstName,
+                    LastName = n.Empleado.LastName,
+                    Profile = n.Empleado.Profile != null ? n.Empleado.Profile.Name : string.Empty
+                } : null,
+                Store = n.Store != null ? new ShiftStoreDto
+                {
+                    Code = n.Store.Code,
+                    ExternalId = n.Store.ExternalId,
+                    Name = n.Store.Name
+                } : null
+            })
+            .ToListAsync();
+
+        return Ok(novedades);
+    }
 }
 
 public class StoreSyncDto
@@ -460,5 +531,18 @@ public class ShiftStoreDto
     public string? Code { get; set; }
     public string? ExternalId { get; set; }
     public string Name { get; set; } = string.Empty;
+}
+
+public class NovedadExportDto
+{
+    public Guid NovedadId { get; set; }
+    public int IdSolicitud { get; set; }
+    public string TipoNovedad { get; set; } = string.Empty;
+    public string Categoria { get; set; } = string.Empty;
+    public DateTime FechaInicio { get; set; }
+    public DateTime FechaFin { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public ShiftEmployeeDto? Employee { get; set; }
+    public ShiftStoreDto? Store { get; set; }
 }
 

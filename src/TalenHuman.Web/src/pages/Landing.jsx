@@ -478,10 +478,7 @@ const Landing = ({ onLoginClick }) => {
               Plataforma SaaS líder para la planificación horaria, control de asistencia geocercada y gestión del talento operativo.
             </p>
             <div className="landing-footer-socials">
-              <a href="https://wa.me/573000000000" target="_blank" rel="noreferrer" className="landing-footer-social-link whatsapp">
-                <Phone size={20} />
-              </a>
-              <a href="mailto:soporte@talenhuman.com" className="landing-footer-social-link email">
+              <a href="mailto:gerencia@apps-tyd.com.co" className="landing-footer-social-link email">
                 <Mail size={20} />
               </a>
             </div>
@@ -490,16 +487,12 @@ const Landing = ({ onLoginClick }) => {
           <div>
             <h4 className="landing-footer-links-title">Contacto y Soporte</h4>
             <div className="landing-footer-links-item">
-              <Phone size={14} />
-              <span>+57 300 000 0000</span>
-            </div>
-            <div className="landing-footer-links-item">
               <Mail size={14} />
-              <a href="mailto:soporte@talenhuman.com">soporte@talenhuman.com</a>
+              <a href="mailto:gerencia@apps-tyd.com.co">gerencia@apps-tyd.com.co</a>
             </div>
             <div className="landing-footer-links-item">
               <Globe size={14} />
-              <a href="https://talenhuman.com" target="_blank" rel="noreferrer">www.talenhuman.com</a>
+              <a href="https://www.apps-tyd.com.co/" target="_blank" rel="noreferrer">www.apps-tyd.com.co</a>
             </div>
           </div>
 
@@ -507,6 +500,7 @@ const Landing = ({ onLoginClick }) => {
             <div></div>
             <div className="landing-footer-copyright">
               <p>&copy; {new Date().getFullYear()} TalenHuman SaaS.</p>
+              <p style={{ marginTop: '0.25rem', opacity: 0.7 }}>Desarrollado por Technology and Development SAS.</p>
               <p style={{ marginTop: '0.25rem', opacity: 0.7 }}>Todos los derechos reservados.</p>
             </div>
           </div>
