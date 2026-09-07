@@ -33,18 +33,30 @@ const Landing = ({ onLoginClick }) => {
     setLoading(true);
     setSubmitStatus(null);
     
-    // Simulate sending contact request
+    // Send contact request
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setSubmitStatus('success');
-      setFormData({
-        Nombre: '',
-        Apellido: '',
-        Email: '',
-        Telefono: '',
-        Interes: '',
-        Mensaje: ''
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://app.talenhuman.com/api';
+      const response = await fetch(`${apiUrl}/system/contact`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
       });
+
+      if (response.ok) {
+        setSubmitStatus('success');
+        setFormData({
+          Nombre: '',
+          Apellido: '',
+          Email: '',
+          Telefono: '',
+          Interes: '',
+          Mensaje: ''
+        });
+      } else {
+        setSubmitStatus('error');
+      }
     } catch (err) {
       setSubmitStatus('error');
     } finally {

@@ -11,11 +11,13 @@ public class SystemController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<SystemController> _logger;
+    private readonly TalenHuman.Application.Common.Interfaces.IEmailService _emailService;
 
-    public SystemController(ApplicationDbContext context, ILogger<SystemController> logger)
+    public SystemController(ApplicationDbContext context, ILogger<SystemController> logger, TalenHuman.Application.Common.Interfaces.IEmailService emailService)
     {
         _context = context;
         _logger = logger;
+        _emailService = emailService;
     }
 
     [HttpGet("force-db-sync-elite-v12")]
@@ -39,6 +41,33 @@ public class SystemController : ControllerBase
         {
             _logger.LogError(ex, "Error forzando migración");
             return StatusCode(500, new { error = ex.Message, detail = ex.InnerException?.Message });
+        }
+    }
+
+    [HttpPost("contact")]
+    [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+    public async Task<IActionResult> ContactForm([FromBody] ContactFormDto dto)
+    {
+        try
+        {
+            var subject = $"Nuevo contacto web: {dto.Interes} - {dto.Nombre} {dto.Apellido}";
+            var body = $@"
+<h2>Nuevo Prospecto / Contacto desde TalenHuman</h2>
+<p><strong>Nombre:</strong> {dto.Nombre} {dto.Apellido}</p>
+<p><strong>Email Corporativo:</strong> {dto.Email}</p>
+<p><strong>Teléfono:</strong> {dto.Telefono}</p>
+<p><strong>Interés:</strong> {dto.Interes}</p>
+<p><strong>Mensaje:</strong> {dto.Mensaje}</p>
+<hr/>
+<p><small>Enviado desde el formulario de la Landing Page</small></p>";
+
+            await _emailService.SendEmailAsync("gerencia@apps-tyd.com.co", subject, body);
+            return Ok(new { message = "Mensaje enviado con éxito." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error enviando correo de contacto");
+            return StatusCode(500, new { message = "Error al enviar el mensaje de contacto." });
         }
     }
 
@@ -210,4 +239,14 @@ public class ApiKeyDto
 {
     public Guid CompanyId { get; set; }
     public string Description { get; set; } = string.Empty;
+}
+
+public class ContactFormDto
+{
+    public string Nombre { get; set; } = string.Empty;
+    public string Apellido { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Telefono { get; set; } = string.Empty;
+    public string Interes { get; set; } = string.Empty;
+    public string Mensaje { get; set; } = string.Empty;
 }
