@@ -79,11 +79,20 @@ public class IntegrationController : ControllerBase
             var store = await _context.Stores.FirstOrDefaultAsync(s => s.Code == dto.StoreCode || s.Name == dto.StoreName);
             if (store == null && (!string.IsNullOrEmpty(dto.StoreCode) || !string.IsNullOrEmpty(dto.StoreName)))
             {
+                var defaultBrand = await _context.Brands.FirstOrDefaultAsync(b => b.CompanyId == tenantId);
+                if (defaultBrand == null)
+                {
+                    defaultBrand = new Brand { Name = "Marca Principal", CompanyId = tenantId };
+                    _context.Brands.Add(defaultBrand);
+                    await _context.SaveChangesAsync();
+                }
+
                 store = new Store 
                 { 
                     Code = string.IsNullOrEmpty(dto.StoreCode) ? "N/A" : dto.StoreCode,
                     Name = string.IsNullOrEmpty(dto.StoreName) ? dto.StoreCode ?? "Sede Básica" : dto.StoreName,
                     CompanyId = tenantId,
+                    BrandId = defaultBrand.Id,
                     IsActive = true,
                     UseSequentialPairing = true
                 };
