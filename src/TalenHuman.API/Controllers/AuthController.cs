@@ -56,6 +56,7 @@ public class AuthController : ControllerBase
         var user = await _userManager.Users
             .IgnoreQueryFilters()
             .Include(u => u.Company)
+            .Include(u => u.AdditionalTenants).ThenInclude(at => at.Company)
             .FirstOrDefaultAsync(u => 
                 u.NormalizedEmail == request.Email.ToUpper() || 
                 u.UserName == request.Email);
@@ -79,7 +80,69 @@ public class AuthController : ControllerBase
             return Unauthorized("Credenciales inválidas");
         }
 
-        var roles = await _userManager.GetRolesAsync(user);
+        var availableCompanies = new List<object>();
+        if (user.Company != null && user.Company.IsActive)
+        {
+            availableCompanies.Add(new { id = user.CompanyId, name = user.Company.Name });
+        }
+
+        foreach (var tenant in user.AdditionalTenants)
+        {
+            if (tenant.Company != null && tenant.Company.IsActive)
+            {
+                availableCompanies.Add(new { id = tenant.CompanyId, name = tenant.Company.Name });
+            }
+        }
+
+        if (availableCompanies.Count == 0)
+        {
+            return Unauthorized("No tienes acceso a ninguna empresa activa. Contacte a soporte.");
+        }
+
+        if (availableCompanies.Count > 1)
+        {
+            // Generate a temporary JWT token for tenant selection
+            var tempClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email!),
+                new Claim("IsTempToken", "true")
+            };
+
+            var tempKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("SuperSecretKey123!_TalenHuman_2026_Secure"));
+            var tempCreds = new SigningCredentials(tempKey, SecurityAlgorithms.HmacSha256);
+            var tempJwt = new JwtSecurityToken(
+                issuer: "TalenHuman",
+                audience: "TalenHuman",
+                claims: tempClaims,
+                expires: DateTime.Now.AddMinutes(15),
+                signingCredentials: tempCreds
+            );
+
+            return Ok(new
+            {
+                status = "select_tenant",
+                tempToken = new JwtSecurityTokenHandler().WriteToken(tempJwt),
+                companies = availableCompanies
+            });
+        }
+
+        // If only 1 company, proceed with normal login for that company
+        var targetCompanyId = (Guid)((dynamic)availableCompanies[0]).id;
+        
+        return await GenerateFinalTokenAsync(user, targetCompanyId);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error interno del servidor", error = ex.Message });
+        }
+    }
+
+    private async Task<IActionResult> GenerateFinalTokenAsync(User user, Guid companyId)
+    {
+        try
+        {
+            var roles = await _userManager.GetRolesAsync(user);
         
         var claims = new List<Claim>
         {
@@ -104,7 +167,7 @@ public class AuthController : ControllerBase
         var activeModules = await _context.CompanyModules
             .IgnoreQueryFilters()
             .Include(cm => cm.Module)
-            .Where(cm => cm.CompanyId == user.CompanyId && cm.IsActive)
+            .Where(cm => cm.CompanyId == companyId && cm.IsActive)
             .Select(cm => cm.Module!.Code)
             .ToListAsync();
         
@@ -216,6 +279,19 @@ public class AuthController : ControllerBase
         // Fetch Global Firebase Config
         var firebaseConfig = await _settingsService.GetGroupSettingsAsync("Firebase");
 
+        var availableCompanies = new List<object>();
+        if (user.Company != null && user.Company.IsActive)
+        {
+            availableCompanies.Add(new { id = user.CompanyId, name = user.Company.Name });
+        }
+        foreach (var tenant in user.AdditionalTenants)
+        {
+            if (tenant.Company != null && tenant.Company.IsActive)
+            {
+                availableCompanies.Add(new { id = tenant.CompanyId, name = tenant.Company.Name });
+            }
+        }
+
         return Ok(new
         {
             token = new JwtSecurityTokenHandler().WriteToken(token),
@@ -227,6 +303,7 @@ public class AuthController : ControllerBase
                 user.MustChangePassword, 
                 roles, 
                 companyName = user.Company?.Name,
+                availableCompanies,
                 countryCode = user.Company?.CountryCode,
                 timeZoneId = user.Company?.TimeZoneId,
                 storeId,
@@ -265,6 +342,65 @@ public class AuthController : ControllerBase
                 inner = ex.InnerException?.Message 
             });
         }
+    }
+
+    [HttpPost("select-tenant")]
+    [Authorize]
+    public async Task<IActionResult> SelectTenant([FromBody] SelectTenantRequest request)
+    {
+        var isTempToken = User.FindFirst("IsTempToken")?.Value;
+        if (isTempToken != "true")
+        {
+            return Unauthorized("Token inválido para esta operación.");
+        }
+
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userIdString, out Guid userId)) return Unauthorized();
+
+        var user = await _userManager.Users
+            .IgnoreQueryFilters()
+            .Include(u => u.Company)
+            .Include(u => u.AdditionalTenants).ThenInclude(at => at.Company)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null) return Unauthorized();
+
+        // Verify if user has access to requested company
+        bool hasAccess = (user.CompanyId == request.CompanyId) || 
+                         user.AdditionalTenants.Any(at => at.CompanyId == request.CompanyId);
+
+        if (!hasAccess)
+        {
+            return Forbid("No tienes acceso a esta empresa.");
+        }
+
+        return await GenerateFinalTokenAsync(user, request.CompanyId);
+    }
+
+    [HttpPost("switch-tenant")]
+    [Authorize]
+    public async Task<IActionResult> SwitchTenant([FromBody] SwitchTenantRequest request)
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userIdString, out Guid userId)) return Unauthorized();
+
+        var user = await _userManager.Users
+            .IgnoreQueryFilters()
+            .Include(u => u.Company)
+            .Include(u => u.AdditionalTenants).ThenInclude(at => at.Company)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null) return Unauthorized();
+
+        bool hasAccess = (user.CompanyId == request.CompanyId) || 
+                         user.AdditionalTenants.Any(at => at.CompanyId == request.CompanyId);
+
+        if (!hasAccess)
+        {
+            return Forbid("No tienes acceso a esta empresa.");
+        }
+
+        return await GenerateFinalTokenAsync(user, request.CompanyId);
     }
 
     [HttpPost("forgot-password")]
@@ -437,6 +573,16 @@ public class LoginRequest
 {
     public string Email { get; set; } = null!; // Can be Email or IdentificationNumber
     public string Password { get; set; } = null!;
+}
+
+public class SelectTenantRequest
+{
+    public Guid CompanyId { get; set; }
+}
+
+public class SwitchTenantRequest
+{
+    public Guid CompanyId { get; set; }
 }
 
 public class ForgotPasswordRequest

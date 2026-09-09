@@ -11,6 +11,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, onBackToLanding,
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [selectTenantData, setSelectTenantData] = useState(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('rememberedEmail');
@@ -33,6 +34,14 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, onBackToLanding,
 
       const res = await api.post('/auth/login', { email, password });
       
+      if (res.data.status === 'select_tenant') {
+        setSelectTenantData({
+          tempToken: res.data.tempToken,
+          companies: res.data.companies
+        });
+        return;
+      }
+
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       localStorage.setItem('tenantId', res.data.user.companyId);
@@ -124,6 +133,53 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, onBackToLanding,
                     </div>
                   )}
 
+                  {selectTenantData ? (
+                    <div className="tenant-selector animate-in slide-in-from-right-4">
+                      <h3 className="text-lg font-bold text-slate-800 mb-4 text-center">Selecciona tu Empresa</h3>
+                      <p className="text-sm text-slate-500 mb-6 text-center">Tu usuario tiene acceso a múltiples organizaciones. ¿Con cuál deseas operar hoy?</p>
+                      
+                      <div className="flex flex-col gap-3">
+                        {selectTenantData.companies.map(company => (
+                          <button
+                            key={company.id}
+                            disabled={loading}
+                            onClick={async () => {
+                              setLoading(true);
+                              setError('');
+                              try {
+                                const res = await api.post('/auth/select-tenant', { companyId: company.id }, {
+                                  headers: { Authorization: `Bearer ${selectTenantData.tempToken}` }
+                                });
+                                
+                                localStorage.setItem('token', res.data.token);
+                                localStorage.setItem('user', JSON.stringify(res.data.user));
+                                localStorage.setItem('tenantId', res.data.user.companyId);
+                                
+                                onLogin(res.data.user, res.data.token);
+                              } catch (err) {
+                                setError('Error al seleccionar la empresa.');
+                              } finally {
+                                setLoading(false);
+                              }
+                            }}
+                            className="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 transition-colors flex items-center justify-between group"
+                          >
+                            <span className="font-semibold text-slate-700 group-hover:text-indigo-700">{company.name}</span>
+                            <ArrowRight size={18} className="text-slate-400 group-hover:text-indigo-600" />
+                          </button>
+                        ))}
+                      </div>
+
+                      <button 
+                        type="button" 
+                        disabled={loading}
+                        onClick={() => setSelectTenantData(null)}
+                        className="w-full mt-6 py-2 text-slate-500 font-medium hover:text-slate-800 transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  ) : (
                   <form onSubmit={handleSubmit} className="login-form">
                     <div className="form-group">
                       <label className="form-label">Usuario o correo corporativo</label>
@@ -205,6 +261,7 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, onBackToLanding,
                         </button>
                     </div>
                   </form>
+                  )}
 
                   <div className="login-footer">
                       <p>¿Necesitas ayuda? <a href="#">Soporte</a></p>

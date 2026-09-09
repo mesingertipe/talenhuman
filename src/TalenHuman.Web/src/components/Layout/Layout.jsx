@@ -372,7 +372,7 @@ const Header = ({ user, activePage, currentCompanyName, tenantSettings, companie
               <div style={{ fontSize: '0.85rem', fontWeight: '900', color: 'var(--text-main)', letterSpacing: '-0.01em' }}>{user?.fullName || 'Perfil'}</div>
               <div style={{ fontSize: '0.65rem', fontWeight: 'bold', color: 'var(--text-muted)', trackingWidest: '0.05em' }}>{user?.roles?.join(' • ')}</div>
               
-              {isSuperAdmin && companies.length > 0 && (
+              {companies.length > 1 && (
                 <div style={{ marginTop: '0.4rem', width: '210px', marginLeft: 'auto' }}>
                   <SearchableSelect
                     options={companies}
@@ -396,13 +396,18 @@ const Header = ({ user, activePage, currentCompanyName, tenantSettings, companie
 const Layout = ({ children, activePage, setPage, user, onLogout }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isPinned, setIsPinned] = useState(true);
-  const [companies, setCompanies] = useState([]);
-  const [selectedTenant, setSelectedTenant] = useState(localStorage.getItem('tenantId') || '');
   const isSuperAdmin = user?.roles?.includes('SuperAdmin');
+  const [companies, setCompanies] = useState(user?.availableCompanies || []);
+  const [selectedTenant, setSelectedTenant] = useState(localStorage.getItem('tenantId') || '');
 
   useEffect(() => {
     const fetchCompanies = async () => {
-      if (!isSuperAdmin) return;
+      if (!isSuperAdmin) {
+        if (user?.availableCompanies) {
+          setCompanies(user.availableCompanies);
+        }
+        return;
+      }
       try {
         const response = await api.get('/companies');
         setCompanies(response.data);
@@ -423,9 +428,9 @@ const Layout = ({ children, activePage, setPage, user, onLogout }) => {
     
     window.addEventListener('tenantSettingsUpdated', fetchCompanies);
     return () => window.removeEventListener('tenantSettingsUpdated', fetchCompanies);
-  }, [isSuperAdmin]);
+  }, [isSuperAdmin, user]);
 
-  const handleTenantChange = (e) => {
+  const handleTenantChange = async (e) => {
     const newId = e.target.value;
     
     // 🛡️ LOOP PROTECTION V12.99
@@ -435,13 +440,23 @@ const Layout = ({ children, activePage, setPage, user, onLogout }) => {
     }
 
     console.log(`[TENANT-SWITCH] Changing to: ${newId}`);
-    setSelectedTenant(newId);
-    localStorage.setItem('tenantId', newId);
-    
-    // Smooth reload to avoid browser cache loops
-    setTimeout(() => {
-      window.location.reload(); 
-    }, 100);
+    try {
+      const res = await api.post('/auth/switch-tenant', { companyId: newId });
+      
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      localStorage.setItem('tenantId', res.data.user.companyId);
+      
+      setSelectedTenant(newId);
+      
+      // Smooth reload to avoid browser cache loops
+      setTimeout(() => {
+        window.location.reload(); 
+      }, 100);
+    } catch (err) {
+      console.error('Error switching tenant', err);
+      alert('Error al cambiar de empresa. Verifique que tiene los permisos necesarios.');
+    }
   };
 
   const effectiveTenantId = selectedTenant || user?.companyId;

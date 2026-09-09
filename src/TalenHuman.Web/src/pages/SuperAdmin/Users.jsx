@@ -46,7 +46,8 @@ const Users = ({ user: sessionUser }) => {
     isActive: true,
     mustChangePassword: true,
     storeIds: [],
-    districtId: ''
+    districtId: '',
+    additionalCompanyIds: []
   });
 
   const availableRoles = ["Admin", "Gerente", "Distrital", "RH", "Soporte", "SuperAdmin"];
@@ -118,7 +119,8 @@ const Users = ({ user: sessionUser }) => {
             roles: payload.roles,
             storeIds: payload.storeIds,
             districtId: payload.districtId || null,
-            newPassword: payload.password || null
+            newPassword: payload.password || null,
+            additionalCompanyIds: payload.additionalCompanyIds || []
         };
         await api.put(`/users/${currentUser.id}`, updateData);
         showToast("Usuario actualizado");
@@ -260,7 +262,7 @@ const Users = ({ user: sessionUser }) => {
                       ? (selectedTenant && selectedTenant !== defaultTenant ? selectedTenant : '') 
                       : (JSON.parse(localStorage.getItem('user'))?.companyId || ''), 
                     roles: ['Admin'], isActive: true, mustChangePassword: true,
-                    storeIds: []
+                    storeIds: [], additionalCompanyIds: []
                 });
                 setShowModal(true);
               }}
@@ -367,7 +369,8 @@ const Users = ({ user: sessionUser }) => {
                           storeIds: u.storeIds || [],
                           districtId: u.districtId || '',
                           isActive: u.isActive,
-                          mustChangePassword: u.mustChangePassword
+                          mustChangePassword: u.mustChangePassword,
+                          additionalCompanyIds: u.additionalCompanyIds || []
                         }); 
                         setShowModal(true); 
                       }}
@@ -466,15 +469,23 @@ const Users = ({ user: sessionUser }) => {
                   </div>
 
                   {isSuperAdminUser && (
-                    <div className="col-span-2">
+                    <div className="col-span-2 space-y-4">
                         <SearchableSelect
-                            label="Asignar a Empresa / Tenant"
+                            label="Empresa Principal / Tenant Base *"
                             options={companies}
                             value={formData.companyId}
                             onChange={(val) => setFormData({ ...formData, companyId: val, storeIds: [] })}
                             icon={Building2}
-                            placeholder="Seleccionar empresa..."
+                            placeholder="Seleccionar empresa principal..."
                             required
+                        />
+                        <MultiSearchableSelect
+                            label="Empresas Adicionales (Opcional)"
+                            options={companies.filter(c => c.id !== formData.companyId)}
+                            values={formData.additionalCompanyIds}
+                            onChange={(vals) => setFormData({ ...formData, additionalCompanyIds: vals })}
+                            icon={Building2}
+                            placeholder="Buscar y seleccionar empresas adicionales..."
                         />
                     </div>
                   )}

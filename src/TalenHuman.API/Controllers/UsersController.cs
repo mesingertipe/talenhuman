@@ -66,6 +66,7 @@ public class UsersController : ControllerBase
             var query = _context.Users
                 .Include(u => u.Company)
                 .Include(u => u.District)
+                .Include(u => u.AdditionalTenants)
                 .IgnoreQueryFilters();
 
             // Filter logic:
@@ -133,7 +134,8 @@ public class UsersController : ControllerBase
                     DistrictName = user.District != null ? user.District.Name : null,
                     Roles = roles,
                     StoreIds = storeIds,
-                    StoreNames = storeNames
+                    StoreNames = storeNames,
+                    AdditionalCompanyIds = user.AdditionalTenants?.Select(at => at.CompanyId).ToList() ?? new List<Guid>()
                 });
             }
 
@@ -181,6 +183,14 @@ public class UsersController : ControllerBase
                 EmailConfirmed = true
             };
 
+            if (dto.AdditionalCompanyIds != null && dto.AdditionalCompanyIds.Any())
+            {
+                user.AdditionalTenants = dto.AdditionalCompanyIds.Select(cid => new UserTenant 
+                { 
+                    CompanyId = cid 
+                }).ToList();
+            }
+
             var result = await _userManager.CreateAsync(user, dto.Password);
             if (!result.Succeeded)
             {
@@ -217,7 +227,10 @@ public class UsersController : ControllerBase
             var isSuperAdmin = User.IsInRole("SuperAdmin");
             var userCompanyId = Guid.Parse(User.FindFirst("CompanyId")?.Value ?? Guid.Empty.ToString());
 
-            var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id);
+            var user = await _context.Users
+                .Include(u => u.AdditionalTenants)
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(u => u.Id == id);
             if (user == null) return NotFound(new { message = $"Usuario no encontrado." });
 
             // Security checks
@@ -244,6 +257,17 @@ public class UsersController : ControllerBase
             user.MustChangePassword = dto.MustChangePassword;
             user.CompanyId = dto.CompanyId;
             user.DistrictId = dto.DistrictId;
+
+            // Sync AdditionalTenants
+            if (user.AdditionalTenants == null) user.AdditionalTenants = new List<UserTenant>();
+            user.AdditionalTenants.Clear();
+            if (dto.AdditionalCompanyIds != null && dto.AdditionalCompanyIds.Any())
+            {
+                foreach (var cid in dto.AdditionalCompanyIds)
+                {
+                    user.AdditionalTenants.Add(new UserTenant { UserId = user.Id, CompanyId = cid });
+                }
+            }
 
             var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
@@ -429,6 +453,7 @@ public class UserCreateDto
     public List<string> Roles { get; set; } = new();
     public List<Guid> StoreIds { get; set; } = new();
     public Guid? DistrictId { get; set; }
+    public List<Guid> AdditionalCompanyIds { get; set; } = new();
 }
 
 public class UserUpdateDto
@@ -441,6 +466,7 @@ public class UserUpdateDto
     public string? NewPassword { get; set; }
     public List<Guid> StoreIds { get; set; } = new();
     public Guid? DistrictId { get; set; }
+    public List<Guid> AdditionalCompanyIds { get; set; } = new();
 }
 
 public class PasswordChangeDto

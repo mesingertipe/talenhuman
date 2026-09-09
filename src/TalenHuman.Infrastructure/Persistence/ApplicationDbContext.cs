@@ -67,8 +67,9 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<AIChatMessage> AIChatMessages => Set<AIChatMessage>();
     
     public DbSet<FaqArticle> FaqArticles => Set<FaqArticle>();
-    public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
-    public DbSet<TicketMessage> TicketMessages => Set<TicketMessage>();
+    public DbSet<SupportTicket> SupportTickets { get; set; }
+    public DbSet<TicketMessage> TicketMessages { get; set; }
+    public DbSet<UserTenant> UserTenants { get; set; }
 
     public Guid TenantId => _tenantProvider.GetTenantId();
 
@@ -78,6 +79,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
 
         // Apply Multitenancy Global Filter
         builder.Entity<User>().HasQueryFilter(u => u.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<UserTenant>().HasQueryFilter(u => u.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<Brand>().HasQueryFilter(b => b.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<Store>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<City>().HasQueryFilter(c => c.CompanyId == TenantId || TenantId == Guid.Empty);
@@ -258,6 +260,22 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
             .HasOne(rp => rp.Rule)
             .WithMany(r => r.RuleProfiles)
             .HasForeignKey(rp => rp.RuleId);
+
+        // User Tenants Many-to-Many
+        builder.Entity<UserTenant>()
+            .HasKey(ut => new { ut.UserId, ut.CompanyId });
+
+        builder.Entity<UserTenant>()
+            .HasOne(ut => ut.User)
+            .WithMany(u => u.AdditionalTenants)
+            .HasForeignKey(ut => ut.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<UserTenant>()
+            .HasOne(ut => ut.Company)
+            .WithMany()
+            .HasForeignKey(ut => ut.CompanyId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Predictive Rules Channels Many-to-Many
         builder.Entity<PredictiveShiftRuleChannel>()
