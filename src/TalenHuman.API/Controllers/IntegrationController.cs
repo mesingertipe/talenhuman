@@ -77,9 +77,23 @@ public class IntegrationController : ControllerBase
         foreach (var dto in employees)
         {
             var store = await _context.Stores.FirstOrDefaultAsync(s => s.Code == dto.StoreCode || s.Name == dto.StoreName);
+            if (store == null && (!string.IsNullOrEmpty(dto.StoreCode) || !string.IsNullOrEmpty(dto.StoreName)))
+            {
+                store = new Store 
+                { 
+                    Code = string.IsNullOrEmpty(dto.StoreCode) ? "N/A" : dto.StoreCode,
+                    Name = string.IsNullOrEmpty(dto.StoreName) ? dto.StoreCode ?? "Sede Básica" : dto.StoreName,
+                    CompanyId = tenantId,
+                    IsActive = true,
+                    UseSequentialPairing = true
+                };
+                _context.Stores.Add(store);
+                await _context.SaveChangesAsync();
+            }
+
             if (store == null)
             {
-                results.Failed.Add(new { dto.IdentificationNumber, Error = "Store not found" });
+                results.Failed.Add(new { dto.IdentificationNumber, Error = "Store not found and could not be created (missing code/name)" });
                 continue;
             }
 
