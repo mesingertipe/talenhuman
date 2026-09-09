@@ -148,7 +148,7 @@ public class AuthController : ControllerBase
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email!),
-            new Claim("CompanyId", user.CompanyId.ToString())
+            new Claim("CompanyId", companyId.ToString())
         };
 
         foreach (var role in roles)
@@ -292,6 +292,10 @@ public class AuthController : ControllerBase
             }
         }
 
+        var targetCompany = user.CompanyId == companyId 
+            ? user.Company 
+            : user.AdditionalTenants?.FirstOrDefault(at => at.CompanyId == companyId)?.Company;
+
         return Ok(new
         {
             token = new JwtSecurityTokenHandler().WriteToken(token),
@@ -299,13 +303,13 @@ public class AuthController : ControllerBase
                 id = user.Id,
                 user.Email, 
                 user.FullName, 
-                user.CompanyId, 
+                CompanyId = companyId, 
                 user.MustChangePassword, 
                 roles, 
-                companyName = user.Company?.Name,
+                companyName = targetCompany?.Name,
                 availableCompanies,
-                countryCode = user.Company?.CountryCode,
-                timeZoneId = user.Company?.TimeZoneId,
+                countryCode = targetCompany?.CountryCode,
+                timeZoneId = targetCompany?.TimeZoneId,
                 storeId,
                 storeName,
                 storeExternalId,
@@ -317,8 +321,8 @@ public class AuthController : ControllerBase
                 activeModules,
                 permissions,
                 // AI Feature Flags
-                isAiEnabled = roles.Contains("SuperAdmin") ? true : user.Company?.IsAiEnabled,
-                aiAllowedRoles = roles.Contains("SuperAdmin") ? "ALL" : user.Company?.AiAllowedRoles,
+                isAiEnabled = roles.Contains("SuperAdmin") ? true : targetCompany?.IsAiEnabled,
+                aiAllowedRoles = roles.Contains("SuperAdmin") ? "ALL" : targetCompany?.AiAllowedRoles,
                 // Global Config
                 firebaseApiKey = firebaseConfig.ContainsKey("FIREBASE_API_KEY") ? firebaseConfig["FIREBASE_API_KEY"] : null,
                 firebaseAuthDomain = firebaseConfig.ContainsKey("FIREBASE_AUTH_DOMAIN") ? firebaseConfig["FIREBASE_AUTH_DOMAIN"] : null,
@@ -328,7 +332,7 @@ public class AuthController : ControllerBase
                 firebaseAppId = firebaseConfig.ContainsKey("FIREBASE_APP_ID") ? firebaseConfig["FIREBASE_APP_ID"] : null,
                 firebaseMeasurementId = firebaseConfig.ContainsKey("FIREBASE_MEASUREMENT_ID") ? firebaseConfig["FIREBASE_MEASUREMENT_ID"] : null,
                 firebaseVapidKey = firebaseConfig.ContainsKey("FIREBASE_VAPID_KEY") ? firebaseConfig["FIREBASE_VAPID_KEY"] : null,
-                privacyPolicyText = user.Company?.PrivacyPolicyText,
+                privacyPolicyText = targetCompany?.PrivacyPolicyText,
                 acceptedPrivacyPolicy = user.AcceptedPrivacyPolicy,
                 hasBiometrics = await _context.UserCredentials.AnyAsync(c => c.UserId == user.Id)
             }

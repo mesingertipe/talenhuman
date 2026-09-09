@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Mail, Eye, EyeOff, ArrowRight, ShieldAlert, Bell, Calendar, Megaphone, Globe } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff, ArrowRight, ShieldAlert, Bell, Calendar, Megaphone, Globe, Building2 } from 'lucide-react';
 import api from '../services/api';
 import TalenHumanLogo from '../components/Shared/TalenHumanLogo';
 import './Login.css';
@@ -134,11 +134,28 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, onBackToLanding,
                   )}
 
                   {selectTenantData ? (
-                    <div className="tenant-selector animate-in slide-in-from-right-4">
-                      <h3 className="text-lg font-bold text-slate-800 mb-4 text-center">Selecciona tu Empresa</h3>
-                      <p className="text-sm text-slate-500 mb-6 text-center">Tu usuario tiene acceso a múltiples organizaciones. ¿Con cuál deseas operar hoy?</p>
+                    <div className="tenant-selector animate-in slide-in-from-right-4" style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <div style={{
+                        width: '64px',
+                        height: '64px',
+                        background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                        borderRadius: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 12px 24px rgba(79, 70, 229, 0.25)',
+                        marginBottom: '1.5rem',
+                        border: '2px solid white'
+                      }}>
+                        <Building2 size={32} color="white" />
+                      </div>
+
+                      <h3 className="text-2xl font-[950] text-slate-800 mb-2 tracking-tight text-center">Selecciona tu Entorno</h3>
+                      <p className="text-sm text-slate-500 mb-8 text-center font-medium leading-relaxed max-w-[280px]">
+                        Tu cuenta está vinculada a múltiples organizaciones. Elige el espacio de trabajo al que deseas ingresar.
+                      </p>
                       
-                      <div className="flex flex-col gap-3">
+                      <div className="flex flex-col gap-4 w-full">
                         {selectTenantData.companies.map(company => (
                           <button
                             key={company.id}
@@ -162,10 +179,18 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, onBackToLanding,
                                 setLoading(false);
                               }
                             }}
-                            className="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 transition-colors flex items-center justify-between group"
+                            className="group relative w-full text-left p-5 rounded-2xl border-2 border-slate-100 hover:border-indigo-500 hover:shadow-[0_8px_30px_rgb(99,102,241,0.12)] hover:-translate-y-1 transition-all duration-300 bg-white flex items-center gap-4 overflow-hidden"
                           >
-                            <span className="font-semibold text-slate-700 group-hover:text-indigo-700">{company.name}</span>
-                            <ArrowRight size={18} className="text-slate-400 group-hover:text-indigo-600" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-indigo-50 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            
+                            <div className="relative z-10 w-12 h-12 rounded-xl bg-slate-50 group-hover:bg-indigo-100/50 flex items-center justify-center transition-colors">
+                               <Globe className="text-slate-400 group-hover:text-indigo-600 transition-colors" size={24} />
+                            </div>
+
+                            <div className="relative z-10 flex-1">
+                                <span className="block font-bold text-slate-700 group-hover:text-indigo-900 transition-colors text-lg tracking-tight">{company.name}</span>
+                                <span className="block text-xs font-semibold text-slate-400 group-hover:text-indigo-500/70 uppercase tracking-widest mt-1">Conectar Entorno &rarr;</span>
+                            </div>
                           </button>
                         ))}
                       </div>
@@ -174,9 +199,9 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, onBackToLanding,
                         type="button" 
                         disabled={loading}
                         onClick={() => setSelectTenantData(null)}
-                        className="w-full mt-6 py-2 text-slate-500 font-medium hover:text-slate-800 transition-colors"
+                        className="w-full mt-8 py-3 text-slate-400 font-bold hover:text-slate-800 transition-colors text-sm tracking-widest uppercase hover:bg-slate-50 rounded-xl"
                       >
-                        Cancelar
+                        ← Cancelar e intentar otro usuario
                       </button>
                     </div>
                   ) : (
