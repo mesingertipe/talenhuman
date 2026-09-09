@@ -482,7 +482,7 @@ const Users = ({ user: sessionUser }) => {
                         <MultiSearchableSelect
                             label="Empresas Adicionales (Opcional)"
                             options={companies.filter(c => c.id !== formData.companyId)}
-                            values={formData.additionalCompanyIds}
+                            value={formData.additionalCompanyIds}
                             onChange={(vals) => setFormData({ ...formData, additionalCompanyIds: vals })}
                             icon={Building2}
                             placeholder="Buscar y seleccionar empresas adicionales..."
