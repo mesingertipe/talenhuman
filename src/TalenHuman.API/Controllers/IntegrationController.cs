@@ -183,6 +183,11 @@ public class IntegrationController : ControllerBase
                 {
                     employee.ProfileId = profile.Id;
                 }
+                else if (employee.ProfileId == Guid.Empty)
+                {
+                    // Si el empleado existía pero tenía el cargo corrupto/vacío, se le asigna el por defecto
+                    employee.ProfileId = await _context.Profiles.Select(p => p.Id).FirstOrDefaultAsync();
+                }
                 
                 employee.DailySalary = dto.DailySalary;
                 employee.IsActive = dto.IsActive;
