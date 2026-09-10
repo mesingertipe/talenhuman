@@ -27,7 +27,7 @@ def main(event, context):
     
     try:
         if not TALENHUMAN_API_KEY:
-            return {"status": "error", "message": "Falta la variable de entorno TALENHUMAN_API_KEY"}
+            return {"statusCode": 500, "body": {"status": "error", "message": "Falta la variable de entorno TALENHUMAN_API_KEY"}}
 
         # 1. Calcular Rango de Fechas
         # Usamos UTC y ajustamos manualmente restando 5 horas para simular la hora de Colombia
@@ -45,11 +45,11 @@ def main(event, context):
                                  timeout=30)
                                  
         if res_auth.status_code != 200:
-            return {"status": "error", "message": f"Fallo Auth Falcon: {res_auth.status_code} - {res_auth.text}"}
+            return {"statusCode": 500, "body": {"status": "error", "message": f"Fallo Auth Falcon: {res_auth.status_code} - {res_auth.text}"}}
             
         token_falcon = res_auth.json().get("token")
         if not token_falcon:
-            return {"status": "error", "message": "No se recibió un token de Falcon Cloud"}
+            return {"statusCode": 500, "body": {"status": "error", "message": "No se recibió un token de Falcon Cloud"}}
 
         # 3. Extracción de Marcaciones (Paginación)
         print("2. Descargando marcaciones de Falcon Cloud...")
@@ -84,7 +84,7 @@ def main(event, context):
         print(f"📥 Total de marcaciones encontradas: {len(all_data)}")
 
         if not all_data:
-            return {"status": "success", "message": "No hay marcaciones para sincronizar en este rango de tiempo."}
+            return {"statusCode": 200, "body": {"status": "success", "message": "No hay marcaciones para sincronizar en este rango de tiempo."}}
 
         # 4. Transformación de Datos para TalenHuman
         print("3. Transformando datos al formato de TalenHuman...")
@@ -112,14 +112,14 @@ def main(event, context):
         
         if res_th.status_code in [200, 201]:
             print("✅ ¡Éxito! Marcaciones sincronizadas exitosamente con TalenHuman.")
-            return {"status": "success", "message": f"{len(payload_talenhuman)} marcaciones sincronizadas."}
+            return {"statusCode": 200, "body": {"status": "success", "message": f"{len(payload_talenhuman)} marcaciones sincronizadas."}}
         else:
             print(f"❌ Fallo envío a TH: {res_th.status_code} - {res_th.text}")
-            return {"status": "error", "message": f"Fallo en TH: {res_th.status_code}"}
+            return {"statusCode": 500, "body": {"status": "error", "message": f"Fallo en TH: {res_th.status_code}"}}
 
     except Exception as e:
         print(f"💥 ERROR CRÍTICO: {str(e)}")
-        return {"status": "error", "message": str(e)}
+        return {"statusCode": 500, "body": {"status": "error", "message": str(e)}}
 
 # Bloque para ejecución local/Cron
 if __name__ == "__main__":

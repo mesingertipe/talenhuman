@@ -36,7 +36,7 @@ def main(event, context):
                                     timeout=30)
                                  
         if res_auth_oh.status_code != 200:
-            return {"status": "error", "message": f"Fallo Auth Open HR: {res_auth_oh.text}"}
+            return {"statusCode": 500, "body": {"status": "error", "message": f"Fallo Auth Open HR: {res_auth_oh.text}"}}
             
         token_openhr = res_auth_oh.json().get("token")
         
@@ -47,7 +47,7 @@ def main(event, context):
                                timeout=60)
                                
         if res_emp.status_code != 200:
-            return {"status": "error", "message": f"Fallo al obtener empleados de Open HR: {res_emp.text}"}
+            return {"statusCode": 500, "body": {"status": "error", "message": f"Fallo al obtener empleados de Open HR: {res_emp.text}"}}
             
         openhr_empleados = res_emp.json()
         print(f"📥 Se encontraron {len(openhr_empleados)} empleados en Open HR.")
@@ -57,8 +57,32 @@ def main(event, context):
             print(f"🛠️ MODO PRUEBA ACTIVO: Solo se procesarán {TEST_LIMIT} empleados.")
         
         if not openhr_empleados:
-            return {"status": "success", "message": "No hay empleados para sincronizar."}
+            return {"statusCode": 200, "body": {"status": "success", "message": "No hay empleados para sincronizar."}}
             
+        # 2.5 Extracción de Tiendas (BiometricId) de TalenHuman
+        print("2.5 Descargando tiendas de TalenHuman para mapear dispositivos biométricos...")
+        mapa_tiendas = {}
+        if TALENHUMAN_API_KEY:
+            try:
+                # El endpoint base se saca de TALENHUMAN_API_URL (quitando /sync-employees y agregando /stores)
+                base_th_url = TALENHUMAN_API_URL.replace("/sync-employees", "")
+                res_stores = requests.get(f"{base_th_url}/stores", 
+                                          headers={"X-Api-Key": TALENHUMAN_API_KEY}, 
+                                          timeout=30)
+                if res_stores.status_code == 200:
+                    tiendas_th = res_stores.json()
+                    for t in tiendas_th:
+                        biometric_id = str(t.get("biometricId") or "").strip()
+                        if biometric_id:
+                            if t.get("name"): mapa_tiendas[str(t["name"]).strip().upper()] = biometric_id
+                            if t.get("code"): mapa_tiendas[str(t["code"]).strip().upper()] = biometric_id
+                            if t.get("externalId"): mapa_tiendas[str(t["externalId"]).strip().upper()] = biometric_id
+                    print(f"✅ Se cargaron {len(tiendas_th)} tiendas. Dispositivos mapeados: {len(set(mapa_tiendas.values()))}")
+                else:
+                    print(f"⚠️ No se pudieron obtener las tiendas de TH: {res_stores.status_code}")
+            except Exception as e:
+                print(f"⚠️ Error al obtener tiendas de TH: {e}")
+
         # 3. Transformación
         print("3. Transformando datos...")
         th_payload = []
@@ -122,6 +146,10 @@ def main(event, context):
                 return d_str
 
             sucursal = str(emp.get("branch_office", "DEFAULT")).strip()
+            sucursal_upper = sucursal.upper()
+            
+            # Buscar ID Biométrico en el mapa de tiendas de TalenHuman
+            device_id_mapped = mapa_tiendas.get(sucursal_upper, "")
 
             # --- Payload para TalenHuman ---
             registro_th = {
@@ -159,7 +187,7 @@ def main(event, context):
                 "branch_office": sucursal,
                 "schedule": "DEFAULT", # Forzado a DEFAULT en lugar del turno
                 "position": str(emp.get("position", "")),
-                "devices": str(emp.get("devices", "")).replace(',', ':') if emp.get("devices") else ""
+                "devices": str(emp.get("devices", "")).replace(',', ':') if emp.get("devices") else device_id_mapped
             }
             falcon_payloads.append(registro_falcon)
             
@@ -254,11 +282,11 @@ def main(event, context):
         except Exception as e:
             print(f"❌ Error en la etapa de Falcon: {e}")
 
-        return {"status": "success", "message": "Proceso ETL completado para TalenHuman y Falcon."}
+        return {"statusCode": 200, "body": {"status": "success", "message": "Proceso ETL completado para TalenHuman y Falcon."}}
 
     except Exception as e:
         print(f"💥 ERROR CRÍTICO: {e}")
-        return {"status": "error", "message": str(e)}
+        return {"statusCode": 500, "body": {"status": "error", "message": str(e)}}
 
 if __name__ == "__main__":
     main({}, {})

@@ -471,6 +471,23 @@ public class IntegrationController : ControllerBase
 
         return Ok(novedades);
     }
+    [HttpGet("stores")]
+    public async Task<IActionResult> GetStores()
+    {
+        var tenantId = _context.TenantId;
+        var stores = await _context.Stores
+            .Where(s => s.CompanyId == tenantId && s.IsActive)
+            .Select(s => new
+            {
+                s.Name,
+                s.Code,
+                s.BiometricId,
+                s.ExternalId
+            })
+            .ToListAsync();
+
+        return Ok(stores);
+    }
 }
 
 public class StoreSyncDto

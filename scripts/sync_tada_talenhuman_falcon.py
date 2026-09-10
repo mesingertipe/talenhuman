@@ -33,7 +33,7 @@ def main(event, context):
                                  timeout=30)
                                  
         if res_auth.status_code != 200:
-            return {"status": "error", "message": f"Fallo Auth TADÁ: {res_auth.text}"}
+            return {"statusCode": 500, "body": {"status": "error", "message": f"Fallo Auth TADÁ: {res_auth.text}"}}
             
         token = res_auth.json().get("token")
         
@@ -44,14 +44,38 @@ def main(event, context):
                                timeout=60)
                                
         if res_emp.status_code != 200:
-            return {"status": "error", "message": f"Fallo GetEmpleados: {res_emp.text}"}
+            return {"statusCode": 500, "body": {"status": "error", "message": f"Fallo GetEmpleados: {res_emp.text}"}}
             
         tada_empleados = res_emp.json().get("result", [])
         print(f"📥 Se encontraron {len(tada_empleados)} empleados en TADÁ.")
         
         if not tada_empleados:
-            return {"status": "success", "message": "No hay empleados para sincronizar."}
+            return {"statusCode": 200, "body": {"status": "success", "message": "No hay empleados para sincronizar."}}
             
+        # 2.5 Extracción de Tiendas (BiometricId) de TalenHuman
+        print("2.5 Descargando tiendas de TalenHuman para mapear dispositivos biométricos...")
+        mapa_tiendas = {}
+        if TALENHUMAN_API_KEY:
+            try:
+                # El endpoint base se saca de TALENHUMAN_API_URL (quitando /sync-employees y agregando /stores)
+                base_th_url = TALENHUMAN_API_URL.replace("/sync-employees", "")
+                res_stores = requests.get(f"{base_th_url}/stores", 
+                                          headers={"X-Api-Key": TALENHUMAN_API_KEY}, 
+                                          timeout=30)
+                if res_stores.status_code == 200:
+                    tiendas_th = res_stores.json()
+                    for t in tiendas_th:
+                        biometric_id = str(t.get("biometricId") or "").strip()
+                        if biometric_id:
+                            if t.get("name"): mapa_tiendas[str(t["name"]).strip().upper()] = biometric_id
+                            if t.get("code"): mapa_tiendas[str(t["code"]).strip().upper()] = biometric_id
+                            if t.get("externalId"): mapa_tiendas[str(t["externalId"]).strip().upper()] = biometric_id
+                    print(f"✅ Se cargaron {len(tiendas_th)} tiendas. Dispositivos mapeados: {len(set(mapa_tiendas.values()))}")
+                else:
+                    print(f"⚠️ No se pudieron obtener las tiendas de TH: {res_stores.status_code}")
+            except Exception as e:
+                print(f"⚠️ Error al obtener tiendas de TH: {e}")
+
         # 3. Transformación
         print("3. Transformando datos...")
         th_payload = []
@@ -114,6 +138,12 @@ def main(event, context):
             if centro_str.isdigit():
                 identificacion = str(emp.get("claveEmpleado", ""))
                 
+                # Buscar ID Biométrico en el mapa de tiendas de TalenHuman
+                device_id_mapped = mapa_tiendas.get(centro_str.upper(), "") # Usamos el código de sucursal
+                # También podríamos buscar por el nombre de la sucursal si no cruza con clave
+                if not device_id_mapped and emp.get("sucursal"):
+                    device_id_mapped = mapa_tiendas.get(str(emp.get("sucursal")).strip().upper(), "")
+                
                 # Para el status, Falcon puede esperar un string según tu Lakehouse
                 # Si en Lakehouse tenías 'status', en TADÁ es 'estatus'
                 estatus_falcon = "S" if emp.get("estatus", "").upper() == "ACTIVO" else "N"
@@ -132,7 +162,7 @@ def main(event, context):
                     "branch_office": centro_str,
                     "schedule": "DEFAULT",
                     "position": str(emp.get("puesto", "")),
-                    "devices": ""
+                    "devices": device_id_mapped
                 }
                 falcon_payloads.append(registro_falcon)
             
@@ -217,10 +247,10 @@ def main(event, context):
         except Exception as e:
             print(f"❌ Error en la etapa de Falcon: {e}")
 
-        return {"status": "success", "message": "Proceso ETL completado para TalenHuman y Falcon."}
+        return {"statusCode": 200, "body": {"status": "success", "message": "Proceso ETL completado para TalenHuman y Falcon."}}
 
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        return {"statusCode": 500, "body": {"status": "error", "message": str(e)}}
 
 # Bloque para probarlo localmente (fuera de AWS Lambda)
 if __name__ == "__main__":

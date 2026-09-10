@@ -44,7 +44,7 @@ def main(event, context):
                                     json={"username": OPENHR_USER, "password": OPENHR_PASS},
                                     timeout=30)
         if res_auth_oh.status_code != 200:
-            return {"status": "error", "message": f"Fallo Auth Open HR: {res_auth_oh.text}"}
+            return {"statusCode": 500, "body": {"status": "error", "message": f"Fallo Auth Open HR: {res_auth_oh.text}"}}
         token_openhr = res_auth_oh.json().get("token")
         headers_openhr = {"Authorization": f"Bearer {token_openhr}", "Content-Type": "application/json"}
 
@@ -53,7 +53,7 @@ def main(event, context):
         res_auth_f = requests.post(f"{FALCON_URL_BASE}/login", 
                                    json={"username": FALCON_USER, "password": FALCON_PASS}, timeout=30)
         if res_auth_f.status_code != 200:
-            return {"status": "error", "message": f"Fallo Auth Falcon: {res_auth_f.status_code}"}
+            return {"statusCode": 500, "body": {"status": "error", "message": f"Fallo Auth Falcon: {res_auth_f.status_code}"}}
         token_falcon = res_auth_f.json().get("token")
         headers_falcon = {"token": token_falcon}
 
@@ -141,11 +141,11 @@ def main(event, context):
             else:
                 print(f"❌ Fallo marcaciones a Open HR: {res_oh_m.status_code} - {res_oh_m.text}")
             
-        return {"status": "success", "message": "Proceso ETL completado (Marcaciones)."}
+        return {"statusCode": 200, "body": {"status": "success", "message": "Proceso ETL completado (Marcaciones)."}}
 
     except Exception as e:
         print(f"💥 ERROR CRÍTICO: {str(e)}")
-        return {"status": "error", "message": str(e)}
+        return {"statusCode": 500, "body": {"status": "error", "message": str(e)}}
 
 if __name__ == "__main__":
     main({}, {})

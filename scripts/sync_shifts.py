@@ -29,7 +29,7 @@ def main(event, context):
                                     json={"username": OPENHR_USER, "password": OPENHR_PASS},
                                     timeout=30)
         if res_auth_oh.status_code != 200:
-            return {"status": "error", "message": f"Fallo Auth Open HR: {res_auth_oh.text}"}
+            return {"statusCode": 500, "body": {"status": "error", "message": f"Fallo Auth Open HR: {res_auth_oh.text}"}}
         token_openhr = res_auth_oh.json().get("token")
         headers_openhr = {"Authorization": f"Bearer {token_openhr}", "Content-Type": "application/json"}
 
@@ -77,11 +77,11 @@ def main(event, context):
         else:
             print(f"❌ Error al consultar descansos en TH: {res_desc.status_code} - {res_desc.text}")
             
-        return {"status": "success", "message": "Proceso ETL completado (Descansos)."}
+        return {"statusCode": 200, "body": {"status": "success", "message": "Proceso ETL completado (Descansos)."}}
 
     except Exception as e:
         print(f"💥 ERROR CRÍTICO: {str(e)}")
-        return {"status": "error", "message": str(e)}
+        return {"statusCode": 500, "body": {"status": "error", "message": str(e)}}
 
 if __name__ == "__main__":
     main({}, {})
