@@ -58,6 +58,14 @@ const Employees = ({ user }) => {
     dateOfTermination: ''
   });
 
+  const getNormalizedGender = (genderValue) => {
+    if (!genderValue) return '';
+    const upper = genderValue.toUpperCase();
+    if (upper.startsWith('M')) return 'M';
+    if (upper.startsWith('F')) return 'F';
+    return '';
+  };
+
   const { 
     data: currentEmployees, 
     searchTerm, 
@@ -224,6 +232,7 @@ const Employees = ({ user }) => {
                     setFormData({ 
                         firstName: '', lastName: '', 
                         identificationNumber: '', birthDate: '',
+                        gender: '',
                         storeId: stores[0]?.id || '', 
                         profileId: profiles[0]?.id || '',
                         jornadaId: jornadas[0]?.id || '',
@@ -284,10 +293,10 @@ const Employees = ({ user }) => {
                         borderRadius: '8px', 
                         fontSize: '0.75rem', 
                         fontWeight: '700',
-                        background: emp.gender === 'F' ? '#fdf2f8' : (emp.gender === 'M' ? '#f0f9ff' : activeColors.border),
-                        color: emp.gender === 'F' ? '#db2777' : (emp.gender === 'M' ? '#0284c7' : activeColors.textMuted)
+                        background: getNormalizedGender(emp.gender) === 'F' ? '#fdf2f8' : (getNormalizedGender(emp.gender) === 'M' ? '#f0f9ff' : activeColors.border),
+                        color: getNormalizedGender(emp.gender) === 'F' ? '#db2777' : (getNormalizedGender(emp.gender) === 'M' ? '#0284c7' : activeColors.textMuted)
                     }}>
-                      {emp.gender === 'F' ? 'Femenino' : (emp.gender === 'M' ? 'Masculino' : 'N/A')}
+                      {getNormalizedGender(emp.gender) === 'F' ? 'Femenino' : (getNormalizedGender(emp.gender) === 'M' ? 'Masculino' : 'N/A')}
                     </span>
                   </td>
                   <td style={{ padding: '20px 24px' }}>
@@ -340,6 +349,7 @@ const Employees = ({ user }) => {
                           setCurrentEmployee(emp); 
                           setFormData({ 
                             ...emp, 
+                            gender: getNormalizedGender(emp.gender),
                             dailySalary: emp.dailySalary || 0,
                             pendingVacationDays: emp.pendingVacationDays || 0,
                             mustChangePassword: false 
