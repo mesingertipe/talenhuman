@@ -114,12 +114,6 @@ public class IntegrationController : ControllerBase
                 await _context.SaveChangesAsync();
             }
 
-            if (profile == null)
-            {
-                results.Failed.Add(new { dto.IdentificationNumber, Error = "Profile not found or could not be created" });
-                continue;
-            }
-
             var employee = await _context.Employees
                 .IgnoreQueryFilters()
                 .FirstOrDefaultAsync(e => e.CompanyId == tenantId && e.IdentificationNumber == dto.IdentificationNumber);
@@ -140,7 +134,7 @@ public class IntegrationController : ControllerBase
                     LastName = dto.LastName,
                     Email = dto.Email,
                     StoreId = store.Id,
-                    ProfileId = profile.Id,
+                    ProfileId = profile?.Id ?? _context.Profiles.FirstOrDefault()?.Id ?? Guid.Empty,
                     JornadaId = jornada?.Id,
                     DateOfEntry = dto.DateOfEntry ?? DateTime.UtcNow,
                     BirthDate = dto.BirthDate,
@@ -184,7 +178,12 @@ public class IntegrationController : ControllerBase
                 employee.Email = dto.Email;
                 employee.BirthDate = dto.BirthDate;
                 employee.StoreId = store.Id;
-                employee.ProfileId = profile.Id;
+                
+                if (profile != null)
+                {
+                    employee.ProfileId = profile.Id;
+                }
+                
                 employee.DailySalary = dto.DailySalary;
                 employee.IsActive = dto.IsActive;
                 employee.DateOfTermination = dto.DateOfTermination;
