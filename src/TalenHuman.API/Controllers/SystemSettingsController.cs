@@ -36,7 +36,7 @@ public class SystemSettingsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> SaveSetting(SaveSettingDto dto)
     {
-        await _settingsService.SetSettingAsync(dto.Key, dto.Value, dto.Group, dto.Description);
+        await _settingsService.SetSettingAsync(dto.Key, dto.Value, dto.Group, dto.Description, isGlobal: true);
         return Ok();
     }
 
@@ -45,7 +45,7 @@ public class SystemSettingsController : ControllerBase
     {
         foreach (var s in settings)
         {
-            await _settingsService.SetSettingAsync(s.Key, s.Value, s.Group, s.Description);
+            await _settingsService.SetSettingAsync(s.Key, s.Value, s.Group, s.Description, isGlobal: true);
         }
         return Ok();
     }

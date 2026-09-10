@@ -55,17 +55,17 @@ public class SystemSettingsService : ISystemSettingsService
         }
     }
 
-    public async Task SetSettingAsync(string key, string value, string group = "General", string? description = null)
+    public async Task SetSettingAsync(string key, string value, string group = "General", string? description = null, bool isGlobal = false)
     {
-        var prefixedKey = GetPrefixedKey(key);
+        var targetKey = isGlobal ? key : GetPrefixedKey(key);
         var setting = await _context.SystemSettings
-            .FirstOrDefaultAsync(s => s.Key == prefixedKey);
+            .FirstOrDefaultAsync(s => s.Key == targetKey);
 
         if (setting == null)
         {
             setting = new SystemSetting
             {
-                Key = prefixedKey,
+                Key = targetKey,
                 Value = value,
                 Group = group,
                 Description = description
@@ -77,6 +77,18 @@ public class SystemSettingsService : ISystemSettingsService
             setting.Value = value;
             if (!string.IsNullOrEmpty(description)) setting.Description = description;
             setting.Group = group;
+        }
+
+        if (isGlobal)
+        {
+            // Borrar cualquier override específico por tenant para garantizar consistencia global
+            var overrides = await _context.SystemSettings
+                .Where(s => s.Key.EndsWith($"_{key}"))
+                .ToListAsync();
+            if (overrides.Any())
+            {
+                _context.SystemSettings.RemoveRange(overrides);
+            }
         }
 
         await _context.SaveChangesAsync(default);
