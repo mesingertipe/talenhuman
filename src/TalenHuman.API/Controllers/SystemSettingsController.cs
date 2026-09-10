@@ -55,11 +55,14 @@ public class SystemSettingsController : ControllerBase
     {
         try
         {
+            if (string.IsNullOrEmpty(req.Endpoint) || string.IsNullOrEmpty(req.AccessKey) || string.IsNullOrEmpty(req.SecretKey))
+                return BadRequest(new { success = false, message = "Faltan datos requeridos (Endpoint, Access Key, Secret Key)." });
+
             var config = new Amazon.S3.AmazonS3Config { ServiceURL = req.Endpoint };
             using var client = new Amazon.S3.AmazonS3Client(req.AccessKey, req.SecretKey, config);
             var response = await client.ListObjectsV2Async(new Amazon.S3.Model.ListObjectsV2Request
             {
-                BucketName = req.BucketName,
+                BucketName = req.BucketName ?? "",
                 MaxKeys = 1
             });
             return Ok(new { success = true, message = "Conexión S3 establecida. Bucket validado con éxito." });
@@ -75,6 +78,9 @@ public class SystemSettingsController : ControllerBase
     {
         try
         {
+            if (string.IsNullOrEmpty(req.ResendApiKey) || string.IsNullOrEmpty(req.FromEmail))
+                return BadRequest(new { success = false, message = "Faltan datos requeridos (API Key, From Email)." });
+
             var currentUserEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
             if (string.IsNullOrEmpty(currentUserEmail)) return BadRequest(new { success = false, message = "No se pudo obtener el correo del usuario actual para enviar la prueba." });
 
@@ -135,6 +141,9 @@ public class SystemSettingsController : ControllerBase
     {
         try
         {
+            if (string.IsNullOrEmpty(req.ApiKey))
+                return BadRequest(new { success = false, message = "Falta la clave API de Gemini." });
+
             using var httpClient = new HttpClient();
             var requestBody = new
             {
@@ -144,7 +153,8 @@ public class SystemSettingsController : ControllerBase
             var json = System.Text.Json.JsonSerializer.Serialize(requestBody);
             var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
-            var response = await httpClient.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/{req.Model}:generateContent?key={req.ApiKey}", content);
+            string modelToUse = !string.IsNullOrEmpty(req.Model) ? req.Model : "gemini-1.5-flash";
+            var response = await httpClient.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/{modelToUse}:generateContent?key={req.ApiKey}", content);
             
             if (!response.IsSuccessStatusCode) 
             {
