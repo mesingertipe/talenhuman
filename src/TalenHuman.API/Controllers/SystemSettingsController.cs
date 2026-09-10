@@ -50,6 +50,18 @@ public class SystemSettingsController : ControllerBase
         return Ok();
     }
 
+    private class CustomHttpClientFactory : Amazon.Runtime.HttpClientFactory
+    {
+        public override HttpClient CreateHttpClient(Amazon.Runtime.IClientConfig config)
+        {
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+            };
+            return new HttpClient(handler);
+        }
+    }
+
     [HttpPost("test/storage")]
     public async Task<IActionResult> TestStorage([FromBody] TalenHuman.API.Models.TestStorageRequest req)
     {
@@ -58,7 +70,11 @@ public class SystemSettingsController : ControllerBase
             if (string.IsNullOrEmpty(req.Endpoint) || string.IsNullOrEmpty(req.AccessKey) || string.IsNullOrEmpty(req.SecretKey))
                 return BadRequest(new { success = false, message = "Faltan datos requeridos (Endpoint, Access Key, Secret Key)." });
 
-            var config = new Amazon.S3.AmazonS3Config { ServiceURL = req.Endpoint };
+            var config = new Amazon.S3.AmazonS3Config 
+            { 
+                ServiceURL = req.Endpoint,
+                HttpClientFactory = new CustomHttpClientFactory()
+            };
             using var client = new Amazon.S3.AmazonS3Client(req.AccessKey, req.SecretKey, config);
             var response = await client.ListObjectsV2Async(new Amazon.S3.Model.ListObjectsV2Request
             {
@@ -84,7 +100,8 @@ public class SystemSettingsController : ControllerBase
             var currentUserEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
             if (string.IsNullOrEmpty(currentUserEmail)) return BadRequest(new { success = false, message = "No se pudo obtener el correo del usuario actual para enviar la prueba." });
 
-            using var httpClient = new HttpClient();
+            var handler = new HttpClientHandler { ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true };
+            using var httpClient = new HttpClient(handler);
             httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", req.ResendApiKey);
 
             var emailData = new
@@ -144,7 +161,8 @@ public class SystemSettingsController : ControllerBase
             if (string.IsNullOrEmpty(req.ApiKey))
                 return BadRequest(new { success = false, message = "Falta la clave API de Gemini." });
 
-            using var httpClient = new HttpClient();
+            var handler = new HttpClientHandler { ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true };
+            using var httpClient = new HttpClient(handler);
             var requestBody = new
             {
                 contents = new[] { new { role = "user", parts = new[] { new { text = "Responde únicamente con la palabra 'OK'." } } } }
