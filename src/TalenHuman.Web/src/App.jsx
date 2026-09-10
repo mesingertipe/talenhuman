@@ -26,6 +26,7 @@ import Districts from './pages/Core/Districts';
 import ShiftApproval from './pages/Scheduling/ShiftApproval';
 import ModulePermissions from './pages/SuperAdmin/ModulePermissions';
 import SystemSettings from './pages/SuperAdmin/SystemSettings';
+import IntegrationTriggers from './pages/SuperAdmin/IntegrationTriggers';
 import NewsTemplateDesigner from './pages/SuperAdmin/NewsTemplateDesigner';
 import AuditLogs from './pages/Core/AuditLogs';
 import CommunicationsCenter from './pages/Admin/CommunicationsCenter';
@@ -394,6 +395,7 @@ function App() {
         case 'Reglas Predictivas': return <PredictiveRules user={user} />;
         case 'Días Especiales': return <SpecialDates user={user} />;
         case 'Configuración Sistema': return <SystemSettings user={user} />;
+        case 'Triggers de Integración': return <IntegrationTriggers user={user} />;
         case 'Auditoría': return <AuditLogs user={user} />;
         case 'Centro de Ayuda': return <HelpCenter user={user} />;
         case 'Mesa de Ayuda': return <HelpDesk user={user} />;

@@ -59,3 +59,30 @@ public enum IntegrationProvider
     HumanCoreExternal,
     CustomPost
 }
+
+public class IntegrationTrigger : BaseEntity, IMultitenant
+{
+    public string Name { get; set; } = string.Empty;
+    public string TargetUrl { get; set; } = string.Empty;
+    public string CronExpression { get; set; } = "0 * * * *"; // Hourly default
+    public bool IsActive { get; set; } = true;
+    
+    public Guid CompanyId { get; set; }
+    public Company? Company { get; set; }
+
+    public ICollection<IntegrationTriggerLog> Logs { get; set; } = new List<IntegrationTriggerLog>();
+}
+
+public class IntegrationTriggerLog : BaseEntity, IMultitenant
+{
+    public Guid IntegrationTriggerId { get; set; }
+    public IntegrationTrigger? IntegrationTrigger { get; set; }
+    
+    public DateTime ExecutedAt { get; set; } = DateTime.UtcNow;
+    public bool IsSuccess { get; set; }
+    public int StatusCode { get; set; }
+    public string? ResponseBody { get; set; }
+    
+    public Guid CompanyId { get; set; }
+    public Company? Company { get; set; }
+}

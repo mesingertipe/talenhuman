@@ -42,7 +42,11 @@ public static class DependencyInjection
         services.AddHostedService<Services.AttendanceSchedulerService>();
         services.AddHostedService<Services.PredictiveHolidaysWorker>();
         services.AddHostedService<Services.AIChatCleanupWorker>();
+        services.AddHostedService<Services.IntegrationTriggerWorker>();
         services.AddHttpClient();
+        services.AddHttpClient("IntegrationTriggerClient", client => {
+            client.Timeout = TimeSpan.FromMinutes(5); // Long timeout for ETLs
+        });
         services.AddHttpContextAccessor();
 
         return services;

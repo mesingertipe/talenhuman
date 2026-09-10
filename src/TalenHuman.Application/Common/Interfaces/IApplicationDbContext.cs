@@ -24,6 +24,8 @@ public interface IApplicationDbContext
     DbSet<SystemSetting> SystemSettings { get; }
     DbSet<ApiKey> ApiKeys { get; }
     DbSet<ExternalApiConfig> ExternalApiConfigs { get; }
+    DbSet<IntegrationTrigger> IntegrationTriggers { get; }
+    DbSet<IntegrationTriggerLog> IntegrationTriggerLogs { get; }
     DbSet<User> Users { get; }
     DbSet<Role> Roles { get; }
     DbSet<SalesData> SalesData { get; }
@@ -51,5 +53,5 @@ public interface IApplicationDbContext
 
     DbSet<TEntity> Set<TEntity>() where TEntity : class;
 
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken);
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

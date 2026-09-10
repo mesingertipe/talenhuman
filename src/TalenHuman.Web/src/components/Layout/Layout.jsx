@@ -83,6 +83,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed, isPinned, setIsPinned, activePag
         { icon: <ShieldAlert size={20} />, label: 'Auditoría', sub: 'AUDIT' },
         { icon: <Building2 size={20} />, label: 'Empresas', sub: 'COMPANIES' },
         { icon: <Cpu size={20} />, label: 'Configuración Sistema', sub: 'SYSTEM_CONFIG' },
+        { icon: <Activity size={20} />, label: 'Triggers de Integración', sub: 'INTEGRATION_TRIGGERS' },
       ]
     },
     {

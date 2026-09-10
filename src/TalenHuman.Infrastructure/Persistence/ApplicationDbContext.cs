@@ -40,6 +40,8 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
     public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
     public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
     public DbSet<ExternalApiConfig> ExternalApiConfigs => Set<ExternalApiConfig>();
+    public DbSet<IntegrationTrigger> IntegrationTriggers => Set<IntegrationTrigger>();
+    public DbSet<IntegrationTriggerLog> IntegrationTriggerLogs => Set<IntegrationTriggerLog>();
     public DbSet<SalesData> SalesData => Set<SalesData>();
     public DbSet<SalesChannel> SalesChannels => Set<SalesChannel>();
     public DbSet<SalesTimeBand> SalesTimeBands => Set<SalesTimeBand>();
@@ -95,6 +97,8 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<SupervisorStore>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<ApiKey>().HasQueryFilter(a => a.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<ExternalApiConfig>().HasQueryFilter(e => e.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<IntegrationTrigger>().HasQueryFilter(i => i.CompanyId == TenantId || TenantId == Guid.Empty);
+        builder.Entity<IntegrationTriggerLog>().HasQueryFilter(i => i.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<SalesData>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<SalesChannel>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);
         builder.Entity<SalesTimeBand>().HasQueryFilter(s => s.CompanyId == TenantId || TenantId == Guid.Empty);
@@ -210,6 +214,8 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, Guid>, IApplic
         builder.Entity<AuditLog>().HasIndex(a => new { a.CompanyId, a.CreatedAt });
         builder.Entity<AuditLog>().HasIndex(a => new { a.UserId, a.CreatedAt });
         builder.Entity<SyncLog>().HasIndex(s => new { s.CompanyId, s.CreatedAt });
+        builder.Entity<IntegrationTrigger>().HasIndex(i => new { i.CompanyId, i.IsActive });
+        builder.Entity<IntegrationTriggerLog>().HasIndex(l => new { l.CompanyId, l.IntegrationTriggerId, l.ExecutedAt });
         builder.Entity<SalesData>().HasIndex(s => new { s.CompanyId, s.StoreId, s.RecordDate, s.Canal }).IsUnique();
 
         builder.Entity<SalesData>()
