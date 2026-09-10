@@ -46,7 +46,7 @@ const SystemSettings = () => {
 
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });
-        setTimeout(() => setToast({ ...toast, show: false }), 3000);
+        setTimeout(() => setToast(prev => ({ ...prev, show: false })), 4000);
     };
 
     const handleChange = (key, value) => {
@@ -109,9 +109,12 @@ const SystemSettings = () => {
             }
 
             const res = await api.post(endpoint, payload);
+            console.log("Test Success:", res.data);
             showToast(res.data.message || 'Conexión Exitosa');
         } catch (err) {
-            showToast(err.response?.data?.message || 'Error de conexión', 'error');
+            console.error("Test Error:", err);
+            const errMsg = err.response?.data?.message || err.message || 'Error de conexión';
+            showToast(errMsg, 'error');
         } finally {
             setTesting(null);
         }
