@@ -23,6 +23,22 @@ public class SystemSettingsService : ISystemSettingsService
         return $"{tenantId}_{key}";
     }
 
+    private bool IsTenantKey(string key, out string cleanKey)
+    {
+        cleanKey = key;
+        var firstUnderscore = key.IndexOf('_');
+        if (firstUnderscore > 0)
+        {
+            var prefix = key.Substring(0, firstUnderscore);
+            if (Guid.TryParse(prefix, out _))
+            {
+                cleanKey = key.Substring(firstUnderscore + 1);
+                return true;
+            }
+        }
+        return false;
+    }
+
     public async Task<string?> GetSettingAsync(string key)
     {
         var prefixedKey = GetPrefixedKey(key);
@@ -104,11 +120,17 @@ public class SystemSettingsService : ISystemSettingsService
 
         // Follow the same priority logic as GetMergedSettingsAsync
         var result = allGroupSettings
-            .Where(s => !s.Key.Contains('_') || (tenantId != Guid.Empty && s.Key.StartsWith($"{tenantId}_")))
-            .Select(s => new {
-                CleanKey = s.Key.Contains('_') ? s.Key.Split('_', 2)[1] : s.Key,
-                IsTenantSpecific = s.Key.Contains('_'),
-                Value = s.Value
+            .Where(s => {
+                var isTenant = IsTenantKey(s.Key, out _);
+                return !isTenant || (tenantId != Guid.Empty && s.Key.StartsWith($"{tenantId}_"));
+            })
+            .Select(s => {
+                var isTenant = IsTenantKey(s.Key, out string cleanKey);
+                return new {
+                    CleanKey = cleanKey,
+                    IsTenantSpecific = isTenant,
+                    Value = s.Value
+                };
             })
             .GroupBy(x => x.CleanKey)
             .Select(g => g.OrderByDescending(x => x.IsTenantSpecific).First())
@@ -123,17 +145,20 @@ public class SystemSettingsService : ISystemSettingsService
         var allSettings = await _context.SystemSettings.AsNoTracking().ToListAsync();
         
         // 1. Identify relevant settings (global or current tenant)
-        var filteredSettings = allSettings.Where(s => 
-            !s.Key.Contains('_') || 
-            (tenantId != Guid.Empty && s.Key.StartsWith($"{tenantId}_"))
-        ).ToList();
+        var filteredSettings = allSettings.Where(s => {
+            var isTenant = IsTenantKey(s.Key, out _);
+            return !isTenant || (tenantId != Guid.Empty && s.Key.StartsWith($"{tenantId}_"));
+        }).ToList();
 
         // 2. Group by "Clean Key" to resolve priority
         var mergedResult = filteredSettings
-            .Select(s => new { 
-                CleanKey = s.Key.Contains('_') ? s.Key.Split('_', 2)[1] : s.Key,
-                IsTenantSpecific = s.Key.Contains('_'),
-                Original = s
+            .Select(s => {
+                var isTenant = IsTenantKey(s.Key, out string cleanKey);
+                return new { 
+                    CleanKey = cleanKey,
+                    IsTenantSpecific = isTenant,
+                    Original = s
+                };
             })
             .GroupBy(x => x.CleanKey)
             .Select(g => {
