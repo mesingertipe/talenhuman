@@ -13,6 +13,7 @@ const SystemSettings = () => {
     const [settings, setSettings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [testing, setTesting] = useState(null);
     const [activeTab, setActiveTab] = useState('infrastructure'); // 'infrastructure', 'email', 'security', 'integrations'
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     const { isDarkMode } = useTheme();
@@ -62,6 +63,57 @@ const SystemSettings = () => {
             showToast("Error al guardar cambios", "error");
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleTest = async (group) => {
+        setTesting(group);
+        try {
+            const getVal = (key) => settings.find(s => s.key === key)?.value || '';
+            let endpoint = '';
+            let payload = {};
+
+            switch (group) {
+                case 'Storage':
+                    endpoint = '/SystemSettings/test/storage';
+                    payload = {
+                        bucketName: getVal('DO_BUCKET_NAME'),
+                        endpoint: getVal('DO_ENDPOINT'),
+                        accessKey: getVal('DO_ACCESS_KEY'),
+                        secretKey: getVal('DO_SECRET_KEY')
+                    };
+                    break;
+                case 'Email':
+                    endpoint = '/SystemSettings/test/email';
+                    payload = {
+                        resendApiKey: getVal('RESEND_API_KEY'),
+                        fromEmail: getVal('EMAIL_FROM')
+                    };
+                    break;
+                case 'Firebase':
+                    endpoint = '/SystemSettings/test/firebase';
+                    payload = {
+                        serviceAccountJson: getVal('FIREBASE_S_ACCOUNT')
+                    };
+                    break;
+                case 'AI':
+                    endpoint = '/SystemSettings/test/ai';
+                    payload = {
+                        apiKey: getVal('GeminiApiKey'),
+                        model: getVal('GeminiModel') || 'gemini-1.5-flash'
+                    };
+                    break;
+                default:
+                    setTesting(null);
+                    return;
+            }
+
+            const res = await api.post(endpoint, payload);
+            showToast(res.data.message || 'Conexión Exitosa');
+        } catch (err) {
+            showToast(err.response?.data?.message || 'Error de conexión', 'error');
+        } finally {
+            setTesting(null);
         }
     };
 
@@ -200,13 +252,22 @@ const SystemSettings = () => {
                                             <p className="text-xs text-slate-400 font-bold">Infraestructura de Almacenamiento S3 Privada</p>
                                         </div>
                                     </div>
-                                    <button 
-                                        onClick={() => handleSave('Storage')}
-                                        disabled={saving}
-                                        className="flex items-center gap-3 px-8 py-3.5 bg-indigo-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-100 disabled:opacity-50"
-                                    >
-                                        {saving ? <RefreshCw className="animate-spin" size={16} /> : <><Save size={16} /> Aplicar Cambios</>}
-                                    </button>
+                                    <div className="flex gap-3">
+                                        <button 
+                                            onClick={() => handleTest('Storage')}
+                                            disabled={testing === 'Storage' || saving}
+                                            className="flex items-center gap-2 px-6 py-3.5 border-2 border-indigo-100 text-indigo-600 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-indigo-50 hover:border-indigo-200 transition-all disabled:opacity-50"
+                                        >
+                                            {testing === 'Storage' ? <RefreshCw className="animate-spin" size={16} /> : <Activity size={16} />} Probar Conexión
+                                        </button>
+                                        <button 
+                                            onClick={() => handleSave('Storage')}
+                                            disabled={saving || testing === 'Storage'}
+                                            className="flex items-center gap-3 px-8 py-3.5 bg-indigo-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-100 disabled:opacity-50"
+                                        >
+                                            {saving ? <RefreshCw className="animate-spin" size={16} /> : <><Save size={16} /> Aplicar Cambios</>}
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
@@ -248,13 +309,22 @@ const SystemSettings = () => {
                                             <p className="text-xs text-slate-400 font-bold">Motor de Notificaciones y SMTP para Empresas</p>
                                         </div>
                                     </div>
-                                    <button 
-                                        onClick={() => handleSave('Email')}
-                                        disabled={saving}
-                                        className="flex items-center gap-3 px-8 py-3.5 bg-indigo-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-100 disabled:opacity-50"
-                                    >
-                                        {saving ? <RefreshCw className="animate-spin" size={16} /> : <><Save size={16} /> Validar & Guardar</>}
-                                    </button>
+                                    <div className="flex gap-3">
+                                        <button 
+                                            onClick={() => handleTest('Email')}
+                                            disabled={testing === 'Email' || saving}
+                                            className="flex items-center gap-2 px-6 py-3.5 border-2 border-emerald-100 text-emerald-600 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-emerald-50 hover:border-emerald-200 transition-all disabled:opacity-50"
+                                        >
+                                            {testing === 'Email' ? <RefreshCw className="animate-spin" size={16} /> : <Activity size={16} />} Probar Conexión
+                                        </button>
+                                        <button 
+                                            onClick={() => handleSave('Email')}
+                                            disabled={saving || testing === 'Email'}
+                                            className="flex items-center gap-3 px-8 py-3.5 bg-indigo-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-100 disabled:opacity-50"
+                                        >
+                                            {saving ? <RefreshCw className="animate-spin" size={16} /> : <><Save size={16} /> Validar & Guardar</>}
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
@@ -294,13 +364,22 @@ const SystemSettings = () => {
                                             <p className="text-xs text-slate-400 font-bold">Push Notifications & Biometrics Core</p>
                                         </div>
                                     </div>
-                                    <button 
-                                        onClick={() => handleSave('Firebase')}
-                                        disabled={saving}
-                                        className="flex items-center gap-3 px-8 py-3.5 bg-indigo-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-100 disabled:opacity-50"
-                                    >
-                                        {saving ? <RefreshCw className="animate-spin" size={16} /> : <><Save size={16} /> Guardar Configuración</>}
-                                    </button>
+                                    <div className="flex gap-3">
+                                        <button 
+                                            onClick={() => handleTest('Firebase')}
+                                            disabled={testing === 'Firebase' || saving}
+                                            className="flex items-center gap-2 px-6 py-3.5 border-2 border-orange-100 text-orange-600 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-orange-50 hover:border-orange-200 transition-all disabled:opacity-50"
+                                        >
+                                            {testing === 'Firebase' ? <RefreshCw className="animate-spin" size={16} /> : <Activity size={16} />} Probar Conexión
+                                        </button>
+                                        <button 
+                                            onClick={() => handleSave('Firebase')}
+                                            disabled={saving || testing === 'Firebase'}
+                                            className="flex items-center gap-3 px-8 py-3.5 bg-indigo-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-100 disabled:opacity-50"
+                                        >
+                                            {saving ? <RefreshCw className="animate-spin" size={16} /> : <><Save size={16} /> Guardar Configuración</>}
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 mb-10">
@@ -424,13 +503,22 @@ const SystemSettings = () => {
                                             <p className="text-xs text-slate-400 font-bold">Configuración del motor de Inteligencia Artificial</p>
                                         </div>
                                     </div>
-                                    <button 
-                                        onClick={() => handleSave('AI')}
-                                        disabled={saving}
-                                        className="flex items-center gap-3 px-8 py-3.5 bg-indigo-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-100 disabled:opacity-50"
-                                    >
-                                        {saving ? <RefreshCw className="animate-spin" size={16} /> : <><Save size={16} /> Guardar Cambios</>}
-                                    </button>
+                                    <div className="flex gap-3">
+                                        <button 
+                                            onClick={() => handleTest('AI')}
+                                            disabled={testing === 'AI' || saving}
+                                            className="flex items-center gap-2 px-6 py-3.5 border-2 border-purple-100 text-purple-600 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-purple-50 hover:border-purple-200 transition-all disabled:opacity-50"
+                                        >
+                                            {testing === 'AI' ? <RefreshCw className="animate-spin" size={16} /> : <Activity size={16} />} Probar Conexión
+                                        </button>
+                                        <button 
+                                            onClick={() => handleSave('AI')}
+                                            disabled={saving || testing === 'AI'}
+                                            className="flex items-center gap-3 px-8 py-3.5 bg-indigo-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-100 disabled:opacity-50"
+                                        >
+                                            {saving ? <RefreshCw className="animate-spin" size={16} /> : <><Save size={16} /> Guardar Cambios</>}
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
