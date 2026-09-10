@@ -200,6 +200,15 @@ public class IntegrationController : ControllerBase
                 {
                     employee.JornadaId = jornada.Id;
                 }
+                else if (employee.JornadaId == null || employee.JornadaId == Guid.Empty)
+                {
+                    // Auto-reparar jornada si el empleado no tiene una asignada
+                    var defaultJornadaId = await _context.Jornadas.Select(j => (Guid?)j.Id).FirstOrDefaultAsync();
+                    if (defaultJornadaId != null)
+                    {
+                        employee.JornadaId = defaultJornadaId;
+                    }
+                }
                 
                 // If becomes inactive, deactivate user access
                 if (!employee.IsActive && employee.UserId.HasValue)
