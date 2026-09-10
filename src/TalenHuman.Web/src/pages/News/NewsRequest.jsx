@@ -8,6 +8,7 @@ import api from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import HelpIcon from '../../components/Shared/HelpIcon';
 import TalenHumanDatePicker from '../../components/Shared/TalenHumanDatePicker';
+import SearchableSelect from '../../components/Shared/SearchableSelect';
 
 const calculateVacationDays = (start, end, mode) => {
     if (!start || !end) return 0;
