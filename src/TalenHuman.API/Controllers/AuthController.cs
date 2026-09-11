@@ -52,6 +52,31 @@ public class AuthController : ControllerBase
     {
         try 
         {
+        if (!request.Email.Contains('@'))
+        {
+            var employeesWithCode = await _context.Employees
+                .IgnoreQueryFilters()
+                .Include(e => e.Company)
+                .Where(e => e.IdentificationNumber == request.Email && e.UserId != null)
+                .ToListAsync();
+
+            if (employeesWithCode.Count > 1)
+            {
+                return StatusCode(409, new { 
+                    status = "multiple_tenants_found", 
+                    message = $"Coloque su correo completo (ej: {request.Email}@marca.talenhuman.com) o comuníquese con el admin" 
+                });
+            }
+            
+            if (employeesWithCode.Count == 1)
+            {
+                var emp = employeesWithCode.First();
+                var alias = !string.IsNullOrWhiteSpace(emp.Company?.Alias) ? emp.Company.Alias : "talenhuman.local";
+                var domain = alias.Contains(".") ? alias : $"{alias}.talenhuman.com";
+                request.Email = $"{emp.IdentificationNumber}@{domain}";
+            }
+        }
+
         // Search by Email or Username (IdentificationNumber)
         var user = await _userManager.Users
             .IgnoreQueryFilters()
@@ -494,9 +519,13 @@ public class AuthController : ControllerBase
         {
             try 
             {
-                var generatedEmail = $"{emp.IdentificationNumber}@talenhuman.local";
+                var company = await _context.Companies.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == emp.CompanyId);
+                var alias = !string.IsNullOrWhiteSpace(company?.Alias) ? company.Alias : "talenhuman.local";
+                var domain = alias.Contains(".") ? alias : $"{alias}.talenhuman.com";
+                
+                var generatedEmail = $"{emp.IdentificationNumber}@{domain}";
                 var (succeeded, userId) = await _identityService.CreateUserAsync(
-                    emp.IdentificationNumber,
+                    generatedEmail, // Use generated email as UserName to guarantee uniqueness
                     generatedEmail,
                     emp.IdentificationNumber,
                     $"{emp.FirstName} {emp.LastName}",
@@ -529,6 +558,41 @@ public class AuthController : ControllerBase
             message = $"Proceso completado. {created} usuarios creados.",
             errors = errors 
         });
+    }
+
+    [HttpPost("migrate-employee-usernames")]
+    [Authorize(Roles = "SuperAdmin")]
+    public async Task<IActionResult> MigrateEmployeeUserNames()
+    {
+        var employeesWithUser = await _context.Employees
+            .IgnoreQueryFilters()
+            .Include(e => e.Company)
+            .Include(e => e.User)
+            .Where(e => e.UserId != null && e.User != null && !e.User.UserName!.Contains("@"))
+            .ToListAsync();
+
+        int updated = 0;
+        foreach (var emp in employeesWithUser)
+        {
+            var alias = !string.IsNullOrWhiteSpace(emp.Company?.Alias) ? emp.Company.Alias : "talenhuman.local";
+            var domain = alias.Contains(".") ? alias : $"{alias}.talenhuman.com";
+            var correctEmail = $"{emp.IdentificationNumber}@{domain}";
+
+            var user = emp.User!;
+            user.UserName = correctEmail;
+            user.NormalizedUserName = correctEmail.ToUpper();
+            user.Email = correctEmail;
+            user.NormalizedEmail = correctEmail.ToUpper();
+            
+            updated++;
+        }
+
+        if (updated > 0)
+        {
+            await _context.SaveChangesAsync();
+        }
+
+        return Ok(new { message = $"Se migraron los UserName de {updated} empleados exitosamente." });
     }
 
     [HttpPost("self-service-reset")]

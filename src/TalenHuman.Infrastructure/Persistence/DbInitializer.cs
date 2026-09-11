@@ -59,12 +59,14 @@ public static class DbInitializer
         {
             var company1 = new Company { 
                 Name = "TalenHuman Corp", 
+                Alias = "talenhuman",
                 Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
                 CountryCode = "CO",
                 TimeZoneId = "SA Pacific Standard Time"
             };
             var company2 = new Company { 
                 Name = "RestoBar Group", 
+                Alias = "restobar",
                 Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
                 CountryCode = "MX",
                 TimeZoneId = "Central Standard Time (Mexico)"

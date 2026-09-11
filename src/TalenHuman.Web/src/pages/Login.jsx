@@ -48,7 +48,12 @@ const Login = ({ onLogin, onForgotPassword, onSelfServiceReset, onBackToLanding,
       
       onLogin(res.data.user, res.data.token);
     } catch (err) {
-      setError('Credenciales inválidas. Por favor intenta de nuevo.');
+      if (err.response?.status === 409 && err.response?.data?.status === 'multiple_tenants_found') {
+        setError(err.response.data.message);
+        setEmail('');
+      } else {
+        setError('Credenciales inválidas. Por favor intenta de nuevo.');
+      }
       console.error(err);
     } finally {
       setLoading(false);
