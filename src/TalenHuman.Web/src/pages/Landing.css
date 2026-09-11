@@ -61,10 +61,16 @@
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+@media (min-width: 768px) {
+  .landing-nav-container {
+    padding: 0 2rem;
+  }
 }
 
 .landing-nav-brand {
@@ -165,12 +171,18 @@
   padding-top: 80px;
 }
 
-/* Hero Section */
 .landing-hero {
-  padding: 6rem 2rem 5rem 2rem;
+  padding: 6rem 1rem 4rem 1rem;
   background: linear-gradient(180deg, var(--landing-bg-light) 0%, var(--landing-bg-card) 100%);
   display: flex;
   justify-content: center;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .landing-hero {
+    padding: 6rem 2rem 5rem 2rem;
+  }
 }
 
 .landing-hero-container {
@@ -334,9 +346,15 @@
   max-width: 1280px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2.5rem;
+  grid-template-columns: 1fr;
+  gap: 2rem;
   text-align: center;
+}
+
+@media (min-width: 640px) {
+  .landing-stats-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (min-width: 768px) {
@@ -363,10 +381,17 @@
 
 /* Features Grid */
 .landing-features-section {
-  padding: 7rem 2rem;
+  padding: 5rem 1rem;
   background: var(--landing-bg-light);
   display: flex;
   justify-content: center;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .landing-features-section {
+    padding: 7rem 2rem;
+  }
 }
 
 .landing-features-container {
