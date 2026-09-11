@@ -190,14 +190,14 @@ const IntegrationTriggers = ({ user }) => {
           </div>
         ) : (
           <div className="overflow-x-auto w-full custom-scrollbar">
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px', tableLayout: 'fixed' }}>
               <thead>
                 <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
-                  <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>Tarea</th>
-                  <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>URL Destino</th>
-                  <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>Frecuencia (Cron)</th>
-                  <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>Estado</th>
-                  <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textAlign: 'right' }}>Acciones</th>
+                  <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', width: '25%' }}>Tarea</th>
+                  <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', width: '30%' }}>URL Destino</th>
+                  <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', width: '20%' }}>Frecuencia (Cron)</th>
+                  <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', width: '10%' }}>Estado</th>
+                  <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textAlign: 'right', width: '15%' }}>Acciones</th>
                 </tr>
               </thead>
             <tbody>
