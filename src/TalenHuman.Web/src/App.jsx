@@ -357,9 +357,15 @@ function App() {
     }
 
     const renderPage = () => {
+      // 🔒 Mandatory Password Change Interceptor
+      let activeView = currentPage;
+      if (user?.mustChangePassword) {
+          activeView = 'ResetPassword';
+      }
+
       // 📱 MOBILE PAGES: Only for Employees on Mobile
       if (isMobileDevice && isEmployee) {
-        switch(currentPage) {
+        switch(activeView) {
           case 'Marcaciones': return <MobileAttendance user={user} isMobile theme={theme} />;
           case 'Perfil': return <MobileProfile user={user} setPage={setCurrentPage} onLogout={handleLogout} />;
           case 'Solicitudes': return <MobileRequests user={user} theme={theme} />;
@@ -373,7 +379,7 @@ function App() {
       
       // 💻 WEB PAGES: Full Navigation Switch restored for Admins/Employees on PC
       // 🚀 V62.8: PERFECTION SYNC (Matching Sidebar Labels exactly)
-      switch(currentPage) {
+      switch(activeView) {
         case 'Marcaciones': return <Marcaciones user={user} />;
         case 'Configuraciones operativas': return <OperationalSettings user={user} />;
         case 'Monitoreo Asistencia': return <AttendanceMonitoring user={user} />;
@@ -405,6 +411,7 @@ function App() {
         case 'Auditoría': return <AuditLogs user={user} />;
         case 'Centro de Ayuda': return <HelpCenter user={user} />;
         case 'Mesa de Ayuda': return <HelpDesk user={user} />;
+        case 'ResetPassword': return <ResetPassword user={user} theme={theme} setPage={setCurrentPage} />;
         case 'Dashboard':
         default:
           return isEmployee ? <EmployeeDashboard user={user} /> : <Dashboard user={user} />;
