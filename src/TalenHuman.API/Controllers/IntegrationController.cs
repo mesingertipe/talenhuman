@@ -504,6 +504,74 @@ public class IntegrationController : ControllerBase
 
         return Ok(stores);
     }
+
+    [HttpGet("attendances")]
+    public async Task<IActionResult> GetAttendances(
+        [FromQuery] DateTime? startDate,
+        [FromQuery] DateTime? endDate,
+        [FromQuery] string? storeCode,
+        [FromQuery] string? employeeIdNo)
+    {
+        if (!startDate.HasValue || !endDate.HasValue)
+        {
+            return BadRequest(new { Message = "Los parámetros startDate y endDate son obligatorios." });
+        }
+
+        if (endDate.Value < startDate.Value)
+        {
+            return BadRequest(new { Message = "La fecha final (endDate) no puede ser menor a la fecha inicial (startDate)." });
+        }
+
+        if ((endDate.Value - startDate.Value).TotalDays > 31)
+        {
+            return BadRequest(new { Message = "El rango máximo de consulta permitido es de 31 días." });
+        }
+
+        var tenantId = _context.TenantId;
+        
+        var query = _context.Attendances
+            .Include(a => a.Employee)
+            .Include(a => a.Store)
+            .AsNoTracking()
+            .Where(a => a.CompanyId == tenantId && a.ClockIn != null &&
+                        (a.ClockIn >= startDate.Value && a.ClockIn <= endDate.Value.AddDays(1).AddTicks(-1)));
+
+        if (!string.IsNullOrEmpty(storeCode))
+        {
+            query = query.Where(a => a.Store != null && (a.Store.Code == storeCode || a.Store.ExternalId == storeCode));
+        }
+
+        if (!string.IsNullOrEmpty(employeeIdNo))
+        {
+            query = query.Where(a => a.Employee != null && a.Employee.IdentificationNumber == employeeIdNo);
+        }
+
+        var attendances = await query
+            .Select(a => new AttendanceExportDto
+            {
+                AttendanceId = a.Id,
+                ClockIn = a.ClockIn,
+                ClockOut = a.ClockOut,
+                Status = a.Status.ToString(),
+                StatusObservation = a.StatusObservation,
+                Employee = a.Employee != null ? new ShiftEmployeeDto
+                {
+                    IdentificationNumber = a.Employee.IdentificationNumber,
+                    FirstName = a.Employee.FirstName,
+                    LastName = a.Employee.LastName,
+                    Profile = a.Employee.Profile != null ? a.Employee.Profile.Name : string.Empty
+                } : null,
+                Store = a.Store != null ? new ShiftStoreDto
+                {
+                    Code = a.Store.Code,
+                    ExternalId = a.Store.ExternalId,
+                    Name = a.Store.Name
+                } : null
+            })
+            .ToListAsync();
+
+        return Ok(attendances);
+    }
 }
 
 public class StoreSyncDto
@@ -598,6 +666,17 @@ public class NovedadExportDto
     public DateTime FechaInicio { get; set; }
     public DateTime FechaFin { get; set; }
     public string Status { get; set; } = string.Empty;
+    public ShiftEmployeeDto? Employee { get; set; }
+    public ShiftStoreDto? Store { get; set; }
+}
+
+public class AttendanceExportDto
+{
+    public Guid AttendanceId { get; set; }
+    public DateTime? ClockIn { get; set; }
+    public DateTime? ClockOut { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string? StatusObservation { get; set; }
     public ShiftEmployeeDto? Employee { get; set; }
     public ShiftStoreDto? Store { get; set; }
 }
