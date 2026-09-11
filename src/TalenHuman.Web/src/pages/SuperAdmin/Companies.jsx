@@ -27,6 +27,7 @@ const Companies = () => {
   const [formData, setFormData] = useState({ 
     id: '', 
     name: '', 
+    alias: '',
     taxId: '', 
     isActive: true,
     countryCode: 'CO',
@@ -118,7 +119,7 @@ const Companies = () => {
         <button 
           onClick={() => { 
             setFormData({ 
-              id: '', name: '', taxId: '', isActive: true, countryCode: 'CO', timeZoneId: 'SA Pacific Standard Time',
+              id: '', name: '', alias: '', taxId: '', isActive: true, countryCode: 'CO', timeZoneId: 'SA Pacific Standard Time',
               firebaseApiKey: '', firebaseAuthDomain: '', firebaseProjectId: '', firebaseStorageBucket: '',
               firebaseMeasurementId: '', firebaseVapidKey: '',
               privacyPolicyText: '',
@@ -206,7 +207,7 @@ const Companies = () => {
                     <button 
                       onClick={() => { 
                         setFormData({ 
-                          id: c.id, name: c.name, taxId: c.taxId, isActive: c.isActive, countryCode: c.countryCode || 'CO', timeZoneId: c.timeZoneId || 'SA Pacific Standard Time',
+                          id: c.id, name: c.name, alias: c.alias || '', taxId: c.taxId, isActive: c.isActive, countryCode: c.countryCode || 'CO', timeZoneId: c.timeZoneId || 'SA Pacific Standard Time',
                           firebaseMeasurementId: c.firebaseMeasurementId || '', 
                           firebaseVapidKey: c.firebaseVapidKey || '',
                           privacyPolicyText: c.privacyPolicyText || '',
@@ -299,6 +300,19 @@ const Companies = () => {
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
                           className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
                           placeholder="Ej. TalenHuman Corp"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Alias (URL Dominio)</label>
+                      <div className="relative">
+                        <Globe size={18} className="absolute left-3 top-4 text-slate-400" />
+                        <input 
+                          value={formData.alias} 
+                          onChange={(e) => setFormData({ ...formData, alias: e.target.value.toLowerCase().replace(/\s+/g, '') })} 
+                          className="w-full p-3 pl-10 rounded-xl border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
+                          placeholder="Ej. crumbl (sin espacios ni mayúsculas)"
                         />
                       </div>
                     </div>

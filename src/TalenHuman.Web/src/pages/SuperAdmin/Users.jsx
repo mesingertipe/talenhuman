@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit, X, Shield, User as UserIcon, Mail, Lock, Building2, CheckCircle, AlertCircle, ToggleLeft, ToggleRight, MapPin, Download, Upload } from 'lucide-react';
+import { Plus, Trash2, Edit, X, Shield, User as UserIcon, Mail, Lock, Building2, CheckCircle, AlertCircle, ToggleLeft, ToggleRight, MapPin, Download, Upload, Globe } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import api from '../../services/api';
 import SearchableSelect from '../../components/Shared/SearchableSelect';
@@ -186,6 +186,21 @@ const Users = ({ user: sessionUser }) => {
     }
   };
 
+  const handleMigrateUserNames = async () => {
+    if (!window.confirm('¿Estás seguro de que deseas migrar los correos de acceso de todos los empleados existentes al nuevo formato con el dominio de su empresa? Esto es necesario si acabas de agregar un Alias a una empresa.')) return;
+    
+    setSyncLoading(true);
+    try {
+        const res = await api.post('/auth/migrate-employee-usernames');
+        showToast(res.data.message);
+        fetchData();
+    } catch (err) {
+        showToast("Error al migrar los usuarios", "error");
+    } finally {
+        setSyncLoading(false);
+    }
+  };
+
   const handleExportExcel = () => {
     const dataToExport = users.map(u => ({
       Nombre: u.fullName,
@@ -234,14 +249,25 @@ const Users = ({ user: sessionUser }) => {
                 <Download size={18} />
             </button>
             {isSuperAdminUser && (
-              <button 
-                onClick={handleSyncEmployees}
-                disabled={syncLoading}
-                className="btn-premium btn-premium-secondary"
-                style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
-              >
-                {syncLoading ? <div className="loader loader-indigo"></div> : <CheckCircle size={18} />} Sincronizar
-              </button>
+              <>
+                <button 
+                  onClick={handleMigrateUserNames}
+                  disabled={syncLoading}
+                  className="btn-premium btn-premium-secondary"
+                  style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
+                  title="Actualizar correos con Alias"
+                >
+                  {syncLoading ? <div className="loader loader-indigo"></div> : <Globe size={18} />} Migrar Dominios
+                </button>
+                <button 
+                  onClick={handleSyncEmployees}
+                  disabled={syncLoading}
+                  className="btn-premium btn-premium-secondary"
+                  style={{ borderRadius: '20px', height: '56px', padding: '0 25px' }}
+                >
+                  {syncLoading ? <div className="loader loader-indigo"></div> : <CheckCircle size={18} />} Sincronizar
+                </button>
+              </>
             )}
             <button 
               onClick={() => setShowImport(true)}
