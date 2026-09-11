@@ -568,7 +568,8 @@ public class AuthController : ControllerBase
             .IgnoreQueryFilters()
             .Include(e => e.Company)
             .Include(e => e.User)
-            .Where(e => e.UserId != null && e.User != null && !e.User.UserName!.Contains("@"))
+            .Where(e => e.UserId != null && e.User != null && 
+                (!e.User.UserName!.Contains("@") || e.User.UserName.EndsWith("@talenhuman.local") || e.User.UserName.EndsWith(".local.talenhuman.com")))
             .ToListAsync();
 
         int updated = 0;
@@ -579,12 +580,19 @@ public class AuthController : ControllerBase
             var correctEmail = $"{emp.IdentificationNumber}@{domain}";
 
             var user = emp.User!;
-            user.UserName = correctEmail;
-            user.NormalizedUserName = correctEmail.ToUpper();
-            user.Email = correctEmail;
-            user.NormalizedEmail = correctEmail.ToUpper();
-            
-            updated++;
+            // Only count as updated if something changed
+            if (user.UserName != correctEmail || user.IsActive != emp.IsActive) 
+            {
+                user.UserName = correctEmail;
+                user.NormalizedUserName = correctEmail.ToUpper();
+                user.Email = correctEmail;
+                user.NormalizedEmail = correctEmail.ToUpper();
+                
+                // Fix for users that got created as Inactive by default in DB migrations
+                user.IsActive = emp.IsActive; 
+                
+                updated++;
+            }
         }
 
         if (updated > 0)
