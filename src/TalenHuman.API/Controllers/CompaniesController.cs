@@ -61,6 +61,7 @@ public class CompaniesController : ControllerBase
         if (existing == null) return NotFound();
 
         existing.Name = company.Name;
+        existing.Alias = company.Alias;
         existing.TaxId = company.TaxId;
         existing.IsActive = company.IsActive;
         existing.CountryCode = company.CountryCode;
