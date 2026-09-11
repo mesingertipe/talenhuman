@@ -210,11 +210,14 @@ public class IntegrationController : ControllerBase
                     }
                 }
                 
-                // If becomes inactive, deactivate user access
-                if (!employee.IsActive && employee.UserId.HasValue)
+                // Sync User active status with Employee active status
+                if (employee.UserId.HasValue)
                 {
                     var user = await _context.Users.FindAsync(employee.UserId.Value);
-                    if (user != null) user.IsActive = false;
+                    if (user != null && user.IsActive != employee.IsActive) 
+                    {
+                        user.IsActive = employee.IsActive;
+                    }
                 }
 
                 results.Updated++;
