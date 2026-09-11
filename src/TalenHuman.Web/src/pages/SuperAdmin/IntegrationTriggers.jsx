@@ -14,6 +14,35 @@ const IntegrationTriggers = ({ user }) => {
     textMuted: isDarkMode ? '#94a3b8' : '#64748b',
   };
 
+  const translateCron = (cron) => {
+    if (!cron) return 'Sin definir';
+    const parts = cron.trim().split(/\s+/);
+    if (parts.length < 5) return 'Horario personalizado';
+    
+    const [min, hour, day, month, dow] = parts;
+    
+    if (min.startsWith('*/') && hour === '*' && day === '*' && month === '*' && dow === '*') {
+      return `Cada ${min.replace('*/', '')} minutos`;
+    }
+    if (min === '0' && hour.startsWith('*/') && day === '*' && month === '*' && dow === '*') {
+      return `Cada ${hour.replace('*/', '')} horas`;
+    }
+    if (min === '0' && hour === '*' && day === '*' && month === '*' && dow === '*') {
+      return 'Cada hora exacta';
+    }
+    if (min === '0' && hour === '0' && day === '*' && month === '*' && dow === '*') {
+      return 'Diario a la medianoche';
+    }
+    if (!isNaN(min) && !isNaN(hour) && day === '*' && month === '*' && dow === '*') {
+      let h = parseInt(hour);
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      if (h > 12) h -= 12;
+      if (h === 0) h = 12;
+      return `Diario a las ${h}:${min.padStart(2, '0')} ${ampm}`;
+    }
+    return 'Horario programado';
+  };
+
   const [triggers, setTriggers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -160,16 +189,17 @@ const IntegrationTriggers = ({ user }) => {
             </div>
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>Tarea</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>URL Destino</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>Cron</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>Estado</th>
-                <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textAlign: 'right' }}>Acciones</th>
-              </tr>
-            </thead>
+          <div className="overflow-x-auto w-full custom-scrollbar">
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
+              <thead>
+                <tr style={{ textAlign: 'left', background: 'var(--bg-main)', borderBottom: '1px solid var(--border)' }}>
+                  <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>Tarea</th>
+                  <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>URL Destino</th>
+                  <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>Frecuencia (Cron)</th>
+                  <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)' }}>Estado</th>
+                  <th style={{ padding: '1.25rem 1.5rem', fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textAlign: 'right' }}>Acciones</th>
+                </tr>
+              </thead>
             <tbody>
               {currentTriggers.map((trigger) => (
                 <tr key={trigger.id} style={{ borderBottom: '1px solid var(--border)' }} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
@@ -187,9 +217,14 @@ const IntegrationTriggers = ({ user }) => {
                     </div>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
-                    <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded font-mono text-xs font-bold">
-                      {trigger.cronExpression}
-                    </span>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                        {translateCron(trigger.cronExpression)}
+                      </span>
+                      <span className="px-2 py-0.5 w-fit bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded font-mono text-[10px] font-bold">
+                        {trigger.cronExpression}
+                      </span>
+                    </div>
                   </td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
                     <span style={{ 
@@ -251,6 +286,7 @@ const IntegrationTriggers = ({ user }) => {
               )}
             </tbody>
           </table>
+        </div>
         )}
         {!loading && (
           <Pagination 
