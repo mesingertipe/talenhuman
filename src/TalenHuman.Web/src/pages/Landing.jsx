@@ -75,7 +75,6 @@ const Landing = ({ onLoginClick }) => {
         <div className="landing-nav-container">
           <a href="#" className="landing-nav-brand">
             <TalenHumanLogo size={36} white={false} />
-            <span>TalenHuman</span>
           </a>
 
           <ul className="landing-nav-links">

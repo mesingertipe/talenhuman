@@ -86,10 +86,16 @@ function App() {
   const [booting, setBooting] = useState(() => {
      if (typeof window !== 'undefined' && window.__TALENHUMAN_BOOTED__) return false;
      return true;
-  }); 
+  });
   const fcmSyncRef = useRef(false);
-  const [authView, setAuthView] = useState('landing'); // 'landing', 'login', 'forgot', 'self-service', 'reset-forgotten'
   const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [authView, setAuthView] = useState(() => {
+    if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('view') === 'login') return 'login';
+    }
+    return 'landing';
+  }); // 'landing', 'login', 'forgot', 'self-service', 'reset-forgotten'
   const { isDarkMode, toggleTheme } = useTheme();
   const theme = isDarkMode ? 'dark' : 'light';
 
@@ -273,7 +279,7 @@ function App() {
     setUser(null);
     localStorage.clear();
     sessionStorage.clear();
-    window.location.replace('/');
+    window.location.replace('/?view=login');
   };
 
   const handleLogin = (userData, userToken) => {
