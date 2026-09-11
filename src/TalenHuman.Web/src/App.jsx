@@ -372,7 +372,7 @@ function App() {
           case 'Novedades': return <MobileRequests user={user} theme={theme} />;
           case 'Comunicados': return <MobileNews user={user} theme={theme} />;
           case 'Turnos': return <MobileShifts user={user} theme={theme} />;
-          case 'ResetPassword': return <ResetPassword user={user} theme={theme} setPage={setCurrentPage} />;
+          case 'ResetPassword': return <ResetPassword user={user} theme={theme} setPage={setCurrentPage} setUser={setUser} />;
           default: return <MobileDashboard user={user} theme={theme} setPage={setCurrentPage} />;
         }
       }
@@ -411,7 +411,7 @@ function App() {
         case 'Auditoría': return <AuditLogs user={user} />;
         case 'Centro de Ayuda': return <HelpCenter user={user} />;
         case 'Mesa de Ayuda': return <HelpDesk user={user} />;
-        case 'ResetPassword': return <ResetPassword user={user} theme={theme} setPage={setCurrentPage} />;
+        case 'ResetPassword': return <ResetPassword user={user} theme={theme} setPage={setCurrentPage} setUser={setUser} />;
         case 'Dashboard':
         default:
           return isEmployee ? <EmployeeDashboard user={user} /> : <Dashboard user={user} />;

@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Lock, ShieldCheck, ArrowLeft, Eye, EyeOff, Loader2, Check, ShieldAlert, Shield, Key } from 'lucide-react';
 import api from '../services/api';
 
-const ResetPassword = ({ user, setPage, theme }) => {
+const ResetPassword = ({ user, setPage, theme, setUser }) => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false); // To show success feedback
   
   const isDark = theme === 'dark';
 
@@ -46,12 +47,21 @@ const ResetPassword = ({ user, setPage, theme }) => {
       const updatedUser = { ...user, mustChangePassword: false };
       localStorage.setItem('user', JSON.stringify(updatedUser));
       
-      // Navigate back to profile
-      if (setPage) setPage('Perfil');
+      setSuccess(true);
+      
+      // Release global interceptor lock
+      if (setUser) {
+          setUser(updatedUser);
+      }
+      
+      // Give the user 1.5 seconds to see the success state before navigating away
+      setTimeout(() => {
+          if (setPage) setPage('Dashboard');
+      }, 1500);
+
     } catch (err) {
       setError(err.response?.data?.message || 'Error al actualizar la contraseña');
-    } finally {
-      setLoading(false);
+      setLoading(false); // Only stop loading if error. If success, keep loading spinner for transition.
     }
   };
 
@@ -175,18 +185,23 @@ const ResetPassword = ({ user, setPage, theme }) => {
 
             <button 
                 type="submit" 
-                disabled={loading || !allValid}
+                disabled={loading || !allValid || success}
                 style={{
                     width: '100%', marginTop: '12px', padding: '20px', borderRadius: '20px',
-                    background: allValid ? 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)' : '#cbd5e1',
+                    background: success ? '#10b981' : (allValid ? 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)' : '#cbd5e1'),
                     color: 'white', border: 'none', fontWeight: '900', fontSize: '15px',
-                    boxShadow: allValid ? '0 15px 30px rgba(79, 70, 229, 0.3)' : 'none',
+                    boxShadow: success ? '0 15px 30px rgba(16, 185, 129, 0.3)' : (allValid ? '0 15px 30px rgba(79, 70, 229, 0.3)' : 'none'),
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
-                    cursor: allValid ? 'pointer' : 'not-allowed', transition: 'all 0.3s'
+                    cursor: (allValid && !success) ? 'pointer' : 'not-allowed', transition: 'all 0.3s'
                 }}
             >
-                {loading ? (
+                {loading && !success ? (
                     <Loader2 className="animate-spin" size={24} />
+                ) : success ? (
+                    <>
+                        <span>¡Clave Actualizada!</span>
+                        <Check size={20} />
+                    </>
                 ) : (
                     <>
                         <span>Actualizar acceso</span>
