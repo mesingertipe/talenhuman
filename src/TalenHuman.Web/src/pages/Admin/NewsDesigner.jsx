@@ -37,7 +37,8 @@ const NewsDesigner = () => {
         categoria: 0,
         requiereAdjunto: false,
         rolAprobador: 'RH',
-        permiteCreacionEmpleado: false
+        permiteCreacionEmpleado: false,
+        codigoIntegracionNomina: ''
     });
     const [fields, setFields] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -90,12 +91,13 @@ const NewsDesigner = () => {
                 categoria: type.categoria || 0,
                 requiereAdjunto: type.requiereAdjunto || false,
                 rolAprobador: type.rolAprobador || 'RH',
-                permiteCreacionEmpleado: type.permiteCreacionEmpleado || false
+                permiteCreacionEmpleado: type.permiteCreacionEmpleado || false,
+                codigoIntegracionNomina: type.codigoIntegracionNomina || ''
             });
             setFields(type.camposConfig ? JSON.parse(type.camposConfig) : []);
         } else {
             setCurrentType(null);
-            setFormData({ nombre: '', descripcion: '', categoria: 0, requiereAdjunto: false, rolAprobador: 'RH', permiteCreacionEmpleado: false });
+            setFormData({ nombre: '', descripcion: '', categoria: 0, requiereAdjunto: false, rolAprobador: 'RH', permiteCreacionEmpleado: false, codigoIntegracionNomina: '' });
             setFields([]);
         }
         setShowModal(true);
@@ -322,6 +324,16 @@ const NewsDesigner = () => {
                                             onChange={(val) => setFormData({ ...formData, rolAprobador: val })}
                                             placeholder="Seleccionar autoridad..."
                                             icon={UserCircle2}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.1em' }}>Código Integración Nómina</label>
+                                        <input 
+                                            value={formData.codigoIntegracionNomina || ''} 
+                                            onChange={(e) => setFormData({ ...formData, codigoIntegracionNomina: e.target.value })} 
+                                            placeholder="Ej. NOV-01"
+                                            style={{ width: '100%', padding: '16px 20px', borderRadius: '18px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', boxSizing: 'border-box', outline: 'none', transition: 'border-color 0.2s' }}
+                                            className="focus:border-indigo-500"
                                         />
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', background: activeColors.accentSoft, borderRadius: '18px', border: `1px solid ${isDarkMode ? 'rgba(79, 70, 229, 0.2)' : '#d1daff'}` }}>

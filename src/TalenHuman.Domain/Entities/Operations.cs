@@ -180,6 +180,7 @@ public class NovedadTipo : BaseEntity, IMultitenant
     public string? Descripcion { get; set; }
     public bool RequiereAdjunto { get; set; } = true;
     public string? CamposConfig { get; set; } // JSON string for dynamic fields
+    public string? CodigoIntegracionNomina { get; set; }
     
     public NovedadCategoria Categoria { get; set; } = NovedadCategoria.Empleado;
     public string RolAprobador { get; set; } = "Admin"; // Default to Admin

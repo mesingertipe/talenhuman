@@ -31,7 +31,8 @@ const NewsTemplateDesigner = () => {
         requiereAdjunto: false,
         rolAprobador: 'RH',
         esPlantilla: true, // Default for this view
-        permiteCreacionEmpleado: false
+        permiteCreacionEmpleado: false,
+        codigoIntegracionNomina: ''
     });
     const [fields, setFields] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -80,12 +81,22 @@ const NewsTemplateDesigner = () => {
                 requiereAdjunto: type.requiereAdjunto || false,
                 rolAprobador: type.rolAprobador || 'RH',
                 esPlantilla: true,
-                permiteCreacionEmpleado: type.permiteCreacionEmpleado || false
+                permiteCreacionEmpleado: type.permiteCreacionEmpleado || false,
+                codigoIntegracionNomina: type.codigoIntegracionNomina || ''
             });
             setFields(type.camposConfig ? JSON.parse(type.camposConfig) : []);
         } else {
             setCurrentType(null);
-            setFormData({ nombre: '', descripcion: '', categoria: 0, requiereAdjunto: false, rolAprobador: 'RH', esPlantilla: true, permiteCreacionEmpleado: false });
+            setFormData({ 
+                nombre: '', 
+                descripcion: '', 
+                categoria: 0, 
+                requiereAdjunto: false, 
+                rolAprobador: 'RH', 
+                esPlantilla: true, 
+                permiteCreacionEmpleado: false, 
+                codigoIntegracionNomina: '' 
+            });
             setFields([]);
         }
         setShowModal(true);
@@ -264,15 +275,27 @@ const NewsTemplateDesigner = () => {
                                     </div>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
                                         <SearchableSelect
-                                            label="Auditor Sugerido *"
+                                            label="Nivel de Autoridad (Aprobador) *"
                                             options={[
                                                 { id: 'RH', name: 'Talento Humano (RH)' },
-                                                { id: 'Admin', name: 'Administrador Master' }
+                                                { id: 'Admin', name: 'Administrador Master' },
+                                                { id: 'Supervisor', name: 'Supervisor Directo' }
                                             ]}
                                             value={formData.rolAprobador}
                                             onChange={(val) => setFormData({ ...formData, rolAprobador: val })}
-                                            placeholder="Seleccionar..."
+                                            placeholder="Seleccionar autoridad..."
+                                            icon={UserCircle2}
                                         />
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: activeColors.textMuted, textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.1em' }}>Código Integración Nómina</label>
+                                            <input 
+                                                value={formData.codigoIntegracionNomina || ''} 
+                                                onChange={(e) => setFormData({ ...formData, codigoIntegracionNomina: e.target.value })} 
+                                                placeholder="Ej. NOV-01"
+                                                style={{ width: '100%', padding: '16px 20px', borderRadius: '18px', border: `2px solid ${activeColors.border}`, background: activeColors.card, color: activeColors.textMain, fontWeight: '700', boxSizing: 'border-box', outline: 'none', transition: 'border-color 0.2s' }}
+                                                className="focus:border-indigo-500"
+                                            />
+                                        </div>
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '18px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
                                             <div>
                                                 <span style={{ display: 'block', fontSize: '10px', fontWeight: '950', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Adjunto por Defecto</span>

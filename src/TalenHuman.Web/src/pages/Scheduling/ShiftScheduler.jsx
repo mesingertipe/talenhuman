@@ -1055,7 +1055,14 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         new Date(s.startTime).toDateString() === day.toDateString()
                     );
                     
-                    if (!hasShiftThatDay) newShifts.push(newShift);
+                    if (!hasShiftThatDay) {
+                        let diff = (end - start) / (1000 * 60 * 60);
+                        if (diff < 0) diff += 24;
+                        const limitCheck = checkWeeklyHoursLimit(empId, diff);
+                        if (limitCheck.allowed) {
+                            newShifts.push(newShift);
+                        }
+                    }
                 }
             });
         });
@@ -1148,6 +1155,40 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             new Date(n.fechaFin).getTime() >= date.getTime() &&
             n.status === 1
         );
+    };
+
+    const checkWeeklyHoursLimit = (employeeId, newShiftHours, existingDayShiftIdToIgnore = null) => {
+        const emp = employees.find(e => e.id === employeeId);
+        if (!emp || !emp.jornadaId) return true; // Si no tiene jornada, no validamos
+
+        const jornada = jornadas.find(j => j.id === emp.jornadaId);
+        if (!jornada || !jornada.horasSemanales) return true;
+
+        // Calcular las horas ya programadas para el empleado en la semana actual (ignorando descansos y turnos fuera)
+        let totalHours = 0;
+        shifts.forEach(s => {
+            if (s.employeeId === employeeId && !s.isDescanso && !s.isFuera) {
+                if (existingDayShiftIdToIgnore && s.id === existingDayShiftIdToIgnore) return; // Ignoramos si estamos sobrescribiendo
+                
+                // Si es un turno temporal (al mover celdas puede no tener id), usamos la fecha para ignorarlo si aplica
+                if (existingDayShiftIdToIgnore === 'TEMPORAL' && new Date(s.startTime).toDateString() === existingDayShiftIdToIgnore) return;
+
+                const start = new Date(s.startTime);
+                const end = new Date(s.endTime);
+                let diff = (end - start) / (1000 * 60 * 60);
+                if (diff < 0) diff += 24;
+                totalHours += diff;
+            }
+        });
+
+        if (totalHours + newShiftHours > jornada.horasSemanales) {
+            return {
+                allowed: false,
+                limit: jornada.horasSemanales,
+                current: totalHours
+            };
+        }
+        return { allowed: true };
     };
 
     const handleDropOnGrid = (e, targetEmployeeId, targetDate) => {
@@ -1253,6 +1294,19 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                 isFuera: !!sourceShift.isFuera
             };
 
+            // Validar límite de horas si no es descanso
+            if (!newShift.isDescanso && !newShift.isFuera) {
+                let diff = (newEnd - newStart) / (1000 * 60 * 60);
+                if (diff < 0) diff += 24;
+                const existingShiftId = shifts.find(s => s.employeeId === targetEmployeeId && new Date(s.startTime).toDateString() === targetDate.toDateString())?.id || 'TEMPORAL';
+                
+                const limitCheck = checkWeeklyHoursLimit(targetEmployeeId, diff, existingShiftId === 'TEMPORAL' ? targetDate.toDateString() : existingShiftId);
+                if (!limitCheck.allowed) {
+                    showToast(`Tope semanal superado (${limitCheck.limit}h). No se puede asignar el turno.`, "warning");
+                    return;
+                }
+            }
+
             setShifts(prev => {
                 // V13.9.42: Limpiar destino para evitar "pegado" de turnos anteriores
                 const filtered = prev.filter(s => !(s.employeeId === targetEmployeeId && new Date(s.startTime).toDateString() === targetDate.toDateString()));
@@ -1292,6 +1346,18 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
             setJustificationComment('');
             setShowJustificationModal(true);
             return;
+        }
+
+        if (!newShift.isDescanso && !newShift.isFuera) {
+            let diff = (end - start) / (1000 * 60 * 60);
+            if (diff < 0) diff += 24;
+            const existingShiftId = shifts.find(s => s.employeeId === employeeId && new Date(s.startTime).toDateString() === date.toDateString())?.id || 'TEMPORAL';
+            
+            const limitCheck = checkWeeklyHoursLimit(employeeId, diff, existingShiftId === 'TEMPORAL' ? date.toDateString() : existingShiftId);
+            if (!limitCheck.allowed) {
+                showToast(`Tope semanal superado (${limitCheck.limit}h). Turno descartado.`, "warning");
+                return; // Bloquear guardado
+            }
         }
 
         const newShifts = [...shifts];
@@ -1597,6 +1663,21 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                         const ne = new Date(targetDate); 
                         const oe = new Date(psh.endTime || psh.EndTime); 
                         ne.setHours(oe.getHours(), oe.getMinutes(), 0);
+                        if (ne < ns && !(psh.isDescanso || psh.IsDescanso) && !(psh.isFuera || psh.IsFuera)) ne.setDate(ne.getDate() + 1);
+
+                        // Validate hours limit for cloned shift
+                        const isDescanso = !!(psh.isDescanso || psh.IsDescanso);
+                        const isFuera = !!(psh.isFuera || psh.IsFuera);
+                        
+                        if (!isDescanso && !isFuera) {
+                            let diff = (ne - ns) / (1000 * 60 * 60);
+                            if (diff < 0) diff += 24;
+                            if (!checkWeeklyHoursLimit(empIdRaw, diff).allowed) {
+                                localSkippedCount++;
+                                localSkippedEmployees.add(nid);
+                                return; // Skip this cloned shift due to limit
+                            }
+                        }
 
                         clonedList.push({ 
                             employeeId: empIdRaw, // Mantenemos el ID original para persistencia
@@ -1605,8 +1686,8 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                             startTime: ns.toISOString(), 
                             endTime: ne.toISOString(), 
                             status: 0, 
-                            isDescanso: !!(psh.isDescanso || psh.IsDescanso), 
-                            isFuera: !!(psh.isFuera || psh.IsFuera),
+                            isDescanso: isDescanso, 
+                            isFuera: isFuera,
                             observation: 'Clonado semana anterior'
                         });
                         localCopiedCount++;

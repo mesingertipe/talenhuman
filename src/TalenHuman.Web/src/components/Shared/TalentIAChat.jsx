@@ -6,6 +6,9 @@ import { useTheme } from '../../context/ThemeContext';
 
 const TalentIAChat = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [hasAcceptedDisclaimer, setHasAcceptedDisclaimer] = useState(() => {
+    return localStorage.getItem('talentia_disclaimer_accepted') === 'true';
+  });
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -185,18 +188,20 @@ const TalentIAChat = () => {
           </div>
         </div>
 
-        {/* Mensajes */}
-        <div 
-          className={isDarkMode ? 'custom-scrollbar' : ''}
-          style={{ 
-            flex: 1, 
-            overflowY: 'auto', 
-            padding: '1rem', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            gap: '1rem' 
-          }}
-        >
+        {hasAcceptedDisclaimer ? (
+          <>
+            {/* Mensajes */}
+            <div 
+              className={isDarkMode ? 'custom-scrollbar' : ''}
+              style={{ 
+                flex: 1, 
+                overflowY: 'auto', 
+                padding: '1rem', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '1rem' 
+              }}
+            >
           {messages.map((msg, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
               <div 
@@ -322,6 +327,53 @@ const TalentIAChat = () => {
             </button>
           </form>
         </div>
+          </>
+        ) : (
+          <div style={{ flex: 1, padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <div style={{ background: 'rgba(0, 102, 255, 0.1)', padding: '1rem', borderRadius: '50%' }}>
+                <Sparkles size={32} color="#0066FF" />
+              </div>
+            </div>
+            <h4 style={{ margin: 0, textAlign: 'center', fontSize: '1.25rem', fontWeight: 'bold', color: isDarkMode ? 'white' : '#1e293b' }}>
+              Aviso Legal - Uso de IA
+            </h4>
+            <div style={{ fontSize: '0.875rem', lineHeight: '1.6', color: isDarkMode ? '#cbd5e1' : '#475569', textAlign: 'justify' }}>
+              <p style={{ marginBottom: '1rem' }}>
+                Estás a punto de interactuar con <strong>TalentIA</strong>, un asistente virtual basado en Inteligencia Artificial.
+              </p>
+              <p style={{ marginBottom: '1rem' }}>
+                De acuerdo con la <strong>Resolución 1644 de 2026</strong>, te informamos que esta herramienta tiene un propósito netamente orientativo y de apoyo.
+              </p>
+              <p style={{ marginBottom: '0' }}>
+                <strong>Ninguna recomendación de esta plataforma reemplaza el criterio profesional.</strong> Las decisiones finales, especialmente de carácter clínico o formal, siempre son tomadas y supervisadas por nuestro talento humano cualificado.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                localStorage.setItem('talentia_disclaimer_accepted', 'true');
+                setHasAcceptedDisclaimer(true);
+              }}
+              style={{
+                marginTop: 'auto',
+                padding: '0.875rem',
+                borderRadius: '12px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #0066FF 0%, #4f46e5 100%)',
+                color: 'white',
+                fontWeight: 'bold',
+                fontSize: '1rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(0, 102, 255, 0.3)',
+                transition: 'all 0.2s ease-in-out'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+            >
+              Entiendo y acepto
+            </button>
+          </div>
+        )}
       </div>
       <style>
         {`
