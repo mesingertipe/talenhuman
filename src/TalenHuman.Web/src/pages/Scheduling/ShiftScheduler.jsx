@@ -1166,12 +1166,24 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
 
         // Calcular las horas ya programadas para el empleado en la semana actual (ignorando descansos y turnos fuera)
         let totalHours = 0;
+        
+        // V13 FIX: Solo sumar turnos que caen en los días visibles de la grilla
+        const currentWeekDateStrings = [];
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(currentWeekStart);
+            d.setDate(d.getDate() + i);
+            currentWeekDateStrings.push(d.toDateString());
+        }
+
         shifts.forEach(s => {
             if (s.employeeId === employeeId && !s.isDescanso && !s.isFuera) {
                 if (existingDayShiftIdToIgnore && s.id === existingDayShiftIdToIgnore) return; // Ignoramos si estamos sobrescribiendo
                 
                 // Si es un turno temporal (al mover celdas puede no tener id), usamos la fecha para ignorarlo si aplica
                 if (existingDayShiftIdToIgnore === 'TEMPORAL' && new Date(s.startTime).toDateString() === existingDayShiftIdToIgnore) return;
+
+                const shiftDateStr = new Date(s.startTime).toDateString();
+                if (!currentWeekDateStrings.includes(shiftDateStr)) return; // Ignorar turnos fantasmas fuera de la semana
 
                 const start = new Date(s.startTime);
                 const end = new Date(s.endTime);
@@ -2518,7 +2530,12 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                 </thead>
                                 <tbody>
                                     {filteredEmployees.map((emp) => {
-                                        const totalScheduled = shifts.filter(s => String(s.employeeId).toLowerCase() === String(emp.id).toLowerCase()).reduce((acc, s) => {
+                                        const totalScheduled = shifts.filter(s => {
+                                            if (String(s.employeeId).toLowerCase() !== String(emp.id).toLowerCase()) return false;
+                                            // V13 FIX: Solo sumar turnos que caen en los días visibles de la grilla
+                                            const shiftDateStr = new Date(s.startTime).toDateString();
+                                            return days.some(d => d.toDateString() === shiftDateStr);
+                                        }).reduce((acc, s) => {
                                             if (s.isDescanso) return acc;
                                             const start = new Date(s.startTime);
                                             const end = new Date(s.endTime);
