@@ -3167,7 +3167,6 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} style={{ width: '100%', background: 'transparent', border: 'none', textAlign: 'center', fontSize: '1.8rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', outline: 'none' }} />
                                         </div>
                                     </div>
-                                    </div>
                                     {(() => {
                                         let limitCheck = { allowed: true };
                                         if (pendingEvent && pendingEvent.type !== 'Descanso' && pendingEvent.type !== 'Turno Fuera') {
