@@ -43,7 +43,8 @@ public class NovedadTiposController : ControllerBase
                 RolAprobador = n.RolAprobador,
                 EsPlantilla = n.EsPlantilla,
                 PermiteCreacionEmpleado = n.PermiteCreacionEmpleado,
-                IsSystem = n.IsSystem
+                IsSystem = n.IsSystem,
+                CodigoIntegracionNomina = n.CodigoIntegracionNomina
             })
             .ToListAsync();
     }
@@ -65,7 +66,8 @@ public class NovedadTiposController : ControllerBase
             RolAprobador = n.RolAprobador,
             EsPlantilla = n.EsPlantilla,
             PermiteCreacionEmpleado = n.PermiteCreacionEmpleado,
-            IsSystem = n.IsSystem
+            IsSystem = n.IsSystem,
+            CodigoIntegracionNomina = n.CodigoIntegracionNomina
         };
     }
 
@@ -87,7 +89,8 @@ public class NovedadTiposController : ControllerBase
             RolAprobador = dto.RolAprobador,
             EsPlantilla = User.IsInRole("SuperAdmin") && dto.EsPlantilla,
             PermiteCreacionEmpleado = dto.PermiteCreacionEmpleado,
-            IsSystem = false
+            IsSystem = false,
+            CodigoIntegracionNomina = dto.CodigoIntegracionNomina
         };
 
         _context.NovedadTipos.Add(n);
@@ -115,6 +118,7 @@ public class NovedadTiposController : ControllerBase
         n.Categoria = (NovedadCategoria)dto.Categoria;
         n.RolAprobador = dto.RolAprobador;
         n.PermiteCreacionEmpleado = dto.PermiteCreacionEmpleado;
+        n.CodigoIntegracionNomina = dto.CodigoIntegracionNomina;
         
         if (User.IsInRole("SuperAdmin"))
         {
@@ -165,7 +169,8 @@ public class NovedadTiposController : ControllerBase
             RolAprobador = template.RolAprobador,
             EsPlantilla = false, // Imported version is NOT a template
             PermiteCreacionEmpleado = template.PermiteCreacionEmpleado,
-            IsSystem = false
+            IsSystem = false,
+            CodigoIntegracionNomina = template.CodigoIntegracionNomina
         };
 
         _context.NovedadTipos.Add(newType);
@@ -182,7 +187,8 @@ public class NovedadTiposController : ControllerBase
             RolAprobador = newType.RolAprobador,
             EsPlantilla = false,
             PermiteCreacionEmpleado = newType.PermiteCreacionEmpleado,
-            IsSystem = false
+            IsSystem = false,
+            CodigoIntegracionNomina = newType.CodigoIntegracionNomina
         });
     }
 }
@@ -199,4 +205,5 @@ public class NovedadTipoDto
     public bool EsPlantilla { get; set; }
     public bool PermiteCreacionEmpleado { get; set; }
     public bool IsSystem { get; set; }
+    public string? CodigoIntegracionNomina { get; set; }
 }

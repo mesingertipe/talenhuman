@@ -3167,10 +3167,31 @@ const ShiftScheduler = ({ user, tenantSettings, readOnly = false, initialStoreId
                                             <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} style={{ width: '100%', background: 'transparent', border: 'none', textAlign: 'center', fontSize: '1.8rem', fontWeight: '950', color: isDarkMode ? 'white' : '#1e293b', outline: 'none' }} />
                                         </div>
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                        <button onClick={confirmTimeModal} style={{ width: '100%', padding: '20px', borderRadius: '20px', border: 'none', background: '#4f46e5', color: 'white', fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '0 12px 24px rgba(79, 70, 229, 0.3)' }}>Asignar Turno</button>
-                                        <button onClick={() => setShowTimeModal(false)} style={{ width: '100%', padding: '15px', borderRadius: '15px', border: 'none', background: 'transparent', color: '#94a3b8', fontWeight: '800', fontSize: '9px', textTransform: 'uppercase', cursor: 'pointer' }}>Cerrar</button>
                                     </div>
+                                    {(() => {
+                                        let limitCheck = { allowed: true };
+                                        if (pendingEvent && pendingEvent.type !== 'Descanso' && pendingEvent.type !== 'Turno Fuera') {
+                                            const start = new Date(pendingEvent.date); const [sh, sm] = String(startTime).split(':'); start.setHours(parseInt(sh)||0, parseInt(sm)||0, 0);
+                                            const end = new Date(pendingEvent.date); const [eh, em] = String(endTime).split(':'); end.setHours(parseInt(eh)||0, parseInt(em)||0, 0);
+                                            let diff = (end - start) / (1000 * 60 * 60);
+                                            if (diff < 0) diff += 24;
+                                            const existingShiftId = shifts.find(s => s.employeeId === pendingEvent.employeeId && new Date(s.startTime).toDateString() === pendingEvent.date.toDateString())?.id || 'TEMPORAL';
+                                            limitCheck = checkWeeklyHoursLimit(pendingEvent.employeeId, diff, existingShiftId === 'TEMPORAL' ? pendingEvent.date.toDateString() : existingShiftId);
+                                        }
+
+                                        return (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                {!limitCheck.allowed && (
+                                                    <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', color: '#ef4444', padding: '12px', borderRadius: '16px', fontSize: '10px', fontWeight: '950', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                                        <AlertCircle size={14} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'text-bottom' }} />
+                                                        Tope semanal superado ({limitCheck.limit}h). Actual: {limitCheck.current.toFixed(1)}h.
+                                                    </div>
+                                                )}
+                                                <button onClick={confirmTimeModal} disabled={!limitCheck.allowed} style={{ width: '100%', padding: '20px', borderRadius: '20px', border: 'none', background: !limitCheck.allowed ? (isDarkMode ? '#334155' : '#cbd5e1') : '#4f46e5', color: !limitCheck.allowed ? (isDarkMode ? '#64748b' : '#94a3b8') : 'white', fontWeight: '950', fontSize: '11px', textTransform: 'uppercase', cursor: !limitCheck.allowed ? 'not-allowed' : 'pointer', boxShadow: !limitCheck.allowed ? 'none' : '0 12px 24px rgba(79, 70, 229, 0.3)' }}>Asignar Turno</button>
+                                                <button onClick={() => setShowTimeModal(false)} style={{ width: '100%', padding: '15px', borderRadius: '15px', border: 'none', background: 'transparent', color: '#94a3b8', fontWeight: '800', fontSize: '9px', textTransform: 'uppercase', cursor: 'pointer' }}>Cerrar</button>
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         </div>
